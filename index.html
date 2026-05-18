@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tango Reels Library</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="bg-glow current-location-glow"></div>
+    <div class="bg-glow secondary-glow"></div>
+
+    <div class="app-container">
+        <aside class="sidebar-glass">
+            <h2>Tango Library</h2>
+            <hr>
+            <div class="menu-items">
+                <button class="menu-btn active">📚 Kütüphane</button>
+                <button class="menu-btn">➕ Yeni Video Ekle</button>
+            </div>
+        </aside>
+
+        <main class="main-content-glass">
+            <header class="search-header">
+                <input type="text" id="search-input" placeholder="Eğitmen, hareket veya etiket ara...">
+                <button id="filter-btn">🔍 Filtrele</button>
+            </header>
+
+            <section class="video-grid" id="video-grid">
+                <div class="info-msg">Veritabanı bağlantısı kuruluyor...</div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
