@@ -29,43 +29,47 @@
 
         <main class="main-content-glass">
             
-            <div id="view-library-container" class="view-panel">
-                <header class="search-header">
+            <div id="view-library-container">
+                <div class="search-bar">
                     <input type="text" id="search-input" placeholder="Eğitmen, hareket veya etiket ara...">
-                    <button id="filter-btn">🔍 Filtrele</button>
-                </header>
-
-                <section class="video-grid" id="video-grid">
+                    <button id="filter-btn" class="filter-btn">🔍 Filtrele</button>
+                </div>
+                <div class="video-grid" id="video-grid">
                     <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
-                </section>
+                </div>
             </div>
 
-            <div id="view-add-container" class="view-panel d-none">
-                <h3 id="form-title" style="margin-bottom: 20px; color: #38bdf8;">➕ Yeni Video Kaydet</h3>
+            <div id="view-add-container" class="d-none">
+                <h2 id="form-title" style="margin-bottom: 20px; color: #38bdf8;">➕ Yeni Video Kaydet</h2>
                 
-                <form id="add-video-form" class="glass-form">
+                <form id="add-video-form">
                     <div class="form-group">
                         <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <select id="form-instructor-select" style="flex: 1; min-width: 150px;" required>
+                        <div class="instructor-select-box" style="display: flex; gap: 10px;">
+                            <select id="form-instructor-select" style="flex: 1;">
                                 </select>
-                            <button type="button" id="btn-edit-instructor" class="lang-btn" title="Düzenle">📝</button>
-                            <button type="button" id="btn-delete-instructor" class="lang-btn" style="border-color: rgba(239, 68, 68, 0.3); color: #ef4444;" title="Sil">❌</button>
-                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8;">➕ New</button>
+                            <button type="button" id="btn-toggle-new-instructor" class="action-btn">➕</button>
+                            <button type="button" id="btn-edit-instructor" class="action-btn">📝</button>
+                            <button type="button" id="btn-delete-instructor" class="action-btn delete-btn">❌</button>
                         </div>
                     </div>
 
-                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
-                        <label id="lbl-new-instructor-name">Yeni Eğitmen Adı:</label>
+                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+                        <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
                         <div style="display: flex; gap: 10px;">
-                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Chicho Frumboli">
-                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.4); padding: 0 20px; font-weight: 600;">Ekle</button>
+                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
+                            <button type="button" id="btn-save-instructor" class="submit-btn" style="width: auto; padding: 0 20px;">Ekle</button>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
+                        <label id="lbl-video-url">Video URL (Instagram, YouTube, Drive vb.):</label>
                         <input type="url" id="form-video-url" placeholder="https://..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-cover-url">Kapak Resmi URL (Sadece IG / FB Ekran Görüntüsü):</label>
+                        <input type="url" id="form-cover-url" placeholder="https://.../resim.jpg">
                     </div>
 
                     <div class="form-group">
