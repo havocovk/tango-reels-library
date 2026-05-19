@@ -5,7 +5,7 @@ export const SUPABASE_KEY = "sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso";
 // DİL SÖZLÜĞÜ (TR / EN)
 export const translations = {
     tr: {
-        brandTitle: "💃 Tango Kütüphanesi",
+        brandTitle: "💃 ATKK",
         title: "Arjantin Tango Kombinasyon Kütüphanesi",
         menuLibrary: "📚 Kütüphane",
         menuAddVideo: "➕ Yeni Video Ekle",
@@ -47,7 +47,7 @@ export const translations = {
         social: "🌐 Sosyal Medya"
     },
     en: {
-        brandTitle: "💃 Tango Library",
+        brandTitle: "💃 ATKK",
         title: "Argentine Tango Combination Library",
         menuLibrary: "📚 Library",
         menuAddVideo: "➕ Add New Video",
