@@ -8,13 +8,14 @@ let editInstructorId = null;
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
     
+    document.title = lang.title;
+    document.getElementById('sidebar-title').innerText = lang.brandTitle;
     document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
     document.getElementById('menu-library').innerText = lang.menuLibrary;
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
     document.getElementById('search-input').placeholder = lang.searchPlaceholder;
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    // Filtre seçeneklerinin dillerini güncelleme
     document.getElementById('opt-all-roles').innerText = lang.allRoles;
     document.getElementById('opt-leader').innerText = lang.leader;
     document.getElementById('opt-follower').innerText = lang.follower;
@@ -117,22 +118,18 @@ function renderVideoCards(videos) {
     });
 }
 
-// HEM ARAMAYI HEM FİLTRELERİ BİRLEŞTİREN AKILLI MOTOR
 function applyFiltersAndSearch() {
     const searchQuery = document.getElementById('search-input').value.toLowerCase();
     const selectedRole = document.getElementById('filter-role-select').value;
     const selectedLocation = document.getElementById('filter-location-select').value;
 
     const filtered = globalVideos.filter(video => {
-        // 1. Kriter: Metin Araması (Eğitmen adı veya partner adı)
         const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
         const partnerName = video.partner_name ? video.partner_name.toLowerCase() : '';
         const matchesSearch = insName.includes(searchQuery) || partnerName.includes(searchQuery);
 
-        // 2. Kriter: Rol Tipi Filtresi
         const matchesRole = (selectedRole === 'all') || (video.role_type === selectedRole);
 
-        // 3. Kriter: Ortam (Location) Filtresi
         let matchesLocation = true;
         if (selectedLocation === 'drive') {
             matchesLocation = (video.is_downloaded === true);
@@ -140,7 +137,6 @@ function applyFiltersAndSearch() {
             matchesLocation = (video.is_downloaded === false || video.is_downloaded === null);
         }
 
-        // Üç kriteri de sağlayan videoları listeye al
         return matchesSearch && matchesRole && matchesLocation;
     });
 
@@ -164,7 +160,7 @@ async function fetchVideos() {
         if (!response.ok) throw new Error();
 
         globalVideos = await response.json();
-        applyFiltersAndSearch(); // Başlangıçta filtreleri çalıştır
+        applyFiltersAndSearch();
 
     } catch (error) {
         console.error("Hata:", error);
@@ -395,8 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    // ANLIK FİLTRELEME DİNLEYİCİLERİ
-    // Kullanıcı yazı yazdıkça veya kutulardan seçim yaptıkça otomatik filtreleme çalışır
     document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
     document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);

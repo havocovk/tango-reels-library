@@ -5,7 +5,8 @@ export const SUPABASE_KEY = "sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso";
 // DİL SÖZLÜĞÜ (TR / EN)
 export const translations = {
     tr: {
-        title: "Tango Library",
+        brandTitle: "💃 Tango Kütüphanesi",
+        title: "Arjantin Tango Kombinasyon Kütüphanesi",
         menuLibrary: "📚 Kütüphane",
         menuAddVideo: "➕ Yeni Video Ekle",
         searchPlaceholder: "Eğitmen, hareket veya etiket ara...",
@@ -37,7 +38,6 @@ export const translations = {
         dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
         uploading: "⏳ Resim yükleniyor...",
         uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen kovanızın (bucket) Public olduğundan emin olun.",
-        // Filtre Etiketleri
         allRoles: "Tüm Roller",
         leader: "Lider",
         follower: "Takipçi",
@@ -47,7 +47,8 @@ export const translations = {
         social: "🌐 Sosyal Medya"
     },
     en: {
-        title: "Tango Library",
+        brandTitle: "💃 Tango Library",
+        title: "Argentine Tango Combination Library",
         menuLibrary: "📚 Library",
         menuAddVideo: "➕ Add New Video",
         searchPlaceholder: "Search instructor, movement or tag...",
@@ -79,7 +80,6 @@ export const translations = {
         dropText: "📸 Click here and paste the screenshot via Ctrl + V",
         uploading: "⏳ Image uploading...",
         uploadError: "❌ Image could not be uploaded to Supabase Storage!",
-        // Filter Labels
         allRoles: "All Roles",
         leader: "Leader",
         follower: "Follower",

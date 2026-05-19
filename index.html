@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tango Class Management System - TCMS</title>
+    <title>Arjantin Tango Kombinasyon Kütüphanesi</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -46,13 +46,14 @@
         }
 
         .sidebar-brand {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--text-main);
             margin-bottom: 32px;
             display: flex;
             align-items: center;
             gap: 8px;
+            line-height: 1.4;
         }
 
         .sidebar-menu {
@@ -316,7 +317,7 @@
 
     <nav class="sidebar">
         <div class="sidebar-brand">
-            <span>💃 TCMS</span>
+            <span id="sidebar-title">💃 ATKK</span>
         </div>
         <ul class="sidebar-menu">
             <li><a id="menu-library" class="active">📚 Kütüphane</a></li>
@@ -366,7 +367,7 @@
                         <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
                         <div style="display: flex; gap: 10px;">
                             <select id="form-instructor-select" style="flex: 1;"></select>
-                            <button type="button" id="btn-toggle-new-instructor" class="btn-secondary">➕/➖</button>
+                            <button type="button" id="btn-toggle-new-instructor" class="btn-secondary">➕</button>
                             <button type="button" id="btn-edit-instructor" class="btn-secondary">✏️</button>
                             <button type="button" id="btn-delete-instructor" class="btn-danger">🗑️</button>
                         </div>
