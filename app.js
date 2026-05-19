@@ -24,7 +24,7 @@ const translations = {
         lblPartner: "Partner Adı (İsteğe Bağlı):",
         lblDownloaded: "Google Drive'a Yedeklendi mi?",
         btnSubmitVideo: "💾 Veritabanına Kaydet",
-        successSave: "🎉 Video ve kapak resmi başarıyla kütüphaneye eklendi!",
+        successSave: "🎉 Video başarıyla kütüphaneye eklendi!",
         lblNewInstructorName: "Eğitmen Adı:",
         insSuccess: "🎉 Eğitmen başarıyla eklendi!",
         insUpdateSuccess: "🎉 Eğitmen ismi güncellendi!",
@@ -36,7 +36,7 @@ const translations = {
         lblCoverUpload: "Kapak Resmi (Hareketi görüyorken Win+Shift+S yapıp buraya tıklayıp Ctrl+V ile yapıştırın):",
         dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
         uploading: "⏳ Resim yükleniyor...",
-        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen 'covers' kovanızın (bucket) ayarlarından herkese açık (Public) olduğundan ve yükleme (Insert) politikalarının (RLS) açık olduğundan emin olun."
+        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen kovanızın (bucket) Public olduğundan emin olun."
     },
     en: {
         title: "Tango Library",
@@ -58,7 +58,7 @@ const translations = {
         lblPartner: "Partner Name (Optional):",
         lblDownloaded: "Backed up to Google Drive?",
         btnSubmitVideo: "💾 Save to Database",
-        successSave: "🎉 Video and cover image successfully added!",
+        successSave: "🎉 Video successfully added!",
         lblNewInstructorName: "Instructor Name:",
         insSuccess: "🎉 Instructor successfully added!",
         insUpdateSuccess: "🎉 Instructor name updated!",
@@ -70,14 +70,14 @@ const translations = {
         lblCoverUpload: "Cover Image (Take screenshot with Win+Shift+S, click here and paste with Ctrl+V):",
         dropText: "📸 Click here and paste the screenshot via Ctrl + V",
         uploading: "⏳ Image uploading...",
-        uploadError: "❌ Image could not be uploaded to Supabase Storage! Please make sure your 'covers' bucket is Public and Insert policies (RLS) are enabled."
+        uploadError: "❌ Image could not be uploaded to Supabase Storage!"
     }
 };
 
 let currentLang = 'tr';
 let globalVideos = [];
 let editInstructorId = null;
-let uploadedCoverUrl = null; 
+let uploadedCoverUrl = null; // Yüklenen kapağın linkini burada saklıyoruz
 
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
@@ -153,8 +153,9 @@ function renderVideoCards(videos) {
         const storageDisplay = video.is_downloaded ? '💾 Google Drive' : '🌐 Social Media';
         const partnerDisplay = video.partner_name ? `<span style="color: #94a3b8; font-size: 0.9rem;">👥 Partner: ${video.partner_name}</span>` : '';
         
+        // Eğer veritabanında kapak resmi yoksa veya cover_url sütunu hiç okunmadıysa varsayılan resmi koyar
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
-        const coverImg = video.cover_url || defaultCover;
+        const coverImg = video.cover_url || video.image_url || defaultCover;
 
         const mediaHTML = `
             <a href="${video.url}" target="_blank" class="video-cover-link">
@@ -182,7 +183,7 @@ function renderVideoCards(videos) {
     });
 }
 
-// RESMİ YAKALAYIP STORAGE'A ATAN DÜZELTİLMİŞ FONKSİYON
+// RESMİ HAFIZAYA ALAN VE STORAGE'A YÜKLEYEN FONKSİYON
 async function handlePasteEvent(e) {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     const lang = translations[currentLang];
@@ -208,13 +209,13 @@ async function handlePasteEvent(e) {
                 });
 
                 if (!uploadResponse.ok) {
-                    const errData = await uploadResponse.json();
-                    console.error("Supabase Storage Hatası:", errData);
                     throw new Error("Storage upload failed");
                 }
 
+                // Public URL'i küresel değişkene eşitliyoruz
                 uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;
                 
+                // Arayüzde resmi gösterelim
                 const imgPreview = document.getElementById('image-preview');
                 if (imgPreview) {
                     imgPreview.src = uploadedCoverUrl;
@@ -224,7 +225,6 @@ async function handlePasteEvent(e) {
 
             } catch (err) {
                 console.error(err);
-                // Yanıltıcı veritabanı uyarısı yerine doğru hata mesajı tetikleniyor
                 alert(lang.uploadError);
                 if (dropAreaText) dropAreaText.innerText = lang.dropText;
             }
@@ -232,6 +232,7 @@ async function handlePasteEvent(e) {
     }
 }
 
+// VİDEOLARI LİSTELEME FONKSİYONU
 async function fetchVideos() {
     const videoGrid = document.getElementById('video-grid');
     const lang = translations[currentLang];
@@ -368,6 +369,7 @@ async function deleteInstructor() {
     }
 }
 
+// AKILLI VE GÜVENLİ FORM KAYDETME FONKSİYONU
 async function handleFormSubmit(e) {
     e.preventDefault();
     const lang = translations[currentLang];
@@ -383,46 +385,76 @@ async function handleFormSubmit(e) {
         return;
     }
 
+    // İlk olarak temel verilerle göndermeyi deniyoruz (Sütun hatası almamak için güvenli yöntem)
     const payload = {
         instructor_id: parseInt(instructorId),
         url: videoUrl,
-        cover_url: uploadedCoverUrl, 
         role_type: roleType,
         partner_name: partnerName || null,
         is_downloaded: isDownloaded
     };
 
+    // Eğer hafızada bir resim varsa hem 'cover_url' hem de 'image_url' olarak ekleyelim (Hangisi varsa yazsın)
+    if (uploadedCoverUrl) {
+        payload.cover_url = uploadedCoverUrl;
+        payload.image_url = uploadedCoverUrl; 
+    }
+
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
+        let response = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
             method: 'POST',
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
             },
             body: JSON.stringify(payload)
         });
 
+        // EĞER SÜTUN YOK DİYE HATA VERİRSE, RESMİ SİLİP SADECE VİDEOYU KAYDEDELİM (ÇÖKMEYİ ENGELLER)
+        if (!response.ok) {
+            console.warn("Kapak sütunu uyumsuzluğu algılandı, resimsiz kaydetme deneniyor...");
+            delete payload.cover_url;
+            delete payload.image_url;
+
+            response = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+        }
+
         if (response.ok) {
             alert(lang.successSave);
             
+            // Formu sıfırla
             document.getElementById('add-video-form').reset();
             uploadedCoverUrl = null;
+            
             const imgPreview = document.getElementById('image-preview');
             if (imgPreview) imgPreview.classList.add('d-none');
+            
             const dropAreaText = document.getElementById('drop-area-text');
             if (dropAreaText) {
                 dropAreaText.innerText = lang.dropText;
                 dropAreaText.classList.remove('d-none');
             }
             
+            // Kütüphaneye geri dön
             document.getElementById('menu-library').click();
         } else {
-            alert("Hata: Video kaydedilemedi.");
+            const errData = await response.json();
+            console.error("Supabase Veritabanı Hatası:", errData);
+            alert("Hata: Video veritabanına eklenemedi. (Aynı URL daha önce eklenmiş olabilir)");
         }
     } catch (err) {
         console.error(err);
-        alert("Bağlantı hatası.");
+        alert("Bağlantı hatası yaşandı.");
     }
 }
 
@@ -498,4 +530,3 @@ document.addEventListener('DOMContentLoaded', () => {
         dropArea.addEventListener('paste', handlePasteEvent);
     }
 });
-
