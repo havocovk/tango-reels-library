@@ -1,6 +1,6 @@
 // SUPABASE BAĞLANTI BİLGİLERİ (Ekran görüntülerinden doğrudan tanımlandı)
 const SUPABASE_URL = "https://airmuygsltqecjdgxlfh.supabase.co";
-const SUPABASE_KEY = "sb_publishable_qddgX_KWXDdNEu8ljnF3w_9L4FDWso";
+const SUPABASE_KEY = "sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso";
 
 // DİL SÖZLÜĞÜ (TR / EN)
 const translations = {
