@@ -17,7 +17,7 @@ body {
     position: relative;
 }
 
-/* Arka Plandaki Renkli Estetik Küreler (Camın arkasında parlayacaklar) */
+/* Arka Plandaki Renkli Estetik Küreler */
 .bg-glow {
     position: absolute;
     width: 400px;
@@ -50,7 +50,7 @@ body {
     gap: 20px;
 }
 
-/* Sol Menü - Buzlu Cam Efekti (Glassmorphism) */
+/* Sol Menü - Buzlu Cam Efekti */
 .sidebar-glass {
     flex: 1;
     max-width: 280px;
@@ -125,7 +125,7 @@ body {
     overflow: hidden;
 }
 
-/* Üst Arama Çubuğu alanı */
+/* Üst Arama Çubuğu */
 .search-header {
     display: flex;
     gap: 15px;
@@ -164,11 +164,11 @@ body {
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* Video Kartlarının Dizileceği Izgara */
+/* Video Izgarası */
 .video-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 20px;
     overflow-y: auto;
     padding-right: 5px;
@@ -180,10 +180,10 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(8px);
     border-radius: 16px;
-    padding: 16px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, border-color 0.3s ease;
 }
@@ -193,27 +193,7 @@ body {
     border-color: rgba(56, 189, 248, 0.3);
 }
 
-/* CANLI VİDEO KAPSAYICISI */
-.video-preview-container {
-    position: relative;
-    width: 100%;
-    padding-top: 130%;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #000;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.video-preview-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-/* META KAPAK RESMİ SİSTEMİ */
+/* KÜTÜPHANEDE REELS KAPAK RESMİ GÖRÜNÜMÜ */
 .video-cover-link {
     text-decoration: none;
     width: 100%;
@@ -222,7 +202,7 @@ body {
 
 .video-cover-container {
     width: 100%;
-    padding-top: 130%;
+    padding-top: 140%; /* Tam dikey Reels oranını korur */
     border-radius: 12px;
     background-size: cover;
     background-position: center;
@@ -236,7 +216,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -245,11 +225,11 @@ body {
 }
 
 .play-icon {
-    font-size: 2rem;
+    font-size: 1.8rem;
     color: #fff;
     background: rgba(236, 72, 153, 0.85);
-    width: 55px;
-    height: 55px;
+    width: 50px;
+    height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -260,13 +240,49 @@ body {
 }
 
 .video-cover-container:hover .play-overlay {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .video-cover-container:hover .play-icon {
     transform: scale(1.1);
     background: rgba(236, 72, 153, 1);
-    box-shadow: 0 0 20px rgba(236, 72, 153, 0.8);
+}
+
+/* YENİ EKLENEN: FORM RESİM YAPIŞTIRMA ALANI (DROP AREA) */
+#drop-area {
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    min-height: 180px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    outline: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#drop-area:focus {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
+}
+
+#drop-area-text {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+#image-preview {
+    max-width: 100%;
+    max-height: 250px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    object-fit: cover;
 }
 
 /* Bilgilendirme Mesajı */
@@ -278,7 +294,7 @@ body {
     margin-top: 40px;
 }
 
-/* Mobil Tasarım Ayarları */
+/* Mobil Ayarlar */
 @media (max-width: 768px) {
     .app-container {
         flex-direction: column;
@@ -316,7 +332,6 @@ body {
 
 .lang-btn:hover {
     background: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
 .view-panel {
@@ -329,22 +344,24 @@ body {
     display: none !important;
 }
 
-/* Form Tasarımları */
+/* Formlar */
 .glass-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     max-width: 600px;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .form-group label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #94a3b8;
 }
 
@@ -369,14 +386,12 @@ body {
 .form-group input:focus,
 .form-group select:focus {
     border-color: rgba(56, 189, 248, 0.5);
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
 }
 
 .row-group {
     flex-direction: row;
     align-items: center;
     gap: 10px;
-    margin-top: 5px;
 }
 
 .row-group input[type="checkbox"] {
@@ -396,7 +411,6 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-top: 10px;
     box-shadow: 0 4px 20px rgba(236, 72, 153, 0.2);
     width: 100%;
 }
