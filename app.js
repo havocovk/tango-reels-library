@@ -35,7 +35,8 @@ const translations = {
         btnUpdateIns: "Güncelle",
         lblCoverUpload: "Kapak Resmi (Hareketi görüyorken Win+Shift+S yapıp buraya tıklayıp Ctrl+V ile yapıştırın):",
         dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
-        uploading: "⏳ Resim yükleniyor..."
+        uploading: "⏳ Resim yükleniyor...",
+        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen 'covers' kovanızın (bucket) ayarlarından herkese açık (Public) olduğundan ve yükleme (Insert) politikalarının (RLS) açık olduğundan emin olun."
     },
     en: {
         title: "Tango Library",
@@ -68,7 +69,8 @@ const translations = {
         btnUpdateIns: "Update",
         lblCoverUpload: "Cover Image (Take screenshot with Win+Shift+S, click here and paste with Ctrl+V):",
         dropText: "📸 Click here and paste the screenshot via Ctrl + V",
-        uploading: "⏳ Image uploading..."
+        uploading: "⏳ Image uploading...",
+        uploadError: "❌ Image could not be uploaded to Supabase Storage! Please make sure your 'covers' bucket is Public and Insert policies (RLS) are enabled."
     }
 };
 
@@ -180,7 +182,7 @@ function renderVideoCards(videos) {
     });
 }
 
-// KLAVYEDEN YAPIŞTIRILAN RESMİ YAKALAYIP STORAGE'A ATAN GÜVENLİ FONKSiyon
+// RESMİ YAKALAYIP STORAGE'A ATAN DÜZELTİLMİŞ FONKSİYON
 async function handlePasteEvent(e) {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     const lang = translations[currentLang];
@@ -195,7 +197,6 @@ async function handlePasteEvent(e) {
             const fileName = `tango_cover_${Date.now()}.png`;
 
             try {
-                // Supabase Storage Nesne yükleme API uç noktası düzeltildi
                 const uploadResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/covers/${fileName}`, {
                     method: 'POST',
                     headers: {
@@ -208,8 +209,8 @@ async function handlePasteEvent(e) {
 
                 if (!uploadResponse.ok) {
                     const errData = await uploadResponse.json();
-                    console.error("Supabase Hata Detayı:", errData);
-                    throw new Error("Yükleme başarısız.");
+                    console.error("Supabase Storage Hatası:", errData);
+                    throw new Error("Storage upload failed");
                 }
 
                 uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;
@@ -223,7 +224,8 @@ async function handlePasteEvent(e) {
 
             } catch (err) {
                 console.error(err);
-                alert(lang.error || "Ekran görüntüsü Supabase'e yüklenemedi. Lütfen kovanızın 'public' olduğundan emin olun.");
+                // Yanıltıcı veritabanı uyarısı yerine doğru hata mesajı tetikleniyor
+                alert(lang.uploadError);
                 if (dropAreaText) dropAreaText.innerText = lang.dropText;
             }
         }
