@@ -28,14 +28,56 @@
         </aside>
 
         <main class="main-content-glass">
-            <header class="search-header">
-                <input type="text" id="search-input" placeholder="Eğitmen, hareket veya etiket ara...">
-                <button id="filter-btn">🔍 Filtrele</button>
-            </header>
+            
+            <div id="view-library-container" class="view-panel">
+                <header class="search-header">
+                    <input type="text" id="search-input" placeholder="Eğitmen, hareket veya etiket ara...">
+                    <button id="filter-btn">🔍 Filtrele</button>
+                </header>
 
-            <section class="video-grid" id="video-grid">
-                <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
-            </section>
+                <section class="video-grid" id="video-grid">
+                    <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
+                </section>
+            </div>
+
+            <div id="view-add-container" class="view-panel d-none">
+                <h3 id="form-title" style="margin-bottom: 20px; color: #38bdf8;">➕ Yeni Video Kaydet</h3>
+                
+                <form id="add-video-form" class="glass-form">
+                    <div class="form-group">
+                        <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
+                        <select id="form-instructor-select" required>
+                            </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
+                        <input type="url" id="form-video-url" placeholder="https://..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-role">Rol Tipi:</label>
+                        <select id="form-role-select">
+                            <option value="Both">Leader & Follower (Both)</option>
+                            <option value="Leader">Leader</option>
+                            <option value="Follower">Follower</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
+                        <input type="text" id="form-partner-name" placeholder="Partner...">
+                    </div>
+
+                    <div class="form-group row-group">
+                        <input type="checkbox" id="form-is-downloaded">
+                        <label id="lbl-downloaded" for="form-is-downloaded" style="cursor:pointer;">Google Drive'a Yedeklendi mi?</label>
+                    </div>
+
+                    <button type="submit" id="btn-submit-video" class="submit-btn">💾 Veritabanına Kaydet</button>
+                </form>
+            </div>
+
         </main>
     </div>
 
