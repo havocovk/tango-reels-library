@@ -5,3 +5,12 @@ sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso
 Project ID
 
 airmuygsltqecjdgxlfh
+
+
+Github Token
+
+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
+
+
+git remote set-url origin https://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@github.com/havocovk/tango-reels-library.git
+

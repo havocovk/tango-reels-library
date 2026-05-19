@@ -16,11 +16,14 @@
 
     <div class="app-container">
         <aside class="sidebar-glass">
-            <h2>Tango Library</h2>
+            <div class="sidebar-header">
+                <h2>Tango Library</h2>
+                <button id="lang-toggle-btn" class="lang-btn">🇬🇧 EN</button>
+            </div>
             <hr>
             <div class="menu-items">
-                <button class="menu-btn active">📚 Kütüphane</button>
-                <button class="menu-btn">➕ Yeni Video Ekle</button>
+                <button class="menu-btn active" id="menu-library">📚 Kütüphane</button>
+                <button class="menu-btn" id="menu-add-video">➕ Yeni Video Ekle</button>
             </div>
         </aside>
 
@@ -31,7 +34,7 @@
             </header>
 
             <section class="video-grid" id="video-grid">
-                <div class="info-msg">Veritabanı bağlantısı kuruluyor...</div>
+                <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
             </section>
         </main>
     </div>
