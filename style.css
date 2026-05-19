@@ -17,7 +17,7 @@ body {
     position: relative;
 }
 
-/* Arka Plandaki Renkli Estetik Küreler */
+/* Arka Plandaki Renkli Estetik Küreler (Camın arkasında parlayacaklar) */
 .bg-glow {
     position: absolute;
     width: 400px;
@@ -40,61 +40,41 @@ body {
     right: -10%;
 }
 
-/* Ana Uygulama Kapsayıcısı */
+/* Ana Uygulama Çerçevesi */
 .app-container {
-    position: relative;
-    z-index: 2;
     display: flex;
-    width: 92vw;
-    height: 88vh;
+    width: 95vw;
+    height: 90vh;
     max-width: 1400px;
-    gap: 25px;
+    z-index: 2;
+    gap: 20px;
 }
 
-/* SOL MENÜ (Sidebar) CAM EFEKTİ */
+/* Sol Menü - Buzlu Cam Efekti (Glassmorphism) */
 .sidebar-glass {
-    width: 280px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    flex: 1;
+    max-width: 280px;
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
 }
 
-.sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.sidebar-header h2 {
-    font-size: 1.3rem;
+.sidebar-glass h2 {
+    font-size: 1.5rem;
     font-weight: 600;
-    background: linear-gradient(to right, #38bdf8, #ec4899);
+    letter-spacing: 0.5px;
+    background: linear-gradient(to right, #fff, #94a3b8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.lang-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    padding: 5px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-}
-
-.lang-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-hr {
+.sidebar-glass hr {
     border: 0;
     height: 1px;
     background: rgba(255, 255, 255, 0.1);
@@ -108,91 +88,93 @@ hr {
 
 .menu-btn {
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     color: #94a3b8;
-    padding: 14px 20px;
+    padding: 14px 18px;
     border-radius: 14px;
     text-align: left;
-    font-size: 1rem;
+    font-size: 0.95rem;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
     transition: all 0.3s ease;
 }
 
 .menu-btn:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.05);
     color: #fff;
 }
 
 .menu-btn.active {
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(236, 72, 153, 0.05));
-    border-left: 4px solid #38bdf8;
-    color: #38bdf8;
-    font-weight: 600;
-}
-
-/* SAĞ PANEL (İçerik Alanı) CAM EFEKTİ */
-.main-content-glass {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    border-radius: 24px;
-    padding: 35px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-    overflow-y: auto;
 }
 
-/* ARAMA ÇUBUĞU */
-.search-bar {
+/* Sağ İçerik Paneli */
+.main-content-glass {
+    flex: 3;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    overflow: hidden;
+}
+
+/* Üst Arama Çubuğu alanı */
+.search-header {
     display: flex;
     gap: 15px;
-    margin-bottom: 30px;
+    flex-shrink: 0;
 }
 
-.search-bar input {
+#search-input {
     flex: 1;
     background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 14px 20px;
-    border-radius: 16px;
+    border-radius: 14px;
     color: #fff;
-    font-size: 1rem;
+    font-size: 0.95rem;
     outline: none;
     transition: all 0.3s ease;
 }
 
-.search-bar input:focus {
-    border-color: rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+#search-input:focus {
+    border-color: rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
 }
 
-.filter-btn {
-    background: #38bdf8;
-    color: #0f172a;
-    border: none;
+#filter-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
     padding: 0 25px;
-    border-radius: 16px;
-    font-weight: 600;
+    border-radius: 14px;
     cursor: pointer;
+    font-weight: 600;
     transition: all 0.3s ease;
 }
 
-.filter-btn:hover {
-    background: #0ea5e9;
-    transform: translateY(-2px);
+#filter-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
-/* VİDEO GRID */
+/* Video Kartlarının Dizileceği Izgara */
 .video-grid {
+    flex: 1;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
+    gap: 20px;
+    overflow-y: auto;
+    padding-right: 5px;
 }
 
-/* ÖZEL VİDEO KARTI YAPISI */
+/* Video Kartı Tasarımı */
 .video-card {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -201,7 +183,7 @@ hr {
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, border-color 0.3s ease;
 }
@@ -211,11 +193,11 @@ hr {
     border-color: rgba(56, 189, 248, 0.3);
 }
 
-/* CANLI VİDEO (YOUTUBE/DRIVE) ALANI */
+/* CANLI VİDEO KAPSAYICISI */
 .video-preview-container {
     position: relative;
     width: 100%;
-    padding-top: 130%; /* Reels dikey format estetiği */
+    padding-top: 130%;
     border-radius: 12px;
     overflow: hidden;
     background: #000;
@@ -231,10 +213,11 @@ hr {
     border: none;
 }
 
-/* META (INSTAGRAM/FACEBOOK) KAPAK RESMİ YAPISI */
+/* META KAPAK RESMİ SİSTEMİ */
 .video-cover-link {
     text-decoration: none;
     width: 100%;
+    display: block;
 }
 
 .video-cover-container {
@@ -245,7 +228,6 @@ hr {
     background-position: center;
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s ease;
 }
 
 .play-overlay {
@@ -254,7 +236,7 @@ hr {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -263,9 +245,9 @@ hr {
 }
 
 .play-icon {
-    font-size: 2.2rem;
+    font-size: 2rem;
     color: #fff;
-    background: rgba(236, 72, 153, 0.85); /* Neon pembe play butonu */
+    background: rgba(236, 72, 153, 0.85);
     width: 55px;
     height: 55px;
     display: flex;
@@ -274,29 +256,81 @@ hr {
     border-radius: 50%;
     box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
     transition: transform 0.3s ease, background 0.3s ease;
+    padding-left: 4px;
 }
 
 .video-cover-container:hover .play-overlay {
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .video-cover-container:hover .play-icon {
     transform: scale(1.1);
     background: rgba(236, 72, 153, 1);
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.8);
 }
 
-/* BİLGİ MESAJLARI */
+/* Bilgilendirme Mesajı */
 .info-msg {
     grid-column: 1 / -1;
     text-align: center;
-    padding: 50px;
-    color: #94a3b8;
-    font-size: 1.1rem;
-    line-height: 1.6;
+    color: #64748b;
+    font-size: 1rem;
+    margin-top: 40px;
 }
 
-/* FORMLAR VE DÜZENEK */
-#add-video-form {
+/* Mobil Tasarım Ayarları */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+        height: 95vh;
+    }
+    .sidebar-glass {
+        max-width: 100%;
+        flex: none;
+        padding: 15px;
+    }
+    .main-content-glass {
+        padding: 15px;
+        overflow-y: auto;
+    }
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.lang-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.lang-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.view-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.d-none {
+    display: none !important;
+}
+
+/* Form Tasarımları */
+.glass-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -345,31 +379,15 @@ hr {
     margin-top: 5px;
 }
 
-/* YARDIMCI BUTONLAR (Ekle/Düzenle/Sil) */
-.action-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
+.row-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
     cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    accent-color: #38bdf8;
 }
 
-.action-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.delete-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: #ef4444;
-}
-
-/* KAYDET BUTONU */
 .submit-btn {
-    background: linear-gradient(135deg, #38bdf8, #ec4899);
+    background: linear-gradient(135deg, #ec4899, #be185d);
     color: #fff;
     border: none;
     padding: 14px;
@@ -377,18 +395,13 @@ hr {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
     transition: all 0.3s ease;
+    margin-top: 10px;
+    box-shadow: 0 4px 20px rgba(236, 72, 153, 0.2);
     width: 100%;
 }
 
 .submit-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
+    box-shadow: 0 6px 25px rgba(236, 72, 153, 0.3);
 }
-
-/* GİZLEME SINIFI */
-.d-none {
-    display: none !important;
-}
-
