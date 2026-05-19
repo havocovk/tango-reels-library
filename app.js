@@ -75,7 +75,7 @@ const translations = {
 let currentLang = 'tr';
 let globalVideos = [];
 let editInstructorId = null;
-let uploadedCoverUrl = null; // Yüklenen resmin linkini burada tutacağız
+let uploadedCoverUrl = null; 
 
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
@@ -89,7 +89,9 @@ function updateInterfaceLanguage() {
     document.getElementById('form-title').innerText = lang.formTitle;
     document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
     document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
+    
+    const coverUploadLbl = document.getElementById('lbl-cover-upload');
+    if (coverUploadLbl) coverUploadLbl.innerText = lang.lblCoverUpload;
     
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !uploadedCoverUrl) {
@@ -149,7 +151,6 @@ function renderVideoCards(videos) {
         const storageDisplay = video.is_downloaded ? '💾 Google Drive' : '🌐 Social Media';
         const partnerDisplay = video.partner_name ? `<span style="color: #94a3b8; font-size: 0.9rem;">👥 Partner: ${video.partner_name}</span>` : '';
         
-        // Eğer yüklenmiş özel kapak resmi varsa onu kullanır, yoksa şık bir dikey boş tasarım sunar.
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
         const coverImg = video.cover_url || defaultCover;
 
@@ -179,7 +180,7 @@ function renderVideoCards(videos) {
     });
 }
 
-// CTRL + V (YAPIŞTIRMA) ETKİNLİĞİNİ YAKALAYAN SİHİRLİ FONKSİYON
+// KLAVYEDEN YAPIŞTIRILAN RESMİ YAKALAYIP STORAGE'A ATAN GÜVENLİ FONKSiyon
 async function handlePasteEvent(e) {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     const lang = translations[currentLang];
@@ -188,14 +189,13 @@ async function handlePasteEvent(e) {
         if (items[i].type.indexOf("image") === 0) {
             const blob = items[i].getAsFile();
             
-            // Ekran arayüzünde yükleniyor durumunu gösterelim
             const dropAreaText = document.getElementById('drop-area-text');
-            dropAreaText.innerText = lang.uploading;
+            if (dropAreaText) dropAreaText.innerText = lang.uploading;
 
-            // Supabase Storage için benzersiz dosya adı üretelim (Örn: cover_171560000.png)
             const fileName = `tango_cover_${Date.now()}.png`;
 
             try {
+                // Supabase Storage Nesne yükleme API uç noktası düzeltildi
                 const uploadResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/covers/${fileName}`, {
                     method: 'POST',
                     headers: {
@@ -206,21 +206,25 @@ async function handlePasteEvent(e) {
                     body: blob
                 });
 
-                if (!uploadResponse.ok) throw new Error("Yükleme hatası");
+                if (!uploadResponse.ok) {
+                    const errData = await uploadResponse.json();
+                    console.error("Supabase Hata Detayı:", errData);
+                    throw new Error("Yükleme başarısız.");
+                }
 
-                // Resim başarıyla yüklendi, şimdi public linkini kuralım
                 uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;
                 
-                // Formda önizlemeyi gösterelim
                 const imgPreview = document.getElementById('image-preview');
-                imgPreview.src = uploadedCoverUrl;
-                imgPreview.classList.remove('d-none');
-                dropAreaText.classList.add('d-none');
+                if (imgPreview) {
+                    imgPreview.src = uploadedCoverUrl;
+                    imgPreview.classList.remove('d-none');
+                }
+                if (dropAreaText) dropAreaText.classList.add('d-none');
 
             } catch (err) {
                 console.error(err);
-                alert("Ekran görüntüsü Supabase'e yüklenemedi.");
-                dropAreaText.innerText = lang.dropText;
+                alert(lang.error || "Ekran görüntüsü Supabase'e yüklenemedi. Lütfen kovanızın 'public' olduğundan emin olun.");
+                if (dropAreaText) dropAreaText.innerText = lang.dropText;
             }
         }
     }
@@ -380,7 +384,7 @@ async function handleFormSubmit(e) {
     const payload = {
         instructor_id: parseInt(instructorId),
         url: videoUrl,
-        cover_url: uploadedCoverUrl, // Ekran görüntüsünden gelen link veritabanına gidiyor
+        cover_url: uploadedCoverUrl, 
         role_type: roleType,
         partner_name: partnerName || null,
         is_downloaded: isDownloaded
@@ -399,13 +403,16 @@ async function handleFormSubmit(e) {
 
         if (response.ok) {
             alert(lang.successSave);
-            // Formu ve önizlemeleri sıfırlayalım
+            
             document.getElementById('add-video-form').reset();
             uploadedCoverUrl = null;
-            document.getElementById('image-preview').classList.add('d-none');
+            const imgPreview = document.getElementById('image-preview');
+            if (imgPreview) imgPreview.classList.add('d-none');
             const dropAreaText = document.getElementById('drop-area-text');
-            dropAreaText.innerText = lang.dropText;
-            dropAreaText.classList.remove('d-none');
+            if (dropAreaText) {
+                dropAreaText.innerText = lang.dropText;
+                dropAreaText.classList.remove('d-none');
+            }
             
             document.getElementById('menu-library').click();
         } else {
@@ -478,11 +485,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    document.getElementById('search-input').addEventListener('input', handleSearch);
-    document.getElementById('filter-btn').addEventListener('click', handleSearch);
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.addEventListener('input', handleSearch);
+    
+    const filterBtn = document.getElementById('filter-btn');
+    if (filterBtn) filterBtn.addEventListener('click', handleSearch);
 
-    // KOPYALA-YAPIŞTIR ETKİNLİK DİNLEYİCİSİ
     const dropArea = document.getElementById('drop-area');
-    dropArea.addEventListener('paste', handlePasteEvent);
+    if (dropArea) {
+        dropArea.addEventListener('paste', handlePasteEvent);
+    }
 });
 
