@@ -36,7 +36,15 @@ export const translations = {
         lblCoverUpload: "Kapak Resmi (Hareketi görüyorken Win+Shift+S yapıp buraya tıklayıp Ctrl+V ile yapıştırın):",
         dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
         uploading: "⏳ Resim yükleniyor...",
-        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen kovanızın (bucket) Public olduğundan emin olun."
+        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen kovanızın (bucket) Public olduğundan emin olun.",
+        // Filtre Etiketleri
+        allRoles: "Tüm Roller",
+        leader: "Lider",
+        follower: "Takipçi",
+        both: "İkisi de",
+        allLocations: "Tüm Ortamlar",
+        drive: "💾 Google Drive",
+        social: "🌐 Sosyal Medya"
     },
     en: {
         title: "Tango Library",
@@ -70,6 +78,14 @@ export const translations = {
         lblCoverUpload: "Cover Image (Take screenshot with Win+Shift+S, click here and paste with Ctrl+V):",
         dropText: "📸 Click here and paste the screenshot via Ctrl + V",
         uploading: "⏳ Image uploading...",
-        uploadError: "❌ Image could not be uploaded to Supabase Storage!"
+        uploadError: "❌ Image could not be uploaded to Supabase Storage!",
+        // Filter Labels
+        allRoles: "All Roles",
+        leader: "Leader",
+        follower: "Follower",
+        both: "Both",
+        allLocations: "All Locations",
+        drive: "💾 Google Drive",
+        social: "🌐 Social Media"
     }
 };

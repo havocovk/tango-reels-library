@@ -3,83 +3,400 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tango Reels Library</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Tango Class Management System - TCMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-sidebar: #1e293b;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --border-color: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR STYLES */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            position: fixed;
+            height: 100vh;
+        }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-menu li a {
+            display: block;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-menu li a:hover, .sidebar-menu li a.active {
+            background-color: rgba(56, 189, 248, 0.1);
+            color: var(--accent);
+        }
+
+        .lang-btn-container {
+            margin-top: auto;
+        }
+
+        /* MAIN CONTENT STYLES */
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+        }
+
+        .view-section {
+            width: 100%;
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        /* SEARCH & FILTER AREA */
+        .search-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-options-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-muted);
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* VIDEO GRID & CARDS */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .video-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .video-cover-link {
+            width: 100%;
+            text-decoration: none;
+        }
+
+        .video-cover-container {
+            width: 100%;
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .video-cover-container:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .play-icon {
+            font-size: 2.5rem;
+            color: white;
+            background: rgba(56, 189, 248, 0.8);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            padding-left: 5px;
+        }
+
+        /* FORM STYLES */
+        .form-container {
+            max-width: 600px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            border-radius: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* DROP ZONE (IMAGE PASTE) AREA */
+        .drop-zone {
+            border: 2px dashed #38bdf8;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            background: rgba(56, 189, 248, 0.05);
+            cursor: pointer;
+            transition: background 0.2s ease;
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .drop-zone:hover {
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .info-msg {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="bg-glow current-location-glow"></div>
-    <div class="bg-glow secondary-glow"></div>
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <span>💃 TCMS</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a id="menu-library" class="active">📚 Kütüphane</a></li>
+            <li><a id="menu-add-video">➕ Yeni Video Ekle</a></li>
+        </ul>
+        <div class="lang-btn-container">
+            <button id="lang-toggle-btn" class="btn-secondary">🇬🇧 EN</button>
+        </div>
+    </nav>
 
-    <div class="app-container">
-        <aside class="sidebar-glass">
-            <div class="sidebar-header">
-                <h2>Tango Library</h2>
-                <button id="lang-toggle-btn" class="lang-btn">🇬🇧 EN</button>
-            </div>
-            <hr>
-            <div class="menu-items">
-                <button class="menu-btn active" id="menu-library">📚 Kütüphane</button>
-                <button class="menu-btn" id="menu-add-video">➕ Yeni Video Ekle</button>
-            </div>
-        </aside>
+    <main class="main-content">
 
-        <main class="main-content-glass">
-            
-            <div id="view-library-container" class="view-panel">
-                <header class="search-header">
-                    <input type="text" id="search-input" placeholder="Eğitmen, hareket veya etiket ara...">
-                    <button id="filter-btn">🔍 Filtrele</button>
-                </header>
-
-                <section class="video-grid" id="video-grid">
-                    <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
-                </section>
-            </div>
-
-            <div id="view-add-container" class="view-panel d-none">
-                <h3 id="form-title" style="margin-bottom: 20px; color: #38bdf8;">➕ Yeni Video Kaydet</h3>
+        <div id="view-library-container" class="view-section">
+            <div class="search-container">
+                <div class="search-row">
+                    <input type="text" id="search-input" style="flex: 1;" placeholder="Eğitmen, hareket veya etiket ara...">
+                    <button id="filter-btn" class="btn-primary">🔍 Filtrele</button>
+                </div>
                 
-                <form id="add-video-form" class="glass-form">
+                <div class="filter-options-row">
+                    <select id="filter-role-select">
+                        <option value="all" id="opt-all-roles">Tüm Roller</option>
+                        <option value="Leader" id="opt-leader">Lider</option>
+                        <option value="Follower" id="opt-follower">Takipçi</option>
+                        <option value="Both" id="opt-both">İkisi de</option>
+                    </select>
+                    
+                    <select id="filter-location-select">
+                        <option value="all" id="opt-all-locations">Tüm Ortamlar</option>
+                        <option value="drive" id="opt-drive">💾 Google Drive</option>
+                        <option value="social" id="opt-social">🌐 Sosyal Medya</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="video-grid" class="video-grid">
+                <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
+            </div>
+        </div>
+
+        <div id="view-add-container" class="view-section d-none">
+            <div class="form-container">
+                <h2 id="form-title" style="margin-bottom: 24px;">➕ Yeni Video Kaydet</h2>
+                
+                <form id="add-video-form">
                     <div class="form-group">
                         <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <select id="form-instructor-select" style="flex: 1; min-width: 150px;" required>
-                            </select>
-                            <button type="button" id="btn-edit-instructor" class="lang-btn" title="Düzenle">📝</button>
-                            <button type="button" id="btn-delete-instructor" class="lang-btn" style="border-color: rgba(239, 68, 68, 0.3); color: #ef4444;" title="Sil">❌</button>
-                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8;">➕ New</button>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="form-instructor-select" style="flex: 1;"></select>
+                            <button type="button" id="btn-toggle-new-instructor" class="btn-secondary">➕/➖</button>
+                            <button type="button" id="btn-edit-instructor" class="btn-secondary">✏️</button>
+                            <button type="button" id="btn-delete-instructor" class="btn-danger">🗑️</button>
                         </div>
                     </div>
 
-                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
-                        <label id="lbl-new-instructor-name">Yeni Eğitmen Adı:</label>
+                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
                         <div style="display: flex; gap: 10px;">
-                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Chicho Frumboli">
-                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.4); padding: 0 20px; font-weight: 600;">Ekle</button>
+                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
+                            <button type="button" id="btn-save-instructor" class="btn-primary">Ekle</button>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
-                        <input type="url" id="form-video-url" placeholder="https://..." required>
+                        <input type="text" id="form-video-url" required placeholder="https://www.instagram.com/reels/...">
                     </div>
 
                     <div class="form-group">
                         <label id="lbl-cover-upload">Kapak Resmi (Hareketi görüyorken Win+Shift+S yapıp buraya tıklayıp Ctrl+V ile yapıştırın):</label>
-                        <div id="drop-area" tabindex="0">
-                            <div id="drop-area-text">📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın</div>
-                            <img id="image-preview" class="d-none" alt="Önizleme">
+                        <div id="drop-area" class="drop-zone" tabindex="0">
+                            <span id="drop-area-text">📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın</span>
+                            <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label id="lbl-role">Rol Tipi:</label>
                         <select id="form-role-select">
-                            <option value="Both">Leader & Follower (Both)</option>
+                            <option value="Both">Leader + Follower (Both)</option>
                             <option value="Leader">Leader</option>
                             <option value="Follower">Follower</option>
                         </select>
@@ -87,20 +404,24 @@
 
                     <div class="form-group">
                         <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
-                        <input type="text" id="form-partner-name" placeholder="Partner...">
+                        <input type="text" id="form-partner-name" placeholder="Örn: Maria">
                     </div>
 
-                    <div class="form-group row-group">
-                        <input type="checkbox" id="form-is-downloaded">
-                        <label id="lbl-downloaded" for="form-is-downloaded" style="cursor:pointer;">Google Drive'a Yedeklendi mi?</label>
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="form-is-downloaded">
+                            <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
+                        </label>
                     </div>
 
-                    <button type="submit" id="btn-submit-video" class="submit-btn">💾 Veritabanına Kaydet</button>
+                    <button type="submit" id="btn-submit-video" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
+                        💾 Veritabanına Kaydet
+                    </button>
                 </form>
             </div>
+        </div>
 
-        </main>
-    </div>
+    </main>
 
     <script type="module" src="app.js"></script>
 </body>
