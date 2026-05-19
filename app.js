@@ -1,83 +1,9 @@
-// SUPABASE BAĞLANTI BİLGİLERİ
-const SUPABASE_URL = "https://airmuygsltqecjdgxlfh.supabase.co";
-const SUPABASE_KEY = "sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso";
-
-// DİL SÖZLÜĞÜ (TR / EN)
-const translations = {
-    tr: {
-        title: "Tango Library",
-        menuLibrary: "📚 Kütüphane",
-        menuAddVideo: "➕ Yeni Video Ekle",
-        searchPlaceholder: "Eğitmen, hareket veya etiket ara...",
-        filterBtn: "🔍 Filtrele",
-        loading: "Veritabanı bağlantısı kuruluyor...",
-        empty: "Kütüphaneniz henüz boş. <br> Sol menüden yeni video eklemeye başlayabilirsiniz! 💃🕺",
-        error: "❌ Veritabanı bağlantısı başarısız oldu. Lütfen anahtarlarınızı kontrol edin.",
-        role: "🎬 Rol",
-        location: "📍 Ortam",
-        watch: "🔗 Videoyu İzle →",
-        langBtn: "🇬🇧 EN",
-        formTitle: "➕ Yeni Video Kaydet",
-        lblInstructor: "Eğitmen Seç / Ekle:",
-        lblVideoUrl: "Video URL (Instagram Reels / YouTube Shorts vb.):",
-        lblRole: "Rol Tipi:",
-        lblPartner: "Partner Adı (İsteğe Bağlı):",
-        lblDownloaded: "Google Drive'a Yedeklendi mi?",
-        btnSubmitVideo: "💾 Veritabanına Kaydet",
-        successSave: "🎉 Video ve kapak resmi başarıyla kütüphaneye eklendi!",
-        lblNewInstructorName: "Eğitmen Adı:",
-        insSuccess: "🎉 Eğitmen başarıyla eklendi!",
-        insUpdateSuccess: "🎉 Eğitmen ismi güncellendi!",
-        insDeleteSuccess: "💥 Eğitmen ve ona ait tüm videolar silindi!",
-        insAlert: "Lütfen bir eğitmen adı yazın.",
-        deleteConfirm: "Bu eğitmeni silmek istediğinize emin misiniz? Eğitmene ait TÜM videolar da kalıcı olarak silinecektir!",
-        btnAddIns: "Ekle",
-        btnUpdateIns: "Güncelle",
-        lblCoverUpload: "Kapak Resmi (Hareketi görüyorken Win+Shift+S yapıp buraya tıklayıp Ctrl+V ile yapıştırın):",
-        dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
-        uploading: "⏳ Resim yükleniyor...",
-        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen kovanızın (bucket) Public olduğundan emin olun."
-    },
-    en: {
-        title: "Tango Library",
-        menuLibrary: "📚 Library",
-        menuAddVideo: "➕ Add New Video",
-        searchPlaceholder: "Search instructor, movement or tag...",
-        filterBtn: "🔍 Filter",
-        loading: "Connecting to database...",
-        empty: "Your library is empty yet. <br> You can start adding new videos from the left menu! 💃🕺",
-        error: "❌ Database connection failed. Please check your keys.",
-        role: "🎬 Role",
-        location: "📍 Storage",
-        watch: "🔗 Watch Video →",
-        langBtn: "🇹🇷 TR",
-        formTitle: "➕ Save New Video",
-        lblInstructor: "Select / Add Instructor:",
-        lblVideoUrl: "Video URL (Instagram Reels / YouTube Shorts etc.):",
-        lblRole: "Role Type:",
-        lblPartner: "Partner Name (Optional):",
-        lblDownloaded: "Backed up to Google Drive?",
-        btnSubmitVideo: "💾 Save to Database",
-        successSave: "🎉 Video successfully added!",
-        lblNewInstructorName: "Instructor Name:",
-        insSuccess: "🎉 Instructor successfully added!",
-        insUpdateSuccess: "🎉 Instructor name updated!",
-        insDeleteSuccess: "💥 Instructor and all related videos deleted!",
-        insAlert: "Please type an instructor name.",
-        deleteConfirm: "Are you sure you want to delete this instructor? ALL videos belonging to this instructor will also be permanently deleted!",
-        btnAddIns: "Add",
-        btnUpdateIns: "Update",
-        lblCoverUpload: "Cover Image (Take screenshot with Win+Shift+S, click here and paste with Ctrl+V):",
-        dropText: "📸 Click here and paste the screenshot via Ctrl + V",
-        uploading: "⏳ Image uploading...",
-        uploadError: "❌ Image could not be uploaded to Supabase Storage!"
-    }
-};
+import { SUPABASE_URL, SUPABASE_KEY, translations } from './config.js';
+import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
 let editInstructorId = null;
-let uploadedCoverUrl = null; 
 
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
@@ -96,7 +22,7 @@ function updateInterfaceLanguage() {
     if (coverUploadLbl) coverUploadLbl.innerText = lang.lblCoverUpload;
     
     const dropAreaText = document.getElementById('drop-area-text');
-    if (dropAreaText && !uploadedCoverUrl) {
+    if (dropAreaText && !getUploadedCoverUrl()) {
         dropAreaText.innerText = lang.dropText;
     }
 
@@ -153,7 +79,6 @@ function renderVideoCards(videos) {
         const storageDisplay = video.is_downloaded ? '💾 Google Drive' : '🌐 Social Media';
         const partnerDisplay = video.partner_name ? `<span style="color: #94a3b8; font-size: 0.9rem;">👥 Partner: ${video.partner_name}</span>` : '';
         
-        // Veritabanındaki cover_url değerini okuyoruz, yoksa varsayılan resmi gösteriyoruz
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
         const coverImg = video.cover_url || defaultCover;
 
@@ -181,52 +106,6 @@ function renderVideoCards(videos) {
         `;
         videoGrid.appendChild(card);
     });
-}
-
-async function handlePasteEvent(e) {
-    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-    const lang = translations[currentLang];
-    
-    for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") === 0) {
-            const blob = items[i].getAsFile();
-            
-            const dropAreaText = document.getElementById('drop-area-text');
-            if (dropAreaText) dropAreaText.innerText = lang.uploading;
-
-            const fileName = `tango_cover_${Date.now()}.png`;
-
-            try {
-                const uploadResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/covers/${fileName}`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': blob.type
-                    },
-                    body: blob
-                });
-
-                if (!uploadResponse.ok) {
-                    throw new Error("Storage upload failed");
-                }
-
-                uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;
-                
-                const imgPreview = document.getElementById('image-preview');
-                if (imgPreview) {
-                    imgPreview.src = uploadedCoverUrl;
-                    imgPreview.classList.remove('d-none');
-                }
-                if (dropAreaText) dropAreaText.classList.add('d-none');
-
-            } catch (err) {
-                console.error(err);
-                alert(lang.uploadError);
-                if (dropAreaText) dropAreaText.innerText = lang.dropText;
-            }
-        }
-    }
 }
 
 async function fetchVideos() {
@@ -380,14 +259,13 @@ async function handleFormSubmit(e) {
         return;
     }
 
-    // Doğrudan cover_url sütununa veriyi ekliyoruz
     const payload = {
         instructor_id: parseInt(instructorId),
         url: videoUrl,
         role_type: roleType,
         partner_name: partnerName || null,
         is_downloaded: isDownloaded,
-        cover_url: uploadedCoverUrl // Yüklenen resmin linkini doğrudan gönder
+        cover_url: getUploadedCoverUrl() // storage modülünden güncel linki alıyoruz
     };
 
     try {
@@ -404,9 +282,8 @@ async function handleFormSubmit(e) {
         if (response.ok) {
             alert(lang.successSave);
             
-            // Form ve resim durumlarını tamamen sıfırla
             document.getElementById('add-video-form').reset();
-            uploadedCoverUrl = null;
+            resetUploadedCoverUrl(); // Modüldeki hafızayı sıfırla
             
             const imgPreview = document.getElementById('image-preview');
             if (imgPreview) imgPreview.classList.add('d-none');
@@ -417,7 +294,6 @@ async function handleFormSubmit(e) {
                 dropAreaText.classList.remove('d-none');
             }
             
-            // Kütüphaneye yönlendir
             document.getElementById('menu-library').click();
         } else {
             const errData = await response.json();
@@ -499,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dropArea = document.getElementById('drop-area');
     if (dropArea) {
-        dropArea.addEventListener('paste', handlePasteEvent);
+        // handlePasteEvent fonksiyonuna dil bilgisini de gönderiyoruz
+        dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
 });
-
