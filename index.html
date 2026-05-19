@@ -46,8 +46,19 @@
                 <form id="add-video-form" class="glass-form">
                     <div class="form-group">
                         <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
-                        <select id="form-instructor-select" required>
-                            </select>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="form-instructor-select" style="flex: 1;" required>
+                                </select>
+                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn" style="padding: 0 15px;">➕ New</button>
+                        </div>
+                    </div>
+
+                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+                        <label id="lbl-new-instructor-name">Yeni Eğitmen Adı:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Chicho Frumboli">
+                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.4);">💾</button>
+                        </div>
                     </div>
 
                     <div class="form-group">

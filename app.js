@@ -24,7 +24,10 @@ const translations = {
         lblPartner: "Partner Adı (İsteğe Bağlı):",
         lblDownloaded: "Google Drive'a Yedeklendi mi?",
         btnSubmitVideo: "💾 Veritabanına Kaydet",
-        successSave: "🎉 Video başarıyla kütüphaneye eklendi!"
+        successSave: "🎉 Video başarıyla kütüphaneye eklendi!",
+        lblNewInstructorName: "Yeni Eğitmen Adı:",
+        insSuccess: "🎉 Eğitmen başarıyla eklendi!",
+        insAlert: "Lütfen bir eğitmen adı yazın."
     },
     en: {
         title: "Tango Library",
@@ -46,7 +49,10 @@ const translations = {
         lblPartner: "Partner Name (Optional):",
         lblDownloaded: "Backed up to Google Drive?",
         btnSubmitVideo: "💾 Save to Database",
-        successSave: "🎉 Video successfully added to library!"
+        successSave: "🎉 Video successfully added to library!",
+        lblNewInstructorName: "New Instructor Name:",
+        insSuccess: "🎉 Instructor successfully added!",
+        insAlert: "Please type an instructor name."
     }
 };
 
@@ -62,7 +68,6 @@ function updateInterfaceLanguage() {
     document.getElementById('search-input').placeholder = lang.searchPlaceholder;
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    // Form elemanlarının dilleri
     document.getElementById('form-title').innerText = lang.formTitle;
     document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
     document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
@@ -70,6 +75,7 @@ function updateInterfaceLanguage() {
     document.getElementById('lbl-partner').innerText = lang.lblPartner;
     document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
     document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
+    document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
 
     const loadingMsg = document.getElementById('loading-msg');
     if (loadingMsg) {
@@ -148,11 +154,10 @@ async function fetchVideos() {
     }
 }
 
-// Supabase'den eğitmen listesini çekip formdaki açılır menüye dolduran fonksiyon
 async function fetchInstructorsForForm() {
     const select = document.getElementById('form-instructor-select');
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
             method: 'GET',
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -161,12 +166,10 @@ async function fetchInstructorsForForm() {
         });
         const instructors = await response.json();
         
-        // Menüyü sıfırla, varsayılan bir "Seçiniz" veya örnek eğitmen koyalım
         select.innerHTML = '';
         
         if (instructors.length === 0) {
-            // Eğer hiç eğitmen yoksa test amaçlı el ile seçebileceğimiz gizli bir id oluşturalım veya boş bırakalım
-            select.innerHTML = `<option value="">Önce Supabase'den Eğitmen Ekleyin</option>`;
+            select.innerHTML = `<option value="">➕ Önce Eğitmen Ekleyin</option>`;
         } else {
             instructors.forEach(ins => {
                 select.innerHTML += `<option value="${ins.id}">${ins.name}</option>`;
@@ -177,10 +180,46 @@ async function fetchInstructorsForForm() {
     }
 }
 
-// FORM GÖNDERME (VİDEO KAYDETME) FONKSİYONU
+// SADECE EĞİTMEN KAYDETMEK İÇİN FONKSİYON
+async function handleInstructorSubmit() {
+    const nameInput = document.getElementById('form-new-instructor-input');
+    const name = nameInput.value.trim();
+    const lang = translations[currentLang];
+
+    if (!name) {
+        alert(lang.insAlert);
+        return;
+    }
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ name: name })
+        });
+
+        if (response.ok) {
+            alert(lang.insSuccess);
+            nameInput.value = '';
+            document.getElementById('new-instructor-container').classList.add('d-none'); // Paneli kapat
+            await fetchInstructorsForForm(); // Listeyi yenile
+        } else {
+            alert("Bu eğitmen zaten kayıtlı veya bir hata oluştu.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Bağlantı hatası.");
+    }
+}
+
 async function handleFormSubmit(e) {
     e.preventDefault();
-    const lang = translations[currentLang];
+    const lang = translations[translations.tr.successSave ? currentLang : 'tr'];
 
     const instructorId = document.getElementById('form-instructor-select').value;
     const videoUrl = document.getElementById('form-video-url').value;
@@ -189,7 +228,7 @@ async function handleFormSubmit(e) {
     const isDownloaded = document.getElementById('form-is-downloaded').checked;
 
     if(!instructorId) {
-        alert("Lütfen önce bir eğitmen seçin.");
+        alert("Lütfen önce bir eğitmen seçin veya ekleyin.");
         return;
     }
 
@@ -214,49 +253,52 @@ async function handleFormSubmit(e) {
         });
 
         if (response.ok) {
-            alert(lang.successSave);
+            alert(translations[currentLang].successSave);
             document.getElementById('add-video-form').reset();
-            // Kütüphane sayfasına geri dön ve listeyi yenile
             document.getElementById('menu-library').click();
         } else {
-            alert("Hata: Video kaydedilemedi. (Aynı URL daha önce eklenmiş olabilir)");
+            alert("Hata: Video kaydedilemedi. (URL çakışması olabilir)");
         }
     } catch (err) {
         console.error(err);
-        alert("Bağlantı hatası gerçekleşti.");
+        alert("Bağlantı hatası.");
     }
 }
 
-// EVENT LISTENERS & INITIALIZATION
 document.addEventListener('DOMContentLoaded', () => {
     updateInterfaceLanguage();
     fetchVideos();
     fetchInstructorsForForm();
 
-    // Dil Değişimi
     document.getElementById('lang-toggle-btn').addEventListener('click', () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
         updateInterfaceLanguage();
     });
 
-    // Sekme Geçişleri: Kütüphane Butonu
     document.getElementById('menu-library').addEventListener('click', (e) => {
         document.getElementById('menu-add-video').classList.remove('active');
         e.target.classList.add('active');
         document.getElementById('view-add-container').classList.add('d-none');
         document.getElementById('view-library-container').classList.remove('d-none');
-        fetchVideos(); // Listeyi tazele
+        fetchVideos();
     });
 
-    // Sekme Geçişleri: Yeni Video Ekle Butonu
     document.getElementById('menu-add-video').addEventListener('click', (e) => {
         document.getElementById('menu-library').classList.remove('active');
         e.target.classList.add('active');
         document.getElementById('view-library-container').classList.add('d-none');
         document.getElementById('view-add-container').classList.remove('d-none');
-        fetchInstructorsForForm(); // Güncel eğitmenleri getir
+        fetchInstructorsForForm();
     });
 
-    // Form Gönderimi
+    // Yeni Eğitmen Paneli Aç/Kapat Butonu
+    document.getElementById('btn-toggle-new-instructor').addEventListener('click', () => {
+        const container = document.getElementById('new-instructor-container');
+        container.classList.toggle('d-none');
+    });
+
+    // Sadece Eğitmen Kaydetme Butonu
+    document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
+
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
 });
