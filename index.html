@@ -46,10 +46,12 @@
                 <form id="add-video-form" class="glass-form">
                     <div class="form-group">
                         <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
-                        <div style="display: flex; gap: 10px;">
-                            <select id="form-instructor-select" style="flex: 1;" required>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <select id="form-instructor-select" style="flex: 1; min-width: 150px;" required>
                                 </select>
-                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn" style="padding: 0 15px;">➕ New</button>
+                            <button type="button" id="btn-edit-instructor" class="lang-btn" title="Düzenle">📝</button>
+                            <button type="button" id="btn-delete-instructor" class="lang-btn" style="border-color: rgba(239, 68, 68, 0.3); color: #ef4444;" title="Sil">❌</button>
+                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8;">➕ New</button>
                         </div>
                     </div>
 
@@ -57,7 +59,7 @@
                         <label id="lbl-new-instructor-name">Yeni Eğitmen Adı:</label>
                         <div style="display: flex; gap: 10px;">
                             <input type="text" id="form-new-instructor-input" placeholder="Örn: Chicho Frumboli">
-                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.4);">💾</button>
+                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.4); padding: 0 20px; font-weight: 600;">Ekle</button>
                         </div>
                     </div>
 

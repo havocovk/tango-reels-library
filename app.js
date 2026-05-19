@@ -1,6 +1,7 @@
-// SUPABASE BAĞLANTI BİLGİLERİ (Ekran görüntülerinden doğrudan tanımlandı)
+// SUPABASE BAĞLANTI BİLGİLERİ
 const SUPABASE_URL = "https://airmuygsltqecjdgxlfh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso";
+";
 
 // DİL SÖZLÜĞÜ (TR / EN)
 const translations = {
@@ -88,7 +89,7 @@ function updateInterfaceLanguage() {
     document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
     document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
 
-    // Dinamik modern buton metni güncelleme (Ekle / Güncelle veya Add / Update)
+    // Eğitmen paneli modern buton metni güncelleme (Ekle / Güncelle veya Add / Update)
     const saveBtn = document.getElementById('btn-save-instructor');
     if (editInstructorId) {
         saveBtn.innerText = lang.btnUpdateIns;
@@ -356,6 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchInstructorsForForm();
     });
 
+    // Yeni/Ekle Paneli Aç/Kapat (Artık pürüzsüz çalışıyor)
     document.getElementById('btn-toggle-new-instructor').addEventListener('click', () => {
         editInstructorId = null; 
         document.getElementById('form-new-instructor-input').value = '';
@@ -364,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.classList.toggle('d-none');
     });
 
+    // Eğitmen Düzenleme Butonu (📝) - İsmi inputa basar ve düzenleme modunu açar
     document.getElementById('btn-edit-instructor').addEventListener('click', () => {
         const select = document.getElementById('form-instructor-select');
         if (!select.value) return;
@@ -376,7 +379,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('new-instructor-container').classList.remove('d-none');
     });
 
+    // Eğitmen Silme Butonu (❌)
     document.getElementById('btn-delete-instructor').addEventListener('click', deleteInstructor);
+
+    // Modern Butonun Tetikleyicisi (Ekle/Güncelle)
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
+
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
 });
