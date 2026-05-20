@@ -52,6 +52,10 @@
                     </select>
                 </div>
 
+                <div id="clear-favorites-container" class="d-none" style="margin: 10px 0;">
+                    <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
+                </div>
+
                 <div id="video-grid" class="video-grid">
                     <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
                 </div>
@@ -107,8 +111,14 @@
                     </div>
 
                     <div class="form-group">
-                        <label id="lbl-tags">Teknik Etiketleri (Virgülle ayırın):</label>
-                        <input type="text" id="form-tags-input" placeholder="Örn: Giro, Sacada, Boleo, Barrida">
+                        <label id="lbl-tags">Teknik Etiketleri (Virgül koyun veya öneriden seçip Enter'a basın):</label>
+                        <div class="tags-input-container" id="form-tags-wrapper">
+                            <div id="chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
+                            <div class="autocomplete-wrapper" style="flex: 1; min-width: 150px; position: relative;">
+                                <input type="text" id="form-tags-input" placeholder="Yazın ve virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
+                                <div id="autocomplete-list" class="autocomplete-suggestions d-none"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -142,6 +152,27 @@
             <span id="modal-close-btn" class="modal-close">&times;</span>
             <div class="video-container">
                 <iframe id="modal-iframe" src="" allow="autoplay" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="tags-edit-modal" class="modal-overlay d-none">
+        <div class="modal-content" style="max-width: 500px; padding: 25px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px);">
+            <span id="tags-modal-close-btn" class="modal-close" style="top: 15px; right: 20px;">&times;</span>
+            <h3 id="edit-tags-title" style="color: #fff; margin-bottom: 20px; font-weight: 600;">✏️ Etiketleri Düzenle</h3>
+            
+            <div id="modal-tags-list-container" class="modal-tags-list"></div>
+            
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
+            
+            <div class="form-group">
+                <div class="tags-input-container" id="modal-tags-wrapper">
+                    <div id="modal-chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
+                    <div class="autocomplete-wrapper" style="flex: 1; min-width: 150px; position: relative;">
+                        <input type="text" id="modal-tags-input" placeholder="Yeni etiket yazıp virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
+                        <div id="modal-autocomplete-list" class="autocomplete-suggestions d-none"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
