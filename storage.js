@@ -49,8 +49,6 @@ export async function handlePasteEvent(e, currentLang) {
 
             } catch (err) {
                 console.error(err);
-                // Burası global modal eklendikten sonra istendiğinde tetiklenebilir duruma geldi.
-                alert(lang.uploadError);
                 if (dropAreaText) dropAreaText.innerText = lang.dropText;
             }
         }

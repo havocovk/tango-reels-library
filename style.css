@@ -8,7 +8,7 @@
     --accent: #38bdf8;
     --accent-hover: #0ea5e9;
     --border-color: #334155;
-    --modal-bg: rgba(30, 41, 59, 0.7);
+    --modal-bg: rgba(30, 41, 59, 0.75);
 }
 
 * {
@@ -324,7 +324,7 @@ input[type="checkbox"] {
     font-size: 1.1rem;
 }
 
-/* MODERN DİNAMİK POP-UP (MODAL) STİLLERİ */
+/* MODERN POP-UP (MODAL) STİLLERİ (GLASSMORPHISM) */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -338,7 +338,7 @@ input[type="checkbox"] {
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    animation: fadeIn 0.25s ease-out;
+    animation: fadeIn 0.2s ease-out;
 }
 
 .modal-window {
@@ -346,9 +346,9 @@ input[type="checkbox"] {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     width: 90%;
-    max-width: 460px;
+    max-width: 480px;
     padding: 24px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -390,18 +390,19 @@ input[type="checkbox"] {
     gap: 12px;
 }
 
-/* DİNAMİK ETİKET (TAG) TASARIMLARI */
+/* REVIZE DİNAMİK ETİKET (TAG) GİRİŞ ALANI */
 .tag-container {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 12px;
     border-radius: 12px;
     margin-top: 8px;
-    min-height: 50px;
+    min-height: 60px;
     align-items: center;
+    width: 100%;
 }
 
 .tag-badge {
@@ -433,17 +434,18 @@ input[type="checkbox"] {
     background: transparent !important;
     padding: 4px 8px !important;
     flex: 1;
-    min-width: 120px;
+    min-width: 150px;
     color: #fff !important;
+    box-shadow: none !important;
 }
 
-/* Animasyonlar */
+/* Animasyon Tanımlamaları */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
 @keyframes scaleUp {
-    from { transform: scale(0.92); opacity: 0; }
+    from { transform: scale(0.94); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
