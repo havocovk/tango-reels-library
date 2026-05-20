@@ -30,27 +30,4 @@ export async function handlePasteEvent(e, currentLang) {
                         'apikey': SUPABASE_KEY,
                         'Authorization': `Bearer ${SUPABASE_KEY}`,
                         'Content-Type': blob.type
-                    },
-                    body: blob
-                });
-
-                if (!uploadResponse.ok) {
-                    throw new Error("Storage upload failed");
-                }
-
-                uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;
-                
-                const imgPreview = document.getElementById('image-preview');
-                if (imgPreview) {
-                    imgPreview.src = uploadedCoverUrl;
-                    imgPreview.classList.remove('d-none');
-                }
-                if (dropAreaText) dropAreaText.classList.add('d-none');
-
-            } catch (err) {
-                console.error(err);
-                if (dropAreaText) dropAreaText.innerText = lang.dropText;
-            }
-        }
-    }
-}
+                    },\n                    body: blob\n                });\n\n                if (!uploadResponse.ok) {\n                    throw new Error("Storage upload failed");\n                }\n\n                uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;\n                \n                const imgPreview = document.getElementById('image-preview');\n                if (imgPreview) {\n                    imgPreview.src = uploadedCoverUrl;\n                    imgPreview.classList.remove('d-none');\n                }\n                if (dropAreaText) dropAreaText.classList.add('d-none');\n\n            } catch (err) {\n                console.error(err);\n                if (dropAreaText) dropAreaText.innerText = lang.dropText;\n            }\n        }\n    }\n}\n
