@@ -59,7 +59,7 @@ export const translations = {
         btnCardDelete: "🗑️ Sil",
         modalOk: "Tamam",
         modalCancel: "İptal",
-        modalConfirmTitle: "⚠️ Onay Gerekiyor"
+        videoSuccess: "🎉 Video başarıyla yüklendi!"
     },
     en: {
         brandTitle: "💃 ATKK",
@@ -116,6 +116,6 @@ export const translations = {
         btnCardDelete: "🗑️ Delete",
         modalOk: "OK",
         modalCancel: "Cancel",
-        modalConfirmTitle: "⚠️ Confirmation Required"
+        videoSuccess: "🎉 Video successfully uploaded!"
     }
 };

@@ -9,22 +9,18 @@ let currentView = 'library';
 
 // Form ve Modal etiket yönetim dizileri
 let formTagsArray = [];
-let activeEditTagsVideoId = null; // Pop-up'ta düzenlenen video ID'si
-
-// Projede yer alan benzersiz etiket havuzu (otomatik tamamlama için)
+let activeEditTagsVideoId = null; 
 let uniqueExistingTags = new Set();
 
-// --- MODERN ÖZELLEŞTİRİLMİŞ MODAL ÇAĞRILARI (ALERT / CONFIRM YERİNE) ---
+// --- MODERN VE UYUMLU POP-UP PENCERELERİ (ALERT / CONFIRM YERİNE) ---
 function showCustomAlert(message, icon = "🎉") {
     const alertModal = document.getElementById('custom-alert-modal');
     document.getElementById('alert-icon').innerText = icon;
     document.getElementById('alert-message').innerText = message;
     
-    // Sadece onay butonunu göster, silme onay butonunu gizle
     document.getElementById('alert-btn-confirm').style.display = 'none';
     const closeBtn = document.getElementById('alert-btn-close');
     closeBtn.innerText = translations[currentLang].modalOk;
-    closeBtn.className = "submit-btn";
     closeBtn.style.background = "linear-gradient(135deg, #38bdf8, #0284c7)";
 
     alertModal.classList.remove('d-none');
@@ -88,7 +84,6 @@ function toggleFavorite(videoId) {
     applyFiltersAndSearch(); 
 }
 
-// Pratik Listesini Onaylı Toplu Temizleme
 async function clearAllFavorites() {
     const lang = translations[currentLang];
     const confirm = await showCustomConfirm(lang.confirmClearFavs);
@@ -98,7 +93,6 @@ async function clearAllFavorites() {
     }
 }
 
-// DOM Yüklendiğinde Başlatıcı
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
     setupEventListeners();
@@ -111,15 +105,12 @@ async function initApp() {
 }
 
 function setupEventListeners() {
-    // Menü Seçimleri
     document.getElementById('menu-library').addEventListener('click', () => switchView('library'));
     document.getElementById('menu-favorites').addEventListener('click', () => switchView('favorites'));
     document.getElementById('menu-add-video').addEventListener('click', () => switchView('add-video'));
     
-    // Dil Seçimi
     document.getElementById('lang-toggle-btn').addEventListener('click', toggleLanguage);
     
-    // Eğitmen Paneli
     document.getElementById('btn-show-instructor-panel').addEventListener('click', () => {
         const panel = document.getElementById('new-instructor-container');
         panel.classList.toggle('d-none');
@@ -129,13 +120,11 @@ function setupEventListeners() {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    // Canlı Arama ve Filtreler
     document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
     document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
 
-    // Modalları Kapatma Olayları
     document.getElementById('modal-close-btn').addEventListener('click', closeVideoModal);
     document.getElementById('video-modal').addEventListener('click', (e) => {
         if (e.target.id === 'video-modal') closeVideoModal();
@@ -152,18 +141,15 @@ function setupEventListeners() {
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
 
-    // FORM Etiket Giriş Dinleyicileri
     const formTagsInput = document.getElementById('form-tags-input');
     formTagsInput.addEventListener('input', (e) => handleTagInput(e, 'form'));
     formTagsInput.addEventListener('keydown', (e) => handleTagKeyDown(e, 'form'));
 
-    // MODAL Etiket Giriş Dinleyicileri
     const modalTagsInput = document.getElementById('modal-tags-input');
     modalTagsInput.addEventListener('input', (e) => handleTagInput(e, 'modal'));
     modalTagsInput.addEventListener('keydown', (e) => handleTagKeyDown(e, 'modal'));
 }
 
-// Dil Değiştirme Fonksiyonu
 function toggleLanguage() {
     currentLang = currentLang === 'tr' ? 'en' : 'tr';
     document.getElementById('lang-toggle-btn').innerText = currentLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
@@ -181,7 +167,6 @@ function updateUIStrings() {
     document.getElementById('search-input').placeholder = lang.searchPlaceholder;
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    // Form Elemanları
     document.getElementById('form-title').innerText = lang.formTitle;
     document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
     document.getElementById('lbl-partner').innerText = lang.lblPartner;
@@ -191,7 +176,6 @@ function updateUIStrings() {
     document.getElementById('lbl-tags').innerText = lang.lblTags;
     document.getElementById('btn-submit-form').innerText = lang.btnSubmitForm;
     
-    // Eğitmen Yönetim Alanı
     document.getElementById('btn-show-instructor-panel').innerText = lang.btnManageInstructors;
     document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
     document.getElementById('btn-save-instructor').innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
@@ -200,7 +184,6 @@ function updateUIStrings() {
     document.getElementById('drop-area-text').innerText = lang.dropText;
     document.getElementById('edit-tags-title').innerText = lang.editTagsTitle;
 
-    // Filtre Seçenekleri Güncelleme
     const roleSelect = document.getElementById('filter-role-select');
     roleSelect.options[0].text = `🎬 ${lang.allRoles}`;
     roleSelect.options[1].text = lang.leader;
@@ -213,7 +196,6 @@ function updateUIStrings() {
     locSelect.options[2].text = lang.social;
 }
 
-// Sayfa Görünüm Geçişleri
 function switchView(view) {
     currentView = view;
     document.getElementById('menu-library').classList.remove('active');
@@ -239,7 +221,7 @@ function switchView(view) {
     }
 }
 
-// --- ETİKETLERİ CHIP (ROZET) OLARAK YÖNETME ALANI ---
+// --- ETİKET YÖNETİM CHIPS YAPISI ---
 function handleTagInput(e, type) {
     const input = e.target;
     const value = input.value;
@@ -347,7 +329,6 @@ function createChipElement(tag, type) {
     return chip;
 }
 
-// Otomatik Tamamlama Mantığı
 function showSuggestions(query, type) {
     const listContainer = document.getElementById(`${type}-autocomplete-list`);
     listContainer.innerHTML = '';
@@ -388,7 +369,7 @@ function hideSuggestions(type) {
     }, 200);
 }
 
-// --- SUPABASE API VE VERİ TABANI SÜREÇLERİ ---
+// --- VERİTABANI VE SELECT YÜKLEMELERİ ---
 async function loadInstructorsToSelect() {
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
@@ -406,7 +387,6 @@ async function loadInstructorsToSelect() {
             selectElement.appendChild(opt);
         });
         
-        // Tetiklendiğinde silme butonunu yönetebilmek için dinleyici ekle
         selectElement.onchange = () => {
             const deleteBtn = document.getElementById('btn-delete-instructor');
             if(selectElement.value) {
@@ -428,14 +408,13 @@ async function handleInstructorSubmit() {
     const lang = translations[currentLang];
     
     if (!name) {
-        showCustomAlert(lang.insAlert, "⚠️");
+        await showCustomAlert(lang.insAlert, "⚠️");
         return;
     }
 
     try {
         let response;
         if (editInstructorId) {
-            // Güncelleme Modu
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${editInstructorId}`, {
                 method: 'PATCH',
                 headers: {
@@ -448,7 +427,6 @@ async function handleInstructorSubmit() {
             });
             if (response.ok) await showCustomAlert(lang.insUpdateSuccess, "🎉");
         } else {
-            // Yeni Kayıt Modu
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
                 method: 'POST',
                 headers: {
@@ -509,7 +487,6 @@ async function fetchVideos() {
         });
         globalVideos = await response.json();
         
-        // Benzersiz etiket havuzunu oluştur
         uniqueExistingTags.clear();
         globalVideos.forEach(v => {
             if (v.tags && Array.isArray(v.tags)) {
@@ -568,7 +545,6 @@ function renderCards(videos) {
         return;
     }
 
-    // Eğer favoriler alanındaysak toplu temizleme butonunu en başa ekleyelim
     if (currentView === 'favorites') {
         const clearBtnContainer = document.createElement('div');
         clearBtnContainer.style.cssText = "grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-bottom: 10px;";
@@ -610,7 +586,6 @@ function renderCards(videos) {
             </div>
         `;
 
-        // Kart İçi Aksiyon Dağıtıcıları
         card.querySelector('.card-image-wrapper').onclick = (e) => {
             if (!e.target.classList.contains('card-fav-btn')) {
                 openVideoModal(video.url);
@@ -621,7 +596,6 @@ function renderCards(videos) {
         card.querySelector('.btn-edit-tags').onclick = () => openTagsEditModal(video.id);
         card.querySelector('.btn-delete-video').onclick = () => deleteVideo(video.id);
         
-        // Tıklanabilir etiket araması tetikleyici
         card.querySelectorAll('.tag-chip.clickable').forEach(chip => {
             chip.onclick = () => {
                 document.getElementById('search-input').value = chip.innerText;
@@ -633,7 +607,6 @@ function renderCards(videos) {
     });
 }
 
-// --- KART YÖNETİM DETAYLARI (SİLME / ETİKET REVEZE MODALU) ---
 async function deleteVideo(id) {
     const lang = translations[currentLang];
     const confirm = await showCustomConfirm(lang.confirmDeleteVideo, "⚠️");
@@ -676,15 +649,12 @@ async function updateTagsInSupabase(videoId, tagsArray) {
             },
             body: JSON.stringify({ tags: tagsArray })
         });
-        
-        // Mevcut benzersiz kümemizi güncelle
         tagsArray.forEach(t => uniqueExistingTags.add(t));
     } catch (err) {
         console.error("Etiket bulut senkronizasyon hatası:", err);
     }
 }
 
-// Form Kayıt İşlemleri
 async function handleFormSubmit(e) {
     e.preventDefault();
     
@@ -717,7 +687,7 @@ async function handleFormSubmit(e) {
         });
 
         if (response.ok) {
-            await showCustomAlert(translations[currentLang].insSuccess, "🎉");
+            await showCustomAlert(translations[currentLang].videoSuccess, "🎉");
             resetVideoForm();
             await fetchVideos();
             switchView('library');
@@ -744,7 +714,6 @@ function resetVideoForm() {
     }
 }
 
-// Oynatıcı Modal Yönetimi
 function openVideoModal(url) {
     let embedUrl = url;
     if (url.includes('youtube.com/watch?v=')) {

@@ -52,7 +52,7 @@ body {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* Sol Menü (Sidebar) */
+/* Sol Menü */
 .sidebar-glass {
     width: 280px;
     background: rgba(30, 41, 59, 0.4);
@@ -142,7 +142,7 @@ body {
     padding: 20px;
 }
 
-/* Üst Arama / Filtre Çubuğu */
+/* Üst Filtre Barı */
 .search-filter-bar {
     display: flex;
     gap: 15px;
@@ -151,11 +151,6 @@ body {
 
 .search-wrapper {
     flex: 1;
-}
-
-.search-input-container {
-    position: relative;
-    width: 100%;
 }
 
 input[type="text"], input[type="url"], select {
@@ -201,7 +196,7 @@ input:focus, select:focus {
     transform: translateY(-1px);
 }
 
-/* Grid Kart Yapısı */
+/* Grid Yapısı */
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -328,7 +323,7 @@ input:focus, select:focus {
     margin-left: 4px;
 }
 
-/* Yönetim Buton Paneli (Kart içi) */
+/* Kart Aksiyonları */
 .card-actions-wrapper {
     display: flex;
     gap: 8px;
@@ -360,7 +355,7 @@ input:focus, select:focus {
     color: #ef4444;
 }
 
-/* Gelişmiş Form Tasarımı */
+/* Formlar */
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -397,7 +392,6 @@ input:focus, select:focus {
     box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 
-/* Sürükle Bırak / Resim Alanı */
 .upload-drop-zone {
     border: 2px dashed rgba(255, 255, 255, 0.1);
     background: rgba(15, 23, 42, 0.4);
@@ -419,7 +413,7 @@ input:focus, select:focus {
     margin-top: 10px;
 }
 
-/* Etiket Giriş Kapsayıcısı */
+/* Etiket Giriş Alanları */
 .tags-input-container {
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -445,7 +439,6 @@ input:focus, select:focus {
     box-shadow: none !important;
 }
 
-/* Otomatik Tamamlama Önerileri */
 .autocomplete-suggestions {
     position: absolute;
     top: 100%;
@@ -471,7 +464,7 @@ input:focus, select:focus {
     color: #38bdf8;
 }
 
-/* Modal Overlay Tasarımları */
+/* Modallar */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -528,7 +521,6 @@ input:focus, select:focus {
     border: none;
 }
 
-/* Genel Yardımcı Sınıflar */
 .d-none { display: none !important; }
 .status-message { text-align: center; padding: 40px; color: #94a3b8; font-size: 1.1rem; }
 
