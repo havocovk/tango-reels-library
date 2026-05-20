@@ -1,111 +1,56 @@
-// SUPABASE BAĞLANTI BİLGİLERİ
-export const SUPABASE_URL = "https://airmuygsltqecjdgxlfh.supabase.co";
-export const SUPABASE_KEY = "sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso";
+import { SUPABASE_URL, SUPABASE_KEY, translations } from './config.js';
 
-// DİL SÖZLÜĞÜ (TR / EN)
-export const translations = {
-    tr: {
-        brandTitle: "💃 ATKK",
-        title: "Arjantin Tango Kombinasyon Kütüphanesi",
-        menuLibrary: "📚 Kütüphane",
-        menuFavorites: "⭐ Pratik Listem",
-        menuAddVideo: "➕ Yeni Video Ekle",
-        searchPlaceholder: "Eğitmen, partner veya etiket (tag) ara...",
-        filterBtn: "🔍 Filtrele",
-        loading: "Veritabanı bağlantısı kuruluyor......",
-        empty: "Kütüphaneniz henüz boş. <br> Sol menüden yeni video eklemeye başlayabilirsiniz! 💃🕺",
-        emptyFav: "Pratik listeniz henüz boş. <br> Kartların üzerindeki yıldız (⭐) ikonuna basarak bu haftanın pratiklerini buraya toplayabilirsiniz!",
-        error: "❌ Veritabanı bağlantısı başarısız oldu. Lütfen anahtarlarınızı kontrol edin.",
-        role: "🎬 Rol",
-        location: "📍 Ortam",
-        watch: "🔗 Videoyu İzle →",
-        langBtn: "🇬🇧 EN",
-        formTitle: "➕ Yeni Video Kaydet...",
-        lblVideoLink: "Video Linki (Drive / Instagram / Facebook):",
-        lblPartner: "Partner Adı:",
-        lblRole: "Rol Seçimi:",
-        lblLocation: "Ortam Seçimi:",
-        lblInstructor: "Eğitmen Seçimi:",
-        btnAddNewInstructor: "➕ Yeni Eğitmen Ekle",
-        lblNewInstructorName: "Eğitmen Adı:",
-        insSuccess: "🎉 Eğitmen başarıyla eklendi!",
-        insUpdateSuccess: "🎉 Eğitmen adı güncellendi!",
-        insDeleteSuccess: "💥 Eğitmen ve ilgili tüm videolar silindi!",
-        insAlert: "Lütfen bir eğitmen adı yazın.",
-        deleteConfirm: "Bu eğitmeni silmek istediğinize emin misiniz? Bu eğitmene ait TÜM videolar da kalıcı olarak silinecektir!",
-        btnAddIns: "Ekle",
-        btnUpdateIns: "Güncelle",
-        lblCoverUpload: "Kapak Resmi:",
-        dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsü yapıştırın",
-        uploading: "⏳ Resim yükleniyor...",
-        uploadError: "❌ Resim Supabase Storage'a yüklenemedi!",
-        allRoles: "Tüm Roller",
-        leader: "Lider",
-        follower: "Takipçi",
-        both: "İkisi de",
-        allLocations: "Tüm Ortamlar",
-        drive: "💾 Google Drive",
-        social: "🌐 Sosyal Medya",
-        closeBtn: "Kapat",
-        btnClearFavorites: "🗑️ Bu Haftaki Pratik Listesini Temizle",
-        confirmClearFavs: "Bu haftaki pratik listesindeki tüm yıldızları kaldırmak istediğinize emin misiniz?",
-        confirmDeleteVideo: "Bu videoyu kütüphanenizden kalıcı olarak silmek istediğinize emin misiniz?",
-        successDeleteVideo: "💥 Video başarıyla silindi!",
-        editTagsTitle: "✏️ Etiketleri Düzenle",
-        addTagPlaceholder: "Yeni etiket yazıp virgül koyun...",
-        btnCardEdit: "✏️ Düzenle",
-        btnCardDelete: "🗑️ Sil"
-    },
-    en: {
-        brandTitle: "💃 ATKK",
-        title: "Argentine Tango Combination Library",
-        menuLibrary: "📚 Library",
-        menuFavorites: "⭐ Practice List",
-        menuAddVideo: "➕ Add New Video",
-        searchPlaceholder: "Search instructor, partner or tag...",
-        filterBtn: "🔍 Filter",
-        loading: "Establishing database connection......",
-        empty: "Your library is empty yet. <br> You can start adding new videos from the left menu! 💃🕺",
-        emptyFav: "Your practice list is empty yet. <br> You can collect this week's practices here by clicking the star (⭐) icon on the cards!",
-        error: "❌ Database connection failed. Please check your keys.",
-        role: "🎬 Role",
-        location: "📍 Location",
-        watch: "🔗 Watch Video →",
-        langBtn: "🇹🇷 TR",
-        formTitle: "➕ Save New Video...",
-        lblVideoLink: "Video Link (Drive / Instagram / Facebook):",
-        lblPartner: "Partner Name:",
-        lblRole: "Role Selection:",
-        lblLocation: "Location Selection:",
-        lblInstructor: "Instructor Selection:",
-        btnAddNewInstructor: "➕ Add New Instructor",
-        lblNewInstructorName: "Instructor Name:",
-        insSuccess: "🎉 Instructor successfully added!",
-        insUpdateSuccess: "🎉 Instructor name updated!",
-        insDeleteSuccess: "💥 Instructor and all related videos deleted!",
-        insAlert: "Please type an instructor name.",
-        deleteConfirm: "Are you sure you want to delete this instructor? ALL videos belonging to this instructor will also be permanently deleted!",
-        btnAddIns: "Add",
-        btnUpdateIns: "Update",
-        lblCoverUpload: "Cover Image:",
-        dropText: "📸 Click here and paste the screenshot via Ctrl + V",
-        uploading: "⏳ Image uploading...",
-        uploadError: "❌ Image could not be uploaded to Supabase Storage!",
-        allRoles: "All Roles",
-        leader: "Leader",
-        follower: "Follower",
-        both: "Both",
-        allLocations: "All Locations",
-        drive: "💾 Google Drive",
-        social: "🌐 Social Media",
-        closeBtn: "Close",
-        btnClearFavorites: "🗑️ Clear This Week's Practice List",
-        confirmClearFavs: "Are you sure you want to remove all stars from this week's practice list?",
-        confirmDeleteVideo: "Are you sure you want to permanently delete this video from your library?",
-        successDeleteVideo: "💥 Video successfully deleted!",
-        editTagsTitle: "✏️ Edit Tags",
-        addTagPlaceholder: "Type new tag and put comma...",
-        btnCardEdit: "✏️ Edit",
-        btnCardDelete: "🗑️ Delete"
+let uploadedCoverUrl = null;
+
+export function getUploadedCoverUrl() {
+    return uploadedCoverUrl;
+}
+
+export function resetUploadedCoverUrl() {
+    uploadedCoverUrl = null;
+}
+
+export async function handlePasteEvent(e, currentLang) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    const lang = translations[currentLang];
+    
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") === 0) {
+            const blob = items[i].getAsFile();
+            
+            const dropAreaText = document.getElementById('drop-area-text');
+            if (dropAreaText) dropAreaText.innerText = lang.uploading;
+
+            const fileName = `tango_cover_${Date.now()}.png`;
+
+            try {
+                const uploadResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/covers/${fileName}`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': blob.type
+                    },
+                    body: blob
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error("Storage upload failed");
+                }
+
+                uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;
+                
+                const imgPreview = document.getElementById('image-preview');
+                if (imgPreview) {
+                    imgPreview.src = uploadedCoverUrl;
+                    imgPreview.classList.remove('d-none');
+                }
+                if (dropAreaText) dropAreaText.classList.add('d-none');
+
+            } catch (err) {
+                console.error(err);
+                if (dropAreaText) dropAreaText.innerText = lang.dropText;
+            }
+        }
     }
-};
+}

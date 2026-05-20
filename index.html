@@ -21,7 +21,7 @@
                 <h2 id="sidebar-title">💃 ATKK</h2>
                 <button id="lang-toggle-btn" class="lang-btn">🇬🇧 EN</button>
             </div>
-            <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;\">
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
             <div class="menu-items">
                 <button id="menu-library" class="menu-btn active">📚 Kütüphane</button>
                 <button id="menu-favorites" class="menu-btn">⭐ Pratik Listem</button>
@@ -29,103 +29,119 @@
             </div>
         </nav>
 
-        <main class="main-content">
-            <header class="content-header">
-                <h1 id="main-title">Arjantin Tango Kombinasyon Kütüphanesi</h1>
-            </header>
+        <main class="main-content-glass">
 
-            <div id="search-filter-section" class="search-filter-bar">
-                <div class="search-wrapper">
+            <div id="view-library-container" class="view-panel">
+                <div class="search-header">
                     <input type="text" id="search-input" placeholder="Eğitmen, partner veya etiket (tag) ara...">
+                    <button id="filter-btn" class="btn-primary">🔍 Filtrele</button>
                 </div>
-                <div class="filters-group">
-                    <select id="filter-role-select" class="filter-select">
-                        <option value="ALL" id="opt-all-roles">Tüm Roller</option>
-                        <option value="LEADER" id="opt-leader">Lider</option>
-                        <option value="FOLLOWER" id="opt-follower">Takipçi</option>
-                        <option value="BOTH" id="opt-both">İkisi de</option>
+                
+                <div style="display: flex; gap: 12px; margin-top: 12px; margin-bottom: 8px;">
+                    <select id="filter-role-select" style="flex: 1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <option value="all" id="opt-all-roles">Tüm Roller</option>
+                        <option value="Leader" id="opt-leader">Lider</option>
+                        <option value="Follower" id="opt-follower">Takipçi</option>
+                        <option value="Both" id="opt-both">İkisi de</option>
                     </select>
-                    <select id="filter-location-select" class="filter-select">
-                        <option value="ALL" id="opt-all-locations">Tüm Ortamlar</option>
-                        <option value="DRIVE" id="opt-drive">💾 Google Drive</option>
-                        <option value="SOCIAL" id="opt-social">🌐 Sosyal Medya</option>
-                    </select>
-                    <button id="filter-btn" class="filter-btn-action">🔍 Filtrele</button>
-                </div>
-            </div>
-
-            <div id="action-bar" class="action-bar d-none">
-                <button id="clear-favorites-btn" class="clear-fav-btn">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
-            </div>
-
-            <div id="loading-element" class="loading-text">Veritabanı bağlantısı kuruluyor......</div>
-            <div id="empty-element" class="empty-text d-none"></div>
-
-            <div id="video-grid" class="video-grid"></div>
-
-            <div id="form-section" class="form-container d-none">
-                <h2 id="form-title">➕ Yeni Video Kaydet...</h2>
-                <form id="add-video-form">
-                    <div class="form-group">
-                        <label for="video-url" id="lbl-video-link">Video Linki (Drive / Instagram / Facebook):</label>
-                        <input type="url" id="video-url" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="partner-name" id="lbl-partner">Partner Adı:</label>
-                        <input type="text" id="partner-name">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="role-select" id="lbl-role">Rol Seçimi:</label>
-                            <select id="role-select">
-                                <option value="LEADER">Lider</option>
-                                <option value="FOLLOWER">Takipçi</option>
-                                <option value="BOTH">İkisi de</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="location-select" id="lbl-location">Ortam Seçimi:</label>
-                            <select id="location-select">
-                                <option value="DRIVE">💾 Google Drive</option>
-                                <option value="SOCIAL">🌐 Sosyal Medya</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="instructor-select" id="lbl-instructor">Eğitmen Seçimi:</label>
-                        <div style="display: flex; gap: 10px;">
-                            <select id="instructor-select" style="flex: 1;"></select>
-                            <button type="button" id="btn-toggle-instructor-input" class="secondary-btn">➕ Yeni Eğitmen Ekle</button>
-                        </div>
-                    </div>
                     
-                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
-                        <label for="new-instructor-name" id="lbl-new-instructor-name">Eğitmen Adı:</label>
-                        <input type="text" id="new-instructor-name" style="margin-bottom: 10px;">
+                    <select id="filter-location-select" style="flex: 1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <option value="all" id="opt-all-locations">Tüm Ortamlar</option>
+                        <option value="drive" id="opt-drive">💾 Google Drive</option>
+                        <option value="social" id="opt-social">🌐 Sosyal Medya</option>
+                    </select>
+                </div>
+
+                <div id="clear-favorites-container" class="d-none" style="margin: 10px 0;">
+                    <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
+                </div>
+
+                <div id="video-grid" class="video-grid">
+                    <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
+                </div>
+            </div>
+
+            <div id="view-add-container" class="view-panel d-none">
+                <form id="add-video-form" class="glass-form">
+                    <h2 id="form-title" style="color: #fff; margin-bottom: 10px;">➕ Yeni Video Kaydet</h2>
+                    
+                    <div class="form-group">
+                        <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
                         <div style="display: flex; gap: 10px;">
-                            <button type="button" id="btn-save-instructor" class="filter-btn-action" style="padding: 8px 16px;">Ekle</button>
-                            <button type="button" id="btn-delete-instructor" class="clear-fav-btn" style="padding: 8px 16px; margin:0;">Sil</button>
+                            <select id="form-instructor-select" style="flex: 1;"></select>
+                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn">➕</button>
+                            <button type="button" id="btn-edit-instructor" class="lang-btn">✏️</button>
+                            <button type="button" id="btn-delete-instructor" class="lang-btn" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);">🗑️</button>
                         </div>
+                    </div>
+
+                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
+                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
+                        <input type="url" id="form-video-url" required placeholder="https://www.instagram.com/reels/...">
                     </div>
 
                     <div class="form-group">
                         <label id="lbl-cover-upload">Kapak Resmi:</label>
-                        <div id="drop-area" class="drop-zone">
-                            <p id="drop-area-text">📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsü yapıştırın</p>
-                            <img id="image-preview" src="" alt="Önizleme" class="d-none" style="max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 10px;">
+                        <div id="drop-area" tabindex="0">
+                            <span id="drop-area-text">📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın</span>
+                            <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
                         </div>
                     </div>
+
                     <div class="form-group">
-                        <label>Etiketler (Tags):</label>
+                        <label id="lbl-role">Rol Tipi:</label>
+                        <select id="form-role-select">
+                            <option value="Both">Leader + Follower (Both)</option>
+                            <option value="Leader">Leader</option>
+                            <option value="Follower">Follower</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
+                        <input type="text" id="form-partner-name" placeholder="Örn: Maria">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-tags">Teknik Etiketleri (Virgül koyun veya öneriden seçip Enter'a basın):</label>
                         <div class="tags-input-container" id="form-tags-wrapper">
-                            <div id="form-chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
+                            <div id="chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
                             <div class="autocomplete-wrapper" style="flex: 1; min-width: 150px; position: relative;">
-                                <input type="text" id="video-tags-input" placeholder="Yeni etiket yazıp virgül koyun...">
-                                <div id="form-autocomplete-list" class=\"autocomplete-suggestions d-none\"></div>
+                                <input type="text" id="form-tags-input" placeholder="Yazın ve virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
+                                <div id="autocomplete-list" class="autocomplete-suggestions d-none"></div>
                             </div>
                         </div>
                     </div>
-                    <button type="submit" class="submit-btn" id="btn-submit-form">Kaydet</button>
+
+                    <div class="form-group">
+                        <label class="checkbox-group">
+                            <input type="checkbox" id="form-is-downloaded">
+                            <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
+                        </label>
+                    </div>
+
+                    <div id="drive-url-container" class="form-group d-none" style="animation: fadeIn 0.3s ease;">
+                        <label id="lbl-drive-url">Google Drive Video Paylaşım Linki:</label>
+                        <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
+                    </div>
+
+                    <div id="assistant-panel" class="assistant-box">
+                        <h4 id="assistant-title">💡 Akıllı Dosya İsmi Asistanı</h4>
+                        <p id="assistant-text" style="font-size: 0.8rem; margin: 4px 0; color: #94a3b8;">İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:</p>
+                        <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
+                    </div>
+
+                    <button type="submit" id="btn-submit-video" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
+                        💾 Veritabanına Kaydet
+                    </button>
                 </form>
             </div>
         </main>
@@ -135,7 +151,7 @@
         <div class="modal-content">
             <span id="modal-close-btn" class="modal-close">&times;</span>
             <div class="video-container">
-                <iframe id="modal-iframe" src="" allowfullscreen></iframe>
+                <iframe id="modal-iframe" src="" allow="autoplay" allowfullscreen></iframe>
             </div>
         </div>
     </div>
@@ -153,12 +169,11 @@
                 <div class="tags-input-container" id="modal-tags-wrapper">
                     <div id="modal-chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
                     <div class="autocomplete-wrapper" style="flex: 1; min-width: 150px; position: relative;">
-                        <input type="text" id="modal-tags-input" placeholder="Yeni etiket yazıp virgül koyun...">
+                        <input type="text" id="modal-tags-input" placeholder="Yeni etiket yazıp virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
                         <div id="modal-autocomplete-list" class="autocomplete-suggestions d-none"></div>
                     </div>
                 </div>
             </div>
-            <button id="btn-save-tags-modal" class="submit-btn" style="margin-top: 15px;">Kapat</button>
         </div>
     </div>
 
