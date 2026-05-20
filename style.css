@@ -43,21 +43,18 @@ body {
     display: flex;
     width: 95vw;
     height: 90vh;
-    max-width: 1400px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(20px);
     border-radius: 24px;
-    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     overflow: hidden;
+    z-index: 2;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* Sol Menü Tasarımı */
 .sidebar-glass {
     width: 280px;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(30, 41, 59, 0.4);
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     padding: 30px 20px;
     display: flex;
@@ -68,11 +65,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
 }
 
 .sidebar-header h2 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     font-weight: 700;
     background: linear-gradient(to right, #38bdf8, #ec4899);
     -webkit-background-clip: text;
@@ -80,20 +76,18 @@ body {
 }
 
 .lang-btn {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: #f8fafc;
     padding: 6px 12px;
     border-radius: 10px;
     cursor: pointer;
     font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
 .lang-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .menu-items {
@@ -107,473 +101,434 @@ body {
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 14px 16px;
-    border-radius: 12px;
-    cursor: pointer;
+    padding: 14px 18px;
+    border-radius: 14px;
     text-align: left;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: all 0.3s ease;
 }
 
 .menu-btn:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.03);
     color: #f8fafc;
+    padding-left: 22px;
 }
 
 .menu-btn.active {
-    background: rgba(56, 189, 248, 0.1);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(236, 72, 153, 0.15));
+    border: 1px solid rgba(56, 189, 248, 0.2);
     color: #38bdf8;
     font-weight: 600;
-    border-left: 3px solid #38bdf8;
-    border-radius: 4px 12px 12px 4px;
 }
 
-/* Ana İçerik Alanı */
-.main-content-glass {
+.main-content {
     flex: 1;
     padding: 40px;
     overflow-y: auto;
-    background: rgba(15, 23, 42, 0.15);
-}
-
-.view-panel {
-    animation: fadeIn 0.4s ease;
-    height: 100%;
     display: flex;
     flex-direction: column;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.content-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 25px;
 }
 
-.d-none {
-    display: none !important;
-}
-
-/* Arama ve Filtreleme Başlığı */
-.search-header {
+.search-filter-bar {
     display: flex;
     gap: 15px;
-    margin-bottom: 10px;
+    margin-bottom: 30px;
+    background: rgba(30, 41, 59, 0.2);
+    padding: 10px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
 }
 
-.search-header input {
+.search-wrapper {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 16px 20px;
-    border-radius: 16px;
-    color: #fff;
-    font-size: 1rem;
+}
+
+.search-wrapper input {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 14px 20px;
+    border-radius: 14px;
+    color: #f8fafc;
+    font-size: 0.95rem;
     outline: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s;
 }
 
-.search-header input:focus {
-    border-color: rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
-    background: rgba(0, 0, 0, 0.3);
+.search-wrapper input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 1px #38bdf8;
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+.filters-group {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-select {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #f8fafc;
+    padding: 0 18px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.filter-select option {
+    background: #0f172a;
+    color: #f8fafc;
+}
+
+.filter-btn-action {
+    background: #38bdf8;
     color: #0f172a;
     border: none;
-    padding: 0 28px;
-    border-radius: 16px;
+    padding: 0 24px;
+    border-radius: 14px;
     font-weight: 600;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
-}
-
-/* 🗑️ Onaylı Liste Temizleme Buton Stili */
-.btn-clear-danger {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-    padding: 10px 16px;
-    border-radius: 12px;
     font-size: 0.9rem;
-    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
-.btn-clear-danger:hover {
-    background: rgba(239, 68, 68, 0.25);
-    border-color: rgba(239, 68, 68, 0.5);
+.filter-btn-action:hover {
+    background: #0ea5e9;
     transform: translateY(-1px);
 }
 
-/* Video Kartları Grid Altyapısı */
+.action-bar {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.clear-fav-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-fav-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.loading-text, .empty-text {
+    text-align: center;
+    color: #64748b;
+    font-size: 1.1rem;
+    margin: auto 0;
+    line-height: 1.6;
+}
+
 .video-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 25px;
-    overflow-y: auto;
-    padding-top: 15px;
-    padding-bottom: 20px;
-    flex: 1;
 }
 
-/* Modern Video Kartı Tasarımı */
 .video-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 20px;
-    padding: 15px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .video-card:hover {
-    transform: translateY(-6px);
-    background: rgba(30, 41, 59, 0.6);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.6);
+    transform: translateY(-5px);
+    border-color: rgba(56, 189, 248, 0.2);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
-.video-cover-link {
-    width: 100%;
-    text-decoration: none;
-    display: block;
-    overflow: hidden;
-    border-radius: 14px;
-    cursor: pointer;
-}
-
-.video-cover-container {
-    width: 100%;
-    padding-top: 56.25% !important; 
-    background-size: cover;
-    background-position: center;
+.card-cover-container {
     position: relative;
-    transition: transform 0.5s ease;
+    width: 100%;
+    padding-top: 56.25%;
+    background: rgba(15, 23, 42, 0.6);
+    cursor: pointer;
 }
 
-.video-card:hover .video-cover-container {
-    transform: scale(1.04);
-}
-
-.play-overlay {
+.card-cover {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.4);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.video-card:hover .play-overlay {
-    opacity: 1;
-}
-
-.play-icon {
-    background: #fff;
-    color: #0f172a;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
-    padding-left: 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: transform 0.3s ease;
-}
-
-.video-card:hover .play-icon {
-    transform: scale(1.1);
-}
-
-.info-msg {
-    grid-column: 1 / -1;
-    text-align: center;
-    color: #94a3b8;
-    font-size: 1.1rem;
-    padding: 40px;
-    line-height: 1.6;
-}
-
-#drop-area {
-    border: 2px dashed rgba(255, 255, 255, 0.15);
-    border-radius: 16px;
-    padding: 30px 20px;
-    text-align: center;
-    background: rgba(0,0,0,0.15);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    outline: none;
-}
-
-#drop-area:focus, #drop-area:hover {
-    border-color: #38bdf8;
-    background: rgba(56, 189, 248, 0.02);
-}
-
-.preview-img {
+    top: 0;
+    left: 0;
     width: 100%;
-    max-height: 200px;
+    height: 100%;
     object-fit: cover;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
 }
 
-.glass-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-width: 600px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.form-group label {
-    font-size: 0.85rem;
-    color: #94a3b8;
-}
-
-.form-group input[type="text"],
-.form-group input[type="url"],
-.form-group select {
-    background: rgba(0, 0, 0, 0.25);
+.card-fav-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 16px;
-    border-radius: 12px;
-    color: #fff;
-    font-size: 0.95rem;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-.form-group select option {
-    background: #0f172a;
-    color: #fff;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: rgba(56, 189, 248, 0.4);
-}
-
-.checkbox-group {
+    color: #64748b;
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
     cursor: pointer;
-    user-select: none;
-    color: #f8fafc !important;
-    font-size: 0.95rem !important;
+    transition: all 0.2s;
+    z-index: 3;
 }
 
-.checkbox-group input {
-    width: 18px;
-    height: 18px;
-    accent-color: #38bdf8;
+.card-fav-btn:hover {
+    transform: scale(1.1);
+    background: rgba(15, 23, 42, 0.8);
 }
 
-.card-info-content {
+.card-fav-btn.active {
+    color: #eab308;
+    border-color: rgba(234, 179, 8, 0.3);
+}
+
+.card-body {
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 10px;
-    width: 100%;
+    gap: 12px;
+    flex: 1;
 }
 
 .card-instructor {
-    font-size: 1.05rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: #38bdf8;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .card-partner {
-    color: #94a3b8;
-    font-size: 0.85rem;
-    margin-top: -4px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #f8fafc;
 }
 
-.card-badges {
+.card-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.card-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 4px;
 }
 
-.badge {
-    font-size: 0.75rem;
-    font-weight: 600;
+.tag-chip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
     padding: 4px 10px;
     border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.badge-leader {
-    background: rgba(168, 85, 247, 0.15); 
-    color: #c084fc;
-    border: 1px solid rgba(168, 85, 247, 0.3);
-}
-
-.badge-follower {
-    background: rgba(236, 72, 153, 0.15); 
-    color: #f472b6;
-    border: 1px solid rgba(236, 72, 153, 0.3);
-}
-
-.badge-both {
-    background: rgba(56, 189, 248, 0.15); 
+.tag-chip:hover {
+    background: rgba(56, 189, 248, 0.1);
     color: #38bdf8;
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-color: rgba(56, 189, 248, 0.2);
 }
 
-.badge-drive {
-    background: rgba(34, 197, 94, 0.15); 
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.badge-social {
-    background: rgba(245, 158, 11, 0.15); 
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.card-action-link {
-    color: #ec4899;
-    font-size: 0.85rem;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s ease;
-    align-self: center;
-    cursor: pointer;
-}
-
-.card-action-link:hover {
-    color: #f472b6;
-    text-decoration: underline;
-}
-
-.fav-star-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 1.1rem;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10;
+.card-action {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    transition: all 0.2s ease;
-    padding-bottom: 2px;
 }
 
-.fav-star-btn:hover {
-    transform: scale(1.1);
-    color: #eab308;
-    background: rgba(15, 23, 42, 0.8);
-}
-
-.fav-star-btn.active {
-    color: #eab308;
-    background: rgba(15, 23, 42, 0.7);
-    border-color: rgba(234, 179, 8, 0.4);
-    box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
-}
-
-.assistant-box {
-    background: rgba(56, 189, 248, 0.04);
-    border: 1px solid rgba(56, 189, 248, 0.15);
-    border-radius: 14px;
-    padding: 15px;
-    margin-top: 5px;
-}
-
-.assistant-box h4 {
+.watch-link {
+    color: #ec4899;
+    text-decoration: none;
     font-size: 0.9rem;
-    color: #38bdf8;
     font-weight: 600;
+    transition: color 0.2s;
 }
 
-.assistant-code {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255,255,255,0.05);
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-family: 'Courier New', Courier, monospace;
+.watch-link:hover {
+    color: #f43f5e;
+}
+
+/* Form Alanları */
+.form-container {
+    max-width: 650px;
+    margin: 0 auto;
+    width: 100%;
+    background: rgba(30, 41, 59, 0.2);
+    padding: 35px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.form-container h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: #f8fafc;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+label {
     font-size: 0.9rem;
-    color: #e2e8f0;
-    word-break: break-all;
-    margin-top: 8px;
-    user-select: all;
+    font-weight: 500;
+    color: #94a3b8;
 }
 
+input[type="text"], input[type="url"], select {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: #f8fafc;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: #38bdf8;
+}
+
+.secondary-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    padding: 0 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+}
+
+.drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    padding: 30px 20px;
+    border-radius: 14px;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(15, 23, 42, 0.2);
+    transition: all 0.2s;
+}
+
+.drop-zone:hover {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.02);
+}
+
+.drop-zone p {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #38bdf8, #ec4899);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 10px;
+}
+
+.submit-btn:hover {
+    opacity: 0.9;
+}
+
+/* Modal */
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    z-index: 9999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: fadeIn 0.3s ease;
+    z-index: 100;
 }
 
 .modal-content {
     position: relative;
     width: 90%;
-    max-width: 960px;
-    background: #0f172a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 800px;
+    background: #1e293b;
     border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
 }
 
 .modal-close {
     position: absolute;
-    top: 12px; right: 20px;
+    top: 10px;
+    right: 15px;
     color: #94a3b8;
-    font-size: 2rem;
-    font-weight: bold;
+    font-size: 1.8rem;
     cursor: pointer;
-    z-index: 10001;
-    transition: color 0.2s ease;
+    transition: color 0.2s;
+    z-index: 101;
 }
 
 .modal-close:hover {
@@ -583,43 +538,53 @@ body {
 .video-container {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%; 
-    height: 0;
+    padding-top: 56.25%;
 }
 
 .video-container iframe {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     border: none;
 }
 
-/* ==========================================================================
-   🚨 YENİ EKLENEN ÖZELLİKLERİN STİLLERİ (TAG CHIPS, AUTOCOMPLETE & CRUD)
-   ========================================================================== */
+.d-none {
+    display: none !important;
+}
 
-/* Modern Etiket Giriş Çerçevesi */
+/* Etiket Çipler Giriş Alanı */
 .tags-input-container {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px 14px;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px 12px;
     border-radius: 12px;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     min-height: 48px;
-    transition: border-color 0.3s ease;
+    cursor: text;
 }
 
-.tags-input-container:focus-within {
-    border-color: rgba(56, 189, 248, 0.4);
+.tags-input-container input {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 0 !important;
+    margin: 0 !important;
+    width: 100%;
+    min-width: 120px;
 }
 
-/* Etiket Kutucuğu (Chip) Tasarımı */
-.tag-chip-item {
-    background: rgba(56, 189, 248, 0.15);
+.tags-input-container input:focus {
+    box-shadow: none !important;
+}
+
+.form-tag-chip {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(236, 72, 153, 0.1));
+    border: 1px solid rgba(56, 189, 248, 0.2);
     color: #38bdf8;
-    border: 1px solid rgba(56, 189, 248, 0.3);
     padding: 4px 10px;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -627,76 +592,55 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    user-select: none;
-    animation: fadeIn 0.2s ease;
 }
 
-.chip-close-x {
+.form-tag-chip-remove {
     cursor: pointer;
+    color: #64748b;
     font-weight: bold;
-    color: rgba(56, 189, 248, 0.6);
-    font-size: 1rem;
     transition: color 0.2s ease;
 }
 
-.chip-close-x:hover {
+.form-tag-chip-remove:hover {
     color: #ef4444;
 }
 
-/* Autocomplete (Arama Öneri Listesi) Kutusu */
+/* Otomatik Tamamlama Önerileri */
 .autocomplete-suggestions {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 5px);
     left: 0;
-    width: 100%;
+    right: 0;
     background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    z-index: 999;
-    max-height: 180px;
+    max-height: 150px;
     overflow-y: auto;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    z-index: 50;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 }
 
 .autocomplete-suggestion-item {
     padding: 10px 14px;
+    font-size: 0.85rem;
+    color: #94a3b8;
     cursor: pointer;
-    font-size: 0.9rem;
-    color: #cbd5e1;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
-.autocomplete-suggestion-item:hover, 
-.autocomplete-active {
-    background: rgba(56, 189, 248, 0.15);
+.autocomplete-suggestion-item:hover {
+    background: rgba(56, 189, 248, 0.1);
     color: #38bdf8;
 }
 
-/* Kart Üzerindeki İçi Kalem Butonu */
-.inline-edit-tags-btn {
-    background: transparent;
-    border: none;
-    color: #64748b;
-    font-size: 0.75rem;
-    cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.inline-edit-tags-btn:hover {
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.08);
-}
-
-/* Pop-up Etiket Düzenleme Satır Yapısı */
+/* Pop-up İçindeki Etiket Düzenleme Alanları */
 .modal-tags-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    max-height: 250px;
+    gap: 10px;
+    max-height: 200px;
     overflow-y: auto;
-    padding-right: 4px;
+    padding-right: 5px;
 }
 
 .modal-tag-row {
@@ -736,34 +680,23 @@ body {
 /* Kart CRUD (Düzenle/Sil) Buton Stilleri */
 .card-crud-btn {
     background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.05);
     color: #94a3b8;
-    width: 32px;
-    height: 32px;
+    padding: 5px 10px;
     border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
     cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 0.85rem;
     transition: all 0.2s ease;
 }
 
-.card-edit-btn:hover {
-    background: rgba(56, 189, 248, 0.15);
-    border-color: rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
-    transform: translateY(-1px);
+.card-crud-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #f8fafc;
 }
 
-.card-delete-btn:hover {
+.card-crud-btn.delete:hover {
     background: rgba(239, 68, 68, 0.15);
     border-color: rgba(239, 68, 68, 0.3);
     color: #ef4444;
-    transform: translateY(-1px);
-}
-
-/* Kart Alt Alan Satır Düzenleyici */
-.card-tags-wrapper-row {
-    width: 100%;
 }
