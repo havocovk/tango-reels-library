@@ -11,55 +11,6 @@ let formTagsArray = [];
 let modalTagsArray = [];
 let activeEditTagsVideoId = null; 
 
-// BEĞENDİĞİNİZ POP-UP STİLİNDE YENİ MODERN ALERT / CONFIRM MEKANİZMASI
-function showCustomModal(message, type = 'info', isConfirm = false) {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('custom-alert-modal');
-        const msgEl = document.getElementById('custom-alert-message');
-        const iconEl = document.getElementById('custom-alert-icon');
-        const confirmBtn = document.getElementById('custom-alert-confirm-btn');
-        const cancelBtn = document.getElementById('custom-alert-cancel-btn');
-
-        msgEl.textContent = message;
-        
-        if (type === 'success') iconEl.textContent = '🎉';
-        else if (type === 'error') iconEl.textContent = '❌';
-        else if (type === 'delete' || type === 'warning') iconEl.textContent = '⚠️';
-        else iconEl.textContent = '🔔';
-
-        const lang = translations[currentLang];
-        confirmBtn.textContent = lang.btnConfirm || 'Tamam';
-        cancelBtn.textContent = lang.btnCancel || 'İptal';
-
-        if (isConfirm) {
-            cancelBtn.classList.remove('d-none');
-        } else {
-            cancelBtn.classList.add('d-none');
-        }
-
-        modal.classList.remove('d-none');
-
-        const handleConfirm = () => {
-            cleanup();
-            resolve(true);
-        };
-
-        const handleCancel = () => {
-            cleanup();
-            resolve(false);
-        };
-
-        const cleanup = () => {
-            confirmBtn.removeEventListener('click', handleConfirm);
-            cancelBtn.removeEventListener('click', handleCancel);
-            modal.classList.add('d-none');
-        };
-
-        confirmBtn.addEventListener('click', handleConfirm);
-        cancelBtn.addEventListener('click', handleCancel);
-    });
-}
-
 function getFavorites() {
     const favs = localStorage.getItem('atkk_favorites');
     return favs ? JSON.parse(favs) : [];
@@ -76,11 +27,9 @@ function toggleFavorite(videoId) {
     applyFiltersAndSearch(); 
 }
 
-// Toplu temizlemedeki eski confirm yapısı yeni pop-up'a geçirildi
-async function clearAllFavorites() {
+function clearAllFavorites() {
     const lang = translations[currentLang];
-    const confirmed = await showCustomModal(lang.confirmClearFavs, 'warning', true);
-    if (confirmed) {
+    if (confirm(lang.confirmClearFavs)) {
         localStorage.setItem('atkk_favorites', JSON.stringify([]));
         applyFiltersAndSearch();
     }
@@ -89,7 +38,10 @@ async function clearAllFavorites() {
 async function fetchVideos() {
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(id,name)&order=created_at.desc`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
         });
         if (!response.ok) throw new Error("Veriler çekilemedi");
         globalVideos = await response.json();
@@ -103,7 +55,10 @@ async function fetchVideos() {
 async function fetchInstructors() {
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
         });
         const instructors = await response.json();
         
@@ -347,7 +302,6 @@ function applyFiltersAndSearch() {
     renderVideos(filtered);
 }
 
-// SADELEŞMİŞ ETİKET POP-UP AÇILIŞ MANTIĞI
 function openTagsEditModal(videoId) {
     activeEditTagsVideoId = videoId;
     const video = globalVideos.find(v => v.id === videoId);
@@ -355,6 +309,36 @@ function openTagsEditModal(videoId) {
 
     modalTagsArray = video.tags ? [...video.tags] : [];
     renderModalChips();
+
+    const container = document.getElementById('modal-tags-list-container');
+    if (container) {
+        container.innerHTML = '';
+        modalTagsArray.forEach((tag, index) => {
+            const row = document.createElement('div');
+            row.className = 'modal-tag-row';
+            row.innerHTML = `
+                <input type="text" value="${tag}" class="modal-tag-edit-input" data-index="${index}">
+                <button class="modal-tag-row-delete-btn" data-index="${index}">&times;</button>
+            `;
+            container.appendChild(row);
+        });
+
+        container.querySelectorAll('.modal-tag-edit-input').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                modalTagsArray[idx] = e.target.value.trim();
+                renderModalChips();
+            });
+        });
+
+        container.querySelectorAll('.modal-tag-row-delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                modalTagsArray.splice(idx, 1);
+                openTagsEditModal(activeEditTagsVideoId); 
+            });
+        });
+    }
 
     document.getElementById('tags-edit-modal').classList.remove('d-none');
 }
@@ -380,7 +364,7 @@ async function saveModalTags() {
         if (!response.ok) throw new Error("Etiketler güncellenemedi");
         
         closeTagsEditModal();
-        await showCustomModal(translations[currentLang].vidUpdateSuccess, 'success');
+        alert(translations[currentLang].vidUpdateSuccess);
         fetchVideos();
     } catch (err) {
         console.error(err);
@@ -414,20 +398,28 @@ async function handleFormSubmit(e) {
         if (editingVideoId) {
             response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${editingVideoId}`, {
                 method: 'PATCH',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(payload)
             });
         } else {
             response = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
                 method: 'POST',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(payload)
             });
         }
 
         if (!response.ok) throw new Error("İşlem başarısız");
 
-        await showCustomModal(editingVideoId ? lang.vidUpdateSuccess : lang.vidSuccess, 'success');
+        alert(editingVideoId ? lang.vidUpdateSuccess : lang.vidSuccess);
         
         document.getElementById('add-video-form').reset();
         formTagsArray = [];
@@ -481,17 +473,19 @@ function loadVideoToForm(videoId) {
 
 async function deleteVideo(videoId) {
     const lang = translations[currentLang];
-    const confirmed = await showCustomModal(lang.confirmDeleteVideo, 'delete', true);
-    if (!confirmed) return;
+    if (!confirm(lang.confirmDeleteVideo)) return;
 
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
             method: 'DELETE',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
         });
         if (!response.ok) throw new Error("Silme işlemi başarısız");
         
-        await showCustomModal(lang.successDeleteVideo, 'success');
+        alert(lang.successDeleteVideo);
         fetchVideos();
     } catch (err) {
         console.error(err);
@@ -517,7 +511,7 @@ async function handleInstructorSubmit() {
     const lang = translations[currentLang];
 
     if (!name) {
-        await showCustomModal(lang.insAlert, 'error');
+        alert(lang.insAlert);
         return;
     }
 
@@ -526,20 +520,28 @@ async function handleInstructorSubmit() {
         if (editInstructorId) {
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${editInstructorId}`, {
                 method: 'PATCH',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ name })
             });
         } else {
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
                 method: 'POST',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ name })
             });
         }
 
         if (!response.ok) throw new Error("Eğitmen işlemi başarısız");
 
-        await showCustomModal(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess, 'success');
+        alert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess);
         nameInput.value = '';
         editInstructorId = null;
         document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
@@ -558,17 +560,19 @@ async function deleteInstructor() {
 
     if (!id) return;
 
-    const confirmed = await showCustomModal(lang.deleteConfirm, 'delete', true);
-    if (!confirmed) return;
+    if (!confirm(lang.deleteConfirm)) return;
 
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
             method: 'DELETE',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
         });
         if (!response.ok) throw new Error("Eğitmen silinemedi");
 
-        await showCustomModal(lang.insDeleteSuccess, 'success');
+        alert(lang.insDeleteSuccess);
         select.value = '';
         document.getElementById('new-instructor-name-input').value = '';
         editInstructorId = null;
@@ -675,6 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
 
     document.getElementById('btn-save-modal-tags').addEventListener('click', saveModalTags);
+
     document.getElementById('modal-close-btn').addEventListener('click', closeVideoModal);
     document.getElementById('video-modal').addEventListener('click', (e) => {
         if (e.target.id === 'video-modal') closeVideoModal();
