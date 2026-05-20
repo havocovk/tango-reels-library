@@ -82,7 +82,7 @@ export const translations = {
         lblInstructor: "Instructor:",
         lblPartner: "Partner / Assistant:",
         lblVideoUrl: "Video URL (Drive / Social Media):",
-        lblRole: "Role:",
+        role: "Role:",
         lblLocation: "Location:",
         lblTags: "Tags (Separate with comma or press enter):",
         btnSubmitVideo: "💾 Add Combination to Library",
