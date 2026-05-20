@@ -52,7 +52,6 @@ body {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* Sol Menü */
 .sidebar-glass {
     width: 280px;
     background: rgba(30, 41, 59, 0.4);
@@ -125,7 +124,6 @@ body {
     color: #38bdf8;
 }
 
-/* Ana İçerik Alanı */
 .main-content {
     flex: 1;
     padding: 30px;
@@ -142,7 +140,6 @@ body {
     padding: 20px;
 }
 
-/* Üst Filtre Barı */
 .search-filter-bar {
     display: flex;
     gap: 15px;
@@ -196,7 +193,6 @@ input:focus, select:focus {
     transform: translateY(-1px);
 }
 
-/* Grid Yapısı */
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -323,7 +319,6 @@ input:focus, select:focus {
     margin-left: 4px;
 }
 
-/* Kart Aksiyonları */
 .card-actions-wrapper {
     display: flex;
     gap: 8px;
@@ -355,7 +350,6 @@ input:focus, select:focus {
     color: #ef4444;
 }
 
-/* Formlar */
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -413,7 +407,6 @@ input:focus, select:focus {
     margin-top: 10px;
 }
 
-/* Etiket Giriş Alanları */
 .tags-input-container {
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -464,7 +457,6 @@ input:focus, select:focus {
     color: #38bdf8;
 }
 
-/* Modallar */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -523,12 +515,3 @@ input:focus, select:focus {
 
 .d-none { display: none !important; }
 .status-message { text-align: center; padding: 40px; color: #94a3b8; font-size: 1.1rem; }
-
-.animate-fade-in {
-    animation: fadeIn 0.25s ease-out forwards;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-}

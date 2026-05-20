@@ -12,7 +12,7 @@ let formTagsArray = [];
 let activeEditTagsVideoId = null; 
 let uniqueExistingTags = new Set();
 
-// --- MODERN VE UYUMLU POP-UP PENCERELERİ (ALERT / CONFIRM YERİNE) ---
+// --- KULLANICI ARAYÜZÜ İLE UYUMLU ASENKRON POP-UP MOTORU ---
 function showCustomAlert(message, icon = "🎉") {
     const alertModal = document.getElementById('custom-alert-modal');
     document.getElementById('alert-icon').innerText = icon;
@@ -221,7 +221,6 @@ function switchView(view) {
     }
 }
 
-// --- ETİKET YÖNETİM CHIPS YAPISI ---
 function handleTagInput(e, type) {
     const input = e.target;
     const value = input.value;
@@ -369,7 +368,6 @@ function hideSuggestions(type) {
     }, 200);
 }
 
-// --- VERİTABANI VE SELECT YÜKLEMELERİ ---
 async function loadInstructorsToSelect() {
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
@@ -555,7 +553,7 @@ function renderCards(videos) {
 
     videos.forEach(video => {
         const card = document.createElement('div');
-        card.className = 'video-card animate-fade-in';
+        card.className = 'video-card';
 
         const isFav = favs.includes(video.id);
         const coverImg = video.cover_url || 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500';
