@@ -28,6 +28,10 @@ export const translations = {
         lblTags: "Teknik Etiketleri (Virgülle ayırın):",
         tagsPlaceholder: "Örn: Giro, Sacada, Boleo, Barrida",
         lblDownloaded: "Google Drive'a Yedeklendi mi?",
+        lblDriveUrl: "Google Drive Video Paylaşım Linki:",
+        assistantTitle: "💡 Akıllı Dosya İsmi Asistanı",
+        assistantText: "İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:",
+        assistantAlert: "(Lütfen önce Eğitmen seçin)",
         btnSubmitVideo: "💾 Veritabanına Kaydet",
         successSave: "🎉 Video başarıyla eklendi!",
         lblNewInstructorName: "Eğitmen Adı:",
@@ -48,7 +52,8 @@ export const translations = {
         both: "İkisi de",
         allLocations: "Tüm Ortamlar",
         drive: "💾 Google Drive",
-        social: "🌐 Sosyal Medya"
+        social: "🌐 Sosyal Medya",
+        closeBtn: "Kapat"
     },
     en: {
         brandTitle: "💃 ATKK",
@@ -74,6 +79,10 @@ export const translations = {
         lblTags: "Technical Tags (Separate with commas):",
         tagsPlaceholder: "e.g., Giro, Sacada, Boleo, Barrida",
         lblDownloaded: "Backed up to Google Drive?",
+        lblDriveUrl: "Google Drive Video Share Link:",
+        assistantTitle: "💡 Smart File Name Assistant",
+        assistantText: "Before uploading the video to Drive, it is recommended to rename it as:",
+        assistantAlert: "(Please select an Instructor first)",
         btnSubmitVideo: "💾 Save to Database",
         successSave: "🎉 Video successfully added!",
         lblNewInstructorName: "Instructor Name:",
@@ -94,6 +103,7 @@ export const translations = {
         both: "Both",
         allLocations: "All Locations",
         drive: "💾 Google Drive",
-        social: "🌐 Social Media"
+        social: "🌐 Social Media",
+        closeBtn: "Close"
     }
 };

@@ -4,9 +4,8 @@ import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './
 let currentLang = 'tr';
 let globalVideos = [];
 let editInstructorId = null;
-let currentView = 'library'; // 'library' veya 'favorites'
+let currentView = 'library'; 
 
-// LocalStorage'dan favorileri yükleme altyapısı
 function getFavorites() {
     const favs = localStorage.getItem('atkk_favorites');
     return favs ? JSON.parse(favs) : [];
@@ -20,7 +19,57 @@ function toggleFavorite(videoId) {
         favs.push(videoId);
     }
     localStorage.setItem('atkk_favorites', JSON.stringify(favs));
-    applyFiltersAndSearch(); // Listeyi anında güncelle
+    applyFiltersAndSearch(); 
+}
+
+// Google Drive Linkini Sitede Doğrudan Oynatılabilecek "Embed" Formatına Çeviren Sihirli Fonksiyon
+function convertDriveUrlToEmbed(url) {
+    if (!url) return '';
+    // drive.google.com/file/d/[ID]/view veya /edit formatındaki ID'yi yakalar
+    const regExp = /\/file\/d\/([^/]+)/;
+    const matches = url.match(regExp);
+    if (matches && matches[1]) {
+        return `https://drive.google.com/file/d/${matches[1]}/preview`;
+    }
+    return url;
+}
+
+// 💡 AKILLI DOSYA İSMİ ASİSTANI ÇALIŞMA MANTIĞI
+function updateSmartFilenameAssistant() {
+    const lang = translations[currentLang];
+    const select = document.getElementById('form-instructor-select');
+    const tagsInput = document.getElementById('form-tags-input').value.trim();
+    const outputDiv = document.getElementById('assistant-filename-output');
+
+    if (!select.value || select.selectedIndex === -1) {
+        outputDiv.innerText = lang.assistantAlert;
+        return;
+    }
+
+    // Seçilen eğitmen adını alıp Türkçe karakterleri/boşlukları temizle temizle
+    let instructorName = select.options[select.selectedIndex].text;
+    
+    // Karakterleri ve boşlukları temizleme kuralı (Temiz ve standart dosya ismi için)
+    let cleanName = instructorName
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_]/g, '');
+
+    // Etiketleri al, temizle ve alt tire ile birleştir
+    let cleanTags = '';
+    if (tagsInput) {
+        cleanTags = tagsInput.split(',')
+            .map(t => t.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, ''))
+            .filter(t => t !== '')
+            .join('_');
+    }
+
+    let finalFilename = cleanName;
+    if (cleanTags) {
+        finalFilename += '_' + cleanTags;
+    }
+    finalFilename += '.mp4';
+
+    outputDiv.innerText = finalFilename;
 }
 
 function updateInterfaceLanguage() {
@@ -51,10 +100,14 @@ function updateInterfaceLanguage() {
     document.getElementById('lbl-tags').innerText = lang.lblTags;
     document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
     document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
+    document.getElementById('lbl-drive-url').innerText = lang.lblDriveUrl;
     document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
     document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
     document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
     
+    document.getElementById('assistant-title').innerText = lang.assistantTitle;
+    document.getElementById('assistant-text').innerText = lang.assistantText;
+
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
         dropAreaText.innerText = lang.dropText;
@@ -62,13 +115,10 @@ function updateInterfaceLanguage() {
 
     const saveInsBtn = document.getElementById('btn-save-instructor');
     if (saveInsBtn) {
-        if (editInstructorId) {
-            saveInsBtn.innerText = lang.btnUpdateIns;
-        } else {
-            saveInsBtn.innerText = lang.btnAddIns;
-        }
+        saveInsBtn.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
     }
 
+    updateSmartFilenameAssistant();
     applyFiltersAndSearch();
 }
 
@@ -87,6 +137,7 @@ async function fetchInstructors() {
             opt.innerText = ins.name;
             select.appendChild(opt);
         });
+        updateSmartFilenameAssistant();
     } catch (err) {
         console.error("Eğitmenler yüklenemedi:", err);
     }
@@ -108,6 +159,17 @@ async function fetchVideos() {
     }
 }
 
+function openVideoModal(url) {
+    const embedUrl = convertDriveUrlToEmbed(url);
+    document.getElementById('modal-iframe').src = embedUrl;
+    document.getElementById('video-modal').classList.remove('d-none');
+}
+
+function closeVideoModal() {
+    document.getElementById('video-modal').classList.add('d-none');
+    document.getElementById('modal-iframe').src = ''; // Videoyu durdurmak için
+}
+
 function renderVideoCards(videos) {
     const videoGrid = document.getElementById('video-grid');
     const lang = translations[currentLang];
@@ -125,10 +187,8 @@ function renderVideoCards(videos) {
         const card = document.createElement('div');
         card.className = 'video-card';
         
-        // Rol Tipi Renkli Badge Ataması
         let roleDisplay = video.role_type || 'Both';
         let roleBadgeClass = '';
-        
         if (roleDisplay === 'Leader') {
             roleDisplay = currentLang === 'tr' ? 'Lider' : 'Leader';
             roleBadgeClass = 'badge-leader';
@@ -140,7 +200,6 @@ function renderVideoCards(videos) {
             roleBadgeClass = 'badge-both';
         }
 
-        // Ortam (Storage) Renkli Badge Ataması
         const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
         const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
         
@@ -160,11 +219,16 @@ function renderVideoCards(videos) {
         const coverImg = video.cover_url || defaultCover;
         const isFav = favs.includes(video.id);
 
+        // Eğer Drive linki varsa site içi Modal Player aç, yoksa dış linke yönlendir
+        const hasDrive = video.is_downloaded && video.drive_url;
+        const actionClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
+        const actionLinkClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image: url('${coverImg}');">
                     <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
-                    <a href="${video.url}" target="_blank" class="play-overlay-link">
+                    <a ${actionClickAttr}>
                         <div class="play-overlay">
                             <span class="play-icon">▶</span>
                         </div>
@@ -182,17 +246,27 @@ function renderVideoCards(videos) {
 
                 ${tagsHtml ? `<div class="card-badges" style="margin-top: 2px; gap: 4px;">${tagsHtml}</div>` : ''}
 
-                <a href="${video.url}" target="_blank" class="card-action-link">
-                    ${lang.watch || '🌐 İzle ↗'}
+                <a ${actionLinkClickAttr}>
+                    ${hasDrive ? (currentLang === 'tr' ? '🎬 Kütüphanede İzle →' : '🎬 Watch in Library →') : lang.watch}
                 </a>
             </div>
         `;
 
-        // Yıldız butonuna tıklama olayı bağlama
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
+
+        // Site içi oynatıcı tetikleyicileri
+        if (hasDrive) {
+            const triggers = card.querySelectorAll('[data-drive]');
+            triggers.forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openVideoModal(video.drive_url);
+                });
+            });
+        }
 
         videoGrid.appendChild(card);
     });
@@ -205,7 +279,6 @@ function applyFiltersAndSearch() {
     const favs = getFavorites();
 
     const filtered = globalVideos.filter(video => {
-        // Eğer 'favorites' görünümündeysek, favori listesinde olmayanları baştan ele
         if (currentView === 'favorites' && !favs.includes(video.id)) {
             return false;
         }
@@ -246,10 +319,8 @@ async function handleInstructorSubmit() {
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${editInstructorId}`, {
                 method: 'PATCH',
                 headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
+                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json', 'Prefer': 'return=minimal'
                 },
                 body: JSON.stringify({ name })
             });
@@ -257,10 +328,8 @@ async function handleInstructorSubmit() {
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
                 method: 'POST',
                 headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
+                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json', 'Prefer': 'return=minimal'
                 },
                 body: JSON.stringify({ name })
             });
@@ -269,7 +338,6 @@ async function handleInstructorSubmit() {
         if (!response.ok) throw new Error("Eğitmen kaydedilemedi");
 
         alert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess);
-        
         input.value = '';
         editInstructorId = null;
         document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
@@ -315,6 +383,7 @@ async function handleFormSubmit(e) {
     const partner_name = document.getElementById('form-partner-name').value.trim();
     const tags = document.getElementById('form-tags-input').value.trim();
     const is_downloaded = document.getElementById('form-is-downloaded').checked;
+    const drive_url = document.getElementById('form-drive-url').value.trim();
     const cover_url = getUploadedCoverUrl();
 
     if (!instructor_id) {
@@ -329,6 +398,7 @@ async function handleFormSubmit(e) {
         partner_name: partner_name || null,
         tags: tags || null,
         is_downloaded,
+        drive_url: is_downloaded && drive_url ? drive_url : null,
         cover_url
     };
 
@@ -336,10 +406,8 @@ async function handleFormSubmit(e) {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
             method: 'POST',
             headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
+                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
             },
             body: JSON.stringify(payload)
         });
@@ -349,15 +417,13 @@ async function handleFormSubmit(e) {
         alert(lang.successSave);
         document.getElementById('add-video-form').reset();
         
-        const imgPreview = document.getElementById('image-preview');
-        if (imgPreview) imgPreview.classList.add('d-none');
-        
-        const dropAreaText = document.getElementById('drop-area-text');
-        if (dropAreaText) {
-            dropAreaText.innerText = lang.dropText;
-            dropAreaText.classList.remove('d-none');
+        if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
+        if (document.getElementById('drop-area-text')) {
+            document.getElementById('drop-area-text').innerText = lang.dropText;
+            document.getElementById('drop-area-text').classList.remove('d-none');
         }
         
+        document.getElementById('drive-url-container').classList.add('d-none');
         resetUploadedCoverUrl();
         
         document.getElementById('menu-library').click();
@@ -370,26 +436,20 @@ async function handleFormSubmit(e) {
 
 function switchView(viewName) {
     currentView = viewName;
-    
-    // Aktif pasif buton durumlarını güncelleme
     document.getElementById('menu-library').classList.remove('active');
     document.getElementById('menu-favorites').classList.remove('active');
     document.getElementById('menu-add-video').classList.remove('active');
 
-    if (viewName === 'library') {
+    if (viewName === 'library' || viewName === 'favorites') {
         document.getElementById('view-library-container').classList.remove('d-none');
         document.getElementById('view-add-container').classList.add('d-none');
-        document.getElementById('menu-library').classList.add('active');
-        applyFiltersAndSearch();
-    } else if (viewName === 'favorites') {
-        document.getElementById('view-library-container').classList.remove('d-none');
-        document.getElementById('view-add-container').classList.add('d-none');
-        document.getElementById('menu-favorites').classList.add('active');
+        document.getElementById(`menu-${viewName}`).classList.add('active');
         applyFiltersAndSearch();
     } else if (viewName === 'add') {
         document.getElementById('view-library-container').classList.add('d-none');
         document.getElementById('view-add-container').classList.remove('d-none');
         document.getElementById('menu-add-video').classList.add('active');
+        updateSmartFilenameAssistant();
     }
 }
 
@@ -406,23 +466,35 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('menu-favorites').addEventListener('click', () => switchView('favorites'));
     document.getElementById('menu-add-video').addEventListener('click', () => switchView('add'));
 
+    // Drive Checkbox'ına basıldığında alt input alanını göster/gizle
+    document.getElementById('form-is-downloaded').addEventListener('change', (e) => {
+        const driveUrlContainer = document.getElementById('drive-url-container');
+        if (e.target.checked) {
+            driveUrlContainer.classList.remove('d-none');
+            document.getElementById('form-drive-url').required = true;
+        } else {
+            driveUrlContainer.classList.add('d-none');
+            document.getElementById('form-drive-url').required = false;
+            document.getElementById('form-drive-url').value = '';
+        }
+    });
+
+    // Asistan Değişiklik Tetikleyicileri
+    document.getElementById('form-instructor-select').addEventListener('change', updateSmartFilenameAssistant);
+    document.getElementById('form-tags-input').addEventListener('input', updateSmartFilenameAssistant);
+
     document.getElementById('btn-toggle-new-instructor').addEventListener('click', () => {
         editInstructorId = null;
         document.getElementById('form-new-instructor-input').value = '';
         document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnAddIns;
-        
-        const container = document.getElementById('new-instructor-container');
-        container.classList.toggle('d-none');
+        document.getElementById('new-instructor-container').classList.toggle('d-none');
     });
 
     document.getElementById('btn-edit-instructor').addEventListener('click', () => {
         const select = document.getElementById('form-instructor-select');
         if (!select.value) return;
-        
         editInstructorId = select.value;
-        const selectedName = select.options[select.selectedIndex].text;
-        
-        document.getElementById('form-new-instructor-input').value = selectedName;
+        document.getElementById('form-new-instructor-input').value = select.options[select.selectedIndex].text;
         document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnUpdateIns;
         document.getElementById('new-instructor-container').classList.remove('d-none');
     });
@@ -435,6 +507,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
+
+    // Modal Kapatma Olayları
+    document.getElementById('modal-close-btn').addEventListener('click', closeVideoModal);
+    document.getElementById('video-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'video-modal') closeVideoModal();
+    });
 
     const dropArea = document.getElementById('drop-area');
     if (dropArea) {
