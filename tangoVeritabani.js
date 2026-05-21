@@ -83,3 +83,68 @@ export async function dbSaveVideo(id, payload) {
     if (!response.ok) throw new Error("Video veritabanına yazılamadı");
     return response;
 }
+
+// dbManager.js dosyasının altına eklenecekler:
+
+export async function dbFetchInstructors() {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!response.ok) throw new Error("Eğitmenler yüklenemedi");
+    return response.json();
+}
+
+export async function dbFetchVideos() {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!response.ok) throw new Error("Videolar yüklenemedi");
+    return response.json();
+}
+
+export async function dbUpdateTagsDirectly(videoId, cleanTags) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
+        method: 'PATCH',
+        headers: {
+            'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tags: cleanTags || null })
+    });
+    if (!response.ok) throw new Error("Etiket güncellenemedi");
+    return response;
+}
+
+export async function dbSaveInstructor(id, name) {
+    let response;
+    if (id) {
+        response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ name })
+        });
+    } else {
+        response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ name })
+        });
+    }
+    if (!response.ok) throw new Error("Eğitmen kaydedilemedi");
+    return response;
+}
+
+export async function dbDeleteInstructor(id) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!response.ok) throw new Error("Eğitmen silinemedi");
+    return response;
+}

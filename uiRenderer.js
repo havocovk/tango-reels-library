@@ -1,0 +1,251 @@
+// uiRenderer.js
+
+// 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
+export function renderChips(containerId, chipsArray, onRemoveCallback) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    chipsArray.forEach((tag, index) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip-item';
+        chip.innerHTML = `#${tag} <span class="chip-close-x" data-idx="${index}">&times;</span>`;
+        chip.querySelector('.chip-close-x').addEventListener('click', () => {
+            onRemoveCallback(index);
+        });
+        container.appendChild(chip);
+    });
+}
+
+// 2. AUTOCOMPLETE (OTOMATİK ÖNERİ) AYARLAMA FONKSİYONU
+export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, onAddCallback, getAllUniqueTagsPool) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+    if (!input || !list) return;
+    let currentFocus = -1;
+
+    input.addEventListener('input', () => {
+        const val = input.value.trim().toLowerCase();
+        list.innerHTML = '';
+        currentFocus = -1;
+        if (!val) {
+            list.classList.add('d-none');
+            return;
+        }
+
+        const pool = getAllUniqueTagsPool();
+        const filtered = pool.filter(tag => tag.toLowerCase().includes(val) && !chipsArray.includes(tag));
+
+        if (filtered.length === 0) {
+            list.classList.add('d-none');
+            return;
+        }
+
+        list.classList.remove('d-none');
+        filtered.forEach((tag) => {
+            const item = document.createElement('div');
+            item.className = 'autocomplete-suggestion-item';
+            const idx = tag.toLowerCase().indexOf(val);
+            item.innerHTML = tag.substring(0, idx) + "<strong>" + tag.substring(idx, idx + val.length) + "</strong>" + tag.substring(idx + val.length);
+            
+            item.addEventListener('click', () => {
+                onAddCallback(tag);
+                input.value = '';
+                list.classList.add('d-none');
+            });
+            list.appendChild(item);
+        });
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const items = list.querySelectorAll('.autocomplete-suggestion-item');
+        if (e.key === 'ArrowDown') {
+            currentFocus++;
+            addActive(items);
+        } else if (e.key === 'ArrowUp') {
+            currentFocus--;
+            addActive(items);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentFocus > -1 && items[currentFocus]) {
+                items[currentFocus].click();
+            } else {
+                const val = input.value.replace(/,/g, '').trim();
+                if (val && !chipsArray.includes(val)) {
+                    onAddCallback(val);
+                    input.value = '';
+                    list.classList.add('d-none');
+                }
+            }
+        } else if (e.key === 'Backspace' && input.value === '') {
+            if (chipsArray.length > 0) {
+                chipsArray.pop();
+                renderChipsFn();
+            }
+        }
+    });
+
+    input.addEventListener('keyup', (e) => {
+        if (e.key === ',' || e.code === 'Comma') {
+            const val = input.value.replace(/,/g, '').trim();
+            if (val && !chipsArray.includes(val)) {
+                onAddCallback(val);
+            }
+            input.value = '';
+            list.classList.add('d-none');
+        }
+    });
+
+    function addActive(items) {
+        if (!items || items.length === 0) return;
+        removeActive(items);
+        if (currentFocus >= items.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        items[currentFocus].classList.add('autocomplete-active');
+    }
+
+    function removeActive(items) {
+        items.forEach(item => item.classList.remove('autocomplete-active'));
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target !== input && e.target !== list) {
+            list.classList.add('d-none');
+        }
+    });
+}
+
+// 3. VİDEO KARTLARINI EKRENA ÇİZME FONKSİYONU
+export function renderVideoCards(videos, config) {
+    const { 
+        currentLang, 
+        currentView, 
+        translations, 
+        favs, 
+        toggleFavorite, 
+        openTagsEditModal, 
+        startVideoEditFlow, 
+        deleteVideoFlow, 
+        openVideoModal 
+    } = config;
+
+    const videoGrid = document.getElementById('video-grid');
+    const lang = translations[currentLang];
+    videoGrid.innerHTML = '';
+
+    if (videos.length === 0) {
+        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
+        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
+        return;
+    }
+
+    videos.forEach(video => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        
+        let roleDisplay = video.role_type || 'Both';
+        let roleBadgeClass = '';
+        if (roleDisplay === 'Leader') {
+            roleDisplay = currentLang === 'tr' ? 'Lider' : 'Leader';
+            roleBadgeClass = 'badge-leader';
+        } else if (roleDisplay === 'Follower') {
+            roleDisplay = currentLang === 'tr' ? 'Takipçi' : 'Follower';
+            roleBadgeClass = 'badge-follower';
+        } else {
+            roleDisplay = currentLang === 'tr' ? 'İkisi de' : 'Both';
+            roleBadgeClass = 'badge-both';
+        }
+
+        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
+        const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
+        
+        const partnerDisplay = video.partner_name 
+            ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
+            : '';
+        
+        let tagsHtml = '';
+        if (video.tags && video.tags.trim() !== '') {
+            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+            tagsArray.forEach(tag => {
+                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
+            });
+            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
+        } else {
+            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
+        }
+        
+        const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
+        const coverImg = video.cover_url || defaultCover;
+        const isFav = favs.includes(video.id);
+
+        const hasDrive = video.is_downloaded && video.drive_url;
+        const actionClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
+        const actionLinkClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+
+        card.innerHTML = `
+            <div class="video-cover-link">
+                <div class="video-cover-container" style="background-image: url('${coverImg}');">
+                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
+                    <a ${actionClickAttr}>
+                        <div class="play-overlay">
+                            <span class="play-icon">▶</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="card-info-content">
+                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
+                ${partnerDisplay}
+                
+                <div class="card-badges">
+                    <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
+                    <span class="badge ${storageClass}">${storageText}</span>
+                </div>
+
+                <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
+
+                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
+                    <a ${actionLinkClickAttr}>
+                        ${hasDrive ? (currentLang === 'tr' ? '🎬 Kütüphanede İzle →' : '🎬 Watch in Library →') : lang.watch}
+                    </a>
+                    
+                    <div style="display:flex; gap:8px;">
+                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
+                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(video.id);
+        });
+
+        card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openTagsEditModal(video);
+        });
+
+        card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            startVideoEditFlow(video);
+        });
+
+        card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteVideoFlow(video.id);
+        });
+
+        if (hasDrive) {
+            const triggers = card.querySelectorAll('[data-drive]');
+            triggers.forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openVideoModal(video.drive_url);
+                });
+            });
+        }
+
+        videoGrid.appendChild(card);
+    });
+}
