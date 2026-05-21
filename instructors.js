@@ -8,7 +8,7 @@ export async function handleInstructorSubmit() {
     const input = document.getElementById('form-new-instructor-input');
     const select = document.getElementById('form-instructor-select');
     if (!input || !select) return;
-    
+
     const name = input.value.trim();
     if (!name) return alert(lang.insAlert);
 
@@ -23,13 +23,14 @@ export async function handleInstructorSubmit() {
         }
         input.value = '';
         document.getElementById('new-instructor-container').classList.add('d-none');
+        AppState.editInstructorId = null;
         if (AppState.onRefreshUI) await AppState.onRefreshUI();
     } catch (err) {
         console.error(err);
     }
 }
 
-export async function deleteInstructorFlow() {
+export async function deleteInstructor() {
     const lang = translations[AppState.currentLang];
     const select = document.getElementById('form-instructor-select');
     if (!select || !select.value) return alert(lang.assistantAlert);

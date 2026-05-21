@@ -159,8 +159,7 @@ export function applyFiltersAndSearch() {
         `;
 
         card.querySelector('.fav-star-btn').addEventListener('click', () => {
-            toggleFavorite(video.id);
-            applyFiltersAndSearch();
+            toggleFavorite(video.id, applyFiltersAndSearch);
         });
 
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', () => {

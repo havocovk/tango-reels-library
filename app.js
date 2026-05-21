@@ -7,8 +7,8 @@ import { handleFormSubmit } from './handlers.js';
 import { clearAllFavorites } from './favorites.js';
 import { handlePasteEvent } from './storage.js';
 import { setupAutocompleteSystems } from './tags.js';
-import { handleInstructorSubmit, deleteInstructorFlow } from './instructors.js';
-import { openVideoModal, closeVideoModal } from './modals.js';
+import { handleInstructorSubmit, deleteInstructor } from './instructors.js';
+import { openVideoModal, closeVideoModal, closeTagsEditModal } from './modals.js';
 
 async function initApp() {
     const savedLang = localStorage.getItem('atkk_lang');
@@ -68,7 +68,7 @@ function setupEventListeners() {
         document.getElementById('form-save-instructor').innerText = translations[AppState.currentLang].btnUpdateIns;
     });
 
-    document.getElementById('btn-delete-instructor').addEventListener('click', deleteInstructorFlow);
+    document.getElementById('btn-delete-instructor').addEventListener('click', deleteInstructor);
     document.getElementById('form-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', (e) => handleFormSubmit(e, ui.switchView));
     
@@ -77,13 +77,21 @@ function setupEventListeners() {
     document.getElementById('filter-location-select').addEventListener('change', ui.applyFiltersAndSearch);
     document.getElementById('filter-btn').addEventListener('click', ui.applyFiltersAndSearch);
 
+    // Modalları Kapatma Dinleyicileri
     document.getElementById('modal-close-btn').addEventListener('click', closeVideoModal);
-    document.getElementById('tags-modal-close-btn').addEventListener('click', () => {
-        document.getElementById('tags-edit-modal').classList.add('d-none');
+    document.getElementById('video-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'video-modal') closeVideoModal();
+    });
+
+    document.getElementById('tags-modal-close-btn').addEventListener('click', closeTagsEditModal);
+    document.getElementById('tags-edit-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
     });
 
     const dropArea = document.getElementById('drop-area');
-    if (dropArea) dropArea.addEventListener('paste', (e) => handlePasteEvent(e, AppState.currentLang));
+    if (dropArea) {
+        dropArea.addEventListener('paste', (e) => handlePasteEvent(e, AppState.currentLang));
+    }
     
     document.addEventListener('click', (e) => {
         const playBtn = e.target.closest('.play-overlay');
