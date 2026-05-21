@@ -68,7 +68,7 @@ const translations = {
 
 let currentLang = 'tr';
 let globalVideos = [];
-let editInstructorId = null; // Düzenleme modunu takip etmek için
+let editInstructorId = null;
 
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
@@ -88,7 +88,6 @@ function updateInterfaceLanguage() {
     document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
     document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
 
-    // Eğitmen paneli buton metni güncelleme
     const saveBtn = document.getElementById('btn-save-instructor');
     if (editInstructorId) {
         saveBtn.innerText = lang.btnUpdateIns;
@@ -100,7 +99,7 @@ function updateInterfaceLanguage() {
     if (loadingMsg) {
         if (loadingMsg.innerText.includes("bağlantısı") || loadingMsg.innerText.includes("Connecting")) {
             loadingMsg.innerText = lang.loading;
-        } else if (loadingMsg.innerText.includes("boş") || loadingMsg.innerText.includes("empty")) {
+        } else if (loadingMsg.innerHTML.includes("boş") || loadingMsg.innerHTML.includes("empty")) {
             loadingMsg.innerHTML = lang.empty;
         } else if (loadingMsg.innerText.includes("başarısız") || loadingMsg.innerText.includes("failed")) {
             loadingMsg.innerText = lang.error;
@@ -124,10 +123,7 @@ function renderVideoCards(videos) {
 
     videos.forEach(video => {
         const card = document.createElement('div');
-        card.className = 'menu-btn active';
-        card.style.display = 'flex';
-        card.style.flexDirection = 'column';
-        card.style.gap = '8px';
+        card.className = 'video-card'; // Özel kart sınıfı CSS ile uyumlu hale getirildi
         
         let roleDisplay = video.role_type || 'Both';
         if (currentLang === 'tr') {
@@ -137,10 +133,12 @@ function renderVideoCards(videos) {
         }
 
         const storageDisplay = video.is_downloaded ? '💾 Google Drive' : '🌐 Social Media';
+        const partnerDisplay = video.partner_name ? `<span style="color: #94a3b8; font-size: 0.9rem;">👥 Partner: ${video.partner_name}</span>` : '';
         
         card.innerHTML = `
             <strong style="font-size: 1.1rem; color: #38bdf8;">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
             <span style="color: #94a3b8; font-size: 0.9rem;">${lang.role}: ${roleDisplay}</span>
+            ${partnerDisplay}
             <span style="color: #94a3b8; font-size: 0.9rem;">${lang.location}: ${storageDisplay}</span>
             <a href="${video.url}" target="_blank" style="color: #ec4899; font-size: 0.85rem; margin-top: 10px; text-decoration: none; font-weight: 600;">${lang.watch}</a>
         `;
@@ -169,12 +167,16 @@ async function fetchVideos() {
 
     } catch (error) {
         console.error("Hata:", error);
-        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg" style="color: #ef4444;">${lang.error}</div>`;
+        if (videoGrid) {
+            videoGrid.innerHTML = `<div class="info-msg" id="loading-msg" style="color: #ef4444;">${lang.error}</div>`;
+        }
     }
 }
 
 async function fetchInstructorsForForm() {
     const select = document.getElementById('form-instructor-select');
+    if (!select) return;
+    
     try {
         const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
             method: 'GET',
@@ -199,7 +201,6 @@ async function fetchInstructorsForForm() {
     }
 }
 
-// EĞİTMEN EKLEME VEYA GÜNCELLEME İŞLEMİ
 async function handleInstructorSubmit() {
     const nameInput = document.getElementById('form-new-instructor-input');
     const name = nameInput.value.trim();
@@ -213,24 +214,24 @@ async function handleInstructorSubmit() {
     try {
         let response;
         if (editInstructorId) {
-            // GÜNCELLEME MODU (PATCH)
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${editInstructorId}`, {
                 method: 'PATCH',
                 headers: {
                     'apikey': SUPABASE_KEY,
                     'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
                 },
                 body: JSON.stringify({ name: name })
             });
         } else {
-            // YENİ EKLEME MODU (POST)
             response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
                 method: 'POST',
                 headers: {
                     'apikey': SUPABASE_KEY,
                     'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
                 },
                 body: JSON.stringify({ name: name })
             });
@@ -239,7 +240,7 @@ async function handleInstructorSubmit() {
         if (response.ok) {
             alert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess);
             nameInput.value = '';
-            editInstructorId = null; // Modu sıfırla
+            editInstructorId = null; 
             document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
             document.getElementById('new-instructor-container').classList.add('d-none');
             await fetchInstructorsForForm();
@@ -252,7 +253,6 @@ async function handleInstructorSubmit() {
     }
 }
 
-// EĞİTMEN SİLME İŞLEMİ
 async function deleteInstructor() {
     const select = document.getElementById('form-instructor-select');
     const instructorId = select.value;
@@ -273,6 +273,7 @@ async function deleteInstructor() {
             if (response.ok) {
                 alert(lang.insDeleteSuccess);
                 await fetchInstructorsForForm();
+                fetchVideos();
             } else {
                 alert("Silme işlemi başarısız.");
             }
@@ -312,7 +313,8 @@ async function handleFormSubmit(e) {
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
             },
             body: JSON.stringify(payload)
         });
@@ -328,6 +330,18 @@ async function handleFormSubmit(e) {
         console.error(err);
         alert("Bağlantı hatası.");
     }
+}
+
+// ARAMA FONKSİYONALİTESİ
+function handleSearch() {
+    const query = document.getElementById('search-input').value.toLowerCase();
+    const filtered = globalVideos.filter(video => {
+        const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
+        const role = video.role_type || '';
+        const partner = video.partner_name ? video.partner_name.toLowerCase() : '';
+        return insName.includes(query) || role.toLowerCase().includes(query) || partner.includes(query);
+    });
+    renderVideoCards(filtered);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -356,16 +370,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchInstructorsForForm();
     });
 
-    // Yeni/Ekle Paneli Aç/Kapat
     document.getElementById('btn-toggle-new-instructor').addEventListener('click', () => {
-        editInstructorId = null; // Modu sıfırla
+        editInstructorId = null; 
         document.getElementById('form-new-instructor-input').value = '';
         document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnAddIns;
         const container = document.getElementById('new-instructor-container');
         container.classList.toggle('d-none');
     });
 
-    // Eğitmen Düzenleme Butonu (Kalem)
     document.getElementById('btn-edit-instructor').addEventListener('click', () => {
         const select = document.getElementById('form-instructor-select');
         if (!select.value) return;
@@ -378,11 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('new-instructor-container').classList.remove('d-none');
     });
 
-    // Eğitmen Silme Butonu (Çarpı)
     document.getElementById('btn-delete-instructor').addEventListener('click', deleteInstructor);
-
-    // Eğitmen Kaydet / Güncelle Butonu
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
-
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
+    
+    // Arama girdisi event listener'ları
+    document.getElementById('search-input').addEventListener('input', handleSearch);
+    document.getElementById('filter-btn').addEventListener('click', handleSearch);
 });
