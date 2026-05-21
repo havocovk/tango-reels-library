@@ -213,15 +213,14 @@ async function handleFormSubmit(e) {
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal' // Supabase'in 201 yerine doğru yanıt dönmesini sağlar
             },
             body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
-            // Supabase'den dönen gerçek hata metnini (JSON veya text) çekiyoruz
-            const rawError = await response.text();
-            throw new Error(rawError);
+            throw new Error("Video kaydedilemedi");
         }
 
         alert(lang.successSave);
@@ -242,8 +241,7 @@ async function handleFormSubmit(e) {
         await fetchVideos();
     } catch (err) {
         console.error(err);
-        // Ekrana doğrudan veritabanının fırlattığı gerçek hatayı basıyoruz
-        alert(`Supabase Veritabanı Hatası:\n${err.message}`);
+        alert(lang.error || "Video kaydedilemedi");
     }
 }
 
