@@ -1,8 +1,5 @@
 import { translations } from './i18n.js';
-
-// SUPABASE BAĞLANTI BİLGİLERİ
-const SUPABASE_URL = "https://coasifpuxnykgswnjguh.supabase.co";
-const SUPABASE_KEY = "sb_publishable_xQ58KgtPyiyCUHWynnHdbQ_k78iXfS1";
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
 
 
