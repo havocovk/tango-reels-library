@@ -1,10 +1,14 @@
 Publishable API key
 
-sb_publishable_qdDgX_KWXDdDnEu8ljnF3w_9L4FDWso
+sb_publishable_xQ58KgtPyiyCUHWynnHdbQ_k78iXfS1
 
 Project ID
 
-airmuygsltqecjdgxlfh
+coasifpuxnykgswnjguh
+
+Supabase URL
+
+https://coasifpuxnykgswnjguh.supabase.co
 
 
 Github Token
