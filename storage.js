@@ -1,6 +1,5 @@
 import { SUPABASE_URL, SUPABASE_KEY, translations } from './config.js';
 
-// Yüklenen resmin URL'sini bu modül içinde lokal bir değişkende saklıyoruz
 let uploadedCoverUrl = null;
 
 export function getUploadedCoverUrl() {

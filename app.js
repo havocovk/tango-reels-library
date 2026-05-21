@@ -8,12 +8,22 @@ let editInstructorId = null;
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
     
+    document.title = lang.title;
+    document.getElementById('sidebar-title').innerText = lang.brandTitle;
     document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
     document.getElementById('menu-library').innerText = lang.menuLibrary;
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
     document.getElementById('search-input').placeholder = lang.searchPlaceholder;
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
+    document.getElementById('opt-all-roles').innerText = lang.allRoles;
+    document.getElementById('opt-leader').innerText = lang.leader;
+    document.getElementById('opt-follower').innerText = lang.follower;
+    document.getElementById('opt-both').innerText = lang.both;
+    document.getElementById('opt-all-locations').innerText = lang.allLocations;
+    document.getElementById('opt-drive').innerText = lang.drive;
+    document.getElementById('opt-social').innerText = lang.social;
+
     document.getElementById('form-title').innerText = lang.formTitle;
     document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
     document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
@@ -51,7 +61,7 @@ function updateInterfaceLanguage() {
     }
 
     if (globalVideos.length > 0) {
-        renderVideoCards(globalVideos);
+        applyFiltersAndSearch();
     }
 }
 
@@ -108,6 +118,31 @@ function renderVideoCards(videos) {
     });
 }
 
+function applyFiltersAndSearch() {
+    const searchQuery = document.getElementById('search-input').value.toLowerCase();
+    const selectedRole = document.getElementById('filter-role-select').value;
+    const selectedLocation = document.getElementById('filter-location-select').value;
+
+    const filtered = globalVideos.filter(video => {
+        const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
+        const partnerName = video.partner_name ? video.partner_name.toLowerCase() : '';
+        const matchesSearch = insName.includes(searchQuery) || partnerName.includes(searchQuery);
+
+        const matchesRole = (selectedRole === 'all') || (video.role_type === selectedRole);
+
+        let matchesLocation = true;
+        if (selectedLocation === 'drive') {
+            matchesLocation = (video.is_downloaded === true);
+        } else if (selectedLocation === 'social') {
+            matchesLocation = (video.is_downloaded === false || video.is_downloaded === null);
+        }
+
+        return matchesSearch && matchesRole && matchesLocation;
+    });
+
+    renderVideoCards(filtered);
+}
+
 async function fetchVideos() {
     const videoGrid = document.getElementById('video-grid');
     const lang = translations[currentLang];
@@ -125,7 +160,7 @@ async function fetchVideos() {
         if (!response.ok) throw new Error();
 
         globalVideos = await response.json();
-        renderVideoCards(globalVideos);
+        applyFiltersAndSearch();
 
     } catch (error) {
         console.error("Hata:", error);
@@ -265,7 +300,7 @@ async function handleFormSubmit(e) {
         role_type: roleType,
         partner_name: partnerName || null,
         is_downloaded: isDownloaded,
-        cover_url: getUploadedCoverUrl() // storage modülünden güncel linki alıyoruz
+        cover_url: getUploadedCoverUrl()
     };
 
     try {
@@ -283,7 +318,7 @@ async function handleFormSubmit(e) {
             alert(lang.successSave);
             
             document.getElementById('add-video-form').reset();
-            resetUploadedCoverUrl(); // Modüldeki hafızayı sıfırla
+            resetUploadedCoverUrl();
             
             const imgPreview = document.getElementById('image-preview');
             if (imgPreview) imgPreview.classList.add('d-none');
@@ -304,17 +339,6 @@ async function handleFormSubmit(e) {
         console.error(err);
         alert("Bağlantı hatası yaşandı.");
     }
-}
-
-function handleSearch() {
-    const query = document.getElementById('search-input').value.toLowerCase();
-    const filtered = globalVideos.filter(video => {
-        const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
-        const role = video.role_type || '';
-        const partner = video.partner_name ? video.partner_name.toLowerCase() : '';
-        return insName.includes(query) || role.toLowerCase().includes(query) || partner.includes(query);
-    });
-    renderVideoCards(filtered);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -367,15 +391,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) searchInput.addEventListener('input', handleSearch);
-    
-    const filterBtn = document.getElementById('filter-btn');
-    if (filterBtn) filterBtn.addEventListener('click', handleSearch);
+    document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
+    document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
 
     const dropArea = document.getElementById('drop-area');
     if (dropArea) {
-        // handlePasteEvent fonksiyonuna dil bilgisini de gönderiyoruz
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
 });
