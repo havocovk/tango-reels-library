@@ -100,7 +100,9 @@ export async function handleFormSubmit(e, state, switchViewCallback) {
         return;
     }
 
-    const payload = {
+    // DÜZELTME BURADA: Payload kelimesini aradan kaldırıp verileri düz bir obje halinde paketliyoruz.
+    // Eğer düzenleme yapıyorsak objenin içine id parametresini de ekliyoruz.
+    const videoData = {
         instructor_id: parseInt(instructor_id),
         url,
         role_type,
@@ -111,23 +113,32 @@ export async function handleFormSubmit(e, state, switchViewCallback) {
         cover_url
     };
 
+    if (state.editingVideoId) {
+        videoData.id = state.editingVideoId;
+    }
+
     try {
-        await api.saveVideo({ id: state.editingVideoId, payload });
+        // api.js dosyanızın beklediği gibi temiz objeyi doğrudan gönderiyoruz
+        await api.saveVideo(videoData);
+        
         alert(state.editingVideoId ? lang.successUpdate : lang.successSave);
         
+        // Form ve state sıfırlama işlemleri
         state.editingVideoId = null;
         state.formTagsArray = [];
         renderFormChips(state);
         document.getElementById('add-video-form').reset();
         
-        if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
+        if (document.getElementById('image-preview')) {
+            document.getElementById('image-preview').classList.add('d-none');
+        }
         document.getElementById('drive-url-container').classList.add('d-none');
         resetUploadedCoverUrl();
         
         switchViewCallback('library');
         if (state.onRefreshUI) state.onRefreshUI();
     } catch (err) {
-        console.error(err);
+        console.error("Supabase Kayıt Hatası Detayı:", err);
         alert("İşlem sırasında bir hata oluştu!");
     }
 }
