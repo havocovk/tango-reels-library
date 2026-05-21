@@ -1,41 +1,14 @@
 // utils.js
-import { translations } from './config.js';
-
-export function convertDriveUrlToEmbed(url) {
-    if (!url) return '';
-    const regExp = /\/file\/d\/([^/]+)/;
-    const matches = url.match(regExp);
-    if (matches && matches[1]) {
-        return `https://drive.google.com/file/d/${matches[1]}/preview`;
-    }
-    return url;
-}
-
-export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
-    const lang = translations[currentLang];
-    const select = document.getElementById('form-instructor-select');
-    const outputDiv = document.getElementById('assistant-filename-output');
-
-    if (!select || !outputDiv) return;
-
-    if (!select.value || select.selectedIndex === -1) {
-        outputDiv.innerText = lang.assistantAlert;
+export function updateSmartFilenameAssistant(langKey, tags) {
+    const el = document.getElementById('smart-filename-preview');
+    if (!el) return;
+    if (!tags || tags.length === 0) {
+        el.innerText = langKey === 'tr' ? 'Henüz etiket eklenmedi...' : 'No tags added yet...';
         return;
     }
-
-    let instructorName = select.options[select.selectedIndex].text;
-    let cleanName = instructorName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-
-    let cleanTags = formTagsArray
-        .map(t => t.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, ''))
-        .filter(t => t !== '')
-        .join('_');
-
-    let finalFilename = cleanName;
-    if (cleanTags) {
-        finalFilename += '_' + cleanTags;
-    }
-    finalFilename += '.mp4';
-
-    outputDiv.innerText = finalFilename;
+    const clean = tags.map(t => t.toLowerCase()
+        .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+        .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+        .replace(/[^a-z0-9]/g, '_')).join('-');
+    el.innerText = `tango_${clean}.mp4`;
 }
