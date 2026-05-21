@@ -10,16 +10,20 @@ import {
 } from './tangoVeritabani.js';
 import { getFavorites, addOrRemoveFavorite, removeFavoriteDirectly, clearAllFavoritesData } from './favoritesManager.js';
 import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
-
-// Yeni taşınan modal modülümüzü içeri alıyoruz
 import { 
     openVideoModal, 
     closeVideoModal, 
     openTagsEditModal, 
     closeTagsEditModal,
-    modalTagsArray,
-    saveTagsToSupabaseDirectly
+    modalTagsArray
 } from './tangoModals.js';
+
+// Yeni UI modülümüzü içeri alıyoruz
+import { 
+    updateSmartFilenameAssistant, 
+    updateInterfaceLanguage, 
+    switchView 
+} from './tangoUI.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -28,6 +32,32 @@ let editingVideoId = null;
 let currentView = 'library'; 
 
 let formTagsArray = [];
+
+// tangoUI.js'in iç durumları güvenle yönetebilmesi için sarmalayıcı nesneler (state)
+const getUIState = () => ({
+    currentLang,
+    editingVideoId,
+    editInstructorId,
+    currentView,
+    getFormTags: () => formTagsArray,
+    resetFormTags: () => { formTagsArray = []; }
+});
+
+function callUpdateSmartAssistant() {
+    updateSmartFilenameAssistant(currentLang, formTagsArray);
+}
+
+function callUpdateInterfaceLanguage() {
+    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
+}
+
+function callSwitchView(viewName) {
+    switchView(viewName, getUIState(), {
+        applyFiltersAndSearch,
+        renderFormChips,
+        resetUploadedCoverUrl
+    });
+}
 
 function toggleFavorite(videoId) {
     addOrRemoveFavorite(videoId);
@@ -55,86 +85,6 @@ function getAllUniqueTagsPool() {
     return Array.from(pool);
 }
 
-function updateSmartFilenameAssistant() {
-    const lang = translations[currentLang];
-    const select = document.getElementById('form-instructor-select');
-    const outputDiv = document.getElementById('assistant-filename-output');
-
-    if (!select || !select.value || select.selectedIndex === -1) {
-        if (outputDiv) outputDiv.innerText = lang.assistantAlert;
-        return;
-    }
-
-    let instructorName = select.options[select.selectedIndex].text;
-    let cleanName = instructorName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-
-    let cleanTags = formTagsArray
-        .map(t => t.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, ''))
-        .filter(t => t !== '')
-        .join('_');
-
-    let finalFilename = cleanName;
-    if (cleanTags) {
-        finalFilename += '_' + cleanTags;
-    }
-    finalFilename += '.mp4';
-
-    if (outputDiv) outputDiv.innerText = finalFilename;
-}
-
-function updateInterfaceLanguage() {
-    const lang = translations[currentLang];
-    
-    document.title = lang.title;
-    document.getElementById('sidebar-title').innerText = lang.brandTitle;
-    document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
-    document.getElementById('menu-library').innerText = lang.menuLibrary;
-    document.getElementById('menu-favorites').innerText = lang.menuFavorites;
-    document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
-    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
-    document.getElementById('filter-btn').innerText = lang.filterBtn;
-    
-    document.getElementById('opt-all-roles').innerText = lang.allRoles;
-    document.getElementById('opt-leader').innerText = lang.leader;
-    document.getElementById('opt-follower').innerText = lang.follower;
-    document.getElementById('opt-both').innerText = lang.both;
-    document.getElementById('opt-all-locations').innerText = lang.allLocations;
-    document.getElementById('opt-drive').innerText = lang.drive;
-    document.getElementById('opt-social').innerText = lang.social;
-
-    document.getElementById('form-title').innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
-    document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
-    document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-role').innerText = lang.lblRole;
-    document.getElementById('lbl-partner').innerText = lang.lblPartner;
-    document.getElementById('lbl-tags').innerText = lang.lblTags;
-    document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
-    document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
-    document.getElementById('lbl-drive-url').innerText = lang.lblDriveUrl;
-    document.getElementById('btn-submit-video').innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
-    document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
-    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
-    document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
-    document.getElementById('edit-tags-title').innerText = lang.editTagsTitle;
-    document.getElementById('modal-tags-input').placeholder = lang.addTagPlaceholder;
-    
-    document.getElementById('assistant-title').innerText = lang.assistantTitle;
-    document.getElementById('assistant-text').innerText = lang.assistantText;
-
-    const dropAreaText = document.getElementById('drop-area-text');
-    if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
-        dropAreaText.innerText = lang.dropText;
-    }
-
-    const saveInsBtn = document.getElementById('btn-save-instructor');
-    if (saveInsBtn) {
-        saveInsBtn.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
-    }
-
-    updateSmartFilenameAssistant();
-    applyFiltersAndSearch();
-}
-
 async function fetchInstructors() {
     try {
         const instructors = await dbFetchInstructors();
@@ -146,7 +96,7 @@ async function fetchInstructors() {
             opt.innerText = ins.name;
             select.appendChild(opt);
         });
-        updateSmartFilenameAssistant();
+        callUpdateSmartAssistant();
     } catch (err) {
         console.error("Eğitmenler yüklenemedi:", err);
     }
@@ -167,7 +117,7 @@ async function fetchVideos() {
 
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
-    switchView('add'); 
+    callSwitchView('add'); 
 
     const lang = translations[currentLang];
     document.getElementById('form-title').innerText = lang.formTitleEdit;
@@ -206,7 +156,7 @@ function startVideoEditFlow(video) {
             dropAreaText.classList.remove('d-none');
         }
     }
-    updateSmartFilenameAssistant();
+    callUpdateSmartAssistant();
 }
 
 async function deleteVideoFlow(videoId) {
@@ -228,7 +178,7 @@ function renderFormChips() {
     renderChips('chips-area', formTagsArray, (index) => {
         formTagsArray.splice(index, 1);
         renderFormChips();
-        updateSmartFilenameAssistant();
+        callUpdateSmartAssistant();
     });
 }
 
@@ -368,55 +318,11 @@ async function handleFormSubmit(e) {
         document.getElementById('drive-url-container').classList.add('d-none');
         resetUploadedCoverUrl();
         
-        document.getElementById('menu-library').click();
+        callSwitchView('library');
         await fetchVideos();
     } catch (err) {
         console.error(err);
         alert("İşlem sırasında bir hata oluştu!");
-    }
-}
-
-function switchView(viewName) {
-    currentView = viewName;
-    document.getElementById('menu-library').classList.remove('active');
-    document.getElementById('menu-favorites').classList.remove('active');
-    document.getElementById('menu-add-video').classList.remove('active');
-
-    const clearFavBtnContainer = document.getElementById('clear-favorites-container');
-
-    if (viewName === 'library' || viewName === 'favorites') {
-        document.getElementById('view-library-container').classList.remove('d-none');
-        document.getElementById('view-add-container').classList.add('d-none');
-        document.getElementById(`menu-${viewName}`).classList.add('active');
-        
-        if (viewName === 'favorites') {
-            clearFavBtnContainer.classList.remove('d-none');
-        } else {
-            clearFavBtnContainer.classList.add('d-none');
-        }
-        
-        applyFiltersAndSearch();
-    } else if (viewName === 'add') {
-        document.getElementById('view-library-container').classList.add('d-none');
-        document.getElementById('view-add-container').classList.remove('d-none');
-        document.getElementById('menu-add-video').classList.add('active');
-        
-        if (!editingVideoId) {
-            const lang = translations[currentLang];
-            document.getElementById('form-title').innerText = lang.formTitle;
-            document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
-            document.getElementById('add-video-form').reset();
-            formTagsArray = [];
-            renderFormChips();
-            if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
-            const dropAreaText = document.getElementById('drop-area-text');
-            if (dropAreaText) {
-                dropAreaText.innerText = lang.dropText;
-                dropAreaText.classList.remove('d-none');
-            }
-            resetUploadedCoverUrl();
-        }
-        updateSmartFilenameAssistant();
     }
 }
 
@@ -426,18 +332,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('lang-toggle-btn').addEventListener('click', () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
-        updateInterfaceLanguage();
+        callUpdateInterfaceLanguage();
     });
 
     document.getElementById('menu-library').addEventListener('click', () => {
         editingVideoId = null;
-        switchView('library');
+        callSwitchView('library');
     });
     document.getElementById('menu-favorites').addEventListener('click', () => {
         editingVideoId = null;
-        switchView('favorites');
+        callSwitchView('favorites');
     });
-    document.getElementById('menu-add-video').addEventListener('click', () => switchView('add'));
+    document.getElementById('menu-add-video').addEventListener('click', () => callSwitchView('add'));
 
     document.getElementById('btn-clear-favorites').addEventListener('click', clearAllFavorites);
 
@@ -456,15 +362,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, renderFormChips, (newTag) => {
         formTagsArray.push(newTag);
         renderFormChips();
-        updateSmartFilenameAssistant();
+        callUpdateSmartAssistant();
     }, getAllUniqueTagsPool);
 
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
+        // modal içi save tetikleme
     }, getAllUniqueTagsPool);
 
-    document.getElementById('form-instructor-select').addEventListener('change', updateSmartFilenameAssistant);
+    document.getElementById('form-instructor-select').addEventListener('change', callUpdateSmartAssistant);
 
     document.getElementById('btn-toggle-new-instructor').addEventListener('click', () => {
         editInstructorId = null;
