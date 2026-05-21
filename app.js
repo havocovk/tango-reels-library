@@ -16,10 +16,12 @@ const translations = {
         role: "🎬 Rol",
         location: "📍 Ortam",
         watch: "🔗 Videoyu İzle →",
+        watchOnPlatform: "🌐 Platformda İzle ↗",
         langBtn: "🇬🇧 EN",
         formTitle: "➕ Yeni Video Kaydet",
         lblInstructor: "Eğitmen Seç / Ekle:",
-        lblVideoUrl: "Video URL (Instagram Reels / YouTube Shorts vb.):",
+        lblVideoUrl: "Video URL (Instagram, YouTube, Drive vb.):",
+        lblCoverUrl: "Kapak Resmi URL (Sadece IG / FB Ekran Görüntüsü):",
         lblRole: "Rol Tipi:",
         lblPartner: "Partner Adı (İsteğe Bağlı):",
         lblDownloaded: "Google Drive'a Yedeklendi mi?",
@@ -46,10 +48,12 @@ const translations = {
         role: "🎬 Role",
         location: "📍 Storage",
         watch: "🔗 Watch Video →",
+        watchOnPlatform: "🌐 Watch on Platform ↗",
         langBtn: "🇹🇷 TR",
         formTitle: "➕ Save New Video",
         lblInstructor: "Select / Add Instructor:",
-        lblVideoUrl: "Video URL (Instagram Reels / YouTube Shorts etc.):",
+        lblVideoUrl: "Video URL (Instagram, YouTube, Drive etc.):",
+        lblCoverUrl: "Cover Image URL (Only for IG / FB Screenshot):",
         lblRole: "Role Type:",
         lblPartner: "Partner Name (Optional):",
         lblDownloaded: "Backed up to Google Drive?",
@@ -70,6 +74,41 @@ let currentLang = 'tr';
 let globalVideos = [];
 let editInstructorId = null;
 
+// Link türünü ve Embed URL'sini ayrıştıran Akıllı Fonksiyon
+function parseVideoLink(url, isDownloaded) {
+    // 1. Google Drive Linki Kontrolü
+    if (url.includes('drive.google.com')) {
+        let embedUrl = url;
+        if (url.includes('/view')) {
+            embedUrl = url.replace('/view', '/preview');
+        } else if (url.includes('?id=')) {
+            const id = url.split('id=')[1].split('&')[0];
+            embedUrl = `https://drive.google.com/file/d/${id}/preview`;
+        }
+        return { type: 'drive', embedUrl: embedUrl };
+    }
+
+    // 2. YouTube Shorts veya Standart Video Kontrolü
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        let videoId = '';
+        if (url.includes('/shorts/')) {
+            videoId = url.split('/shorts/')[1].split('?')[0];
+        } else if (url.includes('v=')) {
+            videoId = url.split('v=')[1].split('&')[0];
+        } else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1].split('?')[0];
+        }
+        return { type: 'youtube', embedUrl: `https://www.youtube.com/embed/${videoId}` };
+    }
+
+    // 3. Meta Dünyası (Instagram / Facebook) Kontrolü
+    if (url.includes('instagram.com') || url.includes('facebook.com') || url.includes('fb.watch')) {
+        return { type: 'meta', embedUrl: null };
+    }
+
+    return { type: 'other', embedUrl: null };
+}
+
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
     
@@ -82,6 +121,9 @@ function updateInterfaceLanguage() {
     document.getElementById('form-title').innerText = lang.formTitle;
     document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
     document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
+    if(document.getElementById('lbl-cover-url')) {
+        document.getElementById('lbl-cover-url').innerText = lang.lblCoverUrl;
+    }
     document.getElementById('lbl-role').innerText = lang.lblRole;
     document.getElementById('lbl-partner').innerText = lang.lblPartner;
     document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
@@ -123,7 +165,7 @@ function renderVideoCards(videos) {
 
     videos.forEach(video => {
         const card = document.createElement('div');
-        card.className = 'video-card'; // Özel kart sınıfı CSS ile uyumlu hale getirildi
+        card.className = 'video-card';
         
         let roleDisplay = video.role_type || 'Both';
         if (currentLang === 'tr') {
@@ -135,12 +177,43 @@ function renderVideoCards(videos) {
         const storageDisplay = video.is_downloaded ? '💾 Google Drive' : '🌐 Social Media';
         const partnerDisplay = video.partner_name ? `<span style="color: #94a3b8; font-size: 0.9rem;">👥 Partner: ${video.partner_name}</span>` : '';
         
+        // Akıllı link çözme çalışıyor
+        const videoDetail = parseVideoLink(video.url, video.is_downloaded);
+        let mediaHTML = '';
+
+        if ((videoDetail.type === 'youtube' || videoDetail.type === 'drive') && videoDetail.embedUrl) {
+            // Canlı Oynatıcı Yapısı
+            mediaHTML = `
+                <div class="video-preview-container">
+                    <iframe src="${videoDetail.embedUrl}" allowfullscreen allow="autoplay"></iframe>
+                </div>
+            `;
+        } else {
+            // Instagram / Facebook Kapak Resmi Yapısı
+            const defaultCover = 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?q=80&w=500'; 
+            const coverImg = video.cover_url || defaultCover;
+            mediaHTML = `
+                <a href="${video.url}" target="_blank" class="video-cover-link">
+                    <div class="video-cover-container" style="background-image: url('${coverImg}');">
+                        <div class="play-overlay">
+                            <span class="play-icon">▶</span>
+                        </div>
+                    </div>
+                </a>
+            `;
+        }
+
         card.innerHTML = `
-            <strong style="font-size: 1.1rem; color: #38bdf8;">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
-            <span style="color: #94a3b8; font-size: 0.9rem;">${lang.role}: ${roleDisplay}</span>
-            ${partnerDisplay}
-            <span style="color: #94a3b8; font-size: 0.9rem;">${lang.location}: ${storageDisplay}</span>
-            <a href="${video.url}" target="_blank" style="color: #ec4899; font-size: 0.85rem; margin-top: 10px; text-decoration: none; font-weight: 600;">${lang.watch}</a>
+            ${mediaHTML}
+            <div class="card-info-content" style="display: flex; flex-direction: column; gap: 5px; margin-top: 10px;">
+                <strong style="font-size: 1.1rem; color: #38bdf8;">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
+                <span style="color: #94a3b8; font-size: 0.9rem;">${lang.role}: ${roleDisplay}</span>
+                ${partnerDisplay}
+                <span style="color: #94a3b8; font-size: 0.9rem;">${lang.location}: ${storageDisplay}</span>
+                <a href="${video.url}" target="_blank" style="color: #ec4899; font-size: 0.85rem; margin-top: 5px; text-decoration: none; font-weight: 600;">
+                    ${videoDetail.embedUrl ? lang.watch : lang.watchOnPlatform}
+                </a>
+            </div>
         `;
         videoGrid.appendChild(card);
     });
@@ -290,6 +363,7 @@ async function handleFormSubmit(e) {
 
     const instructorId = document.getElementById('form-instructor-select').value;
     const videoUrl = document.getElementById('form-video-url').value;
+    const coverUrl = document.getElementById('form-cover-url') ? document.getElementById('form-cover-url').value : null;
     const roleType = document.getElementById('form-role-select').value;
     const partnerName = document.getElementById('form-partner-name').value;
     const isDownloaded = document.getElementById('form-is-downloaded').checked;
@@ -302,6 +376,7 @@ async function handleFormSubmit(e) {
     const payload = {
         instructor_id: parseInt(instructorId),
         url: videoUrl,
+        cover_url: coverUrl || null,
         role_type: roleType,
         partner_name: partnerName || null,
         is_downloaded: isDownloaded
@@ -324,7 +399,7 @@ async function handleFormSubmit(e) {
             document.getElementById('add-video-form').reset();
             document.getElementById('menu-library').click();
         } else {
-            alert("Hata: Video kaydedilemedi. (URL çakışması olabilir)");
+            alert("Hata: Video kaydedilemedi. Supabase tablonuzda 'cover_url' sütunu bulunduğundan emin olun.");
         }
     } catch (err) {
         console.error(err);
@@ -332,7 +407,6 @@ async function handleFormSubmit(e) {
     }
 }
 
-// ARAMA FONKSİYONALİTESİ
 function handleSearch() {
     const query = document.getElementById('search-input').value.toLowerCase();
     const filtered = globalVideos.filter(video => {
@@ -394,7 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    // Arama girdisi event listener'ları
     document.getElementById('search-input').addEventListener('input', handleSearch);
     document.getElementById('filter-btn').addEventListener('click', handleSearch);
 });
