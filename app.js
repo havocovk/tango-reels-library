@@ -1,5 +1,7 @@
 import { SUPABASE_URL, SUPABASE_KEY, translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
+import { dbFetchInstructors, dbFetchVideos } from './tangoVeritabani.js';
+
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -262,10 +264,8 @@ function updateInterfaceLanguage() {
 
 async function fetchInstructors() {
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        const instructors = await response.json();
+        // Yeni postacımızı internete gönderiyoruz ve paketi bekliyoruz
+        const instructors = await dbFetchInstructors();
         
         const select = document.getElementById('form-instructor-select');
         select.innerHTML = '';
@@ -283,10 +283,8 @@ async function fetchInstructors() {
 
 async function fetchVideos() {
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        globalVideos = await response.json();
+        // Yeni postacımız videoları getiriyor, gelince küresel listeye atıyoruz
+        globalVideos = await dbFetchVideos();
         applyFiltersAndSearch();
     } catch (err) {
         document.getElementById('video-grid').innerHTML = `
