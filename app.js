@@ -1,7 +1,7 @@
 import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbFetchInstructors, dbFetchVideos, dbSaveTags, dbDeleteVideo, dbSaveInstructor, dbDeleteInstructor, dbSaveVideo } from './tangoVeritabani.js';
-
+import { getFavorites, addOrRemoveFavorite, removeFavoriteDirectly, clearAllFavoritesData } from './favoritesManager.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -14,27 +14,16 @@ let formTagsArray = [];
 let modalTagsArray = [];
 let activeEditTagsVideoId = null; // Pop-up'ta düzenlenen video ID'si
 
-function getFavorites() {
-    const favs = localStorage.getItem('atkk_favorites');
-    return favs ? JSON.parse(favs) : [];
-}
-
 function toggleFavorite(videoId) {
-    let favs = getFavorites();
-    if (favs.includes(videoId)) {
-        favs = favs.filter(id => id !== videoId);
-    } else {
-        favs.push(videoId);
-    }
-    localStorage.setItem('atkk_favorites', JSON.stringify(favs));
+    // Tüm mantık favoritesManager.js dosyasına taşındı, burada sadece tetikliyoruz
+    addOrRemoveFavorite(videoId);
     applyFiltersAndSearch(); 
 }
 
-// 🗑️ Pratik Listesini Onaylı Toplu Temizleme
 function clearAllFavorites() {
     const lang = translations[currentLang];
     if (confirm(lang.confirmClearFavs)) {
-        localStorage.setItem('atkk_favorites', JSON.stringify([]));
+        clearAllFavoritesData();
         applyFiltersAndSearch();
     }
 }
@@ -442,11 +431,9 @@ async function deleteVideoFlow(videoId) {
         await dbDeleteVideo(videoId);
 
         alert(lang.successDeleteVideo);
-        let favs = getFavorites();
-        if (favs.includes(videoId)) {
-            favs = favs.filter(id => id !== videoId);
-            localStorage.setItem('atkk_favorites', JSON.stringify(favs));
-        }
+        
+        // Doğrudan yeni yöneticiden silme komutunu çağırıyoruz:
+        removeFavoriteDirectly(videoId);
 
         await fetchVideos();
     } catch (err) {
