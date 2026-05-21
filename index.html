@@ -118,14 +118,33 @@
                         </label>
                     </div>
 
+                    <div id="drive-url-container" class="form-group d-none" style="animation: fadeIn 0.3s ease;">
+                        <label id="lbl-drive-url">Google Drive Video Paylaşım Linki:</label>
+                        <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
+                    </div>
+
+                    <div id="assistant-panel" class="assistant-box">
+                        <h4 id="assistant-title">💡 Akıllı Dosya İsmi Asistanı</h4>
+                        <p id="assistant-text" style="font-size: 0.8rem; margin: 4px 0; color: #94a3b8;">İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:</p>
+                        <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
+                    </div>
+
                     <button type="submit" id="btn-submit-video" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
                         💾 Veritabanına Kaydet
                     </button>
                 </form>
             </div>
-        </div>
+        </main>
+    </div>
 
-    </main>
+    <div id="video-modal" class="modal-overlay d-none">
+        <div class="modal-content">
+            <span id="modal-close-btn" class="modal-close">&times;</span>
+            <div class="video-container">
+                <iframe id="modal-iframe" src="" allow="autoplay" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="app.js"></script>
 </body>
