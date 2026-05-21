@@ -219,10 +219,9 @@ async function handleFormSubmit(e) {
         });
 
         if (!response.ok) {
-            // Hata detayını güvenli bir şekilde metin olarak okuyoruz
-            const errText = await response.text();
-            console.error("Supabase Hata Yanıtı:", errText);
-            throw new Error(errText || "Video kaydedilemedi");
+            // Supabase'den dönen gerçek hata metnini (JSON veya text) çekiyoruz
+            const rawError = await response.text();
+            throw new Error(rawError);
         }
 
         alert(lang.successSave);
@@ -242,8 +241,9 @@ async function handleFormSubmit(e) {
         document.getElementById('menu-library').click();
         await fetchVideos();
     } catch (err) {
-        console.error("Yakaladığımız Hata:", err);
-        alert(`Video kaydedilemedi!\nDetay: ${err.message}`);
+        console.error(err);
+        // Ekrana doğrudan veritabanının fırlattığı gerçek hatayı basıyoruz
+        alert(`Supabase Veritabanı Hatası:\n${err.message}`);
     }
 }
 
