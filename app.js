@@ -1,160 +1,186 @@
 // app.js
 import { translations } from './config.js';
-import { handlePasteEvent, resetUploadedCoverUrl } from './storage.js';
-import { toggleFavorite, clearAllFavorites, getFavorites } from './favorites.js';
-import { updateSmartFilenameAssistant } from './utils.js';
-import { setupAutocomplete, setGlobalVideosTagsRef } from './tags.js';
-import { updateInterfaceLanguage, renderVideoCards, switchView } from './ui.js';
 import * as api from './api.js';
+import { handlePasteEvent } from './storage.js';
+import { getFavorites, clearAllFavorites, toggleFavorite } from './favorites.js';
+import { renderFormChips } from './handlers.js';
+import { applyFiltersAndSearch, renderInstructorSelect, switchView } from './ui.js';
+import { setupAutocomplete } from './tags.js';
+import { openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal, setupModalAutocomplete } from './modals.js';
+import { handleInstructorSubmit, deleteInstructorFlow } from './instructors.js';
+import { handleFormSubmit } from './handlers.js';
 
-// Yeni Modüllerimiz
-import * as modals from './modals.js';
-import * as instructors from './instructors.js';
-import * as handlers from './handlers.js';
-
-// MERKEZİ UYGULAMA DURUMU (STATE)
+// MERKEZİ UYGULAMA DURUMU (AppState)
 const AppState = {
     currentLang: 'tr',
     globalVideos: [],
-    editInstructorId: null,
     editingVideoId: null,
     currentView: 'library',
     formTagsArray: [],
     modalTagsArray: [],
     activeEditTagsVideoId: null,
-    onRefreshUI: fetchVideos // Diğer modüllerin listeleri yenilemesini sağlar
+    onRefreshUI: null // Döngüsel bağımlılığı kırmak için ui yenileme tetikleyicisi
 };
 
-setGlobalVideosTagsRef(() => AppState.globalVideos);
+// Uygulama Başlatıcı Fonksiyon (Initialization)
+async function initApp() {
+    // 1. Dil ayarını yükle
+    const savedLang = localStorage.getItem('atkk_lang');
+    if (savedLang) AppState.currentLang = savedLang;
 
-async function fetchVideos() {
+    // 2. Arayüz yenileme görevini ata
+    AppState.onRefreshUI = loadDataAndRender;
+
+    // 3. Dinleyicileri (Event Listeners) ayağa kaldır
+    setupEventListeners();
+
+    // 4. Etiket tamamlama (Autocomplete) sistemlerini kur
+    setupAutocomplete(AppState);
+    setupModalAutocomplete(AppState);
+
+    // 5. İlk verileri veritabanından çek ve ekrana bas
+    await loadDataAndRender();
+}
+
+// Veritabanından Güncel Verileri Çekip Ekrana Basma Fonksiyonu
+async function loadDataAndRender() {
+    const loadingMsg = document.getElementById('loading-msg');
+    if (loadingMsg) {
+        loadingMsg.classList.remove('d-none');
+        loadingMsg.innerText = translations[AppState.currentLang].loading;
+    }
+
     try {
-        AppState.globalVideos = await api.getAllVideos();
-        applyFiltersAndSearch();
+        // api.js dosyasındaki export edilmiş fonksiyonları güvenle çağırıyoruz
+        const [videos, instructors] = await Promise.all([
+            api.fetchVideos(),
+            api.fetchInstructors()
+        ]);
+
+        AppState.globalVideos = videos;
+
+        // Arayüz bileşenlerini güncelle
+        renderInstructorSelect(instructors);
+        applyFiltersAndSearch(AppState);
+
     } catch (err) {
-        document.getElementById('video-grid').innerHTML = `
-            <div class="info-msg" style="color: #ef4444;">${translations[AppState.currentLang].error}</div>`;
-        console.error(err);
+        console.error("Veri yükleme hatası:", err);
+        const videoGrid = document.getElementById('video-grid');
+        if (videoGrid) {
+            videoGrid.innerHTML = `<div class="info-msg" style="color: #ef4444;">${translations[AppState.currentLang].error}</div>`;
+        }
     }
 }
 
-function applyFiltersAndSearch() {
-    const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
-    const roleVal = document.getElementById('filter-role-select').value;
-    const locationVal = document.getElementById('filter-location-select').value;
-    const favs = getFavorites();
+// Tüm Buton Tıklamaları ve Olay Dinleyicileri
+function setupEventListeners() {
+    const lang = translations[AppState.currentLang];
 
-    const filtered = AppState.globalVideos.filter(video => {
-        if (AppState.currentView === 'favorites' && !favs.includes(video.id)) return false;
-
-        const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
-        const partnerName = video.partner_name ? video.partner_name.toLowerCase() : '';
-        const videoTags = video.tags ? video.tags.toLowerCase() : '';
-        
-        const matchesSearch = insName.includes(searchVal) || partnerName.includes(searchVal) || videoTags.includes(searchVal);
-        const matchesRole = (roleVal === 'all') || (video.role_type === roleVal);
-        
-        let matchesLocation = true;
-        if (locationVal === 'drive') matchesLocation = (video.is_downloaded === true);
-        else if (locationVal === 'social') matchesLocation = (!video.is_downloaded);
-
-        return matchesSearch && matchesRole && matchesLocation;
-    });
-
-    renderVideoCards({
-        videos: filtered,
-        currentLang: AppState.currentLang,
-        currentView: AppState.currentView,
-        onToggleFav: (id) => toggleFavorite(id, AppState.currentLang, applyFiltersAndSearch),
-        onOpenTagsModal: (video) => modals.openTagsEditModal(video, AppState),
-        onStartEdit: (video) => handlers.startVideoEditFlow(video, AppState, handleSwitchView),
-        onDeleteVideo: (id) => handlers.deleteVideoFlow(id, AppState),
-        onOpenVideoModal: modals.openVideoModal
-    });
-}
-
-function handleSwitchView(viewName) {
-    AppState.currentView = viewName;
-    switchView({
-        viewName,
-        currentLang: AppState.currentLang,
-        editingVideoId: AppState.editingVideoId,
-        renderFormChipsFn: () => handlers.renderFormChips(AppState),
-        updateFilenameFn: () => updateSmartFilenameAssistant(AppState.currentLang, AppState.formTagsArray),
-        resetCoverFn: resetUploadedCoverUrl,
-        applyFiltersFn: applyFiltersAndSearch
-    });
-}
-
-// OLAY DİNLEYİCİLERİ VE BAŞLANGIÇ
-document.addEventListener('DOMContentLoaded', () => {
-    instructors.fetchInstructors(AppState);
-    fetchVideos();
-
+    // Dil Değiştirme Butonu
     document.getElementById('lang-toggle-btn').addEventListener('click', () => {
         AppState.currentLang = AppState.currentLang === 'tr' ? 'en' : 'tr';
-        updateInterfaceLanguage(AppState.currentLang, AppState.editingVideoId, AppState.editInstructorId, AppState.formTagsArray, applyFiltersAndSearch);
+        localStorage.setItem('atkk_lang', AppState.currentLang);
+        document.getElementById('lang-toggle-btn').innerText = AppState.currentLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
+        loadDataAndRender();
     });
 
-    document.getElementById('menu-library').addEventListener('click', () => { AppState.editingVideoId = null; handleSwitchView('library'); });
-    document.getElementById('menu-favorites').addEventListener('click', () => { AppState.editingVideoId = null; handleSwitchView('favorites'); });
-    document.getElementById('menu-add-video').addEventListener('click', () => handleSwitchView('add'));
+    // Sol Menü Navigasyon Butonları
+    document.getElementById('menu-library').addEventListener('click', () => switchView('library', AppState));
+    document.getElementById('menu-favorites').addEventListener('click', () => switchView('favorites', AppState));
+    document.getElementById('menu-add-video').addEventListener('click', () => switchView('add', AppState));
 
+    // Pratik Listesini Temizleme
     document.getElementById('btn-clear-favorites').addEventListener('click', () => {
-        clearAllFavorites(AppState.currentLang, applyFiltersAndSearch);
+        clearAllFavorites(AppState, () => applyFiltersAndSearch(AppState));
     });
 
+    // Sürükle-Bırak / Ekran Görüntüsü Yapıştırma Alanı
+    const dropArea = document.getElementById('drop-area');
+    if (dropArea) {
+        dropArea.addEventListener('paste', (e) => handlePasteEvent(e, AppState.currentLang));
+    }
+
+    // Google Drive İndirildi Checkbox'ı Mantığı
     document.getElementById('form-is-downloaded').addEventListener('change', (e) => {
-        const container = document.getElementById('drive-url-container');
-        const input = document.getElementById('form-drive-url');
-        container.classList.toggle('d-none', !e.target.checked);
-        input.required = e.target.checked;
-        if (!e.target.checked) input.value = '';
+        const driveUrlContainer = document.getElementById('drive-url-container');
+        const driveInput = document.getElementById('form-drive-url');
+        if (e.target.checked) {
+            driveUrlContainer.classList.remove('d-none');
+            driveInput.required = true;
+        } else {
+            driveUrlContainer.classList.add('d-none');
+            driveInput.value = '';
+            driveInput.required = false;
+        }
     });
 
-    setupAutocomplete('form-tags-input', 'autocomplete-list', AppState.formTagsArray, () => handlers.renderFormChips(AppState), (newTag) => {
-        AppState.formTagsArray.push(newTag);
-        handlers.renderFormChips(AppState);
-        updateSmartFilenameAssistant(AppState.currentLang, AppState.formTagsArray);
-    });
-
-    setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', AppState.modalTagsArray, () => modals.renderModalChips(AppState), (newTag) => {
-        AppState.modalTagsArray.push(newTag);
-        modals.saveModalTags(AppState);
-    });
-
-    document.getElementById('form-instructor-select').addEventListener('change', () => updateSmartFilenameAssistant(AppState.currentLang, AppState.formTagsArray));
-
+    // Eğitmen CRUD Panelini Aç/Kapat Butonları
     document.getElementById('btn-toggle-new-instructor').addEventListener('click', () => {
-        AppState.editInstructorId = null;
-        document.getElementById('form-new-instructor-input').value = '';
-        document.getElementById('btn-save-instructor').innerText = translations[AppState.currentLang].btnAddIns;
-        document.getElementById('new-instructor-container').classList.toggle('d-none');
+        const container = document.getElementById('new-instructor-container');
+        container.classList.toggle('d-none');
+        document.getElementById('form-save-instructor').innerText = translations[AppState.currentLang].btnAddIns;
     });
 
     document.getElementById('btn-edit-instructor').addEventListener('click', () => {
         const select = document.getElementById('form-instructor-select');
-        if (!select || !select.value) return;
-        AppState.editInstructorId = select.value;
+        if (!select.value) return alert(translations[AppState.currentLang].assistantAlert);
+        
+        const container = document.getElementById('new-instructor-container');
+        container.classList.remove('d-none');
         document.getElementById('form-new-instructor-input').value = select.options[select.selectedIndex].text;
-        document.getElementById('btn-save-instructor').innerText = translations[AppState.currentLang].btnUpdateIns;
-        document.getElementById('new-instructor-container').classList.remove('d-none');
+        document.getElementById('form-save-instructor').innerText = translations[AppState.currentLang].btnUpdateIns;
     });
 
-    document.getElementById('btn-delete-instructor').addEventListener('click', () => instructors.deleteInstructorFlow(AppState));
-    document.getElementById('btn-save-instructor').addEventListener('click', () => instructors.handleInstructorSubmit(AppState));
-    document.getElementById('add-video-form').addEventListener('submit', (e) => handlers.handleFormSubmit(e, AppState, handleSwitchView));
+    // Form Gönderimleri ve Silme Tetikleyicileri
+    document.getElementById('btn-delete-instructor').addEventListener('click', () => deleteInstructorFlow(AppState));
+    document.getElementById('form-save-instructor').addEventListener('click', () => handleInstructorSubmit(AppState));
     
-    document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
-    document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
+    // Video Formu Kaydetme (Düzeltilmiş handlers.js'e bağlanıyor)
+    document.getElementById('add-video-form').addEventListener('submit', (e) => {
+        handleFormSubmit(e, AppState, (targetView) => switchView(targetView, AppState));
+    });
 
-    document.getElementById('modal-close-btn').addEventListener('click', modals.closeVideoModal);
-    document.getElementById('video-modal').addEventListener('click', (e) => { if (e.target.id === 'video-modal') modals.closeVideoModal(); });
-    document.getElementById('tags-modal-close-btn').addEventListener('click', () => modals.closeTagsEditModal(AppState));
-    document.getElementById('tags-edit-modal').addEventListener('click', (e) => { if (e.target.id === 'tags-edit-modal') modals.closeTagsEditModal(AppState); });
+    // Arama ve Filtreleme Olayları
+    document.getElementById('search-input').addEventListener('input', () => applyFiltersAndSearch(AppState));
+    document.getElementById('filter-role-select').addEventListener('change', () => applyFiltersAndSearch(AppState));
+    document.getElementById('filter-location-select').addEventListener('change', () => applyFiltersAndSearch(AppState));
+    document.getElementById('filter-btn').addEventListener('click', () => applyFiltersAndSearch(AppState));
 
-    const dropArea = document.getElementById('drop-area');
-    if (dropArea) dropArea.addEventListener('paste', (e) => handlePasteEvent(e, AppState.currentLang));
+    // Video İzleme Modalı Kapatma Olayları
+    document.getElementById('modal-close-btn').addEventListener('click', closeVideoModal);
+    document.getElementById('video-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'video-modal') closeVideoModal();
+    });
+
+    // Etiket Düzenleme Modalı Kapatma Olayları
+    document.getElementById('tags-modal-close-btn').addEventListener('click', () => closeTagsEditModal(AppState));
+    document.getElementById('tags-edit-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'tags-edit-modal') closeTagsEditModal(AppState);
+    });
+}
+
+// Global Kart Tıklamalarını Yakalama Mekanizması (Event Delegation)
+document.addEventListener('click', (e) => {
+    const target = e.target;
+
+    // 1. Favori Yıldız Butonu
+    if (target.classList.contains('fav-star-btn') || target.closest('.fav-star-btn')) {
+        const btn = target.classList.contains('fav-star-btn') ? target : target.closest('.fav-star-btn');
+        const id = parseInt(btn.getAttribute('data-id'));
+        toggleFavorite(id);
+        applyFiltersAndSearch(AppState);
+        return;
+    }
+
+    // 2. Video Kartı Oynat Butonu
+    if (target.classList.contains('play-overlay') || target.closest('.play-overlay')) {
+        const overlay = target.classList.contains('play-overlay') ? target : target.closest('.play-overlay');
+        const driveUrl = overlay.getAttribute('data-drive-url');
+        const videoUrl = overlay.getAttribute('data-video-url');
+        openVideoModal(driveUrl, videoUrl);
+        return;
+    }
 });
+
+// Uygulamayı Başlat
+document.addEventListener('DOMContentLoaded', initApp);
