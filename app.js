@@ -35,7 +35,8 @@ const translations = {
         btnUpdateIns: "Güncelle",
         lblCoverUpload: "Kapak Resmi (Hareketi görüyorken Win+Shift+S yapıp buraya tıklayıp Ctrl+V ile yapıştırın):",
         dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
-        uploading: "⏳ Resim yükleniyor..."
+        uploading: "⏳ Resim yükleniyor...",
+        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen 'covers' kovanızın (bucket) ayarlarından herkese açık (Public) olduğundan ve yükleme (Insert) politikalarının (RLS) açık olduğundan emin olun."
     },
     en: {
         title: "Tango Library",
@@ -68,7 +69,8 @@ const translations = {
         btnUpdateIns: "Update",
         lblCoverUpload: "Cover Image (Take screenshot with Win+Shift+S, click here and paste with Ctrl+V):",
         dropText: "📸 Click here and paste the screenshot via Ctrl + V",
-        uploading: "⏳ Image uploading..."
+        uploading: "⏳ Image uploading...",
+        uploadError: "❌ Image could not be uploaded to Supabase Storage! Please make sure your 'covers' bucket is Public and Insert policies (RLS) are enabled."
     }
 };
 
@@ -89,7 +91,9 @@ function updateInterfaceLanguage() {
     document.getElementById('form-title').innerText = lang.formTitle;
     document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
     document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
+    
+    const coverUploadLbl = document.getElementById('lbl-cover-upload');
+    if (coverUploadLbl) coverUploadLbl.innerText = lang.lblCoverUpload;
     
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !uploadedCoverUrl) {
@@ -149,7 +153,6 @@ function renderVideoCards(videos) {
         const storageDisplay = video.is_downloaded ? '💾 Google Drive' : '🌐 Social Media';
         const partnerDisplay = video.partner_name ? `<span style="color: #94a3b8; font-size: 0.9rem;">👥 Partner: ${video.partner_name}</span>` : '';
         
-        // Ctrl+V ile yüklediğin gerçek ekran görüntüsü varsa onu basar, yoksa şık varsayılan görseli gösterir
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
         const coverImg = video.cover_url || defaultCover;
 
@@ -179,7 +182,7 @@ function renderVideoCards(videos) {
     });
 }
 
-// KLAVYEDEN YAPIŞTIRILAN RESMİ YAKALAYIP STORAGE'A ATAN SİHİRLİ FONKSİYON
+// RESMİ YAKALAYIP STORAGE'A ATAN DÜZELTİLMİŞ FONKSİYON
 async function handlePasteEvent(e) {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     const lang = translations[currentLang];
@@ -189,9 +192,8 @@ async function handlePasteEvent(e) {
             const blob = items[i].getAsFile();
             
             const dropAreaText = document.getElementById('drop-area-text');
-            dropAreaText.innerText = lang.uploading;
+            if (dropAreaText) dropAreaText.innerText = lang.uploading;
 
-            // Dosya ismi çakışmasın diye milisaniye cinsinden benzersiz isim üretiyoruz
             const fileName = `tango_cover_${Date.now()}.png`;
 
             try {
@@ -205,21 +207,26 @@ async function handlePasteEvent(e) {
                     body: blob
                 });
 
-                if (!uploadResponse.ok) throw new Error("Yükleme başarısız.");
+                if (!uploadResponse.ok) {
+                    const errData = await uploadResponse.json();
+                    console.error("Supabase Storage Hatası:", errData);
+                    throw new Error("Storage upload failed");
+                }
 
-                // Resmin internetteki herkese açık direkt linki
                 uploadedCoverUrl = `${SUPABASE_URL}/storage/v1/object/public/covers/${fileName}`;
                 
-                // Form alanında küçük bir önizleme gösterelim
                 const imgPreview = document.getElementById('image-preview');
-                imgPreview.src = uploadedCoverUrl;
-                imgPreview.classList.remove('d-none');
-                dropAreaText.classList.add('d-none');
+                if (imgPreview) {
+                    imgPreview.src = uploadedCoverUrl;
+                    imgPreview.classList.remove('d-none');
+                }
+                if (dropAreaText) dropAreaText.classList.add('d-none');
 
             } catch (err) {
                 console.error(err);
-                alert("Ekran görüntüsü yüklenemedi. Lütfen Supabase Storage kovanızı kontrol edin.");
-                dropAreaText.innerText = lang.dropText;
+                // Yanıltıcı veritabanı uyarısı yerine doğru hata mesajı tetikleniyor
+                alert(lang.uploadError);
+                if (dropAreaText) dropAreaText.innerText = lang.dropText;
             }
         }
     }
@@ -379,7 +386,7 @@ async function handleFormSubmit(e) {
     const payload = {
         instructor_id: parseInt(instructorId),
         url: videoUrl,
-        cover_url: uploadedCoverUrl, // Supabase Storage'dan gelen linki hücreye yazıyoruz
+        cover_url: uploadedCoverUrl, 
         role_type: roleType,
         partner_name: partnerName || null,
         is_downloaded: isDownloaded
@@ -399,13 +406,15 @@ async function handleFormSubmit(e) {
         if (response.ok) {
             alert(lang.successSave);
             
-            // Başarılı kayıttan sonra formu temizle ve eski haline getir
             document.getElementById('add-video-form').reset();
             uploadedCoverUrl = null;
-            document.getElementById('image-preview').classList.add('d-none');
+            const imgPreview = document.getElementById('image-preview');
+            if (imgPreview) imgPreview.classList.add('d-none');
             const dropAreaText = document.getElementById('drop-area-text');
-            dropAreaText.innerText = lang.dropText;
-            dropAreaText.classList.remove('d-none');
+            if (dropAreaText) {
+                dropAreaText.innerText = lang.dropText;
+                dropAreaText.classList.remove('d-none');
+            }
             
             document.getElementById('menu-library').click();
         } else {
@@ -478,10 +487,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    document.getElementById('search-input').addEventListener('input', handleSearch);
-    document.getElementById('filter-btn').addEventListener('click', handleSearch);
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.addEventListener('input', handleSearch);
+    
+    const filterBtn = document.getElementById('filter-btn');
+    if (filterBtn) filterBtn.addEventListener('click', handleSearch);
 
-    // KUTUYA ODAKLANIP CTRL+V YAPILDIĞINDA TETİKLENEN YAPIŞTIRMA ETKİNLİĞİ
     const dropArea = document.getElementById('drop-area');
-    dropArea.addEventListener('paste', handlePasteEvent);
+    if (dropArea) {
+        dropArea.addEventListener('paste', handlePasteEvent);
+    }
 });
