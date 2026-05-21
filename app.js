@@ -7,40 +7,88 @@ let editInstructorId = null;
 
 function updateInterfaceLanguage() {
     const lang = translations[currentLang];
+    if (!lang) return;
     
-    document.title = lang.title;
-    document.getElementById('sidebar-title').innerText = lang.brandTitle;
-    document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
-    document.getElementById('menu-library').innerText = lang.menuLibrary;
-    document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
-    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
-    document.getElementById('filter-btn').innerText = lang.filterBtn;
+    document.title = lang.title || '';
     
-    document.getElementById('opt-all-roles').innerText = lang.allRoles;
-    document.getElementById('opt-leader').innerText = lang.leader;
-    document.getElementById('opt-follower').innerText = lang.follower;
-    document.getElementById('opt-both').innerText = lang.both;
-    document.getElementById('opt-all-locations').innerText = lang.allLocations;
-    document.getElementById('opt-drive').innerText = lang.drive;
-    document.getElementById('opt-social').innerText = lang.social;
+    const sidebarTitle = document.getElementById('sidebar-title');
+    if (sidebarTitle) sidebarTitle.innerText = lang.brandTitle || '';
+    
+    const langToggleBtn = document.getElementById('lang-toggle-btn');
+    if (langToggleBtn) langToggleBtn.innerText = lang.langBtn || '';
+    
+    const menuLibrary = document.getElementById('menu-library');
+    if (menuLibrary) menuLibrary.innerText = lang.menuLibrary || '';
+    
+    const menuAddVideo = document.getElementById('menu-add-video');
+    if (menuAddVideo) menuAddVideo.innerText = lang.menuAddVideo || '';
+    
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.placeholder = lang.searchPlaceholder || '';
+    
+    const filterBtn = document.getElementById('filter-btn');
+    if (filterBtn) filterBtn.innerText = lang.filterBtn || '';
+    
+    const optAllRoles = document.getElementById('opt-all-roles');
+    if (optAllRoles) optAllRoles.innerText = lang.allRoles || '';
+    
+    const optLeader = document.getElementById('opt-leader');
+    if (optLeader) optLeader.innerText = lang.leader || '';
+    
+    const optFollower = document.getElementById('opt-follower');
+    if (optFollower) optFollower.innerText = lang.follower || '';
+    
+    const optBoth = document.getElementById('opt-both');
+    if (optBoth) optBoth.innerText = lang.both || '';
+    
+    const optAllLocations = document.getElementById('opt-all-locations');
+    if (optAllLocations) optAllLocations.innerText = lang.allLocations || '';
+    
+    const optDrive = document.getElementById('opt-drive');
+    if (optDrive) optDrive.innerText = lang.drive || '';
+    
+    const optSocial = document.getElementById('opt-social');
+    if (optSocial) optSocial.innerText = lang.social || '';
 
-    document.getElementById('form-title').innerText = lang.formTitle;
-    document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
-    document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-role').innerText = lang.lblRole;
-    document.getElementById('lbl-partner').innerText = lang.lblPartner;
-    document.getElementById('lbl-tags').innerText = lang.lblTags;
-    document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
-    document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
-    document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
+    const formTitle = document.getElementById('form-title');
+    if (formTitle) formTitle.innerText = lang.formTitle || '';
     
-    document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
-    document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
+    const lblInstructor = document.getElementById('lbl-instructor');
+    if (lblInstructor) lblInstructor.innerText = lang.lblInstructor || '';
     
-    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
+    const lblVideoUrl = document.getElementById('lbl-video-url');
+    if (lblVideoUrl) lblVideoUrl.innerText = lang.lblVideoUrl || '';
+    
+    const lblRole = document.getElementById('lbl-role');
+    if (lblRole) lblRole.innerText = lang.lblRole || '';
+    
+    const lblPartner = document.getElementById('lbl-partner');
+    if (lblPartner) lblPartner.innerText = lang.lblPartner || '';
+    
+    const lblTags = document.getElementById('lbl-tags');
+    if (lblTags) lblTags.innerText = lang.lblTags || '';
+    
+    const formTagsInput = document.getElementById('form-tags-input');
+    if (formTagsInput) formTagsInput.placeholder = lang.tagsPlaceholder || '';
+    
+    const lblDownloaded = document.getElementById('lbl-downloaded');
+    if (lblDownloaded) lblDownloaded.innerText = lang.lblDownloaded || '';
+    
+    const btnSubmitVideo = document.getElementById('btn-submit-video');
+    if (btnSubmitVideo) btnSubmitVideo.innerText = lang.btnSubmitVideo || '';
+    
+    const lblNewInstructorName = document.getElementById('lbl-new-instructor-name');
+    if (lblNewInstructorName) lblNewInstructorName.innerText = lang.lblNewInstructorName || '';
+    
+    const btnSaveInstructor = document.getElementById('btn-save-instructor');
+    if (btnSaveInstructor) btnSaveInstructor.innerText = lang.btnAddIns || '';
+    
+    const lblCoverUpload = document.getElementById('lbl-cover-upload');
+    if (lblCoverUpload) lblCoverUpload.innerText = lang.lblCoverUpload || '';
+    
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
-        dropAreaText.innerText = lang.dropText;
+        dropAreaText.innerText = lang.dropText || '';
     }
 
     applyFiltersAndSearch();
@@ -60,24 +108,28 @@ async function fetchInstructors() {
         
         const instructors = await response.json();
         const select = document.getElementById('form-instructor-select');
+        if (!select) return;
         
-        select.innerHTML = `<option value="">-- ${translations[currentLang].lblInstructor.split(':')[0]} --</option>`;
+        const langLabel = translations[currentLang].lblInstructor ? translations[currentLang].lblInstructor.split(':')[0] : 'Eğitmen';
+        select.innerHTML = `<option value="">-- ${langLabel} --</option>`;
         instructors.forEach(ins => {
             select.innerHTML += `<option value="${ins.id}">${ins.name}</option>`;
         });
     } catch (err) {
-        console.error(err);
+        console.error("Eğitmen yükleme hatası:", err);
     }
 }
 
 async function handleInstructorSubmit(e) {
     e.preventDefault();
     const input = document.getElementById('form-new-instructor-input');
+    if (!input) return;
+    
     const name = input.value.trim();
     const lang = translations[currentLang];
     
     if (!name) {
-        alert(lang.insAlert);
+        alert(lang.insAlert || "Lütfen bir eğitmen ismi girin.");
         return;
     }
 
@@ -105,23 +157,28 @@ async function handleInstructorSubmit(e) {
             });
         }
 
-        if (!response.ok) throw new Error("İşlem başarısız");
+        if (!response.ok) throw new Error("Eğitmen veritabanı işlemi başarısız");
         
         alert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess);
         input.value = '';
         editInstructorId = null;
-        document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
-        document.getElementById('new-instructor-container').classList.add('d-none');
+        
+        const btnSaveInstructor = document.getElementById('btn-save-instructor');
+        if (btnSaveInstructor) btnSaveInstructor.innerText = lang.btnAddIns;
+        
+        const container = document.getElementById('new-instructor-container');
+        if (container) container.classList.add('d-none');
         
         await fetchInstructors();
     } catch (err) {
-        console.error(err);
+        console.error("Eğitmen kaydetme hatası:", err);
         alert("Eğitmen işlemi sırasında hata oluştu!");
     }
 }
 
 async function deleteInstructor() {
     const select = document.getElementById('form-instructor-select');
+    if (!select) return;
     const id = select.value;
     const lang = translations[currentLang];
     
@@ -137,18 +194,25 @@ async function deleteInstructor() {
                 }
             });
             
-            if (!response.ok) throw new Error("Silme başarısız");
+            if (!response.ok) throw new Error("Eğitmen silme başarısız");
             
             alert(lang.insDeleteSuccess);
-            document.getElementById('new-instructor-container').classList.add('d-none');
-            document.getElementById('form-new-instructor-input').value = '';
+            
+            const container = document.getElementById('new-instructor-container');
+            if (container) container.classList.add('d-none');
+            
+            const input = document.getElementById('form-new-instructor-input');
+            if (input) input.value = '';
+            
             editInstructorId = null;
-            document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
+            
+            const btnSaveInstructor = document.getElementById('btn-save-instructor');
+            if (btnSaveInstructor) btnSaveInstructor.innerText = lang.btnAddIns;
             
             await fetchInstructors();
             await fetchVideos();
         } catch (err) {
-            console.error(err);
+            console.error("Eğitmen silme hatası:", err);
             alert("Eğitmen silinirken hata oluştu!");
         }
     }
@@ -156,6 +220,7 @@ async function deleteInstructor() {
 
 async function fetchVideos() {
     const gallery = document.getElementById('video-gallery');
+    if (!gallery) return;
     gallery.innerHTML = `<div class="loading-state">${translations[currentLang].loading}</div>`;
     
     try {
@@ -175,7 +240,7 @@ async function fetchVideos() {
         globalVideos = await response.json();
         applyFiltersAndSearch();
     } catch (err) {
-        console.error(err);
+        console.error("Videoları getirme hatası:", err);
         gallery.innerHTML = `<div class="error-state">${translations[currentLang].error}</div>`;
     }
 }
@@ -220,7 +285,6 @@ async function handleFormSubmit(e) {
         });
 
         if (!response.ok) {
-            // Supabase'den gelen ham hata detayını nesne olarak yakalayıp konsola yazdırıyoruz
             const errorData = await response.json();
             console.error("🔴 Supabase Detaylı Hata Nesnesi:", errorData);
             throw new Error(errorData.message || errorData.details || "Video kaydedilemedi");
@@ -240,7 +304,8 @@ async function handleFormSubmit(e) {
         
         resetUploadedCoverUrl();
         
-        document.getElementById('menu-library').click();
+        const menuLibrary = document.getElementById('menu-library');
+        if (menuLibrary) menuLibrary.click();
         await fetchVideos();
     } catch (err) {
         console.error("🔴 Yakalanan Hata:", err);
@@ -263,18 +328,23 @@ async function deleteVideo(id) {
             
             await fetchVideos();
         } catch (err) {
-            console.error(err);
+            console.error("Video silme hatası:", err);
             alert("Video silinirken bir hata oluştu.");
         }
     }
 }
 
 function applyFiltersAndSearch() {
-    const query = document.getElementById('search-input').value.toLowerCase().trim();
-    const roleFilter = document.getElementById('filter-role-select').value;
-    const locationFilter = document.getElementById('filter-location-select').value;
-    
+    const searchInput = document.getElementById('search-input');
+    const filterRoleSelect = document.getElementById('filter-role-select');
+    const filterLocationSelect = document.getElementById('filter-location-select');
     const gallery = document.getElementById('video-gallery');
+    
+    if (!gallery) return;
+    
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const roleFilter = filterRoleSelect ? filterRoleSelect.value : 'all';
+    const locationFilter = filterLocationSelect ? filterLocationSelect.value : 'all';
     
     let filtered = globalVideos.filter(video => {
         const instructorName = video.instructors ? video.instructors.name.toLowerCase() : '';
@@ -326,7 +396,7 @@ function applyFiltersAndSearch() {
             <div class="card-image-container">
                 <img src="${coverSrc}" alt="Video Cover" class="card-cover">
                 <button class="delete-video-btn" data-id="${video.id}">✕</button>
-                <span class="badge ${badgeRoleClass} card-role-badge">${translations[currentLang][video.role_type.toLowerCase()]}</span>
+                <span class="badge ${badgeRoleClass} card-role-badge">${translations[currentLang][video.role_type.toLowerCase()] || video.role_type}</span>
             </div>
             <div class="card-content">
                 <h3 class="card-instructor">${instructorName}</h3>
@@ -341,7 +411,10 @@ function applyFiltersAndSearch() {
             </div>
         `;
         
-        card.querySelector('.delete-video-btn').addEventListener('click', () => deleteVideo(video.id));
+        const delBtn = card.querySelector('.delete-video-btn');
+        if (delBtn) {
+            delBtn.addEventListener('click', () => deleteVideo(video.id));
+        }
         gallery.appendChild(card);
     });
 }
@@ -351,58 +424,88 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchVideos();
     updateInterfaceLanguage();
 
-    document.getElementById('lang-toggle-btn').addEventListener('click', () => {
-        currentLang = currentLang === 'tr' ? 'en' : 'tr';
-        updateInterfaceLanguage();
-    });
+    const langToggleBtn = document.getElementById('lang-toggle-btn');
+    if (langToggleBtn) {
+        langToggleBtn.addEventListener('click', () => {
+            currentLang = currentLang === 'tr' ? 'en' : 'tr';
+            updateInterfaceLanguage();
+        });
+    }
 
     const menuLibrary = document.getElementById('menu-library');
     const menuAddVideo = document.getElementById('menu-add-video');
     const panelLibrary = document.getElementById('panel-library');
     const panelAddVideo = document.getElementById('panel-add-video');
 
-    menuLibrary.addEventListener('click', () => {
-        menuLibrary.classList.add('active');
-        menuAddVideo.classList.remove('active');
-        panelLibrary.classList.remove('d-none');
-        panelAddVideo.classList.add('d-none');
-    });
+    if (menuLibrary && menuAddVideo && panelLibrary && panelAddVideo) {
+        menuLibrary.addEventListener('click', () => {
+            menuLibrary.classList.add('active');
+            menuAddVideo.classList.remove('active');
+            panelLibrary.classList.remove('d-none');
+            panelAddVideo.classList.add('d-none');
+        });
 
-    menuAddVideo.addEventListener('click', () => {
-        menuAddVideo.classList.add('active');
-        menuLibrary.classList.remove('active');
-        panelAddVideo.classList.remove('d-none');
-        panelLibrary.classList.add('d-none');
-    });
+        menuAddVideo.addEventListener('click', () => {
+            menuAddVideo.classList.add('active');
+            menuLibrary.classList.remove('active');
+            panelAddVideo.classList.remove('d-none');
+            panelLibrary.classList.add('d-none');
+        });
+    }
 
-    document.getElementById('btn-add-instructor-toggle').addEventListener('click', () => {
-        const container = document.getElementById('new-instructor-container');
-        container.classList.toggle('d-none');
-        document.getElementById('form-new-instructor-input').value = '';
-        editInstructorId = null;
-        document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnAddIns;
-    });
+    const btnAddInstructorToggle = document.getElementById('btn-add-instructor-toggle');
+    if (btnAddInstructorToggle) {
+        btnAddInstructorToggle.addEventListener('click', () => {
+            const container = document.getElementById('new-instructor-container');
+            if (container) container.classList.toggle('d-none');
+            const input = document.getElementById('form-new-instructor-input');
+            if (input) input.value = '';
+            editInstructorId = null;
+            const btnSaveInstructor = document.getElementById('btn-save-instructor');
+            if (btnSaveInstructor) btnSaveInstructor.innerText = translations[currentLang].btnAddIns;
+        });
+    }
 
-    document.getElementById('btn-edit-instructor').addEventListener('click', () => {
-        const select = document.getElementById('form-instructor-select');
-        if (!select.value) return;
-        
-        editInstructorId = select.value;
-        const selectedName = select.options[select.selectedIndex].text;
-        
-        document.getElementById('form-new-instructor-input').value = selectedName;
-        document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnUpdateIns;
-        document.getElementById('new-instructor-container').classList.remove('d-none');
-    });
+    const btnEditInstructor = document.getElementById('btn-edit-instructor');
+    if (btnEditInstructor) {
+        btnEditInstructor.addEventListener('click', () => {
+            const select = document.getElementById('form-instructor-select');
+            if (!select || !select.value) return;
+            
+            editInstructorId = select.value;
+            const selectedName = select.options[select.selectedIndex].text;
+            
+            const input = document.getElementById('form-new-instructor-input');
+            if (input) input.value = selectedName;
+            
+            const btnSaveInstructor = document.getElementById('btn-save-instructor');
+            if (btnSaveInstructor) btnSaveInstructor.innerText = translations[currentLang].btnUpdateIns;
+            
+            const container = document.getElementById('new-instructor-container');
+            if (container) container.classList.remove('d-none');
+        });
+    }
 
-    document.getElementById('btn-delete-instructor').addEventListener('click', deleteInstructor);
-    document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
-    document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
+    const btnDeleteInstructor = document.getElementById('btn-delete-instructor');
+    if (btnDeleteInstructor) btnDeleteInstructor.addEventListener('click', deleteInstructor);
     
-    document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
-    document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
+    const btnSaveInstructor = document.getElementById('btn-save-instructor');
+    if (btnSaveInstructor) btnSaveInstructor.addEventListener('click', handleInstructorSubmit);
+    
+    const addVideoForm = document.getElementById('add-video-form');
+    if (addVideoForm) addVideoForm.addEventListener('submit', handleFormSubmit);
+    
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.addEventListener('input', applyFiltersAndSearch);
+    
+    const filterRoleSelect = document.getElementById('filter-role-select');
+    if (filterRoleSelect) filterRoleSelect.addEventListener('change', applyFiltersAndSearch);
+    
+    const filterLocationSelect = document.getElementById('filter-location-select');
+    if (filterLocationSelect) filterLocationSelect.addEventListener('change', applyFiltersAndSearch);
+    
+    const filterBtn = document.getElementById('filter-btn');
+    if (filterBtn) filterBtn.addEventListener('click', applyFiltersAndSearch);
 
     const dropArea = document.getElementById('drop-area');
     if (dropArea) {
