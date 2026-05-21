@@ -7,7 +7,7 @@
 }
 
 body {
-    background: #0f172a; /* Derin gece mavisi arka plan */
+    background: #0f172a; 
     color: #f8fafc;
     min-height: 100vh;
     overflow-x: hidden;
@@ -17,7 +17,6 @@ body {
     position: relative;
 }
 
-/* Arka Plandaki Renkli Estetik Küreler */
 .bg-glow {
     position: absolute;
     width: 400px;
@@ -40,311 +39,288 @@ body {
     right: -10%;
 }
 
-/* Ana Uygulama Çerçevesi */
 .app-container {
     display: flex;
     width: 95vw;
     height: 90vh;
     max-width: 1400px;
-    z-index: 2;
-    gap: 20px;
-}
-
-/* Sol Menü - Buzlu Cam Efekti */
-.sidebar-glass {
-    flex: 1;
-    max-width: 280px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 30px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.sidebar-glass h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    background: linear-gradient(to right, #fff, #94a3b8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.sidebar-glass hr {
-    border: 0;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.menu-items {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.menu-btn {
-    background: transparent;
-    border: 1px solid transparent;
-    color: #94a3b8;
-    padding: 14px 18px;
-    border-radius: 14px;
-    text-align: left;
-    font-size: 0.95rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.menu-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-}
-
-.menu-btn.active {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-}
-
-/* Sağ İçerik Paneli */
-.main-content-glass {
-    flex: 3;
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 24px;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+    z-index: 2;
     overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-/* Üst Arama Çubuğu */
-.search-header {
-    display: flex;
-    gap: 15px;
-    flex-shrink: 0;
-}
-
-#search-input {
-    flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 14px 20px;
-    border-radius: 14px;
-    color: #fff;
-    font-size: 0.95rem;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-#search-input:focus {
-    border-color: rgba(56, 189, 248, 0.5);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
-}
-
-#filter-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #fff;
-    padding: 0 25px;
-    border-radius: 14px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-#filter-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Video Kart Izgarası */
-.video-grid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
-
-/* Video Kartı Tasarımı */
-.video-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(8px);
-    border-radius: 16px;
-    padding: 14px;
+/* Sol Menü Tasarımı */
+.sidebar-glass {
+    width: 280px;
+    background: rgba(15, 23, 42, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 30px 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, border-color 0.3s ease;
-}
-
-.video-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(56, 189, 248, 0.3);
-}
-
-/* KÜTÜPHANE KARTLARI İÇİNDEKİ GÖRSEL YERLEŞİMİ */
-.video-cover-link {
-    text-decoration: none;
-    width: 100%;
-    display: block;
-}
-
-.video-cover-container {
-    width: 100%;
-    padding-top: 140%; /* Tam dikey dikey Reels formatını yakalar */
-    border-radius: 12px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.play-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 12px;
-    transition: background 0.3s ease;
-}
-
-.play-icon {
-    font-size: 1.8rem;
-    color: #fff;
-    background: rgba(236, 72, 153, 0.85);
-    width: 50px;
-    height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
-    transition: transform 0.3s ease, background 0.3s ease;
-    padding-left: 4px;
-}
-
-.video-cover-container:hover .play-overlay {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.video-cover-container:hover .play-icon {
-    transform: scale(1.1);
-    background: rgba(236, 72, 153, 1);
-}
-
-/* FORM RESİM YAPIŞTIRMA ALANI (DROP AREA) */
-#drop-area {
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-    background: rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    min-height: 180px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    outline: none;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-#drop-area:focus {
-    border-color: #38bdf8;
-    background: rgba(56, 189, 248, 0.05);
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
-}
-
-#drop-area-text {
-    font-size: 0.9rem;
-    color: #94a3b8;
-    pointer-events: none;
-}
-
-#image-preview {
-    max-width: 100%;
-    max-height: 250px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    object-fit: cover;
-}
-
-/* Bilgilendirme Mesajı */
-.info-msg {
-    grid-column: 1 / -1;
-    text-align: center;
-    color: #64748b;
-    font-size: 1rem;
-    margin-top: 40px;
-}
-
-/* Mobil Ayarlar */
-@media (max-width: 768px) {
-    .app-container {
-        flex-direction: column;
-        height: 95vh;
-    }
-    .sidebar-glass {
-        max-width: 100%;
-        flex: none;
-        padding: 15px;
-    }
-    .main-content-glass {
-        padding: 15px;
-        overflow-y: auto;
-    }
 }
 
 .sidebar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.sidebar-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #38bdf8, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .lang-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: #fff;
     padding: 6px 12px;
     border-radius: 10px;
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 600;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .lang-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 14px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #f8fafc;
+}
+
+.menu-btn.active {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    font-weight: 600;
+    border-left: 3px solid #38bdf8;
+    border-radius: 4px 12px 12px 4px;
+}
+
+/* Ana İçerik Alanı */
+.main-content-glass {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.15);
 }
 
 .view-panel {
+    animation: fadeIn 0.4s ease;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    height: 100%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .d-none {
     display: none !important;
 }
 
-/* Formlar */
+/* Arama ve Filtreleme Başlığı */
+.search-header {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.search-header input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 16px 20px;
+    border-radius: 16px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-header input:focus {
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+    color: #0f172a;
+    border: none;
+    padding: 0 28px;
+    border-radius: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+}
+
+/* Video Kartları Grid Altyapısı */
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    overflow-y: auto;
+    padding-top: 15px;
+    padding-bottom: 20px;
+    flex: 1;
+}
+
+/* Modern Video Kartı Tasarımı ve Hover Efektleri */
+.video-card {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.video-card:hover {
+    transform: translateY(-6px);
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* Video Kapak Görseli ve Zoom Efekti */
+.video-cover-link {
+    width: 100%;
+    text-decoration: none;
+    display: block;
+    overflow: hidden;
+    border-radius: 14px;
+}
+
+.video-cover-container {
+    width: 100%;
+    padding-top: 56.25% !important; /* Esnek 16:9 Oranı */
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    transition: transform 0.5s ease;
+}
+
+.video-card:hover .video-cover-container {
+    transform: scale(1.04);
+}
+
+/* Oynat Butonu Katmanı */
+.play-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.video-card:hover .play-overlay {
+    opacity: 1;
+}
+
+.play-icon {
+    background: #fff;
+    color: #0f172a;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    padding-left: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+}
+
+.video-card:hover .play-icon {
+    transform: scale(1.1);
+}
+
+/* Bilgi Mesajları */
+.info-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    padding: 40px;
+    line-height: 1.6;
+}
+
+/* Sürükle Bırak / Yapıştır Alanı */
+#drop-area {
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-align: center;
+    background: rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+#drop-area:focus, #drop-area:hover {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.02);
+}
+
+.preview-img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
 .glass-form {
     display: flex;
     flex-direction: column;
@@ -385,37 +361,110 @@ body {
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: rgba(56, 189, 248, 0.5);
+    border-color: rgba(56, 189, 248, 0.4);
 }
 
-.row-group {
-    flex-direction: row;
+.checkbox-group {
+    display: flex;
     align-items: center;
     gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    color: #f8fafc !important;
+    font-size: 0.95rem !important;
 }
 
-.row-group input[type="checkbox"] {
+.checkbox-group input {
     width: 18px;
     height: 18px;
-    cursor: pointer;
     accent-color: #38bdf8;
 }
 
-.submit-btn {
-    background: linear-gradient(135deg, #ec4899, #be185d);
-    color: #fff;
-    border: none;
-    padding: 14px;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(236, 72, 153, 0.2);
+/* --- OPTION 1: PREMIUM KART VE ETİKET (BADGE) SİSTEMİ STİLLERİ --- */
+.card-info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
     width: 100%;
 }
 
-.submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(236, 72, 153, 0.3);
+.card-instructor {
+    font-size: 1.05rem;
+    color: #38bdf8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-partner {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-top: -4px;
+}
+
+/* Badge (Etiket) Taşıyıcı Panel */
+.card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+/* Genel Etiket Tasarımı */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Rol Renkleri */
+.badge-leader {
+    background: rgba(168, 85, 247, 0.15); /* Mor şeffaf */
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.badge-follower {
+    background: rgba(236, 72, 153, 0.15); /* Pembe şeffaf */
+    color: #f472b6;
+    border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+.badge-both {
+    background: rgba(56, 189, 248, 0.15); /* Mavi şeffaf */
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+/* Depolama Ortamı Renkleri */
+.badge-drive {
+    background: rgba(34, 197, 94, 0.15); /* Yeşil şeffaf */
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.badge-social {
+    background: rgba(245, 158, 11, 0.15); /* Turuncu şeffaf */
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Kartın Altındaki Aksiyon Linki */
+.card-action-link {
+    color: #ec4899;
+    font-size: 0.85rem;
+    margin-top: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+    align-self: flex-start;
+}
+
+.card-action-link:hover {
+    color: #f472b6;
+    text-decoration: underline;
 }
