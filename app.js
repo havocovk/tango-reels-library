@@ -5,12 +5,21 @@ import {
     dbDeleteVideo, 
     dbFetchInstructors, 
     dbFetchVideos, 
-    dbUpdateTagsDirectly, 
     dbSaveInstructor, 
     dbDeleteInstructor 
-} from './tangoVeritabani.js'; // <-- Dosya adını buradaki gibi tangoVeritabani.js yapıyoruz
+} from './tangoVeritabani.js';
 import { getFavorites, addOrRemoveFavorite, removeFavoriteDirectly, clearAllFavoritesData } from './favoritesManager.js';
 import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
+
+// Yeni taşınan modal modülümüzü içeri alıyoruz
+import { 
+    openVideoModal, 
+    closeVideoModal, 
+    openTagsEditModal, 
+    closeTagsEditModal,
+    modalTagsArray,
+    saveTagsToSupabaseDirectly
+} from './tangoModals.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -19,8 +28,6 @@ let editingVideoId = null;
 let currentView = 'library'; 
 
 let formTagsArray = [];
-let modalTagsArray = [];
-let activeEditTagsVideoId = null; 
 
 function toggleFavorite(videoId) {
     addOrRemoveFavorite(videoId);
@@ -33,16 +40,6 @@ function clearAllFavorites() {
         clearAllFavoritesData();
         applyFiltersAndSearch();
     }
-}
-
-function convertDriveUrlToEmbed(url) {
-    if (!url) return '';
-    const regExp = /\/file\/d\/([^/]+)/;
-    const matches = url.match(regExp);
-    if (matches && matches[1]) {
-        return `https://drive.google.com/file/d/${matches[1]}/preview`;
-    }
-    return url;
 }
 
 function getAllUniqueTagsPool() {
@@ -168,88 +165,6 @@ async function fetchVideos() {
     }
 }
 
-function openVideoModal(url) {
-    const embedUrl = convertDriveUrlToEmbed(url);
-    document.getElementById('modal-iframe').src = embedUrl;
-    document.getElementById('video-modal').classList.remove('d-none');
-}
-
-function closeVideoModal() {
-    document.getElementById('video-modal').classList.add('d-none');
-    document.getElementById('modal-iframe').src = '';
-}
-
-function openTagsEditModal(video) {
-    activeEditTagsVideoId = video.id;
-    modalTagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t !== '') : [];
-    
-    document.getElementById('tags-edit-modal').classList.remove('d-none');
-    renderModalTagsList();
-    renderModalChips();
-}
-
-function closeTagsEditModal() {
-    document.getElementById('tags-edit-modal').classList.add('d-none');
-    activeEditTagsVideoId = null;
-}
-
-function renderModalTagsList() {
-    const container = document.getElementById('modal-tags-list-container');
-    container.innerHTML = '';
-
-    if (modalTagsArray.length === 0) {
-        container.innerHTML = `<div style="color:#64748b; font-size:0.9rem; text-align:center;">Henüz etiket bulunmuyor.</div>`;
-        return;
-    }
-
-    modalTagsArray.forEach((tag, idx) => {
-        const row = document.createElement('div');
-        row.className = 'modal-tag-row';
-        row.innerHTML = `
-            <input type="text" value="${tag}" data-idx="${idx}" class="modal-tag-edit-input">
-            <button class="modal-tag-row-delete-btn" data-idx="${idx}">&times;</button>
-        `;
-
-        row.querySelector('.modal-tag-edit-input').addEventListener('input', (e) => {
-            modalTagsArray[idx] = e.target.value.trim();
-        });
-
-        row.querySelector('.modal-tag-row-delete-btn').addEventListener('click', () => {
-            modalTagsArray.splice(idx, 1);
-            saveTagsToSupabaseDirectly();
-        });
-
-        row.querySelector('.modal-tag-edit-input').addEventListener('blur', () => {
-            saveTagsToSupabaseDirectly();
-        });
-
-        container.appendChild(row);
-    });
-}
-
-function renderModalChips() {
-    renderChips('modal-chips-area', modalTagsArray, (index) => {
-        modalTagsArray.splice(index, 1);
-        saveTagsToSupabaseDirectly();
-    });
-}
-
-async function saveTagsToSupabaseDirectly() {
-    if (!activeEditTagsVideoId) return;
-    const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
-    
-    try {
-        await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags);
-        const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
-        if (vid) vid.tags = cleanTags || null;
-        renderModalTagsList();
-        renderModalChips();
-        applyFiltersAndSearch();
-    } catch (err) {
-        console.error("Etiket anlık güncellenemedi:", err);
-    }
-}
-
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
     switchView('add'); 
@@ -351,7 +266,7 @@ function applyFiltersAndSearch() {
         translations,
         favs,
         toggleFavorite,
-        openTagsEditModal,
+        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
         startVideoEditFlow,
         deleteVideoFlow,
         openVideoModal
@@ -544,9 +459,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSmartFilenameAssistant();
     }, getAllUniqueTagsPool);
 
-    setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, renderModalChips, (newTag) => {
+    setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        saveTagsToSupabaseDirectly();
+        saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
     }, getAllUniqueTagsPool);
 
     document.getElementById('form-instructor-select').addEventListener('change', updateSmartFilenameAssistant);
