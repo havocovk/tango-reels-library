@@ -29,6 +29,8 @@ function updateInterfaceLanguage() {
     document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
     document.getElementById('lbl-role').innerText = lang.lblRole;
     document.getElementById('lbl-partner').innerText = lang.lblPartner;
+    document.getElementById('lbl-tags').innerText = lang.lblTags;
+    document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
     document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
     document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
     document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
@@ -110,7 +112,6 @@ function renderVideoCards(videos) {
             roleBadgeClass = 'badge-leader';
         } else if (roleDisplay === 'Follower') {
             roleDisplay = currentLang === 'tr' ? 'Takipçi' : 'Follower';
-            roleBadgeClass = 'badge-follower';
         } else {
             roleDisplay = currentLang === 'tr' ? 'İkisi de' : 'Both';
             roleBadgeClass = 'badge-both';
@@ -123,6 +124,15 @@ function renderVideoCards(videos) {
         const partnerDisplay = video.partner_name 
             ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
             : '';
+        
+        // Etiketleri (Tags) ayrıştırıp küçük gri butonlar halinde basma
+        let tagsHtml = '';
+        if (video.tags && video.tags.trim() !== '') {
+            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+            tagsArray.forEach(tag => {
+                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
+            });
+        }
         
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
         const coverImg = video.cover_url || defaultCover;
@@ -144,6 +154,8 @@ function renderVideoCards(videos) {
                     <span class="badge ${storageClass}">${storageText}</span>
                 </div>
 
+                ${tagsHtml ? `<div class="card-badges" style="margin-top: 2px; gap: 4px;">${tagsHtml}</div>` : ''}
+
                 <a href="${video.url}" target="_blank" class="card-action-link">
                     ${lang.watch || '🌐 İzle ↗'}
                 </a>
@@ -161,8 +173,10 @@ function applyFiltersAndSearch() {
     const filtered = globalVideos.filter(video => {
         const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
         const partnerName = video.partner_name ? video.partner_name.toLowerCase() : '';
+        const videoTags = video.tags ? video.tags.toLowerCase() : '';
         
-        const matchesSearch = insName.includes(searchVal) || partnerName.includes(searchVal);
+        // Arama artık hem Eğitmen adında, hem Partner adında hem de teknik etiketlerde (Tags) arama yapar
+        const matchesSearch = insName.includes(searchVal) || partnerName.includes(searchVal) || videoTags.includes(searchVal);
         
         const matchesRole = (roleVal === 'all') || (video.role_type === roleVal);
         
@@ -262,6 +276,7 @@ async function handleFormSubmit(e) {
     const url = document.getElementById('form-video-url').value.trim();
     const role_type = document.getElementById('form-role-select').value;
     const partner_name = document.getElementById('form-partner-name').value.trim();
+    const tags = document.getElementById('form-tags-input').value.trim();
     const is_downloaded = document.getElementById('form-is-downloaded').checked;
     const cover_url = getUploadedCoverUrl();
 
@@ -275,6 +290,7 @@ async function handleFormSubmit(e) {
         url,
         role_type,
         partner_name: partner_name || null,
+        tags: tags || null,
         is_downloaded,
         cover_url
     };
