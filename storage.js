@@ -1,3 +1,4 @@
+// storage.js
 import { SUPABASE_URL, SUPABASE_KEY, translations } from './config.js';
 
 let uploadedCoverUrl = null;
