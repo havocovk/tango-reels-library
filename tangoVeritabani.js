@@ -84,8 +84,7 @@ export async function dbSaveVideo(id, payload) {
     return response;
 }
 
-// dbManager.js dosyasının altına eklenecekler:
-
+// 8. Postacı: app.js tarafından pop-up etiket düzenleme alanında doğrudan tetiklenen güncelleme fonksiyonu
 export async function dbUpdateTagsDirectly(videoId, cleanTags) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'PATCH',
@@ -96,39 +95,5 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags) {
         body: JSON.stringify({ tags: cleanTags || null })
     });
     if (!response.ok) throw new Error("Etiket güncellenemedi");
-    return response;
-}
-
-export async function dbSaveInstructor(id, name) {
-    let response;
-    if (id) {
-        response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ name })
-        });
-    } else {
-        response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
-            method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ name })
-        });
-    }
-    if (!response.ok) throw new Error("Eğitmen kaydedilemedi");
-    return response;
-}
-
-export async function dbDeleteInstructor(id) {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    if (!response.ok) throw new Error("Eğitmen silinemedi");
     return response;
 }
