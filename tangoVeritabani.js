@@ -86,14 +86,6 @@ export async function dbSaveVideo(id, payload) {
 
 // dbManager.js dosyasının altına eklenecekler:
 
-export async function dbFetchInstructors() {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    if (!response.ok) throw new Error("Eğitmenler yüklenemedi");
-    return response.json();
-}
-
 export async function dbFetchVideos() {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
