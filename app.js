@@ -36,7 +36,7 @@ const translations = {
         lblCoverUpload: "Kapak Resmi (Hareketi görüyorken Win+Shift+S yapıp buraya tıklayıp Ctrl+V ile yapıştırın):",
         dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
         uploading: "⏳ Resim yükleniyor...",
-        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen 'covers' kovanızın (bucket) ayarlarından herkese açık (Public) olduğundan ve yükleme (Insert) politikalarının (RLS) açık olduğundan emin olun."
+        uploadError: "❌ Resim Supabase Storage'a yüklenemedi! Lütfen kovanızın (bucket) Public olduğundan emin olun."
     },
     en: {
         title: "Tango Library",
@@ -58,7 +58,7 @@ const translations = {
         lblPartner: "Partner Name (Optional):",
         lblDownloaded: "Backed up to Google Drive?",
         btnSubmitVideo: "💾 Save to Database",
-        successSave: "🎉 Video and cover image successfully added!",
+        successSave: "🎉 Video successfully added!",
         lblNewInstructorName: "Instructor Name:",
         insSuccess: "🎉 Instructor successfully added!",
         insUpdateSuccess: "🎉 Instructor name updated!",
@@ -70,7 +70,7 @@ const translations = {
         lblCoverUpload: "Cover Image (Take screenshot with Win+Shift+S, click here and paste with Ctrl+V):",
         dropText: "📸 Click here and paste the screenshot via Ctrl + V",
         uploading: "⏳ Image uploading...",
-        uploadError: "❌ Image could not be uploaded to Supabase Storage! Please make sure your 'covers' bucket is Public and Insert policies (RLS) are enabled."
+        uploadError: "❌ Image could not be uploaded to Supabase Storage!"
     }
 };
 
@@ -153,6 +153,7 @@ function renderVideoCards(videos) {
         const storageDisplay = video.is_downloaded ? '💾 Google Drive' : '🌐 Social Media';
         const partnerDisplay = video.partner_name ? `<span style="color: #94a3b8; font-size: 0.9rem;">👥 Partner: ${video.partner_name}</span>` : '';
         
+        // Veritabanındaki cover_url değerini okuyoruz, yoksa varsayılan resmi gösteriyoruz
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
         const coverImg = video.cover_url || defaultCover;
 
@@ -182,7 +183,6 @@ function renderVideoCards(videos) {
     });
 }
 
-// RESMİ YAKALAYIP STORAGE'A ATAN DÜZELTİLMİŞ FONKSİYON
 async function handlePasteEvent(e) {
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     const lang = translations[currentLang];
@@ -208,8 +208,6 @@ async function handlePasteEvent(e) {
                 });
 
                 if (!uploadResponse.ok) {
-                    const errData = await uploadResponse.json();
-                    console.error("Supabase Storage Hatası:", errData);
                     throw new Error("Storage upload failed");
                 }
 
@@ -224,7 +222,6 @@ async function handlePasteEvent(e) {
 
             } catch (err) {
                 console.error(err);
-                // Yanıltıcı veritabanı uyarısı yerine doğru hata mesajı tetikleniyor
                 alert(lang.uploadError);
                 if (dropAreaText) dropAreaText.innerText = lang.dropText;
             }
@@ -383,13 +380,14 @@ async function handleFormSubmit(e) {
         return;
     }
 
+    // Doğrudan cover_url sütununa veriyi ekliyoruz
     const payload = {
         instructor_id: parseInt(instructorId),
         url: videoUrl,
-        cover_url: uploadedCoverUrl, 
         role_type: roleType,
         partner_name: partnerName || null,
-        is_downloaded: isDownloaded
+        is_downloaded: isDownloaded,
+        cover_url: uploadedCoverUrl // Yüklenen resmin linkini doğrudan gönder
     };
 
     try {
@@ -406,23 +404,29 @@ async function handleFormSubmit(e) {
         if (response.ok) {
             alert(lang.successSave);
             
+            // Form ve resim durumlarını tamamen sıfırla
             document.getElementById('add-video-form').reset();
             uploadedCoverUrl = null;
+            
             const imgPreview = document.getElementById('image-preview');
             if (imgPreview) imgPreview.classList.add('d-none');
+            
             const dropAreaText = document.getElementById('drop-area-text');
             if (dropAreaText) {
                 dropAreaText.innerText = lang.dropText;
                 dropAreaText.classList.remove('d-none');
             }
             
+            // Kütüphaneye yönlendir
             document.getElementById('menu-library').click();
         } else {
-            alert("Hata: Video kaydedilemedi.");
+            const errData = await response.json();
+            console.error("Supabase Veritabanı Hatası:", errData);
+            alert("Hata: Video veritabanına eklenemedi.");
         }
     } catch (err) {
         console.error(err);
-        alert("Bağlantı hatası.");
+        alert("Bağlantı hatası yaşandı.");
     }
 }
 
