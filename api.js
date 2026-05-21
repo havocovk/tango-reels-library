@@ -1,76 +1,83 @@
 // api.js
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
-const headers = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`,
-    'Content-Type': 'application/json'
-};
+// Ortak Fetch İstek Atıcı Yardımcı Fonksiyonu
+async function supabaseFetch(endpoint, options = {}) {
+    const url = `${SUPABASE_URL}/rest/v1/${endpoint}`;
+    const headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+        ...options.headers
+    };
 
-export async function getAllInstructors() {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, { headers });
-    if (!response.ok) throw new Error("Eğitmenler yüklenemedi");
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Supabase Hatası (${response.status}): ${errorText}`);
+    }
     return await response.json();
 }
 
-export async function getAllVideos() {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, { headers });
-    if (!response.ok) throw new Error("Videolar yüklenemedi");
-    return await response.json();
+// 1. TÜM VİDEOLARI GETİR (Eğitmen Bilgileriyle Birlikte)
+export async function fetchVideos() {
+    // instructors(*) ile videolar tablosuna bağlı eğitmen detaylarını da tek seferde çekiyoruz
+    return await supabaseFetch('videos?select=*,instructors(*)&order=id.desc');
 }
 
-export async function saveInstructor({ id, name }) {
-    let response;
-    if (id) {
-        response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
+// 2. TÜM EĞİTMENLERİ GETİR
+export async function fetchInstructors() {
+    return await supabaseFetch('instructors?select=*&order=name.asc');
+}
+
+// 3. VİDEO KAYDET VEYA GÜNCELLE
+export async function saveVideo(videoData) {
+    // Eğer videoData içinde id varsa GÜNCELLEME (PATCH), yoksa YENİ KAYIT (POST) yapıyoruz
+    if (videoData.id) {
+        const videoId = videoData.id;
+        // id alanını veritabanına tekrar göndermemek için kopyasından siliyoruz
+        const updateData = { ...videoData };
+        delete updateData.id;
+
+        return await supabaseFetch(`videos?id=eq.${videoId}`, {
             method: 'PATCH',
-            headers: { ...headers, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ name })
+            body: JSON.stringify(updateData)
         });
     } else {
-        response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
+        return await supabaseFetch('videos', {
             method: 'POST',
-            headers: { ...headers, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ name })
+            body: JSON.stringify(videoData)
         });
     }
-    if (!response.ok) throw new Error("Eğitmen kaydedilemedi");
-    return true;
 }
 
-export async function deleteInstructor(id) {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
-        method: 'DELETE',
-        headers
+// 4. VİDEO SİL
+export async function deleteVideo(videoId) {
+    return await supabaseFetch(`videos?id=eq.${videoId}`, {
+        method: 'DELETE'
     });
-    if (!response.ok) throw new Error("Eğitmen silinemedi");
-    return true;
 }
 
-export async function saveVideo({ id, payload }) {
-    let response;
-    if (id) {
-        response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
-            method: 'PATCH',
-            headers,
-            body: JSON.stringify(payload)
-        });
-    } else {
-        response = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(payload)
-        });
-    }
-    if (!response.ok) throw new Error("Video kaydedilemedi");
-    return true;
-}
-
-export async function deleteVideo(id) {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
-        method: 'DELETE',
-        headers
+// 5. YENİ EĞİTMEN EKLE
+export async function insertInstructor(name) {
+    return await supabaseFetch('instructors', {
+        method: 'POST',
+        body: JSON.stringify({ name })
     });
-    if (!response.ok) throw new Error("Video veritabanından silinemedi");
-    return true;
+}
+
+// 6. EĞİTMEN ADI GÜNCELLE
+export async function updateInstructor(instructorId, name) {
+    return await supabaseFetch(`instructors?id=eq.${instructorId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name })
+    });
+}
+
+// 7. EĞİTMENİ SİL (Bağlı videolar veritabanında CASCADE silmeye ayarlı olmalıdır)
+export async function deleteInstructor(instructorId) {
+    return await supabaseFetch(`instructors?id=eq.${instructorId}`, {
+        method: 'DELETE'
+    });
 }
