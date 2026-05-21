@@ -1,6 +1,6 @@
-import { SUPABASE_URL, SUPABASE_KEY, translations } from './config.js';
+import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
-import { dbFetchInstructors, dbFetchVideos } from './tangoVeritabani.js';
+import { dbFetchInstructors, dbFetchVideos, dbSaveTags, dbDeleteVideo, dbSaveInstructor, dbDeleteInstructor, dbSaveVideo } from './tangoVeritabani.js';
 
 
 let currentLang = 'tr';
@@ -372,23 +372,14 @@ async function saveTagsToSupabaseDirectly() {
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
     
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${activeEditTagsVideoId}`, {
-            method: 'PATCH',
-            headers: {
-                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ tags: cleanTags || null })
-        });
+        // Yeni postacımızı göreve çağırıyoruz
+        await dbSaveTags(activeEditTagsVideoId, cleanTags);
 
-        if (response.ok) {
-            // Yerel listeyi güncelle ve arayüze yansıt
-            const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
-            if (vid) vid.tags = cleanTags || null;
-            renderModalTagsList();
-            renderModalChips();
-            applyFiltersAndSearch();
-        }
+        const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
+        if (vid) vid.tags = cleanTags || null;
+        renderModalTagsList();
+        renderModalChips();
+        applyFiltersAndSearch();
     } catch (err) {
         console.error("Etiket anlık güncellenemedi:", err);
     }
@@ -448,15 +439,9 @@ async function deleteVideoFlow(videoId) {
     if (!confirm(lang.confirmDeleteVideo)) return;
 
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
-            method: 'DELETE',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-
-        if (!response.ok) throw new Error("Video silinemedi");
+        await dbDeleteVideo(videoId);
 
         alert(lang.successDeleteVideo);
-        // Favorilerden de sil
         let favs = getFavorites();
         if (favs.includes(videoId)) {
             favs = favs.filter(id => id !== videoId);
@@ -649,28 +634,7 @@ async function handleInstructorSubmit() {
     }
 
     try {
-        let response;
-        if (editInstructorId) {
-            response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${editInstructorId}`, {
-                method: 'PATCH',
-                headers: {
-                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ name })
-            });
-        } else {
-            response = await fetch(`${SUPABASE_URL}/rest/v1/instructors`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ name })
-            });
-        }
-
-        if (!response.ok) throw new Error("Eğitmen kaydedilemedi");
+        await dbSaveInstructor(editInstructorId, name);
 
         alert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess);
         input.value = '';
@@ -693,12 +657,7 @@ async function deleteInstructor() {
     if (!confirm(lang.deleteConfirm)) return;
 
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${select.value}`, {
-            method: 'DELETE',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-
-        if (!response.ok) throw new Error("Silme işlemi başarısız");
+        await dbDeleteInstructor(select.value);
 
         alert(lang.insDeleteSuccess);
         await fetchInstructors();
@@ -747,30 +706,8 @@ async function handleFormSubmit(e) {
     };
 
     try {
-        let response;
-        if (editingVideoId) {
-            // GÜNCELLEME MODU (PATCH)
-            response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${editingVideoId}`, {
-                method: 'PATCH',
-                headers: {
-                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-        } else {
-            // YENİ KAYIT MODU (POST)
-            response = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-        }
-
-        if (!response.ok) throw new Error("Veri tabanına yazılamadı");
+        // En kritik değişiklik burada yapıldı; ham fetch'ler gitti, postacı geldi:
+        await dbSaveVideo(editingVideoId, payload);
 
         alert(editingVideoId ? lang.successUpdate : lang.successSave);
         
