@@ -1,227 +1,233 @@
 // ui.js
 import { translations } from './config.js';
 import { getFavorites } from './favorites.js';
-import { updateSmartFilenameAssistant } from './utils.js';
+import { startVideoEditFlow, deleteVideoFlow } from './handlers.js';
 
-export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersFn) {
-    const lang = translations[currentLang];
+// Görünüm Değiştirme (Kütüphane / Favoriler / Form)
+export function switchView(viewName, state) {
+    state.currentView = viewName;
     
-    document.title = lang.title;
-    document.getElementById('sidebar-title').innerText = lang.brandTitle;
-    document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
-    document.getElementById('menu-library').innerText = lang.menuLibrary;
-    document.getElementById('menu-favorites').innerText = lang.menuFavorites;
-    document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
-    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
-    document.getElementById('filter-btn').innerText = lang.filterBtn;
+    // Menü butonlarının aktiflik durumunu güncelle
+    document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
     
-    document.getElementById('opt-all-roles').innerText = lang.allRoles;
-    document.getElementById('opt-leader').innerText = lang.leader;
-    document.getElementById('opt-follower').innerText = lang.follower;
-    document.getElementById('opt-both').innerText = lang.both;
-    document.getElementById('opt-all-locations').innerText = lang.allLocations;
-    document.getElementById('opt-drive').innerText = lang.drive;
-    document.getElementById('opt-social').innerText = lang.social;
+    const viewLibrary = document.getElementById('view-library-container');
+    const viewAdd = document.getElementById('view-add-container');
+    const clearFavContainer = document.getElementById('clear-favorites-container');
 
-    document.getElementById('form-title').innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
-    document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
-    document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-role').innerText = lang.lblRole;
-    document.getElementById('lbl-partner').innerText = lang.lblPartner;
-    document.getElementById('lbl-tags').innerText = lang.lblTags;
-    document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
-    document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
-    document.getElementById('lbl-drive-url').innerText = lang.lblDriveUrl;
-    document.getElementById('btn-submit-video').innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
-    document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
-    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
-    document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
-    document.getElementById('edit-tags-title').innerText = lang.editTagsTitle;
-    document.getElementById('modal-tags-input').placeholder = lang.addTagPlaceholder;
-    
-    document.getElementById('assistant-title').innerText = lang.assistantTitle;
-    document.getElementById('assistant-text').innerText = lang.assistantText;
+    if (viewName === 'library' || viewName === 'favorites') {
+        if (viewLibrary) viewLibrary.classList.remove('d-none');
+        if (viewAdd) viewAdd.classList.add('d-none');
+        
+        const activeBtn = document.getElementById(viewName === 'library' ? 'menu-library' : 'menu-favorites');
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        if (viewName === 'favorites') {
+            if (clearFavContainer) clearFavContainer.classList.remove('d-none');
+        } else {
+            if (clearFavContainer) clearFavContainer.classList.add('d-none');
+        }
+    } else if (viewName === 'add') {
+        if (viewLibrary) viewLibrary.classList.add('d-none');
+        if (viewAdd) viewAdd.remove('d-none');
+        if (viewAdd) viewAdd.classList.remove('d-none');
+        
+        const activeBtn = document.getElementById('menu-add-video');
+        if (activeBtn) activeBtn.classList.add('active');
 
-    const dropAreaText = document.getElementById('drop-area-text');
-    if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
-        dropAreaText.innerText = lang.dropText;
+        // Formu temizle ve başlığı "Yeni Kayıt" durumuna getir
+        const lang = translations[state.currentLang];
+        document.getElementById('form-title').innerText = lang.formTitle;
+        document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
+        if (!state.editingVideoId) {
+            document.getElementById('add-video-form').reset();
+            state.formTagsArray = [];
+            const chipsArea = document.getElementById('chips-area');
+            if (chipsArea) chipsArea.innerHTML = '';
+            const imgPreview = document.getElementById('image-preview');
+            if (imgPreview) imgPreview.classList.add('d-none');
+            const dropAreaText = document.getElementById('drop-area-text');
+            if (dropAreaText) dropAreaText.classList.remove('d-none');
+        }
     }
 
-    const saveInsBtn = document.getElementById('btn-save-instructor');
-    if (saveInsBtn) {
-        saveInsBtn.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
-    }
-
-    updateSmartFilenameAssistant(currentLang, formTagsArray);
-    if (applyFiltersFn) applyFiltersFn();
+    // Dil etiketlerini yeniden uyarla
+    applyStaticTranslations(state.currentLang);
+    applyFiltersAndSearch(state);
 }
 
-export function renderVideoCards({ videos, currentLang, currentView, onToggleFav, onOpenTagsModal, onStartEdit, onDeleteVideo, onOpenVideoModal }) {
-    const videoGrid = document.getElementById('video-grid');
+// HTML'deki Sabit Alanların Çevirisi
+export function applyStaticTranslations(currentLang) {
     const lang = translations[currentLang];
-    if (!videoGrid) return;
-    videoGrid.innerHTML = '';
+    
+    const safeSetText = (id, text) => { const el = document.getElementById(id); if (el) el.innerText = text; };
+    const safeSetPlaceholder = (id, text) => { const el = document.getElementById(id); if (el) el.placeholder = text; };
+
+    safeSetText('sidebar-title', lang.brandTitle);
+    safeSetText('menu-library', lang.menuLibrary);
+    safeSetText('menu-favorites', lang.menuFavorites);
+    safeSetText('menu-add-video', lang.menuAddVideo);
+    safeSetPlaceholder('search-input', lang.searchPlaceholder);
+    safeSetText('filter-btn', lang.filterBtn);
+    safeSetText('btn-clear-favorites', lang.btnClearFavorites);
+    
+    safeSetText('opt-all-roles', lang.allRoles);
+    safeSetText('opt-leader', lang.leader);
+    safeSetText('opt-follower', lang.follower);
+    safeSetText('opt-both', lang.both);
+    safeSetText('opt-all-locations', lang.allLocations);
+    safeSetText('opt-drive', lang.drive);
+    safeSetText('opt-social', lang.social);
+
+    safeSetText('lbl-instructor', lang.lblInstructor);
+    safeSetText('lbl-new-instructor-name', lang.lblNewInstructorName);
+    safeSetPlaceholder('form-new-instructor-input', lang.tagsPlaceholder);
+    safeSetText('lbl-video-url', lang.lblVideoUrl);
+    safeSetText('lbl-partner', lang.lblPartner);
+    safeSetText('lbl-tags', lang.lblTags);
+    safeSetPlaceholder('form-tags-input', lang.tagsPlaceholder);
+    safeSetText('lbl-cover-upload', lang.lblCoverUpload);
+    safeSetText('lbl-downloaded', lang.lblDownloaded);
+    safeSetText('lbl-drive-url', lang.lblDriveUrl);
+    safeSetText('assistant-title', lang.assistantTitle);
+    safeSetText('assistant-text', lang.assistantText);
+    
+    safeSetText('edit-tags-title', lang.editTagsTitle);
+    safeSetPlaceholder('modal-tags-input', lang.addTagPlaceholder);
+}
+
+// Eğitmen Seçim Kutusunu Doldurma
+export function renderInstructorSelect(instructorsList) {
+    const select = document.getElementById('form-instructor-select');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">-- Seçiniz / Select --</option>';
+    instructorsList.forEach(ins => {
+        const opt = document.createElement('option');
+        opt.value = ins.id;
+        opt.textContent = ins.name;
+        select.appendChild(opt);
+    });
+}
+
+// Filtreleri ve Aramayı Uygulayıp Kartları Basma
+export function applyFiltersAndSearch(state) {
+    const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
+    const roleVal = document.getElementById('filter-role-select').value;
+    const locVal = document.getElementById('filter-location-select').value;
+    const favs = getFavorites();
+    const lang = translations[state.currentLang];
+
+    let filtered = state.globalVideos.filter(video => {
+        // 1. Favori Sekmesi Filtresi
+        if (state.currentView === 'favorites' && !favs.includes(video.id)) return false;
+
+        // 2. Rol Filtresi
+        if (roleVal !== 'all' && video.role_type !== roleVal) return false;
+
+        // 3. Ortam (Drive / Sosyal Medya) Filtresi
+        if (locVal === 'drive' && !video.is_downloaded) return false;
+        if (locVal === 'social' && video.is_downloaded) return false;
+
+        // 4. Akıllı Arama Filtresi (Eğitmen adı, Partner adı veya Etiketler içinde arar)
+        if (searchVal) {
+            const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
+            const partName = video.partner_name ? video.partner_name.toLowerCase() : '';
+            const tagsStr = video.tags ? video.tags.toLowerCase() : '';
+            return insName.includes(searchVal) || partName.includes(searchVal) || tagsStr.includes(searchVal);
+        }
+
+        return true;
+    });
+
+    renderVideoCards(filtered, favs, state);
+}
+
+// Listelenen Videoları Ekranda Kart Yapısına Dönüştürme
+function renderVideoCards(videos, favs, state) {
+    const grid = document.getElementById('video-grid');
+    if (!grid) return;
+    
+    const lang = translations[state.currentLang];
+    
+    const loadingMsg = document.getElementById('loading-msg');
+    if (loadingMsg) loadingMsg.classList.add('d-none');
 
     if (videos.length === 0) {
-        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
-        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
+        grid.innerHTML = `<div class="info-msg">${state.currentView === 'favorites' ? lang.emptyFav : lang.empty}</div>`;
         return;
     }
 
-    const favs = getFavorites();
-
+    grid.innerHTML = '';
     videos.forEach(video => {
+        const isFav = favs.includes(video.id);
+        const insName = video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen';
+        const partnerText = video.partner_name ? `ft. ${video.partner_name}` : '';
+        
         const card = document.createElement('div');
         card.className = 'video-card';
-        
-        let roleDisplay = video.role_type || 'Both';
-        let roleBadgeClass = '';
-        if (roleDisplay === 'Leader') {
-            roleDisplay = currentLang === 'tr' ? 'Lider' : 'Leader';
-            roleBadgeClass = 'badge-leader';
-        } else if (roleDisplay === 'Follower') {
-            roleDisplay = currentLang === 'tr' ? 'Takipçi' : 'Follower';
-            roleBadgeClass = 'badge-follower';
-        } else {
-            roleDisplay = currentLang === 'tr' ? 'İkisi de' : 'Both';
-            roleBadgeClass = 'badge-both';
-        }
 
-        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
-        const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
-        
-        const partnerDisplay = video.partner_name 
-            ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
-            : '';
-        
+        // Rol ve Ortam Rozetleri (Badges)
+        let roleBadge = `<span class="badge badge-both">${lang.both}</span>`;
+        if (video.role_type === 'Leader') roleBadge = `<span class="badge badge-leader">${lang.leader}</span>`;
+        if (video.role_type === 'Follower') roleBadge = `<span class="badge badge-follower">${lang.follower}</span>`;
+
+        const locBadge = video.is_downloaded 
+            ? `<span class="badge badge-drive">${lang.drive}</span>` 
+            : `<span class="badge badge-social">${lang.social}</span>`;
+
+        // Etiketleri chips yapılarına dönüştürme
         let tagsHtml = '';
-        if (video.tags && video.tags.trim() !== '') {
-            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-            tagsArray.forEach(tag => {
-                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
-            });
-            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
-        } else {
-            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
+        if (video.tags) {
+            tagsHtml = video.tags.split(',')
+                .map(t => t.trim())
+                .filter(t => t !== '')
+                .map(t => `<span class="tag-chip-item" style="font-size:0.7rem; padding:2px 6px;">${t}</span>`)
+                .join(' ');
         }
-        
-        const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
-        const coverImg = video.cover_url || defaultCover;
-        const isFav = favs.includes(video.id);
 
-        const hasDrive = video.is_downloaded && video.drive_url;
-        const actionClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
-        const actionLinkClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+        // Kapak Resmi Ayarı
+        const bgStyle = video.cover_url ? `background-image: url('${video.cover_url}');` : 'background: rgba(255,255,255,0.03);';
 
         card.innerHTML = `
-            <div class="video-cover-link">
-                <div class="video-cover-container" style="background-image: url('${coverImg}');">
-                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
-                    <a ${actionClickAttr}>
-                        <div class="play-overlay">
-                            <span class="play-icon">▶</span>
-                        </div>
-                    </a>
+            <div class="video-cover-container" style="${bgStyle}">
+                <div class="play-overlay" data-drive-url="${video.drive_url || ''}" data-video-url="${video.url || ''}">
+                    <div class="play-icon">▶</div>
                 </div>
+                <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">⭐</button>
             </div>
             <div class="card-info-content">
-                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
-                ${partnerDisplay}
+                <div class="card-instructor"><strong>${insName}</strong></div>
+                <div class="card-partner">${partnerText}</div>
+                <div class="card-badges">${roleBadge} ${locBadge}</div>
+                <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:5px;">${tagsHtml}</div>
                 
-                <div class="card-badges">
-                    <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
-                    <span class="badge ${storageClass}">${storageText}</span>
-                </div>
-
-                <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
-
-                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
-                    <a ${actionLinkClickAttr}>
-                        ${hasDrive ? (currentLang === 'tr' ? '🎬 Kütüphanede İzle →' : '🎬 Watch in Library →') : lang.watch}
-                    </a>
-                    
-                    <div style="display:flex; gap:8px;">
-                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
-                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
+                <div style="margin-top:auto; padding-top:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <button class="inline-edit-tags-btn" data-id="${video.id}">🏷️ Etiketleri Düzenle</button>
+                    <div style="display:flex; gap:6px;">
+                        <button class="card-crud-btn card-edit-btn" data-id="${video.id}" title="${lang.btnCardEdit}">✏️</button>
+                        <button class="card-crud-btn card-delete-btn" data-id="${video.id}" title="${lang.btnCardDelete}">🗑️</button>
                     </div>
                 </div>
             </div>
         `;
 
-        card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            onToggleFav(video.id);
-        });
-
+        // İç butonların tıklama olaylarını bağlıyoruz
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            onOpenTagsModal(video);
+            const id = parseInt(e.target.getAttribute('data-id'));
+            import('./modals.js').then(m => m.openTagsEditModal(id, state));
         });
 
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            onStartEdit(video);
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const targetVideo = state.globalVideos.find(v => v.id === id);
+            if (targetVideo) startVideoEditFlow(targetVideo, state, (targetView) => switchView(targetView, state));
         });
 
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            onDeleteVideo(video.id);
+            const id = parseInt(e.target.getAttribute('data-id'));
+            deleteVideoFlow(id, state);
         });
 
-        if (hasDrive) {
-            const triggers = card.querySelectorAll('[data-drive]');
-            triggers.forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    onOpenVideoModal(video.drive_url);
-                });
-            });
-        }
-
-        videoGrid.appendChild(card);
+        grid.appendChild(card);
     });
-}
-
-export function switchView({ viewName, currentLang, editingVideoId, renderFormChipsFn, updateFilenameFn, resetCoverFn, applyFiltersFn }) {
-    document.getElementById('menu-library').classList.remove('active');
-    document.getElementById('menu-favorites').classList.remove('active');
-    document.getElementById('menu-add-video').classList.remove('active');
-
-    const clearFavBtnContainer = document.getElementById('clear-favorites-container');
-
-    if (viewName === 'library' || viewName === 'favorites') {
-        document.getElementById('view-library-container').classList.remove('d-none');
-        document.getElementById('view-add-container').classList.add('d-none');
-        document.getElementById(`menu-${viewName}`).classList.add('active');
-        
-        if (viewName === 'favorites') {
-            clearFavBtnContainer.classList.remove('d-none');
-        } else {
-            clearFavBtnContainer.classList.add('d-none');
-        }
-        
-        if (applyFiltersFn) applyFiltersFn();
-    } else if (viewName === 'add') {
-        document.getElementById('view-library-container').classList.add('d-none');
-        document.getElementById('view-add-container').classList.remove('d-none');
-        document.getElementById('menu-add-video').classList.add('active');
-        
-        if (!editingVideoId) {
-            const lang = translations[currentLang];
-            document.getElementById('form-title').innerText = lang.formTitle;
-            document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
-            document.getElementById('add-video-form').reset();
-            
-            if (renderFormChipsFn) renderFormChipsFn();
-            if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
-            
-            const dropAreaText = document.getElementById('drop-area-text');
-            if (dropAreaText) {
-                dropAreaText.innerText = lang.dropText;
-                dropAreaText.classList.remove('d-none');
-            }
-            if (resetCoverFn) resetCoverFn();
-        }
-        if (updateFilenameFn) updateFilenameFn();
-    }
 }
