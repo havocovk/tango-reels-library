@@ -55,6 +55,7 @@ function callUpdateInterfaceLanguage() {
 }
 
 function callSwitchView(viewName) {
+    currentView = viewName; // <-- Hatayı çözen, hafızayı güncelleyen kritik satır!
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch,
         renderFormChips,
