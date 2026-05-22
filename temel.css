@@ -155,3 +155,106 @@ body {
 .d-none {
     display: none !important;
 }
+
+/* ==========================================================================
+   💃 ARJANTİN TANGO KÜTÜPHANESİ - DİNAMİK AURORA RENK DALGALANMASI
+   ========================================================================== */
+
+/* Tüm ekranı kaplayan, taşmaları engelleyen ana kapsayıcı */
+.aurora-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; /* Tüm içeriklerin ve Sidebar'ın arkasında kalması için */
+    overflow: hidden;
+    background: #0b0f19; /* Derin gece mavisi/siyah temel arka plan */
+}
+
+/* Renk dalgalarının ortak ipeksi doku özellikleri */
+.aurora-blob {
+    position: absolute;
+    mix-blend-mode: screen; /* Renklerin birbiriyle ve siyahla kusursuz erimesi için */
+    filter: blur(100px);   /* Keskin sınırları yok edip dumanlı bir hava katma */
+    opacity: 0.55;          /* Gözü yormayacak, şık ve hafif bir parlaklık seviyesi */
+    border-radius: 50%;
+    will-change: transform; /* Tarayıcı performansını optimize etmek için */
+}
+
+/* 1. Küre: İstediğin o etkileyici Canlı Tango Kırmızısı (Sol Üst / Sidebar Arkası odaklı) */
+.blob-tango-red {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(224, 32, 32, 0.85) 0%, rgba(224, 32, 32, 0) 70%);
+    top: -10%;
+    left: -5%;
+    animation: aurora-float-1 28s infinite alternate ease-in-out;
+}
+
+/* 2. Küre: Derin Mürdüm / Şarabi Tonu (Orta ve Alt bölgelere sızan) */
+.blob-deep-plum {
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(136, 14, 79, 0.75) 0%, rgba(136, 14, 79, 0) 70%);
+    bottom: -15%;
+    left: 15%;
+    animation: aurora-float-2 35s infinite alternate ease-in-out;
+}
+
+/* 3. Küre: Gizemli Koyu Kadife Mor (Sağ Tarafı dengeleyen hafif aura) */
+.blob-velvet {
+    width: 550px;
+    height: 550px;
+    background: radial-gradient(circle, rgba(74, 20, 140, 0.6) 0%, rgba(74, 20, 140, 0) 70%);
+    top: 20%;
+    right: -10%;
+    animation: aurora-float-3 22s infinite alternate ease-in-out;
+}
+
+/* ==========================================================================
+   🔄 AKIŞKAN HAREKET ANİMASYONLARI (Kürelerin Yavaşça Yer Değiştirmesi)
+   ========================================================================== */
+
+@keyframes aurora-float-1 {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    50% {
+        transform: translate(120px, 90px) scale(1.15) rotate(180deg);
+    }
+    100% {
+        transform: translate(-40px, 40px) scale(0.9) rotate(360deg);
+    }
+}
+
+@keyframes aurora-float-2 {
+    0% {
+        transform: translate(0, 0) scale(1.1) rotate(0deg);
+    }
+    50% {
+        transform: translate(-90px, -110px) scale(0.85) rotate(-120deg);
+    }
+    100% {
+        transform: translate(60px, 50px) scale(1.05) rotate(120deg);
+    }
+}
+
+@keyframes aurora-float-3 {
+    0% {
+        transform: translate(0, 0) scale(0.95);
+    }
+    50% {
+        transform: translate(80px, -60px) scale(1.2);
+    }
+    100% {
+        transform: translate(-60px, 80px) scale(1);
+    }
+}
+
+/* Ekstra Estetik: Sidebar'ın arkasından ışığın daha asil süzülmesi için ufak dokunuş */
+.sidebar-glass {
+    background: rgba(15, 23, 42, 0.45) !important; /* Arka planı hafifçe daha şeffaf yaptık */
+    backdrop-filter: blur(25px) saturate(160%) !important; /* Cam etkisini ve renk geçirgenliğini artırdık */
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
