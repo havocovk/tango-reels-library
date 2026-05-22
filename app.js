@@ -11,13 +11,13 @@ import {
 import { getFavorites, addOrRemoveFavorite, removeFavoriteDirectly, clearAllFavoritesData } from './favoritesManager.js';
 import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
 import { 
-    openVideoModal, 
-    closeVideoModal, 
-    openTagsEditModal, 
-    closeTagsEditModal,
-    modalTagsArray,
-    showCustomAlert,
-    showCustomConfirm
+    openVideoModal, \r
+    closeVideoModal, \r
+    openTagsEditModal, \r
+    closeTagsEditModal,\r
+    modalTagsArray,\r
+    showCustomAlert,\r
+    showCustomConfirm\r
 } from './tangoModals.js';
 import { 
     updateSmartFilenameAssistant, 
@@ -64,7 +64,6 @@ function callSwitchView(viewName) {
         renderFormChips,
         resetUploadedCoverUrl
     });
-    // Görünüm değiştiğinde (Örn: Pratik listeme geçildiğinde) filtreleri yeniden çalıştır
     applyFiltersAndSearch();
 }
 
@@ -110,7 +109,6 @@ async function fetchInstructors() {
 async function fetchVideos() {
     try {
         globalVideos = await dbFetchVideos();
-        // 🧺 Videolar başarıyla gelince arama alanındaki 5'li akıllı sepetleri doldur
         populateFilterDropdowns(globalVideos);
         applyFiltersAndSearch();
     } catch (err) {
@@ -118,7 +116,7 @@ async function fetchVideos() {
             <div class="info-msg" style="color: #ef4444;">
                 ${translations[currentLang].error}
             </div>`;
-        console.error(err);
+        console.error("Filtreleme veya yükleme hatası detayları:", err);
     }
 }
 
@@ -192,17 +190,14 @@ function renderFormChips() {
     });
 }
 
-// 🔍 Ekrandaki tüm süzgeçlerin durumunu toplayıp filtre motoruna gönderen fonksiyon
 function applyFiltersAndSearch() {
     const favs = getFavorites();
     
-    // Eğer 'Pratik Listem' (favorites) görünümündeysek, sadece favoriye eklenmiş videoları süzgeçe sokalım
     let kaynakVideolar = globalVideos;
     if (currentView === 'favorites') {
         kaynakVideolar = globalVideos.filter(v => favs.includes(v.id));
     }
 
-    // Kullanıcının ekrandaki kutulardan seçtiği güncel filtre durumları
     const secilenFiltreler = {
         aramaMetni: document.getElementById('search-input')?.value || '',
         rol: document.getElementById('filter-role-select')?.value || 'all',
@@ -212,10 +207,8 @@ function applyFiltersAndSearch() {
         ortam: document.getElementById('filter-location-select')?.value || 'all'
     };
 
-    // Filtreleme işini akıllı motorumuza delege ediyoruz
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
 
-    // Süzülmüş nihai listeyi ekrana kartlar halinde basıyoruz
     renderVideoCards(filtered, {
         currentLang,
         currentView,
@@ -401,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    // 🎛️ TÜM FİLTRE ELEMANLARININ DİNLENMESİ (Kutular değiştikçe süzgeç tetiklenir)
     document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
     document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-instructor-select').addEventListener('change', applyFiltersAndSearch);
