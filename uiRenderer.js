@@ -100,24 +100,39 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. 🎥 VİDEO KARTLARINI EKRANA BASAN SÜPER FONKSİYON (GÜNCELLENDİ!)
-export function renderVideoCards(videoGrid, videos, toggleFavorite, openTagsEditModal, startVideoEditFlow, deleteVideoFlow, openVideoModal, currentLang, translations) {
+// 3. 🎥 VİDEO KARTLARINI EKRANA BASAN SÜPER FONKSİYON (app.js ile %100 UYUMLU)
+export function renderVideoCards(videos, config = {}) {
+    // app.js'in aradığı video-grid alanını seçiyoruz
+    const videoGrid = document.getElementById('video-grid');
     if (!videoGrid) return;
+    
     videoGrid.innerHTML = '';
-    const lang = translations[currentLang];
 
-    if (videos.length === 0) {
+    // app.js'den gelen ayarları (config objesini) parçalara ayırıp alıyoruz
+    const {
+        currentLang = 'tr',
+        translations = {},
+        favs = [],
+        toggleFavorite,
+        openTagsEditModal,
+        startVideoEditFlow,
+        deleteVideoFlow,
+        openVideoModal
+    } = config;
+
+    const lang = translations[currentLang] || {};
+
+    // Eğer veritabanında hiç video yoksa veya arama sonucu boşsa
+    if (!videos || videos.length === 0) {
         videoGrid.innerHTML = `<div class="no-results">${lang.noVideosFound || 'Video bulunamadı.'}</div>`;
         return;
     }
 
-    const favorites = JSON.parse(localStorage.getItem('tango_favorites') || '[]');
-
     videos.forEach(video => {
-        const isFav = favorites.includes(video.id);
+        // Favori kontrolünü app.js'den gelen güncel listeden yapıyoruz
+        const isFav = favs.includes(video.id);
         
-        // 🌟 KRİTİK GÜNCELLEME: Kapı görevlisini esnettik! 
-        // Artık link Drive, YouTube veya Shorts içeriyorsa modal tetikleyicisi (data-drive) aktif olacak.
+        // Hem Drive linklerini hem de YouTube (Shorts dahil) linklerini modal sınıfına alıyoruz
         const hasDrive = video.drive_url && (
             video.drive_url.includes('drive.google.com') || 
             video.drive_url.includes('youtube.com') || 
@@ -167,33 +182,34 @@ export function renderVideoCards(videoGrid, videos, toggleFavorite, openTagsEdit
             </div>
         `;
 
+        // Buton dinleyicilerini güvenli tetikleyicilerle bağlıyoruz
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            toggleFavorite(video.id);
+            if (toggleFavorite) toggleFavorite(video.id);
         });
 
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            openTagsEditModal(video);
+            if (openTagsEditModal) openTagsEditModal(video);
         });
 
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            startVideoEditFlow(video);
+            if (startVideoEditFlow) startVideoEditFlow(video);
         });
 
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            deleteVideoFlow(video.id);
+            if (deleteVideoFlow) deleteVideoFlow(video.id);
         });
 
-        // 🌟 Eğer genişletilmiş kuralımıza uyuyorsa, tıklama olayını yakalayıp modal penceremizi açıyoruz
+        // Link eğer Drive veya YouTube ise, dış sekmeye fırlatmak yerine sitemizdeki gömülü ekranı (modalı) açar
         if (hasDrive) {
             const triggers = card.querySelectorAll('[data-drive]');
             triggers.forEach(el => {
                 el.addEventListener('click', (e) => {
                     e.preventDefault();
-                    openVideoModal(video.drive_url);
+                    if (openVideoModal) openVideoModal(video.drive_url);
                 });
             });
         }
