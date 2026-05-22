@@ -6,21 +6,54 @@ import { renderChips } from './uiRenderer.js';
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
 
-// Drive linkini embed formata dönüştürür
-export function convertDriveUrlToEmbed(url) {
+// 🔄 Gelen linki televizyonumuzun (iframe) anlayacağı gömülü (embed) formata dönüştüren akıllı robotumuz
+export function convertUrlToEmbed(url) {
     if (!url) return '';
-    const regExp = /\/file\/d\/([^/]+)/;
-    const matches = url.match(regExp);
-    if (matches && matches[1]) {
-        return `https://drive.google.com/file/d/${matches[1]}/preview`;
+    
+    // 💾 1. DURUM: Eğer bu bir Google Drive linki ise
+    if (url.includes('drive.google.com')) {
+        const regExp = /\/file\/d\/([^/]+)/;
+        const matches = url.match(regExp);
+        if (matches && matches[1]) {
+            return `https://drive.google.com/file/d/${matches[1]}/preview`;
+        }
     }
+    
+    // 📺 2. DURUM: Eğer bu bir YouTube linki ise (Normal, Shorts veya Mobil fark etmez)
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        let videoId = '';
+        
+        if (url.includes('shorts/')) {
+            // YouTube Shorts (Dikey kısa videolar) için gizli kod parçacığını cımbızla çeker
+            videoId = url.split('shorts/')[1]?.split(/[?#]/)[0];
+        } else if (url.includes('youtu.be/')) {
+            // Telefondan paylaşılan kısa YouTube linkleri için gizli kodu cımbızla çeker
+            videoId = url.split('youtu.be/')[1]?.split(/[?#]/)[0];
+        } else if (url.includes('v=')) {
+            // Bilgisayardan açılan normal YouTube linkleri için gizli kodu cımbızla çeker
+            videoId = url.split('v=')[1]?.split('&')[0]?.split(/[?#]/)[0];
+        } else if (url.includes('embed/')) {
+            // Zaten gömülü bir link yapıştırıldıysa kodu doğrudan alır
+            videoId = url.split('embed/')[1]?.split(/[?#]/)[0];
+        }
+        
+        // Eğer gizli kod parçasını başarıyla bulduysak, televizyona uygun hale getirip gönderiyoruz:
+        if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}`;
+        }
+    }
+    
+    // 🌐 3. DURUM: Instagram veya Facebook ise hiç dokunmuyoruz (Onlar dışarıda açılacak)
     return url;
 }
 
-// 🎬 Video Önizleme Modalı Fonksiyonları
+// 🎬 Video Önizleme Modalı Fonksiyonları (Televizyonu Açan Düğme)
 export function openVideoModal(url) {
-    const embedUrl = convertDriveUrlToEmbed(url);
+    // Önce yukarıdaki akıllı robotumuza linki verip dönüştürüyoruz
+    const embedUrl = convertUrlToEmbed(url);
+    // Televizyon ekranımızın (iframe) içine bu yeni adresi koyuyoruz
     document.getElementById('modal-iframe').src = embedUrl;
+    // Perdeyi açıp videoyu ekranda gösteriyoruz
     document.getElementById('video-modal').classList.remove('d-none');
 }
 
