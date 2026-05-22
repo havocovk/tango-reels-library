@@ -107,7 +107,7 @@ async function fetchInstructors() {
 }
 
 /**
- * 🔄 SİHİRLİ GÜNCELLEME: Hem Eğitmen İsimlerini Eşleştirir Hem de Kutuları Taze Tutur
+ * 🔄 SİHİRLİ GÜNCELLEME: Hem Eğitmen İsimlerini Eşleştirir Hem de Kutuları Taze Tutar
  */
 async function fetchVideos() {
     try {
@@ -117,17 +117,16 @@ async function fetchVideos() {
         // 2. Veritabanındaki ham videoları çekiyoruz
         const rawVideos = await dbFetchVideos();
         
-        // 3. BÜYÜK DOKUNUŞ: Videolardaki ID numaralarına bakarak isimleri eşleştiriyoruz!
+        // 3. Videolardaki ID numaralarına bakarak isimleri eşleştiriyoruz
         globalVideos = rawVideos.map(video => {
             const foundInstructor = instructors.find(ins => ins.id === video.instructor_id);
             return {
                 ...video,
-                // Eğer eğitmen silindiyse Bilinmeyen Eğitmen yazar, varsa adını yazar
                 instructor_name: foundInstructor ? foundInstructor.name : 'Bilinmeyen Eğitmen'
             };
         });
 
-        // 4. Şimdi yenilenmiş listeyi süzgeç kutularına gönderiyoruz (Hayalet etiketler temizlenir!)
+        // 4. Şimdi yenilenmiş listeyi süzgeç kutularına gönderiyoruz
         populateFilterDropdowns(globalVideos);
         
         // 5. Videoları ekrana çiziyoruz
@@ -236,8 +235,6 @@ function applyFiltersAndSearch() {
         translations,
         favs,
         toggleFavorite,
-        // ✨ Düzenleme bittiğinde tetiklenecek fonksiyonu `fetchVideos` yaptık. 
-        // Böylece etiket silindiğinde dropdown listesi de sayfa yenilenmeden otomatik temizlenecek!
         openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, fetchVideos),
         startVideoEditFlow,
         deleteVideoFlow,
@@ -424,7 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-date-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
     
-    // ✨ GÜNCELLEME: Büyüteç butonu artık eski listeyi evirip çevirmez, doğrudan veritabanından her şeyi sıfırlar ve taze çeker!
     document.getElementById('filter-btn').addEventListener('click', fetchVideos);
 
     document.getElementById('modal-close-btn').addEventListener('click', closeVideoModal);
