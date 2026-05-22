@@ -10,67 +10,8 @@
     <link rel="stylesheet" href="temel.css">
     <link rel="stylesheet" href="kartlar.css">
     <link rel="stylesheet" href="formlar.css">
-
-    <style>
-        /* CSS ezilmesini engellemek için ana katmanları şeffaflaştırıyoruz */
-        html, body {
-            background: #050206 !important;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
-        }
-
-        .app-container {
-            background: transparent !important;
-        }
-
-        /* Sağ taraftaki resimdeki o ipeksi akışkan girdap katmanı */
-        .premium-vortex-backdrop {
-            position: fixed;
-            top: -20%;
-            left: -20%;
-            width: 140vw;
-            height: 140vh;
-            z-index: -9999;
-            background: #050206;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .premium-vortex-mesh {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            /* Renklerin keskin daireler yerine sıvı gibi bükülerek akmasını sağlayan özel matris */
-            background: 
-                radial-gradient(circle at 45% 40%, #850720 0%, transparent 50%),
-                radial-gradient(circle at 75% 30%, #4c0519 0%, transparent 55%),
-                radial-gradient(circle at 25% 70%, #23083b 0%, transparent 50%),
-                conic-gradient(from 135deg at 50% 45%, #050206 0deg, #5c0618 90deg, #1f042e 200deg, #050206 360deg);
-            filter: blur(90px) saturate(135%) contrast(1.1);
-            transform: scale(1.15) rotate(-10deg);
-        }
-
-        /* Işığın cam panellerin arkasından ipeksi bir dokuyla kırılmasını sağlayan tül katman */
-        .premium-vortex-silk {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
-            mix-blend-mode: overlay;
-        }
-    </style>
 </head>
 <body>
-
-    <div class="premium-vortex-backdrop">
-        <div class="premium-vortex-mesh"></div>
-        <div class="premium-vortex-silk"></div>
-    </div>
 
     <div class="app-container">
         
