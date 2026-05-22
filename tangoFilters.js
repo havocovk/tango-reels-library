@@ -69,11 +69,11 @@ export function populateFilterDropdowns(videolar) {
         tagSelect.appendChild(option);
     });
 
-    // Tarihleri kutuya ekle (Tarihleri yeniden eskiye sıralayabiliriz)
+    // Tarihleri kutuya ekle
     Array.from(tarihlerTorbasi).forEach(tarih => {
         const option = document.createElement('option');
         option.value = tarih;
-        option.textContent = tarih;
+        option.textContent = stale = tarih;
         dateSelect.appendChild(option);
     });
 }
@@ -89,24 +89,24 @@ export function getFilteredVideos(videolar, secilenFiltreler) {
 
     return videolar.filter(video => {
         
-        // 1. Arama Çubuğu Kontrolü (Yazılan kelime Eğitmen, Partner veya Etiketlerde var mı?)
+        // 1. Arama Çubuğu Kontrolü (Boşluklar kaldırıldı: egitmenVarMi, partnerVarMi, etiketVarMi)
         if (aramaMetni) {
             const aranacakKelime = aramaMetni.toLowerCase();
-            const egitmenVar Mi = video.instructor_name?.toLowerCase().includes(aranacakKelime);
-            const partnerVar Mi = video.partner_name?.toLowerCase().includes(aranacakKelime);
-            const etiketVar Mi = video.tags?.toLowerCase().includes(aranacakKelime);
+            const egitmenVarMi = video.instructor_name?.toLowerCase().includes(aranacakKelime);
+            const partnerVarMi = video.partner_name?.toLowerCase().includes(aranacakKelime);
+            const etiketVarMi = video.tags?.toLowerCase().includes(aranacakKelime);
             
-            if (!egitmenVar Mi && !partnerVar Mi && !etiketVar Mi) return false;
+            if (!egitmenVarMi && !partnerVarMi && !etiketVarMi) return false;
         }
 
-        // 2. Rol Tipi Filtresi (Lider / Takipçi / Çift)
-        if (rol !== 'all' && video.role !== rol) return false;
+        // 2. Rol Tipi Filtresi (video.role yerine veritabanıyla uyumlu video.role_type getirildi)
+        if (rol !== 'all' && video.role_type !== rol) return false;
 
         // 3. Eğitmen Filtresi
         if (egitmen !== 'all' && video.instructor_name !== egitmen) return false;
 
         // 4. Etiket Filtresi
-        if (etiket !== 'all') {
+        if (etkelet !== 'all') {
             if (!video.tags) return false;
             // Videonun etiketleri arasında tam eşleşme var mı bakıyoruz
             const videoEtiketleri = video.tags.split(',').map(t => t.trim());
@@ -118,11 +118,10 @@ export function getFilteredVideos(videolar, secilenFiltreler) {
 
         // 6. Ortam Filtresi (Google Drive mı yoksa Sosyal Medya mı?)
         if (ortam !== 'all') {
-            if (ortam === 'drive' && !video.is_downloaded) return false; // Drive seçildiyse indirilenleri getir
-            if (ortam === 'social' && video.is_downloaded) return false; // Sosyal medya seçildiyse indirilmeyenleri getir
+            if (ortam === 'drive' && !video.is_downloaded) return false; 
+            if (ortam === 'social' && video.is_downloaded) return false; 
         }
 
-        // Eğer video tüm bu engelleri başarıyla geçtiyse süzgecin üstünde kalır!
         return true;
     });
 }
