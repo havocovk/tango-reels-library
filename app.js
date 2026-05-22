@@ -11,13 +11,13 @@ import {
 import { getFavorites, addOrRemoveFavorite, removeFavoriteDirectly, clearAllFavoritesData } from './favoritesManager.js';
 import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
 import { 
-    openVideoModal, \r
-    closeVideoModal, \r
-    openTagsEditModal, \r
-    closeTagsEditModal,\r
-    modalTagsArray,\r
-    showCustomAlert,\r
-    showCustomConfirm\r
+    openVideoModal,
+    closeVideoModal,
+    openTagsEditModal,
+    closeTagsEditModal,
+    modalTagsArray,
+    showCustomAlert,
+    showCustomConfirm
 } from './tangoModals.js';
 import { 
     updateSmartFilenameAssistant, 
@@ -109,14 +109,31 @@ async function fetchInstructors() {
 async function fetchVideos() {
     try {
         globalVideos = await dbFetchVideos();
+        
+        // Güvenlik Önlemi: Eğer veritabanından veri hiç gelmediyse (null/undefined) uygulamayı çökertme
+        if (!globalVideos || !Array.isArray(globalVideos)) {
+            globalVideos = [];
+        }
+        
         populateFilterDropdowns(globalVideos);
         applyFiltersAndSearch();
     } catch (err) {
-        document.getElementById('video-grid').innerHTML = `
-            <div class="info-msg" style="color: #ef4444;">
-                ${translations[currentLang].error}
-            </div>`;
-        console.error("Filtreleme veya yükleme hatası detayları:", err);
+        console.error("Veritabanı veya yükleme hatası detayları:", err);
+        
+        // Güvenlik Önlemi: Dil nesnesi bozuksa bile ekrandaki yazıyı zorla değiştir ve donmayı engelle
+        let errorMsg = "Veritabanına bağlanılamadı! Lütfen Supabase bağlantı ayarlarını, internetinizi veya config.js dosyasını kontrol edin.";
+        
+        if (translations && translations[currentLang] && translations[currentLang].error) {
+            errorMsg = translations[currentLang].error;
+        }
+        
+        const videoGrid = document.getElementById('video-grid');
+        if (videoGrid) {
+            videoGrid.innerHTML = `
+                <div class="info-msg" style="color: #ef4444; padding: 20px; background: rgba(239,68,68,0.1); border-radius: 10px; border: 1px solid rgba(239,68,68,0.2);">
+                    ⚠️ ${errorMsg} <br><small style="color: #94a3b8; font-size: 11px;">Hata: ${err.message || err}</small>
+                </div>`;
+        }
     }
 }
 
