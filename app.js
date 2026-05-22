@@ -11,9 +11,9 @@ import {
 import { getFavorites, addOrRemoveFavorite, removeFavoriteDirectly, clearAllFavoritesData } from './favoritesManager.js';
 import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
 import { 
-    openVideoModal,
-    closeVideoModal,
-    openTagsEditModal,
+    openVideoModal, 
+    closeVideoModal, 
+    openTagsEditModal, 
     closeTagsEditModal,
     modalTagsArray,
     showCustomAlert,
@@ -109,31 +109,14 @@ async function fetchInstructors() {
 async function fetchVideos() {
     try {
         globalVideos = await dbFetchVideos();
-        
-        // Güvenlik Önlemi: Eğer veritabanından veri hiç gelmediyse (null/undefined) uygulamayı çökertme
-        if (!globalVideos || !Array.isArray(globalVideos)) {
-            globalVideos = [];
-        }
-        
         populateFilterDropdowns(globalVideos);
         applyFiltersAndSearch();
     } catch (err) {
-        console.error("Veritabanı veya yükleme hatası detayları:", err);
-        
-        // Güvenlik Önlemi: Dil nesnesi bozuksa bile ekrandaki yazıyı zorla değiştir ve donmayı engelle
-        let errorMsg = "Veritabanına bağlanılamadı! Lütfen Supabase bağlantı ayarlarını, internetinizi veya config.js dosyasını kontrol edin.";
-        
-        if (translations && translations[currentLang] && translations[currentLang].error) {
-            errorMsg = translations[currentLang].error;
-        }
-        
-        const videoGrid = document.getElementById('video-grid');
-        if (videoGrid) {
-            videoGrid.innerHTML = `
-                <div class="info-msg" style="color: #ef4444; padding: 20px; background: rgba(239,68,68,0.1); border-radius: 10px; border: 1px solid rgba(239,68,68,0.2);">
-                    ⚠️ ${errorMsg} <br><small style="color: #94a3b8; font-size: 11px;">Hata: ${err.message || err}</small>
-                </div>`;
-        }
+        document.getElementById('video-grid').innerHTML = `
+            <div class="info-msg" style="color: #ef4444;">
+                ${translations[currentLang].error}
+            </div>`;
+        console.error("Filtreleme veya yükleme hatası detayları:", err);
     }
 }
 
@@ -216,7 +199,7 @@ function applyFiltersAndSearch() {
     }
 
     const secilenFiltreler = {
-        aramaMetni: document.getElementById('search-input')?.value || '',
+        aramaMetni: '', // Arama motoru kaldırıldığı için burayı boş metin yaptık, hata vermez.
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -411,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
+    // Arama motoru dinleyicisi kaldırıldı.
     document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-instructor-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-tag-select').addEventListener('change', applyFiltersAndSearch);
