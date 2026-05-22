@@ -76,3 +76,59 @@ export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSe
         console.error("Etiket güncellenirken hata oluştu:", err);
     }
 }
+
+// 🔔 Modern Özel Alert (Bilgilendirme) Pop-up'ı
+export function showCustomAlert(message, okText = 'Tamam') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-dialog-modal');
+        const msgEl = document.getElementById('custom-dialog-message');
+        const okBtn = document.getElementById('custom-dialog-ok-btn');
+        const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+
+        msgEl.innerText = message;
+        okBtn.innerText = okText;
+        cancelBtn.classList.add('d-none'); // Alert modunda İptal butonu gizlenir
+        modal.classList.remove('d-none');
+
+        const handleOk = () => {
+            modal.classList.add('d-none');
+            okBtn.removeEventListener('click', handleOk);
+            resolve();
+        };
+        okBtn.addEventListener('click', handleOk);
+    });
+}
+
+// ❓ Modern Özel Confirm (Onay) Pop-up'ı
+export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İptal') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-dialog-modal');
+        const msgEl = document.getElementById('custom-dialog-message');
+        const okBtn = document.getElementById('custom-dialog-ok-btn');
+        const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+
+        msgEl.innerText = message;
+        okBtn.innerText = okText;
+        cancelBtn.innerText = cancelText;
+        cancelBtn.classList.remove('d-none'); // Confirm modunda İptal butonu gösterilir
+        modal.classList.remove('d-none');
+
+        const handleOk = () => {
+            modal.classList.add('d-none');
+            cleanup();
+            resolve(true);
+        };
+        const handleCancel = () => {
+            modal.classList.add('d-none');
+            cleanup();
+            resolve(false);
+        };
+        const cleanup = () => {
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+        };
+
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+    });
+}

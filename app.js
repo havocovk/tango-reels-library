@@ -15,7 +15,9 @@ import {
     closeVideoModal, 
     openTagsEditModal, 
     closeTagsEditModal,
-    modalTagsArray
+    modalTagsArray,
+    showCustomAlert,
+    showCustomConfirm
 } from './tangoModals.js';
 import { 
     updateSmartFilenameAssistant, 
@@ -70,10 +72,16 @@ function toggleFavorite(videoId) {
 
 function clearAllFavorites() {
     const lang = translations[currentLang];
-    if (confirm(lang.confirmClearFavs)) {
-        clearAllFavoritesData();
-        applyFiltersAndSearch();
-    }
+    const okTxt = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const cancelTxt = currentLang === 'tr' ? 'İptal' : 'Cancel';
+    
+    // Eski confirm yerine modern asenkron onay motoru
+    showCustomConfirm(lang.confirmClearFavs, okTxt, cancelTxt).then(confirmed => {
+        if (confirmed) {
+            clearAllFavoritesData();
+            applyFiltersAndSearch();
+        }
+    });
 }
 
 function callGetUniqueTagsPool() {
@@ -156,16 +164,19 @@ function startVideoEditFlow(video) {
 
 async function deleteVideoFlow(videoId) {
     const lang = translations[currentLang];
-    if (!confirm(lang.confirmDeleteVideo)) return;
+    const okTxt = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const cancelTxt = currentLang === 'tr' ? 'İptal' : 'Cancel';
+
+    if (!await showCustomConfirm(lang.confirmDeleteVideo, okTxt, cancelTxt)) return;
 
     try {
         await dbDeleteVideo(videoId);
-        alert(lang.successDeleteVideo);
+        await showCustomAlert(lang.successDeleteVideo, okTxt);
         removeFavoriteDirectly(videoId);
         await fetchVideos();
     } catch (err) {
         console.error(err);
-        alert("Silme işlemi sırasında hata oluştu!");
+        await showCustomAlert(currentLang === 'tr' ? "Silme işlemi sırasında hata oluştu!" : "An error occurred during deletion!", okTxt);
     }
 }
 
@@ -199,15 +210,16 @@ async function handleInstructorSubmit() {
     const input = document.getElementById('form-new-instructor-input');
     const name = input.value.trim();
     const lang = translations[currentLang];
+    const okTxt = currentLang === 'tr' ? 'Tamam' : 'OK';
 
     if (!name) {
-        alert(lang.insAlert);
+        await showCustomAlert(lang.insAlert, okTxt);
         return;
     }
 
     try {
         await dbSaveInstructor(editInstructorId, name);
-        alert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess);
+        await showCustomAlert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess, okTxt);
         input.value = '';
         editInstructorId = null;
         document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
@@ -225,11 +237,13 @@ async function deleteInstructor() {
     if (!select.value) return;
 
     const lang = translations[currentLang];
-    if (!confirm(lang.deleteConfirm)) return;
+    const okTxt = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const cancelTxt = currentLang === 'tr' ? 'İptal' : 'Cancel';
+    if (!await showCustomConfirm(lang.deleteConfirm, okTxt, cancelTxt)) return;
 
     try {
         await dbDeleteInstructor(select.value);
-        alert(lang.insDeleteSuccess);
+        await showCustomAlert(lang.insDeleteSuccess, okTxt);
         await fetchInstructors();
         await fetchVideos();
     } catch (err) {
@@ -240,6 +254,7 @@ async function deleteInstructor() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     const lang = translations[currentLang];
+    const okTxt = currentLang === 'tr' ? 'Tamam' : 'OK';
 
     const instructor_id = document.getElementById('form-instructor-select').value;
     const url = document.getElementById('form-video-url').value.trim();
@@ -256,7 +271,7 @@ async function handleFormSubmit(e) {
     }
 
     if (!instructor_id) {
-        alert("Lütfen önce bir eğitmen seçin veya ekleyin!");
+        await showCustomAlert(currentLang === 'tr' ? "Lütfen önce bir eğitmen seçin veya ekleyin!" : "Please select or add an instructor first!", okTxt);
         return;
     }
 
@@ -273,7 +288,7 @@ async function handleFormSubmit(e) {
 
     try {
         await dbSaveVideo(editingVideoId, payload);
-        alert(editingVideoId ? lang.successUpdate : lang.successSave);
+        await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okTxt);
         
         editingVideoId = null;
         formTagsArray = [];
@@ -294,7 +309,7 @@ async function handleFormSubmit(e) {
         await fetchVideos();
     } catch (err) {
         console.error(err);
-        alert("İşlem sırasında bir hata oluştu!");
+        await showCustomAlert(currentLang === 'tr' ? "İşlem sırasında bir hata oluştu!" : "An error occurred during the operation!", okTxt);
     }
 }
 
