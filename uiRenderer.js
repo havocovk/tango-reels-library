@@ -31,24 +31,24 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
             list.classList.add('d-none');
             return;
         }
-        
+
         const pool = getAllUniqueTagsPool();
-        const filtered = pool.filter(t => t.toLowerCase().includes(val) && !chipsArray.includes(t));
-        
+        const filtered = pool.filter(tag => tag.toLowerCase().includes(val) && !chipsArray.includes(tag));
+
         if (filtered.length === 0) {
             list.classList.add('d-none');
             return;
         }
-        
+
         list.classList.remove('d-none');
-        filtered.forEach(tag => {
+        filtered.forEach((tag) => {
             const item = document.createElement('div');
-            item.className = 'autocomplete-item';
-            item.innerText = `#${tag}`;
+            item.className = 'autocomplete-suggestion-item';
+            const idx = tag.toLowerCase().indexOf(val);
+            item.innerHTML = tag.substring(0, idx) + "<strong>" + tag.substring(idx, idx + val.length) + "</strong>" + tag.substring(idx + val.length);
+            
             item.addEventListener('click', () => {
-                chipsArray.push(tag);
-                renderChipsFn();
-                if (onAddCallback) onAddCallback();
+                onAddCallback(tag);
                 input.value = '';
                 list.classList.add('d-none');
             });
@@ -57,7 +57,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 
     input.addEventListener('keydown', (e) => {
-        const items = list.querySelectorAll('.autocomplete-item');
+        const items = list.querySelectorAll('.autocomplete-suggestion-item');
         if (e.key === 'ArrowDown') {
             currentFocus++;
             addActive(items);
@@ -69,15 +69,29 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
             if (currentFocus > -1 && items[currentFocus]) {
                 items[currentFocus].click();
             } else {
-                const val = input.value.trim().replace(/,/g, '');
+                const val = input.value.replace(/,/g, '').trim();
                 if (val && !chipsArray.includes(val)) {
-                    chipsArray.push(val);
-                    renderChipsFn();
-                    if (onAddCallback) onAddCallback();
+                    onAddCallback(val);
                     input.value = '';
                     list.classList.add('d-none');
                 }
             }
+        } else if (e.key === 'Backspace' && input.value === '') {
+            if (chipsArray.length > 0) {
+                chipsArray.pop();
+                renderChipsFn();
+            }
+        }
+    });
+
+    input.addEventListener('keyup', (e) => {
+        if (e.key === ',' || e.code === 'Comma') {
+            const val = input.value.replace(/,/g, '').trim();
+            if (val && !chipsArray.includes(val)) {
+                onAddCallback(val);
+            }
+            input.value = '';
+            list.classList.add('d-none');
         }
     });
 
@@ -100,78 +114,103 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. 🎥 VİDEO KARTLARINI EKRANA BASAN SÜPER FONKSİYON (app.js ile %100 UYUMLU)
-export function renderVideoCards(videos, config = {}) {
-    // app.js'in aradığı video-grid alanını seçiyoruz
-    const videoGrid = document.getElementById('video-grid');
-    if (!videoGrid) return;
-    
-    videoGrid.innerHTML = '';
-
-    // app.js'den gelen ayarları (config objesini) parçalara ayırıp alıyoruz
-    const {
-        currentLang = 'tr',
-        translations = {},
-        favs = [],
-        toggleFavorite,
-        openTagsEditModal,
-        startVideoEditFlow,
-        deleteVideoFlow,
-        openVideoModal
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (ORİJİNAL CSS VE TASARIM KORUNDU)
+export function renderVideoCards(videos, config) {
+    const { 
+        currentLang, 
+        currentView, 
+        translations, 
+        favs, 
+        toggleFavorite, 
+        openTagsEditModal, 
+        startVideoEditFlow, 
+        deleteVideoFlow, 
+        openVideoModal 
     } = config;
 
-    const lang = translations[currentLang] || {};
+    const videoGrid = document.getElementById('video-grid');
+    const lang = translations[currentLang];
+    videoGrid.innerHTML = '';
 
-    // Eğer veritabanında hiç video yoksa veya arama sonucu boşsa
-    if (!videos || videos.length === 0) {
-        videoGrid.innerHTML = `<div class="no-results">${lang.noVideosFound || 'Video bulunamadı.'}</div>`;
+    if (videos.length === 0) {
+        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
+        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
         return;
     }
 
     videos.forEach(video => {
-        // Favori kontrolünü app.js'den gelen güncel listeden yapıyoruz
-        const isFav = favs.includes(video.id);
-        
-        // Hem Drive linklerini hem de YouTube (Shorts dahil) linklerini modal sınıfına alıyoruz
-        const hasDrive = video.drive_url && (
-            video.drive_url.includes('drive.google.com') || 
-            video.drive_url.includes('youtube.com') || 
-            video.drive_url.includes('youtu.be')
-        );
-
         const card = document.createElement('div');
-        card.className = 'video-card-glass';
+        card.className = 'video-card';
         
-        const coverImg = video.cover_url || 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&q=80';
+        let roleDisplay = video.role_type || 'Both';
+        let roleBadgeClass = '';
+        if (roleDisplay === 'Leader') {
+            roleDisplay = currentLang === 'tr' ? 'Lider' : 'Leader';
+            roleBadgeClass = 'badge-leader';
+        } else if (roleDisplay === 'Follower') {
+            roleDisplay = currentLang === 'tr' ? 'Takipçi' : 'Follower';
+            roleBadgeClass = 'badge-follower';
+        } else {
+            roleDisplay = currentLang === 'tr' ? 'İkisi de' : 'Both';
+            roleBadgeClass = 'badge-both';
+        }
+
+        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
+        const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
+        
+        const partnerDisplay = video.partner_name 
+            ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
+            : '';
+        
+        let tagsHtml = '';
+        if (video.tags && video.tags.trim() !== '') {
+            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+            tagsArray.forEach(tag => {
+                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
+            });
+            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
+        } else {
+            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
+        }
+        
+        const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
+        const coverImg = video.cover_url || defaultCover;
+        const isFav = favs.includes(video.id);
+
+        // Hem yedeklenmiş Drive videolarını hem de YouTube (Shorts/Normal) linklerini yakalıyoruz
+        const hasDrive = video.is_downloaded && video.drive_url;
+        const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
+        const shouldOpenInModal = hasDrive || isYouTube;
+
+        // Modal tetikleyiciler için dinamik nitelik ayarları
+        const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
+        const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
         card.innerHTML = `
-            <div class="card-image-wrapper">
-                <img src="${coverImg}" class="card-preview-img" alt="Tango">
-                <button class="fav-star-btn ${isFav ? 'is-fav' : ''}" title="${lang.btnFav || 'Favori'}">
-                    ${isFav ? '★' : '☆'}
-                </button>
-                <div class="card-duration">
-                    ${video.duration ? video.duration : '00:00'}
+            <div class="video-cover-link">
+                <div class="video-cover-container" style="background-image: url('${coverImg}');">
+                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
+                    <a ${actionClickAttr}>
+                        <div class="play-overlay">
+                            <span class="play-icon">▶</span>
+                        </div>
+                    </a>
                 </div>
             </div>
-            <div class="card-body-content">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px;">
-                    <h4 class="card-title-text">${video.title || lang.untitledVideo}</h4>
-                </div>
-                <p class="card-instructor-text">
-                    👤 ${video.instructors && video.instructors.name ? video.instructors.name : (video.instructor_name || lang.unknownInstructor)}
-                </p>
+            <div class="card-info-content">
+                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
+                ${partnerDisplay}
                 
-                <div class="card-tags-row">
-                    <span class="inline-edit-tags-btn" title="${lang.btnEditTags || 'Etiketleri Düzenle'}">✏️</span>
-                    <div class="card-tags-inline-list">
-                        ${video.tags ? video.tags.split(',').map(t => `<span class="card-tag-pill">#${t.trim()}</span>`).join('') : `<span class="card-no-tags">${lang.noTags || 'Etiket yok'}</span>`}
-                    </div>
+                <div class="card-badges">
+                    <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
+                    <span class="badge ${storageClass}">${storageText}</span>
                 </div>
 
-                <div class="card-footer-actions">
-                    <a href="${video.drive_url || '#'}" target="_blank" class="card-btn-primary" ${hasDrive ? 'data-drive' : ''}>
-                        ${hasDrive ? (currentLang === 'tr' ? 'İzle →' : lang.watch) : lang.watch}
+                <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
+
+                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
+                    <a ${actionLinkClickAttr}>
+                        ${shouldOpenInModal ? (currentLang === 'tr' ? '🎬 Kütüphanede İzle →' : '🎬 Watch in Library →') : lang.watch}
                     </a>
                     
                     <div style="display:flex; gap:8px;">
@@ -182,38 +221,73 @@ export function renderVideoCards(videos, config = {}) {
             </div>
         `;
 
-        // Buton dinleyicilerini güvenli tetikleyicilerle bağlıyoruz
+        // Orijinal buton olay dinleyicileri
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            if (toggleFavorite) toggleFavorite(video.id);
+            toggleFavorite(video.id);
         });
 
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            if (openTagsEditModal) openTagsEditModal(video);
+            openTagsEditModal(video);
         });
 
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            if (startVideoEditFlow) startVideoEditFlow(video);
+            startVideoEditFlow(video);
         });
 
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            if (deleteVideoFlow) deleteVideoFlow(video.id);
+            deleteVideoFlow(video.id);
         });
 
-        // Link eğer Drive veya YouTube ise, dış sekmeye fırlatmak yerine sitemizdeki gömülü ekranı (modalı) açar
-        if (hasDrive) {
-            const triggers = card.querySelectorAll('[data-drive]');
+        // Tıklama durumunda modalı güvenli link formatıyla tetikler
+        if (shouldOpenInModal) {
+            const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
                 el.addEventListener('click', (e) => {
                     e.preventDefault();
-                    if (openVideoModal) openVideoModal(video.drive_url);
+                    let targetUrl = hasDrive ? video.drive_url : video.url;
+                    
+                    if (isYouTube) {
+                        targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+                    }
+                    openVideoModal(targetUrl);
                 });
             });
         }
 
         videoGrid.appendChild(card);
     });
+}
+
+// YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
+function convertYoutubeUrlToEmbed(url) {
+    if (!url) return '';
+    // YouTube Shorts kontrolü
+    if (url.includes('/shorts/')) {
+        const parts = url.split('/shorts/');
+        if (parts[1]) {
+            const id = parts[1].split(/[?#]/)[0];
+            return `https://www.youtube.com/embed/${id}`;
+        }
+    }
+    // Standart YouTube videoları (?v=...)
+    if (url.includes('v=')) {
+        const regExp = /[?&]v=([^&#]+)/;
+        const matches = url.match(regExp);
+        if (matches && matches[1]) {
+            return `https://www.youtube.com/embed/${matches[1]}`;
+        }
+    }
+    // Kısaltılmış linkler (youtu.be/...)
+    if (url.includes('youtu.be/')) {
+        const parts = url.split('youtu.be/');
+        if (parts[1]) {
+            const id = parts[1].split(/[?#]/)[0];
+            return `https://www.youtube.com/embed/${id}`;
+        }
+    }
+    return url;
 }
