@@ -1,9 +1,9 @@
 /**
  * 💃 ARJANTİN TANGO KOMBİNASYON KÜTÜPHANESİ - AKILLI FİLTRE MOTORU
- * Bu dosya kütüphanedeki videoları eğitmen, etiket, tarih ve role göre süzer.
+ * Bu dosya kütüphanedeki videoları süzmeye yarar ve açılır kutuları doldurur.
  */
 
-// 📅 Yardımcı Fonksiyon: Veritabanındaki karmaşık tarihleri "Mayıs 2026" formatına çevirir.
+// 📅 Yardımcı Fonksiyon: Karmaşık tarihleri "Mayıs 2026" formatına çevirir.
 function formatAyYil(tarihString) {
     if (!tarihString) return 'Bilinmeyen Tarih';
     const tarih = new Date(tarihString);
@@ -11,116 +11,123 @@ function formatAyYil(tarihString) {
 }
 
 /**
- * 🧺 GÖREV 1: HTML sayfasındaki Açılır Kutuları (Dropdown) Veritabanındaki Gerçek Verilerle Doldurur
+ * 🧺 GÖREV 1: HTML sayfasındaki Açılır Kutuları (Dropdown) Canlı Videolara Göre Doldurur
+ * Bu fonksiyon her çalıştığında eski listeyi çöpe atar ve tamamen sıfırdan güncel olanları dizer.
  */
 export function populateFilterDropdowns(videolar) {
     const instructorSelect = document.getElementById('filter-instructor-select');
     const tagSelect = document.getElementById('filter-tag-select');
     const dateSelect = document.getElementById('filter-date-select');
 
+    // Eğer kutular ekranda yoksa işlemi durdur
     if (!instructorSelect || !tagSelect || !dateSelect) return;
 
+    // 1. Kutuların içini tamamen sıfırlıyoruz ve ilk seçeneklerini koyuyoruz
     instructorSelect.innerHTML = '<option value="all">Tüm Eğitmenler</option>';
     tagSelect.innerHTML = '<option value="all">Tüm Etiketler</option>';
     dateSelect.innerHTML = '<option value="all">Tüm Tarihler</option>';
 
-    const egitmenlerTorbasi = new Set();
-    const etiketlerTorbasi = new Set();
-    const tarihlerTorbasi = new Set();
-
+    // 2. Videolardaki güncel Eğitmen İsimlerini topluyoruz (Artık boş kalmayacak!)
+    const egitmenlerTorba = new Set();
     videolar.forEach(video => {
-        if (video.instructor_name) egitmenlerTorbasi.add(video.instructor_name.trim());
+        if (video.instructor_name) {
+            egitmenlerTorba.add(video.instructor_name.trim());
+        }
+    });
 
+    // Eğitmenleri alfabetik sırayla kutuya ekliyoruz
+    Array.from(egitmenlerTorba).sort().forEach(egitmenAdi => {
+        const opt = document.createElement('option');
+        opt.value = egitmenAdi;
+        opt.innerText = egitmenAdi;
+        instructorSelect.appendChild(opt);
+    });
+
+    // 3. AKILLI ETİKET SİSTEMİ: Sadece şu an videolarda kullanılan etiketleri topluyoruz
+    // Eğer bir videodan etiketi silersen veya düzeltirsen, o etiket bu torbaya giremeyecek!
+    const etiketlerTorba = new Set();
+    videolar.forEach(video => {
         if (video.tags) {
-            video.tags.split(',').forEach(tag => {
-                const temizTag = tag.trim();
-                if (temizTag) etiketlerTorbasi.add(temizTag);
+            // Etiketler "sacada, planeo" gibi virgülle ayrıldığı için tek tek koparıyoruz
+            video.tags.split(',').forEach(etiket => {
+                const temizEtiket = etiket.trim();
+                if (temizEtiket) {
+                    etiketlerTorba.add(temizEtiket);
+                }
             });
         }
+    });
 
+    // Canlı etiketleri alfabetik sırayla kutuya diziyoruz
+    Array.from(etiketlerTorba).sort().forEach(etiketAdi => {
+        const opt = document.createElement('option');
+        opt.value = etiketAdi;
+        opt.innerText = `#${etiketAdi}`;
+        tagSelect.appendChild(opt);
+    });
+
+    // 4. Videolardaki güncel Tarihleri topluyoruz
+    const tarihlerTorba = new Set();
+    videolar.forEach(video => {
         if (video.created_at) {
-            tarihlerTorbasi.add(formatAyYil(video.created_at));
+            tarihlerTorba.add(formatAyYil(video.created_at));
         }
     });
 
-    Array.from(egitmenlerTorbasi).sort().forEach(egitmen => {
-        const option = document.createElement('option');
-        option.value = egitmen;
-        option.textContent = egitmen;
-        instructorSelect.appendChild(option);
-    });
-
-    Array.from(etiketlerTorbasi).sort().forEach(etiket => {
-        const option = document.createElement('option');
-        option.value = etiket;
-        option.textContent = `#${etiket}`;
-        tagSelect.appendChild(option);
-    });
-
-    Array.from(tarihlerTorbasi).forEach(tarih => {
-        const option = document.createElement('option');
-        option.value = tarih;
-        option.textContent = tarih;
-        dateSelect.appendChild(option);
+    // Tarihleri kutuya diziyoruz
+    Array.from(tarihlerTorba).forEach(tarihMetni => {
+        const opt = document.createElement('option');
+        opt.value = tarihMetni;
+        opt.innerText = tarihMetni;
+        dateSelect.appendChild(opt);
     });
 }
 
 /**
- * 🔍 GÖREV 2: Seçilen tüm filtrelere göre videoları süzgeçten geçirir
+ * 🔍 GÖREV 2: Seçtiğin filtrelere göre eşleşen videoları bulur ve ekrana taşır
  */
-export function getFilteredVideos(videolar, secilenFiltreler) {
-    const { aramaMetni, rol, egitmen, etiket, tarih, ortam } = secilenFiltreler;
+export function getFilteredVideos(videolar, filtreler) {
+    const { rol, egitmen, etiket, tarih, ortam } = filtreler;
 
     return videolar.filter(video => {
-        
-        // 1. Arama Çubuğu Kontrolü (Değişken isimleri birleştirildi)
-        if (aramaMetni) {
-            const aranacakKelime = aramaMetni.toLowerCase();
-            const egitmenVarMi = video.instructor_name?.toLowerCase().includes(aranacakKelime);
-            const partnerVarMi = video.partner_name?.toLowerCase().includes(aranacakKelime);
-            const etiketVarMi = video.tags?.toLowerCase().includes(aranacakKelime);
-            
-            if (!egitmenVarMi && !partnerVarMi && !etiketVarMi) return false;
-        }
-
-        // 2. Rol Tipi Filtresi (video.role alanı video.role_type olarak düzeltildi)
+        // 1. Rol Tipi Filtresi (Lider / Takipçi / Çift)
         if (rol !== 'all' && video.role_type !== rol) return false;
 
-        // 3. Eğitmen Filtresi
+        // 2. Eğitmen Filtresi
         if (egitmen !== 'all' && video.instructor_name !== egitmen) return false;
 
-        // 4. Etiket Filtresi
+        // 3. Etiket Filtresi
         if (etiket !== 'all') {
             if (!video.tags) return false;
             const videoEtiketleri = video.tags.split(',').map(t => t.trim());
             if (!videoEtiketleri.includes(etiket)) return false;
         }
 
-        // 5. Zaman Filtresi
+        // 4. Zaman Filtresi (Örn: "Mayıs 2026")
         if (tarih !== 'all' && formatAyYil(video.created_at) !== tarih) return false;
 
-        // 6. Ortam Filtresi
+        // 5. Ortam Filtresi (Google Drive mı, Sosyal Medya mı?)
         if (ortam !== 'all') {
-            if (ortam === 'drive' && !video.is_downloaded) return false; 
-            if (ortam === 'social' && video.is_downloaded) return false; 
+            if (ortam === 'drive' && !video.is_downloaded) return false;
+            if (ortam === 'social' && video.is_downloaded) return false;
         }
 
+        // Tüm testlerden geçen video başarıyla listelenir!
         return true;
     });
 }
 
 /**
- * Otomatik tamamlama havuzu için yardımcı fonksiyon
+ * 🏷️ GÖREV 3: Yeni video eklerken alttaki otomatik tamamlama kutusunu besler
  */
 export function getAllUniqueTagsPool(videolar) {
-    const havuz = new Set();
-    videolar.forEach(v => {
-        if (v.tags) {
-            v.tags.split(',').forEach(t => {
-                const temiz = t.trim();
-                if (temiz) havuz.add(temiz);
+    const torba = new Set();
+    videolar.forEach(video => {
+        if (video.tags) {
+            video.tags.split(',').map(t => t.trim()).forEach(t => {
+                if (t) torba.add(t);
             });
         }
     });
-    return Array.from(havuz);
+    return Array.from(torba).sort();
 }
