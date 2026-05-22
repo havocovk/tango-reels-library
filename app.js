@@ -106,10 +106,31 @@ async function fetchInstructors() {
     }
 }
 
+/**
+ * 🔄 SİHİRLİ GÜNCELLEME: Hem Eğitmen İsimlerini Eşleştirir Hem de Kutuları Taze Tutur
+ */
 async function fetchVideos() {
     try {
-        globalVideos = await dbFetchVideos();
+        // 1. Önce veritabanındaki güncel eğitmen listesini isimleriyle çekiyoruz
+        const instructors = await dbFetchInstructors();
+        
+        // 2. Veritabanındaki ham videoları çekiyoruz
+        const rawVideos = await dbFetchVideos();
+        
+        // 3. BÜYÜK DOKUNUŞ: Videolardaki ID numaralarına bakarak isimleri eşleştiriyoruz!
+        globalVideos = rawVideos.map(video => {
+            const foundInstructor = instructors.find(ins => ins.id === video.instructor_id);
+            return {
+                ...video,
+                // Eğer eğitmen silindiyse Bilinmeyen Eğitmen yazar, varsa adını yazar
+                instructor_name: foundInstructor ? foundInstructor.name : 'Bilinmeyen Eğitmen'
+            };
+        });
+
+        // 4. Şimdi yenilenmiş listeyi süzgeç kutularına gönderiyoruz (Hayalet etiketler temizlenir!)
         populateFilterDropdowns(globalVideos);
+        
+        // 5. Videoları ekrana çiziyoruz
         applyFiltersAndSearch();
     } catch (err) {
         document.getElementById('video-grid').innerHTML = `
@@ -199,7 +220,7 @@ function applyFiltersAndSearch() {
     }
 
     const secilenFiltreler = {
-        aramaMetni: '', // Arama motoru kaldırıldığı için burayı boş metin yaptık, hata vermez.
+        aramaMetni: document.getElementById('search-input')?.value || '',
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -215,7 +236,9 @@ function applyFiltersAndSearch() {
         translations,
         favs,
         toggleFavorite,
-        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
+        // ✨ Düzenleme bittiğinde tetiklenecek fonksiyonu `fetchVideos` yaptık. 
+        // Böylece etiket silindiğinde dropdown listesi de sayfa yenilenmeden otomatik temizlenecek!
+        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, fetchVideos),
         startVideoEditFlow,
         deleteVideoFlow,
         openVideoModal
@@ -394,13 +417,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
-    // Arama motoru dinleyicisi kaldırıldı.
+    document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
     document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-instructor-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-tag-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-date-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
+    
+    // ✨ GÜNCELLEME: Büyüteç butonu artık eski listeyi evirip çevirmez, doğrudan veritabanından her şeyi sıfırlar ve taze çeker!
+    document.getElementById('filter-btn').addEventListener('click', fetchVideos);
 
     document.getElementById('modal-close-btn').addEventListener('click', closeVideoModal);
     document.getElementById('video-modal').addEventListener('click', (e) => {
