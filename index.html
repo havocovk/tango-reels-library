@@ -10,13 +10,55 @@
     <link rel="stylesheet" href="temel.css">
     <link rel="stylesheet" href="kartlar.css">
     <link rel="stylesheet" href="formlar.css">
+
+    <style>
+        .vortex-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0b0f19; /* Derin gece siyahı taban */
+            overflow: hidden;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .vortex-mesh {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200vw;
+            height: 200vh;
+            /* İpeksi girdap dokusunu oluşturan iç içe geçmiş konik ve radyal gradyanlar */
+            background: 
+                radial-gradient(circle at 60% 40%, rgba(224, 32, 32, 0.16) 0%, transparent 45%),
+                radial-gradient(circle at 30% 65%, rgba(139, 12, 158, 0.20) 0%, transparent 50%),
+                radial-gradient(circle at 75% 80%, rgba(15, 118, 110, 0.12) 0%, transparent 40%),
+                conic-gradient(from 225deg at 55% 45%, #0b0f19 0deg, #2a050d 70deg, #4c0519 130deg, #3b0764 210deg, #020617 290deg, #0b0f19 360deg);
+            filter: blur(75px) saturate(125%) contrast(105%);
+            opacity: 0.95;
+            transform: rotate(-12deg); /* Girdaba ipeksi akış yönünü veren sanatsal eğim */
+        }
+
+        .vortex-silk-texture {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Işığın yumuşakça kırılmasını ve cam panellerin arkasında asil durmasını sağlayan ipeksi tül katmanı */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0.50) 100%);
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="aurora-container">
-        <div class="aurora-blob blob-tango-red"></div>
-        <div class="aurora-blob blob-deep-plum"></div>
-        <div class="aurora-blob blob-velvet"></div>
+    <div class="vortex-backdrop">
+        <div class="vortex-mesh"></div>
+        <div class="vortex-silk-texture"></div>
     </div>
 
     <div class="app-container">
@@ -49,21 +91,22 @@
                             <option value="all" id="opt-all-roles">Tüm Roller</option>
                             <option value="Leader" id="opt-leader">Lider</option>
                             <option value="Follower" id="opt-follower">Takipçi</option>
-                            <option value="Both" id="opt-both">Çift</option> </select>
+                            <option value="Both" id="opt-both">Çift</option>
+                        </select>
 
                         <select id="filter-instructor-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Eğitmenler</option>
-                            </select>
+                        </select>
 
                         <select id="filter-tag-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Etiketler</option>
-                            </select>
+                        </select>
                     </div>
 
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                         <select id="filter-date-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Tarihler</option>
-                            </select>
+                        </select>
 
                         <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all" id="opt-all-locations">Tüm Ortamlar</option>
@@ -121,7 +164,8 @@
                     <div class="form-group">
                         <label id="lbl-role">Rol Tipi:</label>
                         <select id="form-role-select">
-                            <option value="Both">Çift (Leader + Follower)</option> <option value="Leader">Leader</option>
+                            <option value="Both">Çift (Leader + Follower)</option>
+                            <option value="Leader">Leader</option>
                             <option value="Follower">Follower</option>
                         </select>
                     </div>
