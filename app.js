@@ -17,13 +17,17 @@ import {
     closeTagsEditModal,
     modalTagsArray
 } from './tangoModals.js';
-
-// Yeni UI modülümüzü içeri alıyoruz
 import { 
     updateSmartFilenameAssistant, 
     updateInterfaceLanguage, 
     switchView 
 } from './tangoUI.js';
+
+// Yeni Filtre modülümüzü içeri alıyoruz
+import { 
+    getFilteredVideos, 
+    getAllUniqueTagsPool 
+} from './tangoFilters.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -33,7 +37,6 @@ let currentView = 'library';
 
 let formTagsArray = [];
 
-// tangoUI.js'in iç durumları güvenle yönetebilmesi için sarmalayıcı nesneler (state)
 const getUIState = () => ({
     currentLang,
     editingVideoId,
@@ -72,17 +75,8 @@ function clearAllFavorites() {
     }
 }
 
-function getAllUniqueTagsPool() {
-    let pool = new Set();
-    globalVideos.forEach(v => {
-        if (v.tags) {
-            v.tags.split(',').forEach(t => {
-                const clean = t.trim();
-                if (clean) pool.add(clean);
-            });
-        }
-    });
-    return Array.from(pool);
+function callGetUniqueTagsPool() {
+    return getAllUniqueTagsPool(globalVideos);
 }
 
 async function fetchInstructors() {
@@ -183,32 +177,9 @@ function renderFormChips() {
 }
 
 function applyFiltersAndSearch() {
-    const searchVal = document.getElementById('search-input').value.toLowerCase().trim();
-    const roleVal = document.getElementById('filter-role-select').value;
-    const locationVal = document.getElementById('filter-location-select').value;
     const favs = getFavorites();
-
-    const filtered = globalVideos.filter(video => {
-        if (currentView === 'favorites' && !favs.includes(video.id)) {
-            return false;
-        }
-
-        const insName = video.instructors ? video.instructors.name.toLowerCase() : '';
-        const partnerName = video.partner_name ? video.partner_name.toLowerCase() : '';
-        const videoTags = video.tags ? video.tags.toLowerCase() : '';
-        
-        const matchesSearch = insName.includes(searchVal) || partnerName.includes(searchVal) || videoTags.includes(searchVal);
-        const matchesRole = (roleVal === 'all') || (video.role_type === roleVal);
-        
-        let matchesLocation = true;
-        if (locationVal === 'drive') {
-            matchesLocation = (video.is_downloaded === true);
-        } else if (locationVal === 'social') {
-            matchesLocation = (video.is_downloaded === false || !video.is_downloaded);
-        }
-
-        return matchesSearch && matchesRole && matchesLocation;
-    });
+    // Filtreleme işini yeni modülümüze delege ediyoruz
+    const filtered = getFilteredVideos(globalVideos, currentView, favs);
 
     renderVideoCards(filtered, {
         currentLang,
@@ -363,12 +334,11 @@ document.addEventListener('DOMContentLoaded', () => {
         formTagsArray.push(newTag);
         renderFormChips();
         callUpdateSmartAssistant();
-    }, getAllUniqueTagsPool);
+    }, callGetUniqueTagsPool);
 
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        // modal içi save tetikleme
-    }, getAllUniqueTagsPool);
+    }, callGetUniqueTagsPool);
 
     document.getElementById('form-instructor-select').addEventListener('change', callUpdateSmartAssistant);
 
