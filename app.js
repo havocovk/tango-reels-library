@@ -17,8 +17,7 @@ import {
     closeTagsEditModal,
     modalTagsArray,
     showCustomAlert,
-    showCustomConfirm,
-    saveTagsToSupabaseDirectly
+    showCustomConfirm
 } from './tangoModals.js';
 import { 
     updateSmartFilenameAssistant, 
@@ -26,10 +25,11 @@ import {
     switchView 
 } from './tangoUI.js';
 
-// Yeni Filtre modülümüzü içeri alıyoruz
+// ⚙️ Filtre modülümüzden süzme fonksiyonunu ve sepet doldurucuyu içeri alıyoruz
 import { 
     getFilteredVideos, 
-    getAllUniqueTagsPool 
+    getAllUniqueTagsPool,
+    populateFilterDropdowns
 } from './tangoFilters.js';
 
 let currentLang = 'tr';
@@ -58,12 +58,14 @@ function callUpdateInterfaceLanguage() {
 }
 
 function callSwitchView(viewName) {
-    currentView = viewName; // <-- Hatayı çözen, hafızayı güncelleyen kritik satır!
+    currentView = viewName; 
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch,
         renderFormChips,
         resetUploadedCoverUrl
     });
+    // Görünüm değiştiğinde (Örn: Pratik listeme geçildiğinde) filtreleri yeniden çalıştır
+    applyFiltersAndSearch();
 }
 
 function toggleFavorite(videoId) {
@@ -76,7 +78,6 @@ function clearAllFavorites() {
     const okTxt = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelTxt = currentLang === 'tr' ? 'İptal' : 'Cancel';
     
-    // Eski confirm yerine modern asenkron onay motoru
     showCustomConfirm(lang.confirmClearFavs, okTxt, cancelTxt).then(confirmed => {
         if (confirmed) {
             clearAllFavoritesData();
@@ -109,6 +110,8 @@ async function fetchInstructors() {
 async function fetchVideos() {
     try {
         globalVideos = await dbFetchVideos();
+        // 🧺 Videolar başarıyla gelince arama alanındaki 5'li akıllı sepetleri doldur
+        populateFilterDropdowns(globalVideos);
         applyFiltersAndSearch();
     } catch (err) {
         document.getElementById('video-grid').innerHTML = `
@@ -189,11 +192,30 @@ function renderFormChips() {
     });
 }
 
+// 🔍 Ekrandaki tüm süzgeçlerin durumunu toplayıp filtre motoruna gönderen fonksiyon
 function applyFiltersAndSearch() {
     const favs = getFavorites();
-    // Filtreleme işini yeni modülümüze delege ediyoruz
-    const filtered = getFilteredVideos(globalVideos, currentView, favs);
+    
+    // Eğer 'Pratik Listem' (favorites) görünümündeysek, sadece favoriye eklenmiş videoları süzgeçe sokalım
+    let kaynakVideolar = globalVideos;
+    if (currentView === 'favorites') {
+        kaynakVideolar = globalVideos.filter(v => favs.includes(v.id));
+    }
 
+    // Kullanıcının ekrandaki kutulardan seçtiği güncel filtre durumları
+    const secilenFiltreler = {
+        aramaMetni: document.getElementById('search-input')?.value || '',
+        rol: document.getElementById('filter-role-select')?.value || 'all',
+        egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
+        etiket: document.getElementById('filter-tag-select')?.value || 'all',
+        tarih: document.getElementById('filter-date-select')?.value || 'all',
+        ortam: document.getElementById('filter-location-select')?.value || 'all'
+    };
+
+    // Filtreleme işini akıllı motorumuza delege ediyoruz
+    const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
+
+    // Süzülmüş nihai listeyi ekrana kartlar halinde basıyoruz
     renderVideoCards(filtered, {
         currentLang,
         currentView,
@@ -354,11 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, callGetUniqueTagsPool);
 
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
-        if (!modalTagsArray.includes(newTag)) {
-            modalTagsArray.push(newTag);
-            // 💡 NÖBETÇİYE EMİR VERDİK: Yeni etiket gelirse anında Supabase'e kaydet ve ekranı yenile!
-            saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
-        }
+        modalTagsArray.push(newTag);
     }, callGetUniqueTagsPool);
 
     document.getElementById('form-instructor-select').addEventListener('change', callUpdateSmartAssistant);
@@ -383,8 +401,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor').addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form').addEventListener('submit', handleFormSubmit);
     
+    // 🎛️ TÜM FİLTRE ELEMANLARININ DİNLENMESİ (Kutular değiştikçe süzgeç tetiklenir)
     document.getElementById('search-input').addEventListener('input', applyFiltersAndSearch);
     document.getElementById('filter-role-select').addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-instructor-select').addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-tag-select').addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-date-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-location-select').addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-btn').addEventListener('click', applyFiltersAndSearch);
 
