@@ -13,6 +13,9 @@
 </head>
 <body>
 
+    <div class="bg-glow current-location-glow"></div>
+    <div class="secondary-glow bg-glow"></div>
+
     <div class="app-container">
         
         <nav class="sidebar-glass">
@@ -31,9 +34,8 @@
         <main class="main-content-glass">
 
             <div id="view-library-container" class="view-panel">
-                <div class="search-header">
-                    <input type="text" id="search-input" placeholder="Eğitmen, partner veya etiket (tag) ara...">
-                    <button id="filter-btn" class="btn-primary">🔍 Filtrele</button>
+                <div class="search-header" style="display: flex; justify-content: flex-end;">
+                    <button id="filter-btn" class="btn-primary">🔍 Listeyi Yenile</button>
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; margin-bottom: 12px;">
@@ -43,22 +45,21 @@
                             <option value="all" id="opt-all-roles">Tüm Roller</option>
                             <option value="Leader" id="opt-leader">Lider</option>
                             <option value="Follower" id="opt-follower">Takipçi</option>
-                            <option value="Both" id="opt-both">Çift</option>
-                        </select>
+                            <option value="Both" id="opt-both">Çift</option> </select>
 
                         <select id="filter-instructor-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Eğitmenler</option>
-                        </select>
+                            </select>
 
                         <select id="filter-tag-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Etiketler</option>
-                        </select>
+                            </select>
                     </div>
 
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                         <select id="filter-date-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Tarihler</option>
-                        </select>
+                            </select>
 
                         <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all" id="opt-all-locations">Tüm Ortamlar</option>
@@ -116,8 +117,7 @@
                     <div class="form-group">
                         <label id="lbl-role">Rol Tipi:</label>
                         <select id="form-role-select">
-                            <option value="Both">Çift (Leader + Follower)</option>
-                            <option value="Leader">Leader</option>
+                            <option value="Both">Çift (Leader + Follower)</option> <option value="Leader">Leader</option>
                             <option value="Follower">Follower</option>
                         </select>
                     </div>

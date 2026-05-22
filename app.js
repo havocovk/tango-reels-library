@@ -55,13 +55,6 @@ function callUpdateSmartAssistant() {
 }
 
 function callUpdateInterfaceLanguage() {
-    // 🌍 Başlığı dillere göre dinamik güncelliyoruz
-    const sidebarTitle = document.getElementById('sidebar-title');
-    if (sidebarTitle) {
-        sidebarTitle.innerText = currentLang === 'tr' 
-            ? '💃 Arjantin Tango Kombinasyon Koleksiyonu' 
-            : '💃 Argentina Tango Combination Collection';
-    }
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
 }
 
@@ -116,6 +109,9 @@ async function fetchInstructors() {
     }
 }
 
+/**
+ * 🔄 SİHİRLİ GÜNCELLEME: Hem Eğitmen İsimlerini Eşleştirir Hem de Kutuları Taze Tutar
+ */
 async function fetchVideos() {
     try {
         const instructors = await dbFetchInstructors();
@@ -241,7 +237,7 @@ function applyFiltersAndSearch() {
     }
 
     const secilenFiltreler = {
-        aramaMetni: '', 
+        aramaMetni: '', // Üst arama çubuğu kaldırıldığı için boş geçiliyor
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -433,6 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
         callUpdateSmartAssistant();
     }, callGetUniqueTagsPool);
 
+    // ⚡ DÜZELTME ALANI: Modal içinde yeni etiket eklendiğinde doğrudan Supabase'e kaydeden ve arayüzü çizen fonksiyon bağlandı
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
         saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
