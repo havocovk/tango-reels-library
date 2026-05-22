@@ -17,7 +17,8 @@ import {
     closeTagsEditModal,
     modalTagsArray,
     showCustomAlert,
-    showCustomConfirm
+    showCustomConfirm,
+    saveTagsToSupabaseDirectly
 } from './tangoModals.js';
 import { 
     updateSmartFilenameAssistant, 
@@ -236,7 +237,7 @@ function applyFiltersAndSearch() {
     }
 
     const secilenFiltreler = {
-        aramaMetni: document.getElementById('search-input')?.value || '',
+        aramaMetni: '', // Üst arama çubuğu kaldırıldığı için boş geçiliyor
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -252,7 +253,7 @@ function applyFiltersAndSearch() {
         translations,
         favs,
         toggleFavorite,
-        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, fetchVideos),
+        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
         startVideoEditFlow,
         deleteVideoFlow,
         openVideoModal
@@ -428,8 +429,10 @@ document.addEventListener('DOMContentLoaded', () => {
         callUpdateSmartAssistant();
     }, callGetUniqueTagsPool);
 
+    // ⚡ DÜZELTME ALANI: Modal içinde yeni etiket eklendiğinde doğrudan Supabase'e kaydeden ve arayüzü çizen fonksiyon bağlandı
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
+        saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
     }, callGetUniqueTagsPool);
 
     document.getElementById('form-instructor-select')?.addEventListener('change', callUpdateSmartAssistant);
@@ -458,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form')?.addEventListener('submit', handleFormSubmit);
     
-    document.getElementById('search-input')?.addEventListener('input', applyFiltersAndSearch);
     document.getElementById('filter-role-select')?.addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-instructor-select')?.addEventListener('change', applyFiltersAndSearch);
     document.getElementById('filter-tag-select')?.addEventListener('change', applyFiltersAndSearch);
