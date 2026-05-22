@@ -2,7 +2,7 @@ import { translations } from './config.js';
 import { dbUpdateTagsDirectly } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 
-// Modal durum değişkenleri (app.js'ten buraya taşındı)
+// Modal durum değişkenleri
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
 
@@ -32,71 +32,47 @@ export function closeVideoModal() {
 // ✏️ Etiket Düzenleme Modalı Fonksiyonları
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
+    document.getElementById('tags-edit-modal').classList.remove('d-none');
+    
+    // Videoya ait etiketleri diziye dönüştürür
     modalTagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t !== '') : [];
     
-    document.getElementById('tags-edit-modal').classList.remove('d-none');
-    renderModalTagsList(globalVideos, applyFiltersAndSearch);
+    // Üstteki mükerrer liste kaldırıldığı için sadece alt kısımdaki akıllı çipleri çizdiriyoruz
     renderModalChips(globalVideos, applyFiltersAndSearch);
 }
 
 export function closeTagsEditModal() {
     document.getElementById('tags-edit-modal').classList.add('d-none');
     activeEditTagsVideoId = null;
+    modalTagsArray = [];
+    document.getElementById('modal-tags-input').value = '';
 }
 
-export function renderModalTagsList(globalVideos, applyFiltersAndSearch) {
-    const container = document.getElementById('modal-tags-list-container');
-    container.innerHTML = '';
-
-    if (modalTagsArray.length === 0) {
-        container.innerHTML = `<div style="color:#64748b; font-size:0.9rem; text-align:center;">Henüz etiket bulunmuyor.</div>`;
-        return;
-    }
-
-    modalTagsArray.forEach((tag, idx) => {
-        const row = document.createElement('div');
-        row.className = 'modal-tag-row';
-        row.innerHTML = `
-            <input type="text" value="${tag}" data-idx="${idx}" class="modal-tag-edit-input">
-            <button class="modal-tag-row-delete-btn" data-idx="${idx}">&times;</button>
-        `;
-
-        row.querySelector('.modal-tag-edit-input').addEventListener('input', (e) => {
-            modalTagsArray[idx] = e.target.value.trim();
-        });
-
-        row.querySelector('.modal-tag-row-delete-btn').addEventListener('click', () => {
-            modalTagsArray.splice(idx, 1);
-            saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
-        });
-
-        row.querySelector('.modal-tag-edit-input').addEventListener('blur', () => {
-            saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
-        });
-
-        container.appendChild(row);
-    });
-}
-
+// Alt alandaki dinamik etiket çiplerini (çarpı butonlu kutuları) ekrana basar
 export function renderModalChips(globalVideos, applyFiltersAndSearch) {
     renderChips('modal-chips-area', modalTagsArray, (index) => {
+        // Çarpıya basıldığında ilgili etiketi siler ve anında Supabase'e kaydeder
         modalTagsArray.splice(index, 1);
         saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
     });
 }
 
+// Değişiklikleri doğrudan Supabase veritabanına gönderir ve arayüzü günceller
 export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
     
     try {
         await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags);
+        
+        // Yerel hafızadaki videonun etiketlerini de günceller
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
-        renderModalTagsList(globalVideos, applyFiltersAndSearch);
+        
+        // Eski liste yerine artık sadece çipleri ve ana kütüphane filtrelerini yeniliyoruz
         renderModalChips(globalVideos, applyFiltersAndSearch);
         applyFiltersAndSearch();
     } catch (err) {
-        console.error("Etiket anlık güncellenemedi:", err);
+        console.error("Etiket güncellenirken hata oluştu:", err);
     }
 }
