@@ -12,53 +12,97 @@
     <link rel="stylesheet" href="formlar.css">
 
     <style>
-        .vortex-backdrop {
+        .vortex-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: #0b0f19; /* Derin gece siyahı taban */
-            overflow: hidden;
+            background: #060205; /* Çok derin tango gecesi taban rengi */
             z-index: -2;
+            overflow: hidden;
             pointer-events: none;
         }
 
-        .vortex-mesh {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200vw;
-            height: 200vh;
-            /* İpeksi girdap dokusunu oluşturan iç içe geçmiş konik ve radyal gradyanlar */
-            background: 
-                radial-gradient(circle at 60% 40%, rgba(224, 32, 32, 0.16) 0%, transparent 45%),
-                radial-gradient(circle at 30% 65%, rgba(139, 12, 158, 0.20) 0%, transparent 50%),
-                radial-gradient(circle at 75% 80%, rgba(15, 118, 110, 0.12) 0%, transparent 40%),
-                conic-gradient(from 225deg at 55% 45%, #0b0f19 0deg, #2a050d 70deg, #4c0519 130deg, #3b0764 210deg, #020617 290deg, #0b0f19 360deg);
-            filter: blur(75px) saturate(125%) contrast(105%);
-            opacity: 0.95;
-            transform: rotate(-12deg); /* Girdaba ipeksi akış yönünü veren sanatsal eğim */
+        /* Renk kollarını organik bir sıvı kıvrımına dönüştüren gelişmiş kontrast ve blur filtresi */
+        .vortex-blend-wrapper {
+            width: 100%;
+            height: 100%;
+            filter: blur(50px) contrast(1.4) saturate(1.3);
+            background: #060205;
+            position: relative;
         }
 
-        .vortex-silk-texture {
+        /* Girdabın ana Tango Kırmızısı akış kolu */
+        .vortex-arm-red {
+            position: absolute;
+            top: 15%;
+            left: 30%;
+            width: 65vw;
+            height: 65vh;
+            background: radial-gradient(ellipse at center, #800c24 0%, rgba(128, 12, 36, 0) 75%);
+            transform: rotate(-28deg) scaleX(1.9);
+            opacity: 0.85;
+        }
+
+        /* Girdabın derin mürdüm/kadife kıvrım kolu */
+        .vortex-arm-plum {
+            position: absolute;
+            top: 35%;
+            left: 10%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(ellipse at center, #4c0519 0%, rgba(76, 5, 25, 0) 70%);
+            transform: rotate(32deg) scaleX(1.6);
+            opacity: 0.9;
+        }
+
+        /* Girdabın ışık saçan asil mor/gece mavisi geçiş tonu */
+        .vortex-arm-violet {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            width: 55vw;
+            height: 55vh;
+            background: radial-gradient(ellipse at center, #2e1065 0%, rgba(46, 16, 101, 0) 70%);
+            transform: rotate(-55deg) scaleX(1.7);
+            opacity: 0.65;
+        }
+
+        /* Alt kısımdaki derinliği sağlayan karanlık girdap merkezi */
+        .vortex-arm-deep {
+            position: absolute;
+            bottom: -5%;
+            right: 5%;
+            width: 75vw;
+            height: 75vh;
+            background: radial-gradient(circle at center, #020617 0%, transparent 85%);
+            opacity: 0.95;
+        }
+
+        /* Üst kısımdaki ışık kırılmasını ve cam arkası ipeksi parıltıyı veren ipek tül katmanı */
+        .vortex-silk-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* Işığın yumuşakça kırılmasını ve cam panellerin arkasında asil durmasını sağlayan ipeksi tül katmanı */
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0.50) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 45%, rgba(0, 0, 0, 0.5) 100%),
+                        linear-gradient(45deg, rgba(128, 12, 36, 0.08) 0%, transparent 60%);
             mix-blend-mode: overlay;
-            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="vortex-backdrop">
-        <div class="vortex-mesh"></div>
-        <div class="vortex-silk-texture"></div>
+    <div class="vortex-container">
+        <div class="vortex-blend-wrapper">
+            <div class="vortex-arm-red"></div>
+            <div class="vortex-arm-plum"></div>
+            <div class="vortex-arm-violet"></div>
+            <div class="vortex-arm-deep"></div>
+        </div>
+        <div class="vortex-silk-overlay"></div>
     </div>
 
     <div class="app-container">
@@ -143,6 +187,7 @@
                     <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                         <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
                         <div style="display: flex; gap: 10px;">
+                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
                             <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
                             <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
                         </div>
