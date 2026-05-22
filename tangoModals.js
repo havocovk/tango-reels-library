@@ -63,10 +63,13 @@ export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
     document.getElementById('tags-edit-modal').classList.remove('d-none');
     
-    // Videoya ait etiketleri diziye dönüştürür
-    modalTagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t !== '') : [];
+    // 💡 KUTUYU ÇÖPE ATMIYORUZ: İçini boşaltıp yeni etiketleri içine dolduruyoruz (Referans bozulmuyor)
+    modalTagsArray.length = 0;
+    if (video.tags) {
+        video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
+    }
     
-    // Üstteki mükerrer liste kaldırıldığı için sadece alt kısımdaki akıllı çipleri çizdiriyoruz
+    // Sadece alt kısımdaki akıllı çipleri çizdiriyoruz
     renderModalChips(globalVideos, applyFiltersAndSearch);
 }
 

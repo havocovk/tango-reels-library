@@ -17,7 +17,8 @@ import {
     closeTagsEditModal,
     modalTagsArray,
     showCustomAlert,
-    showCustomConfirm
+    showCustomConfirm,
+    saveTagsToSupabaseDirectly
 } from './tangoModals.js';
 import { 
     updateSmartFilenameAssistant, 
@@ -353,7 +354,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }, callGetUniqueTagsPool);
 
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
-        modalTagsArray.push(newTag);
+        if (!modalTagsArray.includes(newTag)) {
+            modalTagsArray.push(newTag);
+            // 💡 NÖBETÇİYE EMİR VERDİK: Yeni etiket gelirse anında Supabase'e kaydet ve ekranı yenile!
+            saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
+        }
     }, callGetUniqueTagsPool);
 
     document.getElementById('form-instructor-select').addEventListener('change', callUpdateSmartAssistant);
