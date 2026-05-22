@@ -3,13 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arjantin Tango Kombinasyon Koleksiyonu</title>
+    <title>Arjantin Tango Kombinasyon Kütüphanesi</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="temel.css">
     <link rel="stylesheet" href="kartlar.css">
     <link rel="stylesheet" href="formlar.css">
+
+    <style>
+        :root {
+            --bg-dark: #090a0f;
+            --panel-bg: rgba(18, 14, 20, 0.65);
+            --border-color: rgba(183, 110, 121, 0.2);
+            --border-focus: rgba(183, 110, 121, 0.6);
+            --rose-gold: #b76e79;
+            --rose-gold-glow: rgba(183, 110, 121, 0.4);
+            --rose-gold-light: #e6c2c7;
+            --burgundy: #58111a;
+            --burgundy-glow: rgba(88, 17, 26, 0.6);
+            --burgundy-dark: #2c050b;
+            --text-main: #f3ecef;
+            --text-muted: #a69da1;
+        }
+
+        body {
+            background-color: var(--bg-dark) !important;
+            color: var(--text-main) !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* 🌊 Arka Plandaki Hafif Bordo Kırmızı Dalgalanmalar (Glow Wave Efektleri) */
+        .bg-glow {
+            position: fixed;
+            width: 900px;
+            height: 900px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: -1;
+            filter: blur(150px);
+            opacity: 0.5;
+            mix-blend-mode: screen;
+        }
+
+        .current-location-glow {
+            top: -250px;
+            left: -200px;
+            background: radial-gradient(circle, var(--burgundy) 0%, var(--burgundy-dark) 75%, transparent 100%);
+            animation: waveMotion1 25s infinite alternate ease-in-out;
+        }
+
+        .secondary-glow {
+            bottom: -350px;
+            right: -150px;
+            background: radial-gradient(circle, #722f37 0%, var(--burgundy) 65%, transparent 100%);
+            animation: waveMotion2 30s infinite alternate ease-in-out;
+        }
+
+        @keyframes waveMotion1 {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.45; }
+            50% { transform: translate(100px, 80px) scale(1.15); opacity: 0.6; }
+            100% { transform: translate(-50px, 150px) scale(0.9) rotate(20deg); opacity: 0.4; }
+        }
+
+        @keyframes waveMotion2 {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 0.55; }
+            50% { transform: translate(-120px, -60px) scale(1.2) rotate(35deg); opacity: 0.4; }
+            100% { transform: translate(60px, -140px) scale(0.95) rotate(-10deg); opacity: 0.65; }
+        }
+
+        /* Ana Uygulama Konteyneri */
+        .app-container {
+            background: radial-gradient(transparent 40%, rgba(9, 10, 15, 0.85)), 
+                        linear-gradient(135deg, rgba(88, 17, 26, 0.12) 0%, transparent 100%) !important;
+        }
+
+        /* Sol Yan Menü (Sidebar) Kadife Cam Efekti */
+        .sidebar-glass {
+            background: rgba(14, 11, 16, 0.75) !important;
+            backdrop-filter: blur(25px) !important;
+            border-right: 1px solid var(--border-color) !important;
+            box-shadow: 8px 0 35px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        #sidebar-title {
+            color: var(--rose-gold-light) !important;
+            text-shadow: 0 0 15px var(--rose-gold-glow);
+            font-weight: 700;
+        }
+
+        /* Sol Menü Butonları */
+        .menu-btn {
+            background: transparent !important;
+            color: var(--text-muted) !important;
+            border: 1px solid transparent !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .menu-btn:hover {
+            color: var(--rose-gold-light) !important;
+            background: rgba(183, 110, 121, 0.08) !important;
+            border-color: rgba(183, 110, 121, 0.15) !important;
+        }
+
+        .menu-btn.active {
+            background: linear-gradient(90deg, rgba(88, 17, 26, 0.35) 0%, rgba(183, 110, 121, 0.12) 100%) !important;
+            color: var(--rose-gold-light) !important;
+            border: 1px solid var(--border-color) !important;
+            border-left: 4px solid var(--rose-gold) !important;
+            box-shadow: 0 4px 20px rgba(88, 17, 26, 0.35), inset 0 0 10px rgba(183, 110, 121, 0.05) !important;
+            font-weight: 600;
+        }
+
+        /* Ana Panel Gövdesi */
+        .main-content-glass {
+            background: rgba(11, 12, 17, 0.45) !important;
+            backdrop-filter: blur(20px) !important;
+        }
+
+        /* Arama Girdileri, Seçim Kutuları (Dropdownlar) */
+        .search-header input, select, .glass-form input, .glass-form select, .glass-form textarea {
+            background: rgba(14, 11, 16, 0.75) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            border-radius: 10px;
+            transition: all 0.3s ease !important;
+        }
+
+        .search-header input:focus, select:focus, .glass-form input:focus, .glass-form select:focus {
+            outline: none !important;
+            border-color: var(--rose-gold) !important;
+            box-shadow: 0 0 15px rgba(183, 110, 121, 0.25), inset 0 0 8px rgba(0, 0, 0, 0.5) !important;
+            background: rgba(20, 15, 23, 0.85) !important;
+        }
+
+        /* Select Seçeneklerinin İç Kutuları */
+        select option {
+            background-color: #120e14 !important;
+            color: var(--text-main) !important;
+        }
+
+        /* Birincil Butonlar (Filtrele, Veritabanına Kaydet vb.) */
+        .btn-primary, button#filter-btn, button[type="submit"] {
+            background: linear-gradient(135deg, var(--burgundy) 0%, var(--rose-gold) 100%) !important;
+            color: #ffffff !important;
+            border: 1px solid var(--rose-gold-light) !important;
+            box-shadow: 0 4px 15px rgba(88, 17, 26, 0.4), 0 0 12px var(--rose-gold-glow) !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .btn-primary:hover, button#filter-btn:hover, button[type="submit"]:hover {
+            background: linear-gradient(135deg, #6e1823 0%, #c47c87 100%) !important;
+            box-shadow: 0 6px 22px rgba(88, 17, 26, 0.55), 0 0 18px rgba(183, 110, 121, 0.5) !important;
+            transform: translateY(-1px);
+        }
+
+        /* Dil ve Küçük Aksiyon Butonları */
+        .lang-btn {
+            background: rgba(183, 110, 121, 0.08) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--rose-gold-light) !important;
+            transition: all 0.2s ease;
+        }
+
+        .lang-btn:hover {
+            background: rgba(183, 110, 121, 0.2) !important;
+            border-color: var(--rose-gold) !important;
+            box-shadow: 0 0 12px var(--rose-gold-glow);
+        }
+
+        /* Dinamik Video Kartları (JavaScript ile basılan kartların uyumu için) */
+        .video-card, .video-grid > div {
+            background: rgba(16, 12, 18, 0.7) !important;
+            border: 1px solid rgba(183, 110, 121, 0.15) !important;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .video-card:hover, .video-grid > div:hover {
+            border-color: var(--rose-gold) !important;
+            box-shadow: 0 16px 35px rgba(88, 17, 26, 0.45), 0 0 15px rgba(183, 110, 121, 0.2) !important;
+            transform: translateY(-4px);
+        }
+
+        /* Teknik Etiket Çipleri (Chips) */
+        .tag-chip, .chips-area span, #chips-area div, #modal-chips-area div {
+            background: rgba(88, 17, 26, 0.35) !important;
+            color: var(--rose-gold-light) !important;
+            border: 1px solid rgba(183, 110, 121, 0.2) !important;
+        }
+
+        /* Akıllı Dosya İsmi Asistanı Kutusu */
+        .assistant-box {
+            background: rgba(44, 5, 11, 0.25) !important;
+            border: 1px solid rgba(183, 110, 121, 0.15) !important;
+            border-left: 4px solid var(--rose-gold) !important;
+        }
+
+        .assistant-code {
+            background: rgba(10, 7, 12, 0.8) !important;
+            color: var(--rose-gold-light) !important;
+            border: 1px solid rgba(183, 110, 121, 0.12) !important;
+        }
+
+        /* Yeni Video Ekleme Form Alanı */
+        .glass-form {
+            background: rgba(15, 11, 17, 0.75) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 25px 55px rgba(0, 0, 0, 0.55) !important;
+        }
+
+        /* Sürükle Bırak / Kapak Resmi Alanı */
+        #drop-area {
+            border: 2px dashed rgba(183, 110, 121, 0.35) !important;
+            background: rgba(14, 11, 16, 0.5) !important;
+            transition: all 0.2s ease;
+        }
+
+        #drop-area:focus, #drop-area:hover {
+            border-color: var(--rose-gold) !important;
+            background: rgba(88, 17, 26, 0.08) !important;
+            color: var(--rose-gold-light) !important;
+        }
+
+        /* Pop-up Modallar (Video Oynatıcı ve Düzenleme Ekranları) */
+        .modal-content {
+            background: rgba(14, 10, 15, 0.94) !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 30px 65px rgba(0, 0, 0, 0.75), 0 0 35px var(--burgundy-glow) !important;
+        }
+
+        /* Özel Alert/Confirm Onay Pop-up'ı */
+        #custom-dialog-modal .modal-content {
+            background: rgba(16, 11, 16, 0.97) !important;
+            border: 1px solid var(--rose-gold) !important;
+        }
+
+        #custom-dialog-ok-btn {
+            background: linear-gradient(135deg, var(--burgundy) 0%, var(--rose-gold) 100%) !important;
+        }
+
+        /* Pratik Listesi Temizleme Butonu (Tehlike Rengi) */
+        .btn-clear-danger {
+            background: rgba(239, 68, 68, 0.08) !important;
+            border: 1px solid rgba(239, 68, 68, 0.25) !important;
+            color: #ef4444 !important;
+            transition: all 0.2s ease;
+        }
+        .btn-clear-danger:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+        }
+    </style>
 </head>
 <body>
 
@@ -19,8 +270,8 @@
     <div class="app-container">
         
         <nav class="sidebar-glass">
-            <div class="sidebar-header" style="flex-direction: column; align-items: flex-start; gap: 10px;">
-                <h2 id="sidebar-title" style="font-size: 1.1rem; line-height: 1.4; font-weight: 700; color: #fff; margin: 0;">💃 Arjantin Tango Kombinasyon Koleksiyonu</h2>
+            <div class="sidebar-header">
+                <h2 id="sidebar-title">💃 ATKK</h2>
                 <button id="lang-toggle-btn" class="lang-btn">🇬🇧 EN</button>
             </div>
             <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
@@ -34,34 +285,36 @@
         <main class="main-content-glass">
 
             <div id="view-library-container" class="view-panel">
-                <div class="search-header" style="display: flex; justify-content: flex-end;">
-                    <button id="filter-btn" class="btn-primary">🔍 Listeyi Yenile</button>
+                <div class="search-header">
+                    <input type="text" id="search-input" placeholder="Eğitmen, partner veya etiket (tag) ara...">
+                    <button id="filter-btn" class="btn-primary">🔍 Filtrele</button>
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; margin-bottom: 12px;">
                     
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <select id="filter-role-select" style="flex: 1; min-width: 120px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-role-select" style="flex: 1; min-width: 120px;">
                             <option value="all" id="opt-all-roles">Tüm Roller</option>
                             <option value="Leader" id="opt-leader">Lider</option>
                             <option value="Follower" id="opt-follower">Takipçi</option>
-                            <option value="Both" id="opt-both">Çift</option> </select>
+                            <option value="Both" id="opt-both">Çift</option>
+                        </select>
 
-                        <select id="filter-instructor-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-instructor-select" style="flex: 1; min-width: 150px;">
                             <option value="all">Tüm Eğitmenler</option>
-                            </select>
+                        </select>
 
-                        <select id="filter-tag-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-tag-select" style="flex: 1; min-width: 150px;">
                             <option value="all">Tüm Etiketler</option>
-                            </select>
+                        </select>
                     </div>
 
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <select id="filter-date-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-date-select" style="flex: 1; min-width: 150px;">
                             <option value="all">Tüm Tarihler</option>
-                            </select>
+                        </select>
 
-                        <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-location-select" style="flex: 1; min-width: 150px;">
                             <option value="all" id="opt-all-locations">Tüm Ortamlar</option>
                             <option value="drive" id="opt-drive">💾 Google Drive</option>
                             <option value="social" id="opt-social">🌐 Sosyal Medya</option>
@@ -97,7 +350,7 @@
                         <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
                         <div style="display: flex; gap: 10px;">
                             <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
-                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
+                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #e6c2c7; color: #0f172a;">Ekle</button>
                         </div>
                     </div>
 
@@ -117,7 +370,8 @@
                     <div class="form-group">
                         <label id="lbl-role">Rol Tipi:</label>
                         <select id="form-role-select">
-                            <option value="Both">Çift (Leader + Follower)</option> <option value="Leader">Leader</option>
+                            <option value="Both">Çift (Leader + Follower)</option>
+                            <option value="Leader">Leader</option>
                             <option value="Follower">Follower</option>
                         </select>
                     </div>
@@ -152,7 +406,7 @@
 
                     <div id="assistant-panel" class="assistant-box">
                         <h4 id="assistant-title">💡 Akıllı Dosya İsmi Asistanı</h4>
-                        <p id="assistant-text" style="font-size: 0.8rem; margin: 4px 0; color: #94a3b8;">İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:</p>
+                        <p id="assistant-text" style="font-size: 0.8rem; margin: 4px 0; color: #a69da1;">İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:</p>
                         <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
                     </div>
 
@@ -174,7 +428,7 @@
     </div>
 
     <div id="tags-edit-modal" class="modal-overlay d-none">
-        <div class="modal-content" style="max-width: 500px; padding: 25px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px);">
+        <div class="modal-content" style="max-width: 500px; padding: 25px;">
             <span id="tags-modal-close-btn" class="modal-close" style="top: 15px; right: 20px;">&times;</span>
             <h3 id="edit-tags-title" style="color: #fff; margin-bottom: 20px; font-weight: 600;">✏️ Etiketleri Düzenle</h3>
             
@@ -191,11 +445,11 @@
     </div>
 
     <div id="custom-dialog-modal" class="modal-overlay d-none" style="z-index: 10000;">
-        <div class="modal-content" style="max-width: 400px; padding: 25px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+        <div class="modal-content" style="max-width: 400px; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
             <p id="custom-dialog-message" style="color: #fff; font-size: 16px; margin-bottom: 25px; line-height: 1.6; font-weight: 500;"></p>
             <div style="display: flex; justify-content: center; gap: 12px;">
                 <button id="custom-dialog-cancel-btn" class="btn d-none" style="padding: 10px 24px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; font-weight: 500;">İptal</button>
-                <button id="custom-dialog-ok-btn" class="btn" style="padding: 10px 24px; border-radius: 8px; background: #3b82f6; color: #fff; border: none; cursor: pointer; font-weight: 500;">Tamam</button>
+                <button id="custom-dialog-ok-btn" class="btn" style="padding: 10px 24px; border-radius: 8px; color: #fff; border: none; cursor: pointer; font-weight: 500;">Tamam</button>
             </div>
         </div>
     </div>
