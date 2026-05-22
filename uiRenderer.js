@@ -31,24 +31,24 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
             list.classList.add('d-none');
             return;
         }
-
+        
         const pool = getAllUniqueTagsPool();
-        const filtered = pool.filter(tag => tag.toLowerCase().includes(val) && !chipsArray.includes(tag));
-
+        const filtered = pool.filter(t => t.toLowerCase().includes(val) && !chipsArray.includes(t));
+        
         if (filtered.length === 0) {
             list.classList.add('d-none');
             return;
         }
-
+        
         list.classList.remove('d-none');
-        filtered.forEach((tag) => {
+        filtered.forEach(tag => {
             const item = document.createElement('div');
-            item.className = 'autocomplete-suggestion-item';
-            const idx = tag.toLowerCase().indexOf(val);
-            item.innerHTML = tag.substring(0, idx) + "<strong>" + tag.substring(idx, idx + val.length) + "</strong>" + tag.substring(idx + val.length);
-            
+            item.className = 'autocomplete-item';
+            item.innerText = `#${tag}`;
             item.addEventListener('click', () => {
-                onAddCallback(tag);
+                chipsArray.push(tag);
+                renderChipsFn();
+                if (onAddCallback) onAddCallback();
                 input.value = '';
                 list.classList.add('d-none');
             });
@@ -57,7 +57,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 
     input.addEventListener('keydown', (e) => {
-        const items = list.querySelectorAll('.autocomplete-suggestion-item');
+        const items = list.querySelectorAll('.autocomplete-item');
         if (e.key === 'ArrowDown') {
             currentFocus++;
             addActive(items);
@@ -69,29 +69,15 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
             if (currentFocus > -1 && items[currentFocus]) {
                 items[currentFocus].click();
             } else {
-                const val = input.value.replace(/,/g, '').trim();
+                const val = input.value.trim().replace(/,/g, '');
                 if (val && !chipsArray.includes(val)) {
-                    onAddCallback(val);
+                    chipsArray.push(val);
+                    renderChipsFn();
+                    if (onAddCallback) onAddCallback();
                     input.value = '';
                     list.classList.add('d-none');
                 }
             }
-        } else if (e.key === 'Backspace' && input.value === '') {
-            if (chipsArray.length > 0) {
-                chipsArray.pop();
-                renderChipsFn();
-            }
-        }
-    });
-
-    input.addEventListener('keyup', (e) => {
-        if (e.key === ',' || e.code === 'Comma') {
-            const val = input.value.replace(/,/g, '').trim();
-            if (val && !chipsArray.includes(val)) {
-                onAddCallback(val);
-            }
-            input.value = '';
-            list.classList.add('d-none');
         }
     });
 
@@ -114,98 +100,63 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. VİDEO KARTLARINI EKRENA ÇİZME FONKSİYONU
-export function renderVideoCards(videos, config) {
-    const { 
-        currentLang, 
-        currentView, 
-        translations, 
-        favs, 
-        toggleFavorite, 
-        openTagsEditModal, 
-        startVideoEditFlow, 
-        deleteVideoFlow, 
-        openVideoModal 
-    } = config;
-
-    const videoGrid = document.getElementById('video-grid');
-    const lang = translations[currentLang];
+// 3. 🎥 VİDEO KARTLARINI EKRANA BASAN SÜPER FONKSİYON (GÜNCELLENDİ!)
+export function renderVideoCards(videoGrid, videos, toggleFavorite, openTagsEditModal, startVideoEditFlow, deleteVideoFlow, openVideoModal, currentLang, translations) {
+    if (!videoGrid) return;
     videoGrid.innerHTML = '';
+    const lang = translations[currentLang];
 
     if (videos.length === 0) {
-        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
-        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
+        videoGrid.innerHTML = `<div class="no-results">${lang.noVideosFound || 'Video bulunamadı.'}</div>`;
         return;
     }
 
+    const favorites = JSON.parse(localStorage.getItem('tango_favorites') || '[]');
+
     videos.forEach(video => {
+        const isFav = favorites.includes(video.id);
+        
+        // 🌟 KRİTİK GÜNCELLEME: Kapı görevlisini esnettik! 
+        // Artık link Drive, YouTube veya Shorts içeriyorsa modal tetikleyicisi (data-drive) aktif olacak.
+        const hasDrive = video.drive_url && (
+            video.drive_url.includes('drive.google.com') || 
+            video.drive_url.includes('youtube.com') || 
+            video.drive_url.includes('youtu.be')
+        );
+
         const card = document.createElement('div');
-        card.className = 'video-card';
+        card.className = 'video-card-glass';
         
-        let roleDisplay = video.role_type || 'Both';
-        let roleBadgeClass = '';
-        if (roleDisplay === 'Leader') {
-            roleDisplay = currentLang === 'tr' ? 'Lider' : 'Leader';
-            roleBadgeClass = 'badge-leader';
-        } else if (roleDisplay === 'Follower') {
-            roleDisplay = currentLang === 'tr' ? 'Takipçi' : 'Follower';
-            roleBadgeClass = 'badge-follower';
-        } else {
-            roleDisplay = currentLang === 'tr' ? 'İkisi de' : 'Both';
-            roleBadgeClass = 'badge-both';
-        }
-
-        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
-        const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
-        
-        const partnerDisplay = video.partner_name 
-            ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
-            : '';
-        
-        let tagsHtml = '';
-        if (video.tags && video.tags.trim() !== '') {
-            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-            tagsArray.forEach(tag => {
-                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
-            });
-            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
-        } else {
-            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
-        }
-        
-        const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
-        const coverImg = video.cover_url || defaultCover;
-        const isFav = favs.includes(video.id);
-
-        const hasDrive = video.is_downloaded && video.drive_url;
-        const actionClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
-        const actionLinkClickAttr = hasDrive ? `data-drive="${video.drive_url}" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+        const coverImg = video.cover_url || 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&q=80';
 
         card.innerHTML = `
-            <div class="video-cover-link">
-                <div class="video-cover-container" style="background-image: url('${coverImg}');">
-                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
-                    <a ${actionClickAttr}>
-                        <div class="play-overlay">
-                            <span class="play-icon">▶</span>
-                        </div>
-                    </a>
+            <div class="card-image-wrapper">
+                <img src="${coverImg}" class="card-preview-img" alt="Tango">
+                <button class="fav-star-btn ${isFav ? 'is-fav' : ''}" title="${lang.btnFav || 'Favori'}">
+                    ${isFav ? '★' : '☆'}
+                </button>
+                <div class="card-duration">
+                    ${video.duration ? video.duration : '00:00'}
                 </div>
             </div>
-            <div class="card-info-content">
-                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
-                ${partnerDisplay}
+            <div class="card-body-content">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px;">
+                    <h4 class="card-title-text">${video.title || lang.untitledVideo}</h4>
+                </div>
+                <p class="card-instructor-text">
+                    👤 ${video.instructors && video.instructors.name ? video.instructors.name : (video.instructor_name || lang.unknownInstructor)}
+                </p>
                 
-                <div class="card-badges">
-                    <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
-                    <span class="badge ${storageClass}">${storageText}</span>
+                <div class="card-tags-row">
+                    <span class="inline-edit-tags-btn" title="${lang.btnEditTags || 'Etiketleri Düzenle'}">✏️</span>
+                    <div class="card-tags-inline-list">
+                        ${video.tags ? video.tags.split(',').map(t => `<span class="card-tag-pill">#${t.trim()}</span>`).join('') : `<span class="card-no-tags">${lang.noTags || 'Etiket yok'}</span>`}
+                    </div>
                 </div>
 
-                <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
-
-                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
-                    <a ${actionLinkClickAttr}>
-                        ${hasDrive ? (currentLang === 'tr' ? '🎬 Kütüphanede İzle →' : '🎬 Watch in Library →') : lang.watch}
+                <div class="card-footer-actions">
+                    <a href="${video.drive_url || '#'}" target="_blank" class="card-btn-primary" ${hasDrive ? 'data-drive' : ''}>
+                        ${hasDrive ? (currentLang === 'tr' ? 'İzle →' : lang.watch) : lang.watch}
                     </a>
                     
                     <div style="display:flex; gap:8px;">
@@ -236,6 +187,7 @@ export function renderVideoCards(videos, config) {
             deleteVideoFlow(video.id);
         });
 
+        // 🌟 Eğer genişletilmiş kuralımıza uyuyorsa, tıklama olayını yakalayıp modal penceremizi açıyoruz
         if (hasDrive) {
             const triggers = card.querySelectorAll('[data-drive]');
             triggers.forEach(el => {
