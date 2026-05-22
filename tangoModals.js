@@ -6,11 +6,11 @@ import { renderChips } from './uiRenderer.js';
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
 
-// 🔄 Gelen linki televizyonumuzun (iframe) anlayacağı gömülü (embed) formata dönüştüren akıllı robotumuz
-export function convertUrlToEmbed(url) {
+// Drive linkini embed formata dönüştürür (Artık YouTube linklerini de dönüştürüyor!)
+export function convertDriveUrlToEmbed(url) {
     if (!url) return '';
     
-    // 💾 1. DURUM: Eğer bu bir Google Drive linki ise
+    // 💾 1. Durum: Eğer bu bir Google Drive linki ise
     if (url.includes('drive.google.com')) {
         const regExp = /\/file\/d\/([^/]+)/;
         const matches = url.match(regExp);
@@ -19,41 +19,37 @@ export function convertUrlToEmbed(url) {
         }
     }
     
-    // 📺 2. DURUM: Eğer bu bir YouTube linki ise (Normal, Shorts veya Mobil fark etmez)
+    // 📺 2. Durum: Eğer bu bir YouTube linki ise (Normal, Shorts veya Mobil fark etmez)
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         let videoId = '';
         
         if (url.includes('shorts/')) {
-            // YouTube Shorts (Dikey kısa videolar) için gizli kod parçacığını cımbızla çeker
+            // YouTube Shorts (Dikey kısa videolar) için özel kod parçacığını alır
             videoId = url.split('shorts/')[1]?.split(/[?#]/)[0];
         } else if (url.includes('youtu.be/')) {
-            // Telefondan paylaşılan kısa YouTube linkleri için gizli kodu cımbızla çeker
+            // Telefondan paylaşılan kısa YouTube linkleri için kodu alır
             videoId = url.split('youtu.be/')[1]?.split(/[?#]/)[0];
         } else if (url.includes('v=')) {
-            // Bilgisayardan açılan normal YouTube linkleri için gizli kodu cımbızla çeker
+            // Bilgisayardan açılan normal YouTube linkleri için kodu alır
             videoId = url.split('v=')[1]?.split('&')[0]?.split(/[?#]/)[0];
         } else if (url.includes('embed/')) {
             // Zaten gömülü bir link yapıştırıldıysa kodu doğrudan alır
             videoId = url.split('embed/')[1]?.split(/[?#]/)[0];
         }
         
-        // Eğer gizli kod parçasını başarıyla bulduysak, televizyona uygun hale getirip gönderiyoruz:
+        // Eğer özel kod parçacığını bulabildiysek, televizyona uygun hale getirip gönderiyoruz:
         if (videoId) {
             return `https://www.youtube.com/embed/${videoId}`;
         }
     }
     
-    // 🌐 3. DURUM: Instagram veya Facebook ise hiç dokunmuyoruz (Onlar dışarıda açılacak)
     return url;
 }
 
-// 🎬 Video Önizleme Modalı Fonksiyonları (Televizyonu Açan Düğme)
+// 🎬 Video Önizleme Modalı Fonksiyonları
 export function openVideoModal(url) {
-    // Önce yukarıdaki akıllı robotumuza linki verip dönüştürüyoruz
-    const embedUrl = convertUrlToEmbed(url);
-    // Televizyon ekranımızın (iframe) içine bu yeni adresi koyuyoruz
+    const embedUrl = convertDriveUrlToEmbed(url);
     document.getElementById('modal-iframe').src = embedUrl;
-    // Perdeyi açıp videoyu ekranda gösteriyoruz
     document.getElementById('video-modal').classList.remove('d-none');
 }
 
