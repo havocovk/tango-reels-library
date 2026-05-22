@@ -39,19 +39,36 @@
                     <button id="filter-btn" class="btn-primary">🔍 Filtrele</button>
                 </div>
                 
-                <div style="display: flex; gap: 12px; margin-top: 12px; margin-bottom: 8px;">
-                    <select id="filter-role-select" style="flex: 1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
-                        <option value="all" id="opt-all-roles">Tüm Roller</option>
-                        <option value="Leader" id="opt-leader">Lider</option>
-                        <option value="Follower" id="opt-follower">Takipçi</option>
-                        <option value="Both" id="opt-both">İkisi de</option>
-                    </select>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; margin-bottom: 12px;">
                     
-                    <select id="filter-location-select" style="flex: 1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
-                        <option value="all" id="opt-all-locations">Tüm Ortamlar</option>
-                        <option value="drive" id="opt-drive">💾 Google Drive</option>
-                        <option value="social" id="opt-social">🌐 Sosyal Medya</option>
-                    </select>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <select id="filter-role-select" style="flex: 1; min-width: 120px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                            <option value="all" id="opt-all-roles">Tüm Roller</option>
+                            <option value="Leader" id="opt-leader">Lider</option>
+                            <option value="Follower" id="opt-follower">Takipçi</option>
+                            <option value="Both" id="opt-both">Çift</option> </select>
+
+                        <select id="filter-instructor-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                            <option value="all">Tüm Eğitmenler</option>
+                            </select>
+
+                        <select id="filter-tag-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                            <option value="all">Tüm Etiketler (Teknikler)</option>
+                            </select>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <select id="filter-date-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                            <option value="all">Tüm Tarihler</option>
+                            </select>
+
+                        <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                            <option value="all" id="opt-all-locations">Tüm Ortamlar</option>
+                            <option value="drive" id="opt-drive">💾 Google Drive</option>
+                            <option value="social" id="opt-social">🌐 Sosyal Medya</option>
+                        </select>
+                    </div>
+
                 </div>
 
                 <div id="clear-favorites-container" class="d-none" style="margin: 10px 0;">
@@ -101,8 +118,7 @@
                     <div class="form-group">
                         <label id="lbl-role">Rol Tipi:</label>
                         <select id="form-role-select">
-                            <option value="Both">Leader + Follower (Both)</option>
-                            <option value="Leader">Leader</option>
+                            <option value="Both">Çift (Leader + Follower)</option> <option value="Leader">Leader</option>
                             <option value="Follower">Follower</option>
                         </select>
                     </div>
