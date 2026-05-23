@@ -155,3 +155,56 @@ body {
 .d-none {
     display: none !important;
 }
+
+/* ==========================================================================
+   📱 MOBİL VE TABLET UYUMLULUK AYARLARI (max-width: 768px)
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+    
+    /* PC'de yan yana (row) olan yapıyı alt alta (column) getiriyoruz */
+    .app-container {
+        flex-direction: column;
+        width: 100vw;
+        height: auto;
+        min-height: 100vh;
+        padding: 10px;
+    }
+
+    /* Sol menüyü (Sidebar) mobile göre tam genişlik yapıyoruz */
+    nav.sidebar-glass {
+        width: 100%;
+        height: auto;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 16px;
+    }
+
+    /* Menü butonlarını mobilde yan yana dizerek alandan tasarruf ediyoruz */
+    .menu-items {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    .menu-btn {
+        flex: 1;
+        min-width: 120px; /* Butonların çok küçülmesini engeller */
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        justify-content: center; /* İkon ve yazıyı ortalar */
+    }
+
+    /* Sağ taraftaki ana içerik alanını mobilde tam genişlik yapıyoruz */
+    main.content-area {
+        width: 100%;
+        padding: 5px;
+    }
+
+    /* Arka plandaki parlamaları mobilde biraz küçültüyoruz ki gözü yormasın */
+    .bg-glow {
+        width: 250px;
+        height: 250px;
+        filter: blur(60px);
+    }
+}
