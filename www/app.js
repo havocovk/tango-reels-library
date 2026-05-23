@@ -56,9 +56,7 @@ function callUpdateSmartAssistant() {
 }
 
 function callUpdateInterfaceLanguage() {
-    // Tüm arayüz kelimeleri ve placeholder değişimleri artık tangoUI.js içinde dönecek
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
-    applyFiltersAndSearch();
 }
 
 function callSwitchView(viewName) {
@@ -68,9 +66,7 @@ function callSwitchView(viewName) {
         renderFormChips,
         resetUploadedCoverUrl
     });
-    // Görünüm değiştiğinde tangoUI.js içindeki başlıkları ve form yazılarını güncelliyoruz
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
-    applyFiltersAndSearch();
 }
 
 async function toggleFavorite(videoId) {
@@ -112,7 +108,7 @@ function callGetUniqueTagsPool() {
 
 async function fetchInstructors() {
     try {
-        const instructors = await dbFetchInstructors();
+        const instructors = await dbFetchInstructors() || [];
         const select = document.getElementById('form-instructor-select');
         if (select) {
             select.innerHTML = '';
@@ -131,28 +127,30 @@ async function fetchInstructors() {
 
 async function fetchVideos() {
     try {
-        const instructors = await dbFetchInstructors();
-        const rawVideos = await dbFetchVideos();
+        const instructors = await dbFetchInstructors() || [];
+        const rawVideos = await dbFetchVideos() || [];
         
         try {
             const favRows = await dbFetchFavorites();
-            globalFavorites = favRows.map(f => f.video_id);
+            // Güvenli haritalama kontrolü (Veritabanı boşsa çökmesini engeller)
+            globalFavorites = Array.isArray(favRows) ? favRows.map(f => f.video_id) : [];
         } catch (favErr) {
             console.error("Favoriler çekilemedi:", favErr);
             globalFavorites = [];
         }
         
-        globalVideos = rawVideos.map(video => {
+        // Veritabanından gelen videoların dizi olup olmadığını doğrula
+        globalVideos = Array.isArray(rawVideos) ? rawVideos.map(video => {
             const foundInstructor = instructors.find(ins => ins.id === video.instructor_id);
             return {
                 ...video,
                 instructor_name: foundInstructor ? foundInstructor.name : 'Bilinmeyen Eğitmen'
             };
-        });
+        }) : [];
 
         populateFilterDropdowns(globalVideos);
+        // updateInterfaceLanguage zaten kendi içinde applyFiltersAndSearch çağırıyor, mükemmel senkronizasyon.
         updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
-        applyFiltersAndSearch();
     } catch (err) {
         const grid = document.getElementById('video-grid');
         if (grid) {
@@ -249,7 +247,7 @@ function applyFiltersAndSearch() {
     }
 
     const secilenFiltreler = {
-        aramaMetni: '', 
+        aramaMetni: document.getElementById('search-input')?.value || '', 
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -259,7 +257,6 @@ function applyFiltersAndSearch() {
 
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
 
-    // uiRenderer artık içeride dili tam kontrol edecek güce sahip
     renderVideoCards(filtered, {
         currentLang,
         currentView,
@@ -398,6 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('menu-add-video')?.addEventListener('click', () => callSwitchView('add'));
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
 
+    // 🔍 Arama çubuğu anlık dinleyicisi eklendi
+    document.getElementById('search-input')?.addEventListener('input', applyFiltersAndSearch);
+
     document.getElementById('form-is-downloaded')?.addEventListener('change', (e) => {
         const driveUrlContainer = document.getElementById('drive-url-container');
         if (driveUrlContainer) {
@@ -456,5 +456,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tags-modal-close-btn')?.addEventListener('click', closeTagsEditModal);
     document.getElementById('tags-edit-modal')?.addEventListener('click', (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); });
 
-    document.getElementById('drop-area')?.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
+    const dropArea = document.getElementById('drop-area');
+    if (dropArea) {
+        dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
+    }
 });
