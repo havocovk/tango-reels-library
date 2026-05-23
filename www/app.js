@@ -42,6 +42,7 @@ let globalFavorites = []; // Buluttan anlık beslenecek ortak havuzumuz
 let editInstructorId = null;
 let editingVideoId = null; 
 let currentView = 'library'; 
+let visibleCount = 20; // 🔢 Sayfalama için görünür video limiti
 
 let formTagsArray = [];
 
@@ -64,6 +65,7 @@ function callUpdateInterfaceLanguage() {
 
 function callSwitchView(viewName) {
     currentView = viewName; 
+    visibleCount = 20; // 🔄 Sekme değiştirildiğinde video sayacını 20'ye sıfırla
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch,
         renderFormChips,
@@ -274,7 +276,20 @@ function applyFiltersAndSearch() {
 
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
 
-    renderVideoCards(filtered, {
+    // 🔘 "Daha Fazla Video Yükle" Butonunun Görünürlük Yönetimi
+    const loadMoreContainer = document.getElementById('load-more-container');
+    if (loadMoreContainer) {
+        if (filtered.length > visibleCount) {
+            loadMoreContainer.classList.remove('d-none');
+        } else {
+            loadMoreContainer.classList.add('d-none');
+        }
+    }
+
+    // ✂️ Filtrelenmiş listeden sadece limitimiz kadarını kesip arayüze gönderiyoruz
+    const videosToRender = filtered.slice(0, visibleCount);
+
+    renderVideoCards(videosToRender, {
         currentLang,
         currentView,
         translations,
@@ -487,13 +502,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form')?.addEventListener('submit', handleFormSubmit);
     
-    document.getElementById('filter-role-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-instructor-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-tag-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-date-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-location-select')?.addEventListener('change', applyFiltersAndSearch);
+    // 🔍 Filtre kutularından biri değiştiğinde limiti 20'ye sıfırlayıp öyle listeliyoruz
+    const handleFilterChange = () => {
+        visibleCount = 20;
+        applyFiltersAndSearch();
+    };
+
+    document.getElementById('filter-role-select')?.addEventListener('change', handleFilterChange);
+    document.getElementById('filter-instructor-select')?.addEventListener('change', handleFilterChange);
+    document.getElementById('filter-tag-select')?.addEventListener('change', handleFilterChange);
+    document.getElementById('filter-date-select')?.addEventListener('change', handleFilterChange);
+    document.getElementById('filter-location-select')?.addEventListener('change', handleFilterChange);
     
-    document.getElementById('filter-btn')?.addEventListener('click', fetchVideos);
+    document.getElementById('filter-btn')?.addEventListener('click', () => {
+        visibleCount = 20; // Listeyi manuel yenilerken de limiti sıfırla
+        fetchVideos();
+    });
+
+    // ➕ "Daha Fazla Video Yükle" butonuna basıldığında limiti 20 artırıp listeyi tazele
+    document.getElementById('btn-load-more')?.addEventListener('click', () => {
+        visibleCount += 20;
+        applyFiltersAndSearch();
+    });
 
     document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
     document.getElementById('video-modal')?.addEventListener('click', (e) => {
