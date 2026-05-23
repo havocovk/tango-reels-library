@@ -114,7 +114,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (ORİJİNAL CSS VE TASARIM KORUNDU)
 export function renderVideoCards(videos, config) {
     const { 
         currentLang, 
@@ -134,35 +134,11 @@ export function renderVideoCards(videos, config) {
 
     if (videos.length === 0) {
         const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
-        videoGridGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
+        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
         return;
     }
 
     videos.forEach(video => {
-        // 🔍 Hata Analizi İçin Konsol Logu (İş bitince silebilirsin)
-        console.log("ATKK Gelen Video Detayı:", video);
-
-        // 🔥 KÖKTEN ÇÖZÜM: Eğitmen Adı Çıkarma Algoritması
-        let instructorName = 'Bilinmeyen Eğitmen';
-
-        if (video.instructor_name) {
-            instructorName = video.instructor_name;
-        } else if (video.instructors) {
-            if (Array.isArray(video.instructors)) {
-                instructorName = video.instructors[0]?.name || 'Bilinmeyen Eğitmen';
-            } else if (typeof video.instructors === 'object') {
-                instructorName = video.instructors.name || 'Bilinmeyen Eğitmen';
-            } else if (typeof video.instructors === 'string') {
-                instructorName = video.instructors;
-            }
-        } else if (video.instructor) {
-            if (Array.isArray(video.instructor)) {
-                instructorName = video.instructor[0]?.name || 'Bilinmeyen Eğitmen';
-            } else if (typeof video.instructor === 'object') {
-                instructorName = video.instructor.name || 'Bilinmeyen Eğitmen';
-            }
-        }
-
         const card = document.createElement('div');
         card.className = 'video-card';
         
@@ -201,12 +177,17 @@ export function renderVideoCards(videos, config) {
         const coverImg = video.cover_url || defaultCover;
         const isFav = favs.includes(video.id);
 
+        // Hem yedeklenmiş Drive videolarını hem de YouTube (Shorts/Normal) linklerini yakalıyoruz
         const hasDrive = video.is_downloaded && video.drive_url;
         const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
         const shouldOpenInModal = hasDrive || isYouTube;
 
+        // Modal tetikleyiciler için dinamik nitelik ayarları
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+
+        // Eğitmen adının app.js üzerindeki map ile veya doğrudan ilişkisel nesneyle doğru beslenmesi sağlandı
+        const displayInstructorName = video.instructor_name || (video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen');
 
         card.innerHTML = `
             <div class="video-cover-link">
@@ -220,7 +201,7 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>
             <div class="card-info-content">
-                <strong class="card-instructor">👤 ${instructorName}</strong>
+                <strong class="card-instructor">👤 ${displayInstructorName}</strong>
                 ${partnerDisplay}
                 
                 <div class="card-badges">
@@ -243,6 +224,7 @@ export function renderVideoCards(videos, config) {
             </div>
         `;
 
+        // Orijinal buton olay dinleyicileri
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
@@ -263,6 +245,7 @@ export function renderVideoCards(videos, config) {
             deleteVideoFlow(video.id);
         });
 
+        // Tıklama durumunda modalı güvenli link formatıyla tetikler
         if (shouldOpenInModal) {
             const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
@@ -282,8 +265,10 @@ export function renderVideoCards(videos, config) {
     });
 }
 
+// YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
+    // YouTube Shorts kontrolü
     if (url.includes('/shorts/')) {
         const parts = url.split('/shorts/');
         if (parts[1]) {
@@ -291,6 +276,7 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${id}`;
         }
     }
+    // Standart YouTube videoları (?v=...)
     if (url.includes('v=')) {
         const regExp = /[?&]v=([^&#]+)/;
         const matches = url.match(regExp);
@@ -298,6 +284,7 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${matches[1]}`;
         }
     }
+    // Kısaltılmış linkler (youtu.be/...)
     if (url.includes('youtu.be/')) {
         const parts = url.split('youtu.be/');
         if (parts[1]) {
