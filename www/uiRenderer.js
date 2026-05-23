@@ -155,7 +155,10 @@ export function renderVideoCards(videos, config) {
             roleBadgeClass = 'badge-both';
         }
 
-        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
+        // Sosyal Medya yazısı dile göre dinamik hale getirildi:
+        const storageText = video.is_downloaded 
+            ? '💾 Drive' 
+            : (currentLang === 'tr' ? '🌐 Sosyal Medya' : '🌐 Social Media');
         const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
         
         const partnerDisplay = video.partner_name 
@@ -177,12 +180,10 @@ export function renderVideoCards(videos, config) {
         const coverImg = video.cover_url || defaultCover;
         const isFav = favs.includes(video.id);
 
-        // Hem yedeklenmiş Drive videolarını hem de YouTube (Shorts/Normal) linklerini yakalıyoruz
         const hasDrive = video.is_downloaded && video.drive_url;
         const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
         const shouldOpenInModal = hasDrive || isYouTube;
 
-        // Modal tetikleyiciler için dinamik nitelik ayarları
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
@@ -221,7 +222,6 @@ export function renderVideoCards(videos, config) {
             </div>
         `;
 
-        // Orijinal buton olay dinleyicileri
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
@@ -242,7 +242,6 @@ export function renderVideoCards(videos, config) {
             deleteVideoFlow(video.id);
         });
 
-        // Tıklama durumunda modalı güvenli link formatıyla tetikler
         if (shouldOpenInModal) {
             const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
@@ -265,7 +264,6 @@ export function renderVideoCards(videos, config) {
 // YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
-    // YouTube Shorts kontrolü
     if (url.includes('/shorts/')) {
         const parts = url.split('/shorts/');
         if (parts[1]) {
@@ -273,7 +271,6 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${id}`;
         }
     }
-    // Standart YouTube videoları (?v=...)
     if (url.includes('v=')) {
         const regExp = /[?&]v=([^&#]+)/;
         const matches = url.match(regExp);
@@ -281,7 +278,6 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${matches[1]}`;
         }
     }
-    // Kısaltılmış linkler (youtu.be/...)
     if (url.includes('youtu.be/')) {
         const parts = url.split('youtu.be/');
         if (parts[1]) {
