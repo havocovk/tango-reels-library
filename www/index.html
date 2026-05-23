@@ -21,6 +21,49 @@
         });
       }
     </script>
+
+    <style>
+        @media (min-width: 992px) {
+            .form-grid-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+            .form-column {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .form-row-parallel {
+                display: flex;
+                gap: 12px;
+            }
+            .glass-form .form-group {
+                margin-bottom: 0px !important; /* Grid boşlukları yönettiği için eski alt boşlukları sıfırlıyoruz */
+            }
+            .drop-area-group {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
+            #drop-area {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                min-height: 110px;
+            }
+            #image-preview {
+                max-height: 100px;
+                object-fit: contain;
+            }
+            .assistant-box {
+                margin-top: auto; /* Sağ sütunun en altına sabitler */
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -96,82 +139,93 @@
 
             <div id="view-add-container" class="view-panel d-none">
                 <form id="add-video-form" class="glass-form">
-                    <h2 id="form-title" style="color: #fff; margin-bottom: 10px;">➕ Yeni Video Kaydet</h2>
+                    <h2 id="form-title" style="color: #fff; margin-bottom: 15px;">➕ Yeni Video Kaydet</h2>
                     
-                    <div class="form-group">
-                        <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
-                        <div style="display: flex; gap: 10px;">
-                            <select id="form-instructor-select" style="flex: 1;"></select>
-                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn">➕</button>
-                            <button type="button" id="btn-edit-instructor" class="lang-btn">✏️</button>
-                            <button type="button" id="btn-delete-instructor" class="lang-btn" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);">🗑️</button>
-                        </div>
-                    </div>
+                    <div class="form-grid-container">
+                        
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <select id="form-instructor-select" style="flex: 1;"></select>
+                                    <button type="button" id="btn-toggle-new-instructor" class="lang-btn">➕</button>
+                                    <button type="button" id="btn-edit-instructor" class="lang-btn">✏️</button>
+                                    <button type="button" id="btn-delete-instructor" class="lang-btn" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);">🗑️</button>
+                                </div>
+                            </div>
 
-                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
-                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
-                        </div>
-                    </div>
+                            <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                                <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
+                                    <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
+                                </div>
+                            </div>
 
-                    <div class="form-group">
-                        <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
-                        <input type="url" id="form-video-url" required placeholder="https://www.instagram.com/reels/...">
-                    </div>
+                            <div class="form-group">
+                                <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
+                                <input type="url" id="form-video-url" required placeholder="https://www.instagram.com/reels/...">
+                            </div>
 
-                    <div class="form-group">
-                        <label id="lbl-cover-upload">Kapak Resmi:</label>
-                        <div id="drop-area" tabindex="0">
-                            <span id="drop-area-text">📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın</span>
-                            <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
-                        </div>
-                    </div>
+                            <div class="form-row-parallel">
+                                <div class="form-group" style="flex: 1;">
+                                    <label id="lbl-role">Rol Tipi:</label>
+                                    <select id="form-role-select">
+                                        <option value="Both">Çift (Leader + Follower)</option> 
+                                        <option value="Leader">Leader</option>
+                                        <option value="Follower">Follower</option>
+                                    </select>
+                                </div>
 
-                    <div class="form-group">
-                        <label id="lbl-role">Rol Tipi:</label>
-                        <select id="form-role-select">
-                            <option value="Both">Çift (Leader + Follower)</option> <option value="Leader">Leader</option>
-                            <option value="Follower">Follower</option>
-                        </select>
-                    </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
+                                    <input type="text" id="form-partner-name" placeholder="Örn: Maria">
+                                </div>
+                            </div>
 
-                    <div class="form-group">
-                        <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
-                        <input type="text" id="form-partner-name" placeholder="Örn: Maria">
-                    </div>
-
-                    <div class="form-group">
-                        <label id="lbl-tags">Teknik Etiketleri (Virgül koyun veya öneriden seçip Enter'a basın):</label>
-                        <div class="tags-input-container" id="form-tags-wrapper">
-                            <div id="chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
-                            <div class="autocomplete-wrapper" style="flex: 1; min-width: 150px; position: relative;">
-                                <input type="text" id="form-tags-input" placeholder="Yazın ve virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
-                                <div id="autocomplete-list" class="autocomplete-suggestions d-none"></div>
+                            <div class="form-group">
+                                <label id="lbl-tags">Teknik Etiketleri (Virgül koyun veya öneriden seçip Enter'a basın):</label>
+                                <div class="tags-input-container" id="form-tags-wrapper">
+                                    <div id="chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
+                                    <div class="autocomplete-wrapper" style="flex: 1; min-width: 150px; position: relative;">
+                                        <input type="text" id="form-tags-input" placeholder="Yazın ve virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
+                                        <div id="autocomplete-list" class="autocomplete-suggestions d-none"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <div class="form-column">
+                            <div class="form-group drop-area-group">
+                                <label id="lbl-cover-upload">Kapak Resmi:</label>
+                                <div id="drop-area" tabindex="0">
+                                    <span id="drop-area-text">📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın</span>
+                                    <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="checkbox-group">
+                                    <input type="checkbox" id="form-is-downloaded">
+                                    <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
+                                </label>
+                            </div>
+
+                            <div id="drive-url-container" class="form-group d-none" style="animation: fadeIn 0.3s ease;">
+                                <label id="lbl-drive-url">Google Drive Video Paylaşım Linki:</label>
+                                <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
+                            </div>
+
+                            <div id="assistant-panel" class="assistant-box">
+                                <h4 id="assistant-title">💡 Akıllı Dosya İsmi Asistanı</h4>
+                                <p id="assistant-text" style="font-size: 0.8rem; margin: 4px 0; color: #94a3b8;">İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:</p>
+                                <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="form-group">
-                        <label class="checkbox-group">
-                            <input type="checkbox" id="form-is-downloaded">
-                            <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
-                        </label>
-                    </div>
-
-                    <div id="drive-url-container" class="form-group d-none" style="animation: fadeIn 0.3s ease;">
-                        <label id="lbl-drive-url">Google Drive Video Paylaşım Linki:</label>
-                        <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
-                    </div>
-
-                    <div id="assistant-panel" class="assistant-box">
-                        <h4 id="assistant-title">💡 Akıllı Dosya İsmi Asistanı</h4>
-                        <p id="assistant-text" style="font-size: 0.8rem; margin: 4px 0; color: #94a3b8;">İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:</p>
-                        <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
-                    </div>
-
-                    <button type="submit" id="btn-submit-video" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
+                    <button type="submit" id="btn-submit-video" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 15px;">
                         💾 Veritabanına Kaydet
                     </button>
                 </form>
