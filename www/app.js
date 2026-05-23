@@ -6,9 +6,12 @@ import {
     dbFetchInstructors, 
     dbFetchVideos, 
     dbSaveInstructor, 
-    dbDeleteInstructor 
+    dbDeleteInstructor,
+    dbFetchFavorites,
+    dbAddFavorite,
+    dbRemoveFavorite,
+    dbClearAllFavorites
 } from './tangoVeritabani.js';
-import { getFavorites, addOrRemoveFavorite, removeFavoriteDirectly, clearAllFavoritesData } from './favoritesManager.js';
 import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
 import { 
     openVideoModal, 
@@ -35,15 +38,12 @@ import {
 
 let currentLang = 'tr';
 let globalVideos = [];
+let globalFavorites = [];
 let editInstructorId = null;
 let editingVideoId = null; 
 let currentView = 'library'; 
 
 let formTagsArray = [];
-
-// 🔄 HİBRİT SAYFALAMA DURUM DEĞİŞKENLERİ
-let visibleVideosCount = 20;
-let filteredVideosGlobal = [];
 
 const getUIState = () => ({
     currentLang,
@@ -59,22 +59,32 @@ function callUpdateSmartAssistant() {
 }
 
 function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, () => applyFiltersAndSearch(false));
+    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
 }
 
 function callSwitchView(viewName) {
     currentView = viewName; 
     switchView(viewName, getUIState(), {
-        applyFiltersAndSearch: () => applyFiltersAndSearch(true), // Görünüm değiştiğinde ilk 20 karta sıfırla
+        applyFiltersAndSearch,
         renderFormChips,
         resetUploadedCoverUrl
-    });
-    applyFiltersAndSearch(true);
+            });
+    applyFiltersAndSearch();
 }
 
-function toggleFavorite(videoId) {
-    addOrRemoveFavorite(videoId);
-    applyFiltersAndSearch(false); // Favori listesine eklerken kullanıcının miktarını sıfırlama (sayfa kaymasın)
+async function toggleFavorite(videoId) {
+    try {
+        if (globalFavorites.includes(videoId)) {
+            await dbRemoveFavorite(videoId);
+            globalFavorites = globalFavorites.filter(id => id !== videoId);
+        } else {
+            await dbAddFavorite(videoId);
+            globalFavorites.push(videoId);
+        }
+        applyFiltersAndSearch(); 
+    } catch (err) {
+        console.error("Favori güncellenirken hata oluştu:", err);
+    }
 }
 
 function clearAllFavorites() {
@@ -82,10 +92,15 @@ function clearAllFavorites() {
     const okTxt = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelTxt = currentLang === 'tr' ? 'İptal' : 'Cancel';
     
-    showCustomConfirm(lang.confirmClearFavs, okTxt, cancelTxt).then(confirmed => {
+    showCustomConfirm(lang.confirmClearFavs, okTxt, cancelTxt).then(async (confirmed) => {
         if (confirmed) {
-            clearAllFavoritesData();
-            applyFiltersAndSearch(true);
+            try {
+                await dbClearAllFavorites();
+                globalFavorites = [];
+                applyFiltersAndSearch();
+            } catch (err) {
+                console.error("Favoriler temizlenirken hata oluştu:", err);
+            }
         }
     });
 }
@@ -121,6 +136,14 @@ async function fetchVideos() {
         const instructors = await dbFetchInstructors();
         const rawVideos = await dbFetchVideos();
         
+        try {
+            const favRows = await dbFetchFavorites();
+            globalFavorites = favRows.map(f => f.video_id);
+        } catch (favErr) {
+            console.error("Favoriler çekilemedi, yerel liste sıfırlanıyor:", favErr);
+            globalFavorites = [];
+        }
+        
         globalVideos = rawVideos.map(video => {
             const foundInstructor = instructors.find(ins => ins.id === video.instructor_id);
             return {
@@ -130,7 +153,7 @@ async function fetchVideos() {
         });
 
         populateFilterDropdowns(globalVideos);
-        applyFiltersAndSearch(true); // İlk veri yüklemesinde listeyi sıfırla
+        applyFiltersAndSearch();
     } catch (err) {
         const grid = document.getElementById('video-grid');
         if (grid) {
@@ -216,7 +239,7 @@ async function deleteVideoFlow(videoId) {
     try {
         await dbDeleteVideo(videoId);
         await showCustomAlert(lang.successDeleteVideo, okTxt);
-        removeFavoriteDirectly(videoId);
+        globalFavorites = globalFavorites.filter(id => id !== videoId);
         await fetchVideos();
     } catch (err) {
         console.error(err);
@@ -232,13 +255,8 @@ function renderFormChips() {
     });
 }
 
-// 🔄 HİBRİT FILTRELEME VE SAYFALAMA MOTORU
-function applyFiltersAndSearch(resetPagination = false) {
-    if (resetPagination) {
-        visibleVideosCount = 20; // Filtre değişince en başa sar
-    }
-
-    const favs = getFavorites();
+function applyFiltersAndSearch() {
+    const favs = globalFavorites;
     
     let kaynakVideolar = globalVideos;
     if (currentView === 'favorites') {
@@ -246,7 +264,7 @@ function applyFiltersAndSearch(resetPagination = false) {
     }
 
     const secilenFiltreler = {
-        aramaMetni: '', 
+        aramaMetni: '', // Üst arama çubuğu kaldırıldığı için boş geçiliyor
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -255,32 +273,18 @@ function applyFiltersAndSearch(resetPagination = false) {
     };
 
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
-    filteredVideosGlobal = filtered; // İleride basılmak üzere global hafızaya al
 
-    // Hafifletilmiş dilim: Sadece izin verilen miktar kadarını render et
-    const chunkToShow = filteredVideosGlobal.slice(0, visibleVideosCount);
-
-    renderVideoCards(chunkToShow, {
+    renderVideoCards(filtered, {
         currentLang,
         currentView,
         translations,
         favs,
         toggleFavorite,
-        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, () => applyFiltersAndSearch(false)),
+        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
         startVideoEditFlow,
         deleteVideoFlow,
         openVideoModal
     });
-
-    // Butonun görünürlük kontrolü
-    const loadMoreContainer = document.getElementById('load-more-container');
-    if (loadMoreContainer) {
-        if (filteredVideosGlobal.length > visibleVideosCount) {
-            loadMoreContainer.classList.remove('d-none');
-        } else {
-            loadMoreContainer.classList.add('d-none');
-        }
-    }
 }
 
 async function handleInstructorSubmit() {
@@ -455,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ⚡ DÜZELTME ALANI: Modal içinde yeni etiket eklendiğinde doğrudan Supabase'e kaydeden ve arayüzü çizen fonksiyon bağlandı
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        saveTagsToSupabaseDirectly(globalVideos, () => applyFiltersAndSearch(false));
+        saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
     }, callGetUniqueTagsPool);
 
     document.getElementById('form-instructor-select')?.addEventListener('change', callUpdateSmartAssistant);
@@ -484,43 +488,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form')?.addEventListener('submit', handleFormSubmit);
     
-    // Filtre kutuları değiştiğinde sayfalamayı en başa sıfırla
-    document.getElementById('filter-role-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
-    document.getElementById('filter-instructor-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
-    document.getElementById('filter-tag-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
-    document.getElementById('filter-date-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
-    document.getElementById('filter-location-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
+    document.getElementById('filter-role-select')?.addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-instructor-select')?.addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-tag-select')?.addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-date-select')?.addEventListener('change', applyFiltersAndSearch);
+    document.getElementById('filter-location-select')?.addEventListener('change', applyFiltersAndSearch);
     
     document.getElementById('filter-btn')?.addEventListener('click', fetchVideos);
-
-    // ➕ DAHA FAZLA VİDEO YÜKLE BUTONU TETİKLEYİCİSİ
-    document.getElementById('btn-load-more')?.addEventListener('click', () => {
-        visibleVideosCount += 20; // 20 video daha aç
-        
-        const favs = getFavorites();
-        const chunkToShow = filteredVideosGlobal.slice(0, visibleVideosCount);
-        
-        renderVideoCards(chunkToShow, {
-            currentLang,
-            currentView,
-            translations,
-            favs,
-            toggleFavorite,
-            openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, () => applyFiltersAndSearch(false)),
-            startVideoEditFlow,
-            deleteVideoFlow,
-            openVideoModal
-        });
-
-        const loadMoreContainer = document.getElementById('load-more-container');
-        if (loadMoreContainer) {
-            if (filteredVideosGlobal.length > visibleVideosCount) {
-                loadMoreContainer.classList.remove('d-none');
-            } else {
-                loadMoreContainer.classList.add('d-none');
-            }
-        }
-    });
 
     document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
     document.getElementById('video-modal')?.addEventListener('click', (e) => {
@@ -537,3 +511,4 @@ document.addEventListener('DOMContentLoaded', () => {
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
 });
+}

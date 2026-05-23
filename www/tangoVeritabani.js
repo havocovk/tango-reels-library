@@ -68,7 +68,7 @@ export async function dbDeleteInstructor(id) {
     return response;
 }
 
-// 7. Postacı: Yeni video kaydeder (POST) or var olan videoyu günceller (PATCH)
+// 7. Postacı: Yeni video kaydeder (POST) Pension var olan videoyu günceller (PATCH)
 export async function dbSaveVideo(id, payload) {
     const method = id ? 'PATCH' : 'POST';
     const url = id ? `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/videos`;
@@ -95,5 +95,48 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags) {
         body: JSON.stringify({ tags: cleanTags || null })
     });
     if (!response.ok) throw new Error("Etiket güncellenemedi");
+    return response;
+}
+
+// 9. Postacı: Tüm favori video ID'lerini buluttan getirir
+export async function dbFetchFavorites() {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites?select=video_id`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!response.ok) throw new Error("Favoriler veritabanından çekilemedi");
+    return await response.json();
+}
+
+// 10. Postacı: Bir videoyu bulutta favorilere ekler
+export async function dbAddFavorite(videoId) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites`, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ video_id: videoId })
+    });
+    if (!response.ok) throw new Error("Favori veritabanına eklenemedi");
+    return response;
+}
+
+// 11. Postacı: Bir videoyu buluttaki favorilerden siler
+export async function dbRemoveFavorite(videoId) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites?video_id=eq.${videoId}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!response.ok) throw new Error("Favori veritabanından silinemedi");
+    return response;
+}
+
+// 12. Postacı: Tüm favori listesini tek hamlede temizler
+export async function dbClearAllFavorites() {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites?video_id=gt.0`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!response.ok) throw new Error("Favori listesi temizlenemedi");
     return response;
 }
