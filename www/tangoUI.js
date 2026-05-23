@@ -1,3 +1,4 @@
+// tangoUI.js
 import { translations } from './config.js';
 
 // Akıllı Dosya Adı Asistanını Günceller
@@ -28,46 +29,64 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
-// Tüm Arayüzün Dil Metinlerini Günceller
+// Tüm Arayüzün Dil Metinlerini Günceller (Çökme Korumalı Sürüm)
 export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch) {
     const lang = translations[currentLang];
     
     document.title = lang.title;
-    document.getElementById('sidebar-title').innerText = lang.brandTitle;
-    document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
-    document.getElementById('menu-library').innerText = lang.menuLibrary;
-    document.getElementById('menu-favorites').innerText = lang.menuFavorites;
-    document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
-    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
-    document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    document.getElementById('opt-all-roles').innerText = lang.allRoles;
-    document.getElementById('opt-leader').innerText = lang.leader;
-    document.getElementById('opt-follower').innerText = lang.follower;
-    document.getElementById('opt-both').innerText = lang.both;
-    document.getElementById('opt-all-locations').innerText = lang.allLocations;
-    document.getElementById('opt-drive').innerText = lang.drive;
-    document.getElementById('opt-social').innerText = lang.social;
+    // 1. innerText Güncellenecek Elemanlar Havuzu
+    const textUpdates = {
+        'sidebar-title': lang.brandTitle,
+        'lang-toggle-btn': lang.langBtn,
+        'menu-library': lang.menuLibrary,
+        'menu-favorites': lang.menuFavorites,
+        'menu-add-video': lang.menuAddVideo,
+        'filter-btn': lang.filterBtn,
+        'opt-all-roles': lang.allRoles,
+        'opt-leader': lang.leader,
+        'opt-follower': lang.follower,
+        'opt-both': lang.both,
+        'opt-all-locations': lang.allLocations,
+        'opt-drive': lang.drive,
+        'opt-social': lang.social,
+        'form-title': editingVideoId ? lang.formTitleEdit : lang.formTitle,
+        'lbl-instructor': lang.lblInstructor,
+        'lbl-video-url': lang.lblVideoUrl,
+        'lbl-role': lang.lblRole,
+        'lbl-partner': lang.lblPartner,
+        'lbl-tags': lang.lblTags,
+        'lbl-downloaded': lang.lblDownloaded,
+        'lbl-drive-url': lang.lblDriveUrl,
+        'btn-submit-video': editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo,
+        'lbl-new-instructor-name': lang.lblNewInstructorName,
+        'lbl-cover-upload': lang.lblCoverUpload,
+        'btn-clear-favorites': lang.btnClearFavorites,
+        'edit-tags-title': lang.editTagsTitle,
+        'assistant-title': lang.assistantTitle,
+        'assistant-text': lang.assistantText
+    };
 
-    document.getElementById('form-title').innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
-    document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
-    document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-role').innerText = lang.lblRole;
-    document.getElementById('lbl-partner').innerText = lang.lblPartner;
-    document.getElementById('lbl-tags').innerText = lang.lblTags;
-    document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
-    document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
-    document.getElementById('lbl-drive-url').innerText = lang.lblDriveUrl;
-    document.getElementById('btn-submit-video').innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
-    document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
-    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
-    document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
-    document.getElementById('edit-tags-title').innerText = lang.editTagsTitle;
-    document.getElementById('modal-tags-input').placeholder = lang.addTagPlaceholder;
-    
-    document.getElementById('assistant-title').innerText = lang.assistantTitle;
-    document.getElementById('assistant-text').innerText = lang.assistantText;
+    // Güvenli Text Ataması (Eleman yoksa pas geçer, asla çökmez)
+    Object.entries(textUpdates).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    });
 
+    // 2. placeholder Güncellenecek Elemanlar Havuzu (Hata Veren Bölge)
+    const placeholderUpdates = {
+        'search-input': lang.searchPlaceholder,
+        'form-tags-input': lang.tagsPlaceholder,
+        'modal-tags-input': lang.addTagPlaceholder
+    };
+
+    // Güvenli Placeholder Ataması
+    Object.entries(placeholderUpdates).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.placeholder = value;
+    });
+
+    // Özel Durumlu Diğer Eleman Kontrolleri
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
         dropAreaText.innerText = lang.dropText;
@@ -85,38 +104,60 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
 // Görünümler (Kütüphane / Ekleme Formu) Arasında Geçiş Yapar
 export function switchView(viewName, state, functions) {
     state.currentView = viewName;
-    document.getElementById('menu-library').classList.remove('active');
-    document.getElementById('menu-favorites').classList.remove('active');
-    document.getElementById('menu-add-video').classList.remove('active');
+    
+    const menuLib = document.getElementById('menu-library');
+    const menuFav = document.getElementById('menu-favorites');
+    const menuAdd = document.getElementById('menu-add-video');
+    
+    if (menuLib) menuLib.classList.remove('active');
+    if (menuFav) menuFav.classList.remove('active');
+    if (menuAdd) menuAdd.classList.remove('active');
 
     const clearFavBtnContainer = document.getElementById('clear-favorites-container');
 
     if (viewName === 'library' || viewName === 'favorites') {
-        document.getElementById('view-library-container').classList.remove('d-none');
-        document.getElementById('view-add-container').classList.add('d-none');
-        document.getElementById(`menu-${viewName}`).classList.add('active');
+        const viewLibContainer = document.getElementById('view-library-container');
+        const viewAddContainer = document.getElementById('view-add-container');
+        const activeMenu = document.getElementById(`menu-${viewName}`);
+
+        if (viewLibContainer) viewLibContainer.classList.remove('d-none');
+        if (viewAddContainer) viewAddContainer.classList.add('d-none');
+        if (activeMenu) activeMenu.classList.add('active');
         
-        if (viewName === 'favorites') {
-            clearFavBtnContainer.classList.remove('d-none');
-        } else {
-            clearFavBtnContainer.classList.add('d-none');
+        if (clearFavBtnContainer) {
+            if (viewName === 'favorites') {
+                clearFavBtnContainer.classList.remove('d-none');
+            } else {
+                clearFavBtnContainer.classList.add('d-none');
+            }
         }
         
         functions.applyFiltersAndSearch();
     } else if (viewName === 'add') {
-        document.getElementById('view-library-container').classList.add('d-none');
-        document.getElementById('view-add-container').classList.remove('d-none');
-        document.getElementById('menu-add-video').classList.add('active');
+        const viewLibContainer = document.getElementById('view-library-container');
+        const viewAddContainer = document.getElementById('view-add-container');
+        const menuAddVid = document.getElementById('menu-add-video');
+
+        if (viewLibContainer) viewLibContainer.classList.add('d-none');
+        if (viewAddContainer) viewAddContainer.classList.remove('d-none');
+        if (menuAddVid) menuAddVid.classList.add('active');
         
         if (!state.editingVideoId) {
             const lang = translations[state.currentLang];
-            document.getElementById('form-title').innerText = lang.formTitle;
-            document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
-            document.getElementById('add-video-form').reset();
+            const formTitle = document.getElementById('form-title');
+            const btnSubmitVideo = document.getElementById('btn-submit-video');
+            const addVideoForm = document.getElementById('add-video-form');
+            const imgPreview = document.getElementById('image-preview');
+            const dropAreaText = document.getElementById('drop-area-text');
+
+            if (formTitle) formTitle.innerText = lang.formTitle;
+            if (btnSubmitVideo) btnSubmitVideo.innerText = lang.btnSubmitVideo;
+            if (addVideoForm) addVideoForm.reset();
+            
             state.resetFormTags();
             functions.renderFormChips();
-            if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
-            const dropAreaText = document.getElementById('drop-area-text');
+            
+            if (imgPreview) imgPreview.classList.add('d-none');
             if (dropAreaText) {
                 dropAreaText.innerText = lang.dropText;
                 dropAreaText.classList.remove('d-none');
