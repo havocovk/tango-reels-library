@@ -38,7 +38,7 @@ import {
 
 let currentLang = 'tr';
 let globalVideos = [];
-let globalFavorites = [];
+let globalFavorites = []; // Buluttan anlık beslenecek ortak havuzumuz
 let editInstructorId = null;
 let editingVideoId = null; 
 let currentView = 'library'; 
@@ -140,7 +140,7 @@ async function fetchVideos() {
             const favRows = await dbFetchFavorites();
             globalFavorites = favRows.map(f => f.video_id);
         } catch (favErr) {
-            console.error("Favoriler çekilemedi, yerel liste sıfırlanıyor:", favErr);
+            console.error("Favoriler çekilemedi, liste sıfırlanıyor:", favErr);
             globalFavorites = [];
         }
         
@@ -264,7 +264,7 @@ function applyFiltersAndSearch() {
     }
 
     const secilenFiltreler = {
-        aramaMetni: '', // Üst arama çubuğu kaldırıldığı için boş geçiliyor
+        aramaMetni: '', 
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -456,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
         callUpdateSmartAssistant();
     }, callGetUniqueTagsPool);
 
-    // ⚡ DÜZELTME ALANI: Modal içinde yeni etiket eklendiğinde doğrudan Supabase'e kaydeden ve arayüzü çizen fonksiyon bağlandı
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
         saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
@@ -511,4 +510,3 @@ document.addEventListener('DOMContentLoaded', () => {
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
 });
-}
