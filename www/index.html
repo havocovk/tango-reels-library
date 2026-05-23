@@ -43,10 +43,9 @@
             margin-bottom: 0 !important;
         }
         .glass-form .form-group {
-            margin-bottom: 0 !important; /* Boşluk yönetimini tamamen grid'e bırakıyoruz */
+            margin-bottom: 0 !important;
         }
         
-        /* 📸 Minimal ve Zarif Kapak Resmi Yapıştırma Alanı */
         #drop-area {
             border: 1.5px dashed rgba(255, 255, 255, 0.2);
             border-radius: 10px;
@@ -59,7 +58,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 68px; /* Yüksekliği düşürerek kabalıktan kurtardık */
+            min-height: 68px;
         }
         #drop-area:hover {
             border-color: #38bdf8;
@@ -77,7 +76,6 @@
             margin-top: 2px;
         }
         
-        /* 💡 Şık ve İnce Asistan Kutusu */
         .compact-assistant-box {
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -159,17 +157,17 @@
                         </select>
 
                         <select id="filter-instructor-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
-                            <option value="all">Tüm Eğitmenler</option>
+                            <option value="all" id="opt-all-instructors">Tüm Eğitmenler</option>
                         </select>
 
                         <select id="filter-tag-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
-                            <option value="all">Tüm Etiketler</option>
+                            <option value="all" id="opt-all-tags">Tüm Etiketler</option>
                         </select>
                     </div>
 
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                         <select id="filter-date-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
-                            <option value="all">Tüm Tarihler</option>
+                            <option value="all" id="opt-all-dates">Tüm Tarihler</option>
                         </select>
 
                         <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
@@ -227,9 +225,9 @@
                                 <div class="form-group">
                                     <label id="lbl-role">Rol Tipi:</label>
                                     <select id="form-role-select">
-                                        <option value="Both">Çift (Leader + Follower)</option> 
-                                        <option value="Leader">Leader</option>
-                                        <option value="Follower">Follower</option>
+                                        <option value="Both" id="opt-form-both">Çift (Leader + Follower)</option> 
+                                        <option value="Leader" id="opt-form-leader">Leader</option>
+                                        <option value="Follower" id="opt-form-follower">Follower</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -317,7 +315,7 @@
 
     <div id="custom-dialog-modal" class="modal-overlay d-none" style="z-index: 10000;">
         <div class="modal-content" style="max-width: 400px; padding: 25px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
-            <p id="custom-dialog-message" style="color: #fff; font-size: 16px; margin-bottom: 25px; line-height: 1.6; font-weight: 500;"></p>
+            <p id="custom-dialog-message" style="color: #fff; font-size: 16px; margin-bottom: 25px; line-height: 1.6; font-weight: 500;\"></p>
             <div style="display: flex; justify-content: center; gap: 12px;">
                 <button id="custom-dialog-cancel-btn" class="btn d-none" style="padding: 10px 24px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; font-weight: 500;">İptal</button>
                 <button id="custom-dialog-ok-btn" class="btn" style="padding: 10px 24px; border-radius: 8px; background: #3b82f6; color: #fff; border: none; cursor: pointer; font-weight: 500;">Tamam</button>
