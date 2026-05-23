@@ -68,7 +68,7 @@ export async function dbDeleteInstructor(id) {
     return response;
 }
 
-// 7. Postacı: Yeni video kaydeder (POST) veya var olan videoyu günceller (PATCH)
+// 7. Postacı: Yeni video kaydeder (POST) or var olan videoyu günceller (PATCH)
 export async function dbSaveVideo(id, payload) {
     const method = id ? 'PATCH' : 'POST';
     const url = id ? `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/videos`;

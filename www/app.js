@@ -41,6 +41,10 @@ let currentView = 'library';
 
 let formTagsArray = [];
 
+// 🔄 HİBRİT SAYFALAMA DURUM DEĞİŞKENLERİ
+let visibleVideosCount = 20;
+let filteredVideosGlobal = [];
+
 const getUIState = () => ({
     currentLang,
     editingVideoId,
@@ -55,22 +59,22 @@ function callUpdateSmartAssistant() {
 }
 
 function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
+    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, () => applyFiltersAndSearch(false));
 }
 
 function callSwitchView(viewName) {
     currentView = viewName; 
     switchView(viewName, getUIState(), {
-        applyFiltersAndSearch,
+        applyFiltersAndSearch: () => applyFiltersAndSearch(true), // Görünüm değiştiğinde ilk 20 karta sıfırla
         renderFormChips,
         resetUploadedCoverUrl
-            });
-    applyFiltersAndSearch();
+    });
+    applyFiltersAndSearch(true);
 }
 
 function toggleFavorite(videoId) {
     addOrRemoveFavorite(videoId);
-    applyFiltersAndSearch(); 
+    applyFiltersAndSearch(false); // Favori listesine eklerken kullanıcının miktarını sıfırlama (sayfa kaymasın)
 }
 
 function clearAllFavorites() {
@@ -81,7 +85,7 @@ function clearAllFavorites() {
     showCustomConfirm(lang.confirmClearFavs, okTxt, cancelTxt).then(confirmed => {
         if (confirmed) {
             clearAllFavoritesData();
-            applyFiltersAndSearch();
+            applyFiltersAndSearch(true);
         }
     });
 }
@@ -126,7 +130,7 @@ async function fetchVideos() {
         });
 
         populateFilterDropdowns(globalVideos);
-        applyFiltersAndSearch();
+        applyFiltersAndSearch(true); // İlk veri yüklemesinde listeyi sıfırla
     } catch (err) {
         const grid = document.getElementById('video-grid');
         if (grid) {
@@ -228,7 +232,12 @@ function renderFormChips() {
     });
 }
 
-function applyFiltersAndSearch() {
+// 🔄 HİBRİT FILTRELEME VE SAYFALAMA MOTORU
+function applyFiltersAndSearch(resetPagination = false) {
+    if (resetPagination) {
+        visibleVideosCount = 20; // Filtre değişince en başa sar
+    }
+
     const favs = getFavorites();
     
     let kaynakVideolar = globalVideos;
@@ -237,7 +246,7 @@ function applyFiltersAndSearch() {
     }
 
     const secilenFiltreler = {
-        aramaMetni: '', // Üst arama çubuğu kaldırıldığı için boş geçiliyor
+        aramaMetni: '', 
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -246,18 +255,32 @@ function applyFiltersAndSearch() {
     };
 
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
+    filteredVideosGlobal = filtered; // İleride basılmak üzere global hafızaya al
 
-    renderVideoCards(filtered, {
+    // Hafifletilmiş dilim: Sadece izin verilen miktar kadarını render et
+    const chunkToShow = filteredVideosGlobal.slice(0, visibleVideosCount);
+
+    renderVideoCards(chunkToShow, {
         currentLang,
         currentView,
         translations,
         favs,
         toggleFavorite,
-        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
+        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, () => applyFiltersAndSearch(false)),
         startVideoEditFlow,
         deleteVideoFlow,
         openVideoModal
     });
+
+    // Butonun görünürlük kontrolü
+    const loadMoreContainer = document.getElementById('load-more-container');
+    if (loadMoreContainer) {
+        if (filteredVideosGlobal.length > visibleVideosCount) {
+            loadMoreContainer.classList.remove('d-none');
+        } else {
+            loadMoreContainer.classList.add('d-none');
+        }
+    }
 }
 
 async function handleInstructorSubmit() {
@@ -432,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ⚡ DÜZELTME ALANI: Modal içinde yeni etiket eklendiğinde doğrudan Supabase'e kaydeden ve arayüzü çizen fonksiyon bağlandı
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
+        saveTagsToSupabaseDirectly(globalVideos, () => applyFiltersAndSearch(false));
     }, callGetUniqueTagsPool);
 
     document.getElementById('form-instructor-select')?.addEventListener('change', callUpdateSmartAssistant);
@@ -461,13 +484,43 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form')?.addEventListener('submit', handleFormSubmit);
     
-    document.getElementById('filter-role-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-instructor-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-tag-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-date-select')?.addEventListener('change', applyFiltersAndSearch);
-    document.getElementById('filter-location-select')?.addEventListener('change', applyFiltersAndSearch);
+    // Filtre kutuları değiştiğinde sayfalamayı en başa sıfırla
+    document.getElementById('filter-role-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
+    document.getElementById('filter-instructor-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
+    document.getElementById('filter-tag-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
+    document.getElementById('filter-date-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
+    document.getElementById('filter-location-select')?.addEventListener('change', () => applyFiltersAndSearch(true));
     
     document.getElementById('filter-btn')?.addEventListener('click', fetchVideos);
+
+    // ➕ DAHA FAZLA VİDEO YÜKLE BUTONU TETİKLEYİCİSİ
+    document.getElementById('btn-load-more')?.addEventListener('click', () => {
+        visibleVideosCount += 20; // 20 video daha aç
+        
+        const favs = getFavorites();
+        const chunkToShow = filteredVideosGlobal.slice(0, visibleVideosCount);
+        
+        renderVideoCards(chunkToShow, {
+            currentLang,
+            currentView,
+            translations,
+            favs,
+            toggleFavorite,
+            openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, () => applyFiltersAndSearch(false)),
+            startVideoEditFlow,
+            deleteVideoFlow,
+            openVideoModal
+        });
+
+        const loadMoreContainer = document.getElementById('load-more-container');
+        if (loadMoreContainer) {
+            if (filteredVideosGlobal.length > visibleVideosCount) {
+                loadMoreContainer.classList.remove('d-none');
+            } else {
+                loadMoreContainer.classList.add('d-none');
+            }
+        }
+    });
 
     document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
     document.getElementById('video-modal')?.addEventListener('click', (e) => {

@@ -429,3 +429,30 @@
         flex: 1; /* Alandaki boşluğu kaplasın */
     }
 }
+
+/* Mobil Uyumlu "Daha Fazla Yükle" Butonu */
+.btn-load-more {
+    background-color: #cb1c1c; /* Tango kırmızısı / uygulamanın ana rengi */
+    color: white;
+    border: none;
+    padding: 14px 35px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 85%; /* Mobilde parmakla rahat basılması için geniş alan */
+    max-width: 320px;
+}
+
+.btn-load-more:active {
+    transform: scale(0.98);
+}
+
+.btn-load-more:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
