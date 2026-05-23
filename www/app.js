@@ -132,31 +132,35 @@ async function fetchVideos() {
         
         try {
             const favRows = await dbFetchFavorites();
-            // Güvenli haritalama kontrolü (Veritabanı boşsa çökmesini engeller)
             globalFavorites = Array.isArray(favRows) ? favRows.map(f => f.video_id) : [];
         } catch (favErr) {
             console.error("Favoriler çekilemedi:", favErr);
             globalFavorites = [];
         }
         
-        // Veritabanından gelen videoların dizi olup olmadığını doğrula
+        // 🛡️ CRITICAL FIX: Verileri haritalarken hem yeni 'instructor_name' alanını 
+        // hem de diger modüllerin bekledigi 'video.instructors.name' nesne yapısını koruma altına alıyoruz.
         globalVideos = Array.isArray(rawVideos) ? rawVideos.map(video => {
             const foundInstructor = instructors.find(ins => ins.id === video.instructor_id);
+            const instructorName = foundInstructor ? foundInstructor.name : 'Bilinmeyen Eğitmen';
             return {
                 ...video,
-                instructor_name: foundInstructor ? foundInstructor.name : 'Bilinmeyen Eğitmen'
+                instructor_name: instructorName,
+                instructors: video.instructors ? video.instructors : { name: instructorName }
             };
         }) : [];
 
         populateFilterDropdowns(globalVideos);
-        // updateInterfaceLanguage zaten kendi içinde applyFiltersAndSearch çağırıyor, mükemmel senkronizasyon.
         updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
     } catch (err) {
+        console.error("Yükleme sırasında hata oluştu (Detay):", err);
         const grid = document.getElementById('video-grid');
         if (grid) {
-            grid.innerHTML = `<div class="info-msg" style="color: #ef4444;">${translations[currentLang].error}</div>`;
+            const errMsg = translations && translations[currentLang] && translations[currentLang].error 
+                ? translations[currentLang].error 
+                : (currentLang === 'tr' ? "Veritabanı yükleme hatası!" : "Database load error!");
+            grid.innerHTML = `<div class="info-msg" style="color: #ef4444;">${errMsg}</div>`;
         }
-        console.error("Yükleme hatası:", err);
     }
 }
 
@@ -240,10 +244,10 @@ function renderFormChips() {
 }
 
 function applyFiltersAndSearch() {
-    const favs = globalFavorites;
-    let kaynakVideolar = globalVideos;
+    const favs = globalFavorites || [];
+    let kaynakVideolar = globalVideos || [];
     if (currentView === 'favorites') {
-        kaynakVideolar = globalVideos.filter(v => favs.includes(v.id));
+        kaynakVideolar = kaynakVideolar.filter(v => favs.includes(v.id));
     }
 
     const secilenFiltreler = {
@@ -255,19 +259,24 @@ function applyFiltersAndSearch() {
         ortam: document.getElementById('filter-location-select')?.value || 'all'
     };
 
-    const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
+    // 🛡️ UI Çizim Koruyucu: Filtreleme veya kart basma esnasında bir hata olursa ana akış kopmaz.
+    try {
+        const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
 
-    renderVideoCards(filtered, {
-        currentLang,
-        currentView,
-        translations,
-        favs,
-        toggleFavorite,
-        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, () => { applyFiltersAndSearch(); }),
-        startVideoEditFlow,
-        deleteVideoFlow,
-        openVideoModal
-    });
+        renderVideoCards(filtered, {
+            currentLang,
+            currentView,
+            translations,
+            favs,
+            toggleFavorite,
+            openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, () => { applyFiltersAndSearch(); }),
+            startVideoEditFlow,
+            deleteVideoFlow,
+            openVideoModal
+        });
+    } catch (filterErr) {
+        console.error("Filtreleme veya Kart Arayüzü Çizilirken Hata Yakalandı:", filterErr);
+    }
 }
 
 async function handleInstructorSubmit() {
@@ -366,18 +375,20 @@ async function handleFormSubmit(e) {
         
         editingVideoId = null;
         formTagsArray = [];
-        renderFormChips();
         
         document.getElementById('add-video-form')?.reset();
-        document.getElementById('image-preview')?.classList.add('d-none');
-        document.getElementById('drop-area-text')?.classList.remove('d-none');
-        document.getElementById('drive-url-container')?.classList.add('d-none');
+        if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
+        if (document.getElementById('drop-area-text')) document.getElementById('drop-area-text').classList.remove('d-none');
+        if (document.getElementById('drive-url-container')) document.getElementById('drive-url-container').classList.add('d-none');
         
         resetUploadedCoverUrl();
+        renderFormChips();
+        
         callSwitchView('library');
         await fetchVideos();
     } catch (err) {
-        console.error(err);
+        console.error("Kayıt işlemi hatası:", err);
+        await showCustomAlert(currentLang === 'tr' ? "Kayıt sırasında bir hata oluştu!" : "An error occurred during saving!", okTxt);
     }
 }
 
@@ -395,7 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('menu-add-video')?.addEventListener('click', () => callSwitchView('add'));
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
 
-    // 🔍 Arama çubuğu anlık dinleyicisi eklendi
     document.getElementById('search-input')?.addEventListener('input', applyFiltersAndSearch);
 
     document.getElementById('form-is-downloaded')?.addEventListener('change', (e) => {
