@@ -199,7 +199,7 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>
             <div class="card-info-content">
-                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
+                <strong class="card-instructor">👤 ${video.instructor_name || 'Bilinmeyen Eğitmen'}</strong>
                 ${partnerDisplay}
                 
                 <div class="card-badges">
