@@ -114,7 +114,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (ORİJİNAL CSS VE TASARIM KORUNDU)
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU
 export function renderVideoCards(videos, config) {
     const { 
         currentLang, 
@@ -134,11 +134,35 @@ export function renderVideoCards(videos, config) {
 
     if (videos.length === 0) {
         const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
-        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
+        videoGridGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
         return;
     }
 
     videos.forEach(video => {
+        // 🔍 Hata Analizi İçin Konsol Logu (İş bitince silebilirsin)
+        console.log("ATKK Gelen Video Detayı:", video);
+
+        // 🔥 KÖKTEN ÇÖZÜM: Eğitmen Adı Çıkarma Algoritması
+        let instructorName = 'Bilinmeyen Eğitmen';
+
+        if (video.instructor_name) {
+            instructorName = video.instructor_name;
+        } else if (video.instructors) {
+            if (Array.isArray(video.instructors)) {
+                instructorName = video.instructors[0]?.name || 'Bilinmeyen Eğitmen';
+            } else if (typeof video.instructors === 'object') {
+                instructorName = video.instructors.name || 'Bilinmeyen Eğitmen';
+            } else if (typeof video.instructors === 'string') {
+                instructorName = video.instructors;
+            }
+        } else if (video.instructor) {
+            if (Array.isArray(video.instructor)) {
+                instructorName = video.instructor[0]?.name || 'Bilinmeyen Eğitmen';
+            } else if (typeof video.instructor === 'object') {
+                instructorName = video.instructor.name || 'Bilinmeyen Eğitmen';
+            }
+        }
+
         const card = document.createElement('div');
         card.className = 'video-card';
         
@@ -155,10 +179,7 @@ export function renderVideoCards(videos, config) {
             roleBadgeClass = 'badge-both';
         }
 
-        // Sosyal Medya yazısı dile göre dinamik hale getirildi:
-        const storageText = video.is_downloaded 
-            ? '💾 Drive' 
-            : (currentLang === 'tr' ? '🌐 Sosyal Medya' : '🌐 Social Media');
+        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
         const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
         
         const partnerDisplay = video.partner_name 
@@ -199,7 +220,7 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>
             <div class="card-info-content">
-                <strong class="card-instructor">👤 ${video.instructor_name || 'Bilinmeyen Eğitmen'}</strong>
+                <strong class="card-instructor">👤 ${instructorName}</strong>
                 ${partnerDisplay}
                 
                 <div class="card-badges">
@@ -261,7 +282,6 @@ export function renderVideoCards(videos, config) {
     });
 }
 
-// YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
     if (url.includes('/shorts/')) {
