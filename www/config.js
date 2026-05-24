@@ -49,11 +49,17 @@ export const translations = {
         dropText: "📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın",
         uploading: "⏳ Resim yükleniyor...",
         uploadError: "❌ Resim Supabase Storage'a yüklenemedi!",
+        
+        // FİLTRE PANELİ METİNLERİ (ÇÖKMEYİ ÖNLEYEN VE EKSİK OLAN KISIMLAR)
         allRoles: "Tüm Roller",
+        allLocations: "Tüm Ortamlar",
+        allInstructors: "Tüm Eğitmenler",
+        allTags: "Tüm Etiketler",
+        allDates: "Tüm Tarihler",
+        
         leader: "Lider",
         follower: "Takipçi",
         both: "Çift",
-        allLocations: "Tüm Ortamlar",
         drive: "💾 Google Drive",
         social: "🌐 Sosyal Medya",
         closeBtn: "Kapat",
@@ -111,11 +117,17 @@ export const translations = {
         dropText: "📸 Click here and paste the screenshot via Ctrl + V",
         uploading: "⏳ Image uploading...",
         uploadError: "❌ Image could not be uploaded to Supabase Storage!",
+        
+        // FILTER PANEL TRANSLATIONS (PREVENTS UNDEFINED CRASH)
         allRoles: "All Roles",
+        allLocations: "All Locations",
+        allInstructors: "All Instructors",
+        allTags: "All Tags",
+        allDates: "All Dates",
+        
         leader: "Leader",
         follower: "Follower",
         both: "Couple",
-        allLocations: "All Locations",
         drive: "💾 Google Drive",
         social: "🌐 Social Media",
         closeBtn: "Close",
