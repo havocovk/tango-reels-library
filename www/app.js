@@ -43,7 +43,6 @@ let editInstructorId = null;
 let editingVideoId = null; 
 let currentView = 'library'; 
 let visibleCount = 20; // 🔢 Sayfalama için görünür video limiti
-
 let formTagsArray = [];
 
 const getUIState = () => ({
@@ -59,16 +58,19 @@ function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(currentLang, formTagsArray);
 }
 
-// 🌐 tangoUI.js dosyasının beklediği tüm parametreleri eksiksiz ve doğru sırada geçiyoruz
+// 🌐 tangoUI.js dosyasının beklediği tüm parametreleri eksiksiz geçiyoruz
 function callUpdateInterfaceLanguage() {
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
+    // 🛡️ KORUMA: tangoUI içinden kaçabilecek isimlendirme hatasını burada eziyoruz
+    if (document.getElementById('filter-btn')) {
+        document.getElementById('filter-btn').innerText = currentLang === 'tr' ? '🔄 Listeyi Güncelle' : '🔄 Update List';
+    }
 }
 
 function callSwitchView(viewName) {
     currentView = viewName; 
-    visibleCount = 20; // 🔄 Sekme değiştirildiğinde video sayacını 20'ye sıfırla
+    visibleCount = 20; 
     
-    // 🔄 tangoUI.js içindeki switchView fonksiyonunun beklediği state ve functions objelerini doğru şekilde paslıyoruz
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch,
         renderFormChips,
@@ -265,7 +267,6 @@ function applyFiltersAndSearch() {
         kaynakVideolar = globalVideos.filter(v => favs.includes(v.id));
     }
 
-    // 🔍 Filtre elemanlarının değerlerini tek tek alıyoruz
     const aramaMetni = document.getElementById('search-input')?.value || ''; 
     const rol = document.getElementById('filter-role-select')?.value || 'all';
     const egitmen = document.getElementById('filter-instructor-select')?.value || 'all';
@@ -273,7 +274,6 @@ function applyFiltersAndSearch() {
     const tarih = document.getElementById('filter-date-select')?.value || 'all';
     const ortam = document.getElementById('filter-location-select')?.value || 'all';
 
-    // 🌟 DÜZELTME: Obje göndermek yerine tangoFilters.js'in beklediği gibi parametreleri sırayla geçiriyoruz!
     const filtered = getFilteredVideos(kaynakVideolar, aramaMetni, rol, egitmen, etiket, tarih, ortam);
 
     const loadMoreContainer = document.getElementById('load-more-container');
@@ -377,7 +377,7 @@ async function handleFormSubmit(e) {
     }
 
     if (!instructor_id) {
-        await showCustomAlert(currentLang === 'tr' ? "Lütfen önce bir eğitmen seçin veya ekleyin!" : "Please select or add an instructor first!", okTxt);
+        await showCustomAlert(currentLang === 'tr' ? "Lütfen önce bir eğitmen seçin!" : "Please select an instructor first!", okTxt);
         return;
     }
 
@@ -424,11 +424,17 @@ async function handleFormSubmit(e) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+// 🚀 ASIL HALLEDEN BAĞLANTI NOKTASI: DOM yüklense de yüklenmese de kodun sağır kalmasını önleyen ana tetikleyici fonksiyon
+function initializeAppLogic() {
     fetchInstructors();
     fetchVideos();
 
-    // 🌐 Dil Değiştirme Butonu Aktivasyonu
+    // 🔄 Açılışta buton isminin "Listeyi Güncelle" olmasını garanti altına alıyoruz
+    if (document.getElementById('filter-btn')) {
+        document.getElementById('filter-btn').innerText = currentLang === 'tr' ? '🔄 Listeyi Güncelle' : '🔄 Update List';
+    }
+
+    // 🌐 Dil Değiştirme Buton Aktivasyonu
     document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
         
@@ -439,15 +445,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         callUpdateInterfaceLanguage();
 
-        // 🛡️ KORUMA HATTI: tangoUI.js içindeki kaçakları engellemek için menü başlıklarını burada manuel de zorluyoruz
         const lang = translations[currentLang];
         if (document.getElementById('menu-library')) document.getElementById('menu-library').innerText = lang.menuLibrary;
         if (document.getElementById('menu-favorites')) document.getElementById('menu-favorites').innerText = lang.menuFavorites;
         if (document.getElementById('menu-add-video')) document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
         if (document.getElementById('search-input')) document.getElementById('search-input').placeholder = lang.searchPlaceholder;
-        if (document.getElementById('filter-btn')) document.getElementById('filter-btn').innerText = lang.filterBtn;
         if (document.getElementById('btn-clear-favorites')) document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
         
+        // Burayı da sağlama alalım
+        if (document.getElementById('filter-btn')) {
+            document.getElementById('filter-btn').innerText = currentLang === 'tr' ? '🔄 Listeyi Güncelle' : '🔄 Update List';
+        }
+
         populateFilterDropdowns(globalVideos); 
         applyFiltersAndSearch();
     });
@@ -529,7 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-tag-select')?.addEventListener('change', handleFilterChange);
     document.getElementById('filter-date-select')?.addEventListener('change', handleFilterChange);
     document.getElementById('filter-location-select')?.addEventListener('change', handleFilterChange);
-    
     document.getElementById('search-input')?.addEventListener('input', handleFilterChange);
 
     document.getElementById('filter-btn')?.addEventListener('click', () => {
@@ -556,4 +564,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dropArea) {
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
-});
+}
+
+// 🛡️ GÜVENLİK DUVARI: Eğer sayfa çoktan yüklendiyse beklemeden kodu çalıştır, aksi halde yüklenmesini bekle.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAppLogic);
+} else {
+    initializeAppLogic();
+}
