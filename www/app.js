@@ -265,16 +265,16 @@ function applyFiltersAndSearch() {
         kaynakVideolar = globalVideos.filter(v => favs.includes(v.id));
     }
 
-    const secilenFiltreler = {
-        aramaMetni: document.getElementById('search-input')?.value || '', 
-        rol: document.getElementById('filter-role-select')?.value || 'all',
-        egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
-        etiket: document.getElementById('filter-tag-select')?.value || 'all',
-        tarih: document.getElementById('filter-date-select')?.value || 'all',
-        ortam: document.getElementById('filter-location-select')?.value || 'all'
-    };
+    // 🔍 Filtre elemanlarının değerlerini tek tek alıyoruz
+    const aramaMetni = document.getElementById('search-input')?.value || ''; 
+    const rol = document.getElementById('filter-role-select')?.value || 'all';
+    const egitmen = document.getElementById('filter-instructor-select')?.value || 'all';
+    const etiket = document.getElementById('filter-tag-select')?.value || 'all';
+    const tarih = document.getElementById('filter-date-select')?.value || 'all';
+    const ortam = document.getElementById('filter-location-select')?.value || 'all';
 
-    const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
+    // 🌟 DÜZELTME: Obje göndermek yerine tangoFilters.js'in beklediği gibi parametreleri sırayla geçiriyoruz!
+    const filtered = getFilteredVideos(kaynakVideolar, aramaMetni, rol, egitmen, etiket, tarih, ortam);
 
     const loadMoreContainer = document.getElementById('load-more-container');
     if (loadMoreContainer) {
@@ -438,6 +438,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         callUpdateInterfaceLanguage();
+
+        // 🛡️ KORUMA HATTI: tangoUI.js içindeki kaçakları engellemek için menü başlıklarını burada manuel de zorluyoruz
+        const lang = translations[currentLang];
+        if (document.getElementById('menu-library')) document.getElementById('menu-library').innerText = lang.menuLibrary;
+        if (document.getElementById('menu-favorites')) document.getElementById('menu-favorites').innerText = lang.menuFavorites;
+        if (document.getElementById('menu-add-video')) document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
+        if (document.getElementById('search-input')) document.getElementById('search-input').placeholder = lang.searchPlaceholder;
+        if (document.getElementById('filter-btn')) document.getElementById('filter-btn').innerText = lang.filterBtn;
+        if (document.getElementById('btn-clear-favorites')) document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
+        
         populateFilterDropdowns(globalVideos); 
         applyFiltersAndSearch();
     });
