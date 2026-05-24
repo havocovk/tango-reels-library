@@ -1,4 +1,5 @@
 // uiRenderer.js
+import { translations } from './config.js';
 
 // 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
@@ -33,7 +34,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
         }
 
         const pool = getAllUniqueTagsPool();
-        const filtered = pool.filter(tag => tag.toLowerCase().includes(val) && !chipsArray.includes(tag));
+        const filtered = pool.filter(item => item.toLowerCase().includes(val) && !chipsArray.includes(item));
 
         if (filtered.length === 0) {
             list.classList.add('d-none');
@@ -41,57 +42,42 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
         }
 
         list.classList.remove('d-none');
-        filtered.forEach((tag) => {
-            const item = document.createElement('div');
-            item.className = 'autocomplete-suggestion-item';
-            const idx = tag.toLowerCase().indexOf(val);
-            item.innerHTML = tag.substring(0, idx) + "<strong>" + tag.substring(idx, idx + val.length) + "</strong>" + tag.substring(idx + val.length);
-            
-            item.addEventListener('click', () => {
-                onAddCallback(tag);
+        filtered.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-suggestion-item';
+            div.innerText = `#${item}`;
+            div.addEventListener('click', () => {
+                onAddCallback(item);
                 input.value = '';
+                list.innerHTML = '';
                 list.classList.add('d-none');
+                input.focus();
             });
-            list.appendChild(item);
+            list.appendChild(div);
         });
     });
 
     input.addEventListener('keydown', (e) => {
         const items = list.querySelectorAll('.autocomplete-suggestion-item');
-        if (e.key === 'ArrowDown') {
+        if (e.keyCode === 40) { // Aşağı Ok
             currentFocus++;
             addActive(items);
-        } else if (e.key === 'ArrowUp') {
+        } else if (e.keyCode === 38) { // Yukarı Ok
             currentFocus--;
             addActive(items);
-        } else if (e.key === 'Enter') {
+        } else if (e.keyCode === 13) { // Enter
             e.preventDefault();
             if (currentFocus > -1 && items[currentFocus]) {
                 items[currentFocus].click();
             } else {
-                const val = input.value.replace(/,/g, '').trim();
+                const val = input.value.trim().replace(/,/g, '');
                 if (val && !chipsArray.includes(val)) {
                     onAddCallback(val);
                     input.value = '';
+                    list.innerHTML = '';
                     list.classList.add('d-none');
                 }
             }
-        } else if (e.key === 'Backspace' && input.value === '') {
-            if (chipsArray.length > 0) {
-                chipsArray.pop();
-                renderChipsFn();
-            }
-        }
-    });
-
-    input.addEventListener('keyup', (e) => {
-        if (e.key === ',' || e.code === 'Comma') {
-            const val = input.value.replace(/,/g, '').trim();
-            if (val && !chipsArray.includes(val)) {
-                onAddCallback(val);
-            }
-            input.value = '';
-            list.classList.add('d-none');
         }
     });
 
@@ -101,6 +87,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
         if (currentFocus >= items.length) currentFocus = 0;
         if (currentFocus < 0) currentFocus = items.length - 1;
         items[currentFocus].classList.add('autocomplete-active');
+        items[currentFocus].scrollIntoView({ block: 'nearest' });
     }
 
     function removeActive(items) {
@@ -109,154 +96,99 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
 
     document.addEventListener('click', (e) => {
         if (e.target !== input && e.target !== list) {
+            list.innerHTML = '';
             list.classList.add('d-none');
         }
     });
 }
 
-// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (ORİJİNAL CSS VE TASARIM KORUNDU)
-export function renderVideoCards(videos, config) {
-    const { 
-        currentLang, 
-        currentView, 
-        translations, 
-        favs, 
-        toggleFavorite, 
-        openTagsEditModal, 
-        startVideoEditFlow, 
-        deleteVideoFlow, 
-        openVideoModal 
-    } = config;
-
-    const videoGrid = document.getElementById('video-grid');
-    const lang = translations[currentLang];
+// 3. VİDEO KARTLARINI EKRANA BASAN ANA MOTOR
+export function renderVideoCards(containerId, videos, favorites, currentLang = 'tr') {
+    const videoGrid = document.getElementById(containerId);
+    if (!videoGrid) return;
     videoGrid.innerHTML = '';
 
+    const lang = translations[currentLang];
+
     if (videos.length === 0) {
-        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
-        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
+        videoGrid.innerHTML = `<div class="empty-message" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8; font-size: 1.1rem; line-height: 1.6;">${containerId === 'favorites-grid' ? lang.emptyFav : lang.empty}</div>`;
         return;
     }
 
     videos.forEach(video => {
+        const isFav = favorites.some(fav => fav.video_id === video.id);
+        const starIcon = isFav ? '★' : '☆';
+        const starClass = isFav ? 'fav-star-btn active' : 'fav-star-btn';
+
         const card = document.createElement('div');
         card.className = 'video-card';
-        
-        let roleDisplay = video.role_type || 'Both';
-        let roleBadgeClass = '';
-        if (roleDisplay === 'Leader') {
-            roleDisplay = currentLang === 'tr' ? 'Lider' : 'Leader';
-            roleBadgeClass = 'badge-leader';
-        } else if (roleDisplay === 'Follower') {
-            roleDisplay = currentLang === 'tr' ? 'Takipçi' : 'Follower';
-            roleBadgeClass = 'badge-follower';
-        } else {
-            roleDisplay = currentLang === 'tr' ? 'İkisi de' : 'Both';
-            roleBadgeClass = 'badge-both';
-        }
 
-        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
-        const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
-        
-        const partnerDisplay = video.partner_name 
-            ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
-            : '';
-        
-        let tagsHtml = '';
-        if (video.tags && video.tags.trim() !== '') {
-            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-            tagsArray.forEach(tag => {
-                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
-            });
-            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
-        } else {
-            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
-        }
-        
-        const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
-        const coverImg = video.cover_url || defaultCover;
-        const isFav = favs.includes(video.id);
-
-        // Hem yedeklenmiş Drive videolarını hem de YouTube (Shorts/Normal) linklerini yakalıyoruz
-        const hasDrive = video.is_downloaded && video.drive_url;
+        const hasDrive = !!video.drive_url;
+        const hasUrl = !!video.url;
         const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
-        const shouldOpenInModal = hasDrive || isYouTube;
 
-        // Modal tetikleyiciler için dinamik nitelik ayarları
-        const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
-        const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+        // 🎬 Rol Tipi Çevirisi (Lider, Takipçi, Çift / Couple)
+        let roleText = lang.both;
+        if (video.role_type === 'leader') roleText = lang.leader;
+        if (video.role_type === 'follower') roleText = lang.follower;
+
+        // 📍 Ortam / Platform Çevirisi (Google Drive, Sosyal Medya)
+        const locationText = video.is_downloaded ? lang.drive : lang.social;
+
+        // Etiketleri Hazırla
+        const tagsHTML = video.tags 
+            ? video.tags.split(',').map(t => `<span class="card-chip-item">#${t.trim()}</span>`).join(' ')
+            : '';
 
         card.innerHTML = `
-            <div class="video-cover-link">
-                <div class="video-cover-container" style="background-image: url('${coverImg}');">
-                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
-                    <a ${actionClickAttr}>
-                        <div class="play-overlay">
-                            <span class="play-icon">▶</span>
-                        </div>
-                    </a>
-                </div>
+            <div class="card-cover-container">
+                <img src="${video.cover_url || 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500'}" class="card-cover" alt="Tango">
+                <button class="${starClass}" data-id="${video.id}">${starIcon}</button>
             </div>
-            <div class="card-info-content">
-                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
-                ${partnerDisplay}
-                
-                <div class="card-badges">
-                    <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
-                    <span class="badge ${storageClass}">${storageText}</span>
+            <div class="card-content">
+                <h3 class="card-instructors">${video.instructor_name}${video.partner_name ? ` & ${video.partner_name}` : ''}</h3>
+                <div class="card-info-row">
+                    <span><strong>${lang.role}:</strong> ${roleText}</span>
+                    <span><strong>${lang.platform}:</strong> ${locationText}</span>
                 </div>
-
-                <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
-
-                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
-                    <a ${actionLinkClickAttr}>
-                        ${shouldOpenInModal ? (currentLang === 'tr' ? '🎬 Kütüphanede İzle →' : '🎬 Watch in Library →') : lang.watch}
-                    </a>
-                    
-                    <div style="display:flex; gap:8px;">
-                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
-                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
+                <div class="card-tags-container">${tagsHTML}</div>
+                <div class="card-actions">
+                    <button class="inline-edit-tags-btn" data-id="${video.id}">✏️ <span style="font-size:0.85rem; margin-left:2px;">${lang.editTagsInline}</span></button>
+                    <div class="card-management-btns">
+                        <button class="btn-card-edit" data-id="${video.id}">✏️</button>
+                        <button class="btn-card-delete" data-id="${video.id}">🗑️</button>
                     </div>
+                </div>
+                <div class="card-links" style="display:flex; gap:10px; margin-top:10px;">
+                    ${hasUrl ? `<a href="${video.url}" class="video-watch-link watch-btn" data-type="url" style="flex:1; text-align:center;">${lang.watch}</a>` : ''}
+                    ${hasDrive ? `<a href="${video.drive_url}" class="video-watch-link watch-cloud-btn" data-type="drive" style="flex:1; text-align:center;">${lang.watchCloud}</a>` : ''}
                 </div>
             </div>
         `;
 
-        // Orijinal buton olay dinleyicileri
-        card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleFavorite(video.id);
-        });
-
-        card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            openTagsEditModal(video);
-        });
-
-        card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            startVideoEditFlow(video);
-        });
-
-        card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteVideoFlow(video.id);
-        });
-
-        // Tıklama durumunda modalı güvenli link formatıyla tetikler
-        if (shouldOpenInModal) {
-            const triggers = card.querySelectorAll('[data-modal-url]');
-            triggers.forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    let targetUrl = hasDrive ? video.drive_url : video.url;
-                    
-                    if (isYouTube) {
-                        targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+        // Video izleme tetikleyicileri
+        const watchTriggers = card.querySelectorAll('.video-watch-link');
+        watchTriggers.forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                let targetUrl = el.getAttribute('data-type') === 'drive' ? video.drive_url : video.url;
+                
+                if (el.getAttribute('data-type') === 'url' && isYouTube) {
+                    targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+                }
+                
+                if (el.getAttribute('data-type') === 'drive' && targetUrl.includes('drive.google.com') && !targetUrl.includes('/preview')) {
+                    const regExp = /\/file\/d\/([^/]+)/;
+                    const matches = targetUrl.match(regExp);
+                    if (matches && matches[1]) {
+                        targetUrl = `https://drive.google.com/file/d/${matches[1]}/preview`;
                     }
-                    openVideoModal(targetUrl);
-                });
+                }
+                
+                // tangoModals içerisindeki openVideoModal fonksiyonunu tetikler
+                window.openVideoModal ? window.openVideoModal(targetUrl) : console.log("Modal target:", targetUrl);
             });
-        }
+        });
 
         videoGrid.appendChild(card);
     });
@@ -265,7 +197,6 @@ export function renderVideoCards(videos, config) {
 // YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
-    // YouTube Shorts kontrolü
     if (url.includes('/shorts/')) {
         const parts = url.split('/shorts/');
         if (parts[1]) {
@@ -273,7 +204,6 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${id}`;
         }
     }
-    // Standart YouTube videoları (?v=...)
     if (url.includes('v=')) {
         const regExp = /[?&]v=([^&#]+)/;
         const matches = url.match(regExp);
@@ -281,7 +211,6 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${matches[1]}`;
         }
     }
-    // Kısaltılmış linkler (youtu.be/...)
     if (url.includes('youtu.be/')) {
         const parts = url.split('youtu.be/');
         if (parts[1]) {
