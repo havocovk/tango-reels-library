@@ -59,18 +59,18 @@ function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(currentLang, formTagsArray);
 }
 
+// 🌐 tangoUI.js dosyasının beklediği tüm parametreleri eksiksiz ve doğru sırada geçiyoruz
 function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(currentLang, editingVideoId);
+    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch);
 }
 
 function callSwitchView(viewName) {
     currentView = viewName; 
     visibleCount = 20; // 🔄 Sekme değiştirildiğinde video sayacını 20'ye sıfırla
     
-    // tangoUI.js içindeki switchView fonksiyonuna parametreleri eksiksiz geçiyoruz
-    switchView(viewName, currentLang, editingVideoId, formTagsArray, {
+    // 🔄 tangoUI.js içindeki switchView fonksiyonunun beklediği state ve functions objelerini doğru şekilde paslıyoruz
+    switchView(viewName, getUIState(), {
         applyFiltersAndSearch,
-        resetFormTags: () => { formTagsArray = []; },
         renderFormChips,
         resetUploadedCoverUrl
     });
@@ -133,9 +133,6 @@ async function fetchInstructors() {
     }
 }
 
-/**
- * 🔄 SİHİRLİ GÜNCELLEME: Hem Eğitmen Иsimlerini Eşleştirir Hem de Kutuları Taze Tutar
- */
 async function fetchVideos() {
     try {
         const instructors = await dbFetchInstructors();
@@ -279,7 +276,6 @@ function applyFiltersAndSearch() {
 
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
 
-    // 🔘 "Daha Fazla Video Yükle" Butonunun Görünürlük Yönetimi
     const loadMoreContainer = document.getElementById('load-more-container');
     if (loadMoreContainer) {
         if (filtered.length > visibleCount) {
@@ -289,7 +285,6 @@ function applyFiltersAndSearch() {
         }
     }
 
-    // ✂️ Filtrelenmiş listeden sadece limitimiz kadarını kesip arayüze gönderiyoruz
     const videosToRender = filtered.slice(0, visibleCount);
 
     renderVideoCards(videosToRender, {
@@ -433,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchInstructors();
     fetchVideos();
 
-    // 🌐 Dil Değiştirme Butonu Aktivasyonu (Buradaki ID karmaşası düzeltildi)
+    // 🌐 Dil Değiştirme Butonu Aktivasyonu
     document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
         
@@ -443,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         callUpdateInterfaceLanguage();
-        populateFilterDropdowns(globalVideos); // Açılır kutuların (Lider/Takipçi/Çift vb.) dili anında döner
+        populateFilterDropdowns(globalVideos); 
         applyFiltersAndSearch();
     });
 
@@ -514,7 +509,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-save-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('add-video-form')?.addEventListener('submit', handleFormSubmit);
     
-    // 🔍 Filtre kutularından biri değiştiğinde limiti 20'ye sıfırlayıp öyle listeliyoruz
     const handleFilterChange = () => {
         visibleCount = 20;
         applyFiltersAndSearch();
@@ -526,15 +520,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('filter-date-select')?.addEventListener('change', handleFilterChange);
     document.getElementById('filter-location-select')?.addEventListener('change', handleFilterChange);
     
-    // 🔍 Arama çubuğuna yazıldığında da filtreleri ve aramayı tetikliyoruz
     document.getElementById('search-input')?.addEventListener('input', handleFilterChange);
 
     document.getElementById('filter-btn')?.addEventListener('click', () => {
-        visibleCount = 20; // Listeyi manuel yenilerken de limiti sıfırla
+        visibleCount = 20; 
         fetchVideos();
     });
 
-    // ➕ "Daha Fazla Video Yükle" butonuna basıldığında limiti 20 artırıp listeyi tazele
     document.getElementById('btn-load-more')?.addEventListener('click', () => {
         visibleCount += 20;
         applyFiltersAndSearch();
