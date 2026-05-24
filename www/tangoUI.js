@@ -1,13 +1,13 @@
 import { translations } from './config.js';
 
-// Akıllı Dosya Adı Asistanını Günceller
+// 🧠 Akıllı Dosya Adı Asistanını Günceller
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     const lang = translations[currentLang];
     const select = document.getElementById('form-instructor-select');
     const outputDiv = document.getElementById('assistant-filename-output');
 
     if (!select || !select.value || select.selectedIndex === -1) {
-        if (outputDiv) outputDiv.innerText = lang.assistantAlert;
+        if (outputDiv) outputDiv.innerText = lang.insAlert || "Lütfen eğitmen seçin.";
         return;
     }
 
@@ -28,148 +28,85 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
-// Tüm Arayüzün Dil Metinlerini Günceller
-export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch) {
+// 🌐 Tüm Arayüzün Dil Metinlerini Günceller (Sayfa İngilizceye dönünce terimler de döner)
+export function updateInterfaceLanguage(currentLang, editingVideoId) {
     const lang = translations[currentLang];
-    
-    // Sol Menü Öğeleri
-    const menuLibrary = document.getElementById('menu-library');
-    if (menuLibrary) menuLibrary.innerText = lang.menuLibrary;
-    
-    const menuFavorites = document.getElementById('menu-favorites');
-    if (menuFavorites) menuFavorites.innerText = lang.menuFavorites;
-    
-    const menuAddVideo = document.getElementById('menu-add-video');
-    if (menuAddVideo) menuAddVideo.innerText = lang.menuAddVideo;
-    
-    // Ana Başlık
-    const mainTitle = document.querySelector('.sidebar-glass h2') || document.querySelector('h1');
-    if (mainTitle && mainTitle.id !== 'form-title') mainTitle.innerText = lang.title;
-    
-    // Arama Çubuğu Placeholder
+    if (!lang) return;
+
+    // DOM elemanlarını ve karşılık gelen sözlük anahtarlarını eşleştiriyoruz
+    const elements = {
+        'brand-title': lang.brandTitle,
+        'main-title': lang.title,
+        'menu-library': lang.menuLibrary,
+        'menu-favorites': lang.menuFavorites,
+        'menu-add-video': lang.menuAddVideo,
+        'filter-btn': lang.filterBtn,
+        'lbl-role': lang.role,
+        'lbl-location': lang.location,
+        'btn-clear-favorites': lang.btnClearFavorites,
+        'drop-area-text': lang.dropText,
+        'form-title': editingVideoId ? (lang.formTitleEdit || "✏️ Videoyu Düzenle") : lang.formTitle,
+        'btn-submit-video': editingVideoId ? (lang.btnUpdateVideo || "Güncelle") : lang.btnSubmitVideo
+    };
+
+    for (const [id, text] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el && text) el.innerHTML = text;
+    }
+
+    // Arama çubuğu placeholder ayarı
     const searchInput = document.getElementById('search-input');
-    if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
-    
-    // Filtreleme Butonu
-    const filterBtn = document.getElementById('filter-btn');
-    if (filterBtn) filterBtn.innerText = lang.filterBtn;
-    
-    // ➕ "Daha Fazla Video Göster" Butonu Güncellemesi
-    const btnLoadMore = document.getElementById('btn-load-more');
-    if (btnLoadMore) btnLoadMore.innerText = lang.btnLoadMore;
-    
-    // Dil Değiştirme Butonu
-    const langBtn = document.getElementById('lang-btn');
-    if (langBtn) langBtn.innerText = lang.langBtn;
-
-    // 🎬 Statik Filtre Dropdown Güncellemesi: Rol Seçimi
-    const roleSelect = document.getElementById('filter-role-select');
-    if (roleSelect && roleSelect.options.length >= 4) {
-        roleSelect.options[0].text = lang.allRoles;
-        roleSelect.options[1].text = lang.leader;
-        roleSelect.options[2].text = lang.follower;
-        roleSelect.options[3].text = lang.both;
+    if (searchInput && lang.searchPlaceholder) {
+        searchInput.placeholder = lang.searchPlaceholder;
     }
-    
-    // 📍 Statik Filtre Dropdown Güncellemesi: Ortam Seçimi
-    const locationSelect = document.getElementById('filter-location-select');
-    if (locationSelect && locationSelect.options.length >= 4) {
-        locationSelect.options[0].text = lang.allLocations;
-        locationSelect.options[1].text = lang.drive;
-        locationSelect.options[2].text = lang.social;
-    }
-
-    // Pratik Listesini Temizleme Butonu
-    const clearFavsBtn = document.getElementById('btn-clear-favorites');
-    if (clearFavsBtn) clearFavsBtn.innerText = lang.btnClearFavorites;
-
-    // Form Başlıkları ve Butonları
-    const formTitle = document.getElementById('form-title');
-    if (formTitle) {
-        formTitle.innerText = editingVideoId ? (currentLang === 'tr' ? '✏️ Videoyu Düzenle' : '✏️ Edit Video') : lang.formTitle;
-    }
-    const btnSubmitVideo = document.getElementById('btn-submit-video');
-    if (btnSubmitVideo) {
-        btnSubmitVideo.innerText = editingVideoId ? (currentLang === 'tr' ? '💾 Değişiklikleri Kaydet' : '💾 Save Changes') : lang.btnSubmitVideo;
-    }
-    
-    // Eğitmen Yönetim Alanı
-    const manageTitle = document.querySelector('.instructor-management h3');
-    if (manageTitle) manageTitle.innerText = lang.manageInsTitle;
-    
-    const lblInsName = document.querySelector('label[for="new-instructor-name"]');
-    if (lblInsName) lblInsName.innerText = lang.lblNewInstructorName;
-    
-    const btnAddIns = document.getElementById('btn-add-instructor');
-    if (btnAddIns) btnAddIns.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
-    
-    // Video Form Alan Etiketleri
-    const labelIns = document.querySelector('label[for="form-instructor-select"]');
-    if (labelIns) labelIns.innerText = lang.lblInstructor;
-    const labelPart = document.querySelector('label[for="form-partner-input"]');
-    if (labelPart) labelPart.innerText = lang.lblPartner;
-    const labelRoleType = document.querySelector('label[for="form-role-select"]');
-    if (labelRoleType) labelRoleType.innerText = lang.lblRole;
-    const labelUrl = document.querySelector('label[for="form-url-input"]');
-    if (labelUrl) labelUrl.innerText = lang.lblUrl;
-    const labelCover = document.querySelector('.form-group label[for="drop-area"]') || document.querySelector('label:has(+ #drop-area)');
-    if (labelCover) labelCover.innerText = lang.lblCoverUpload;
-    const labelTags = document.querySelector('label[for="form-tag-input"]');
-    if (labelTags) labelTags.innerText = lang.lblTags;
-    
-    const dropAreaText = document.getElementById('drop-area-text');
-    if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
-        dropAreaText.innerText = lang.dropText;
-    }
-    
-    const assistantTitle = document.querySelector('.smart-assistant h4');
-    if (assistantTitle) assistantTitle.innerText = lang.assistantTitle;
-    
-    if (applyFiltersAndSearch) applyFiltersAndSearch();
 }
 
-// Görünüm pencereleri (Kütüphane / Favoriler / Ekle) arası geçişi sağlar
-export function switchView(viewName, state, functions) {
+// 🔄 Görünüm (Sekme) Geçişlerini Güvenli Şekilde Yönetir
+export function switchView(viewName, currentLang, editingVideoId, formTagsArray, callbacks) {
+    const lang = translations[currentLang];
     const clearFavBtnContainer = document.getElementById('clear-favorites-container');
-    if (!clearFavBtnContainer) return;
+
+    // Menü butonlarındaki aktiflik sınıflarını temizle
+    document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
 
     if (viewName === 'library' || viewName === 'favorites') {
-        document.getElementById('view-add-container').classList.add('d-none');
-        document.getElementById('view-library-container').classList.remove('d-none');
+        document.getElementById('view-library-container')?.classList.remove('d-none');
+        document.getElementById('view-add-container')?.classList.add('d-none');
         
-        document.getElementById('menu-library').classList.remove('active');
-        document.getElementById('menu-favorites').classList.remove('active');
-        document.getElementById('menu-add-video').classList.remove('active');
+        const activeMenuId = viewName === 'library' ? 'menu-library' : 'menu-favorites';
+        document.getElementById(activeMenuId)?.classList.add('active');
         
-        document.getElementById(`menu-${viewName}`).classList.add('active');
-        
-        if (viewName === 'favorites') {
-            clearFavBtnContainer.classList.remove('d-none');
-        } else {
-            clearFavBtnContainer.classList.add('d-none');
+        if (clearFavBtnContainer) {
+            if (viewName === 'favorites') clearFavBtnContainer.classList.remove('d-none');
+            else clearFavBtnContainer.classList.add('d-none');
         }
         
-        functions.applyFiltersAndSearch();
+        // Listeyi tazelemek için ana dosyadan gelen callback'i çağırıyoruz
+        if (callbacks && typeof callbacks.applyFiltersAndSearch === 'function') {
+            callbacks.applyFiltersAndSearch();
+        }
     } else if (viewName === 'add') {
-        document.getElementById('view-library-container').classList.add('d-none');
-        document.getElementById('view-add-container').classList.remove('d-none');
-        document.getElementById('menu-add-video').classList.add('active');
+        document.getElementById('view-library-container')?.classList.add('d-none');
+        document.getElementById('view-add-container')?.classList.remove('d-none');
+        document.getElementById('menu-add-video')?.classList.add('active');
         
-        if (!state.editingVideoId) {
-            const lang = translations[state.currentLang];
-            document.getElementById('form-title').innerText = lang.formTitle;
-            document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
-            document.getElementById('add-video-form').reset();
-            state.resetFormTags();
-            functions.renderFormChips();
-            if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
+        if (!editingVideoId) {
+            const form = document.getElementById('add-video-form');
+            if (form) form.reset();
+            
+            if (callbacks && typeof callbacks.resetFormTags === 'function') callbacks.resetFormTags();
+            if (callbacks && typeof callbacks.renderFormChips === 'function') callbacks.renderFormChips();
+            
+            const imgPreview = document.getElementById('image-preview');
+            if (imgPreview) imgPreview.classList.add('d-none');
+            
             const dropAreaText = document.getElementById('drop-area-text');
             if (dropAreaText) {
                 dropAreaText.innerText = lang.dropText;
                 dropAreaText.classList.remove('d-none');
             }
-            functions.resetUploadedCoverUrl();
+            if (callbacks && typeof callbacks.resetUploadedCoverUrl === 'function') callbacks.resetUploadedCoverUrl();
         }
-        updateSmartFilenameAssistant(state.currentLang, state.getFormTags());
+        updateSmartFilenameAssistant(currentLang, formTagsArray);
     }
 }
