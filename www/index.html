@@ -21,6 +21,105 @@
         });
       }
     </script>
+
+    <style>
+        .atkk-form-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        .atkk-form-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .atkk-inline-row {
+            display: flex;
+            gap: 12px;
+        }
+        .atkk-inline-row .form-group {
+            flex: 1;
+            margin-bottom: 0 !important;
+        }
+        .glass-form .form-group {
+            margin-bottom: 0 !important; /* Boşluk yönetimini tamamen grid'e bırakıyoruz */
+        }
+        
+        /* 📸 Minimal ve Zarif Kapak Resmi Yapıştırma Alanı */
+        #drop-area {
+            border: 1.5px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 68px; /* Yüksekliği düşürerek kabalıktan kurtardık */
+        }
+        #drop-area:hover {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.03);
+        }
+        #drop-area-text {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        #image-preview {
+            max-height: 55px;
+            border-radius: 6px;
+            object-fit: contain;
+            margin-top: 2px;
+        }
+        
+        /* 💡 Şık ve İnce Asistan Kutusu */
+        .compact-assistant-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .compact-assistant-box h4 {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .compact-assistant-box p {
+            margin: 0;
+            font-size: 0.72rem;
+            color: #64748b;
+        }
+        .assistant-code {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            word-break: break-all;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 992px) {
+            .atkk-form-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -45,9 +144,8 @@
         <main class="main-content-glass">
 
             <div id="view-library-container" class="view-panel">
-                <div class="search-header" style="display: flex; gap: 12px; justify-content: space-between; align-items: center; width: 100%;">
-                    <input type="text" id="search-input" placeholder="Kombinasyon veya etiket ara..." style="flex: 1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white; outline: none;">
-                    <button id="filter-btn" class="btn-primary" style="white-space: nowrap;">🔍 Listeyi Yenile</button>
+                <div class="search-header" style="display: flex; justify-content: flex-end;">
+                    <button id="filter-btn" class="btn-primary">🔍 Listeyi Yenile</button>
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; margin-bottom: 12px;">
@@ -80,7 +178,6 @@
                             <option value="social" id="opt-social">🌐 Sosyal Medya</option>
                         </select>
                     </div>
-
                 </div>
 
                 <div id="clear-favorites-container" class="d-none" style="margin: 10px 0;">
@@ -97,84 +194,94 @@
             </div>
 
             <div id="view-add-container" class="view-panel d-none">
-                <form id="add-video-form" class="glass-form">
-                    <h2 id="form-title" style="color: #fff; margin-bottom: 10px;">➕ Yeni Video Kaydet</h2>
+                <form id="add-video-form" class="glass-form" style="max-width: 900px; margin: 0 auto;">
+                    <h2 id="form-title" style="color: #fff; margin-bottom: 15px; font-weight: 600;">➕ Yeni Video Kaydet</h2>
                     
-                    <div class="form-group">
-                        <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
-                        <div style="display: flex; gap: 10px;">
-                            <select id="form-instructor-select" style="flex: 1;"></select>
-                            <button type="button" id="btn-toggle-new-instructor" class="lang-btn">➕</button>
-                            <button type="button" id="btn-edit-instructor" class="lang-btn">✏️</button>
-                            <button type="button" id="btn-delete-instructor" class="lang-btn" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);">🗑️</button>
-                        </div>
-                    </div>
+                    <div class="atkk-form-grid">
+                        
+                        <div class="atkk-form-column">
+                            <div class="form-group">
+                                <label id="lbl-instructor">Eğitmen Seç / Ekle:</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <select id="form-instructor-select" style="flex: 1;"></select>
+                                    <button type="button" id="btn-toggle-new-instructor" class="lang-btn">➕</button>
+                                    <button type="button" id="btn-edit-instructor" class="lang-btn">✏️</button>
+                                    <button type="button" id="btn-delete-instructor" class="lang-btn" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4);">🗑️</button>
+                                </div>
+                            </div>
 
-                    <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
-                            <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
-                        </div>
-                    </div>
+                            <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                                <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
+                                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                                    <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
+                                    <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
+                                </div>
+                            </div>
 
-                    <div class="form-group">
-                        <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
-                        <input type="url" id="form-video-url" required placeholder="https://www.instagram.com/reels/...">
-                    </div>
+                            <div class="form-group">
+                                <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
+                                <input type="url" id="form-video-url" required placeholder="https://www.instagram.com/reels/...">
+                            </div>
 
-                    <div class="form-group">
-                        <label id="lbl-cover-upload">Kapak Resmi:</label>
-                        <div id="drop-area" tabindex="0">
-                            <span id="drop-area-text">📸 Buraya tıklayın ve Ctrl + V ile ekran görüntüsünü yapıştırın</span>
-                            <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
-                        </div>
-                    </div>
+                            <div class="atkk-inline-row">
+                                <div class="form-group">
+                                    <label id="lbl-role">Rol Tipi:</label>
+                                    <select id="form-role-select">
+                                        <option value="Both">Çift (Leader + Follower)</option> 
+                                        <option value="Leader">Leader</option>
+                                        <option value="Follower">Follower</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
+                                    <input type="text" id="form-partner-name" placeholder="Örn: Maria">
+                                </div>
+                            </div>
 
-                    <div class="form-group">
-                        <label id="lbl-role">Rol Tipi:</label>
-                        <select id="form-role-select">
-                            <option value="Both">Çift (Leader + Follower)</option>
-                            <option value="Leader">Leader</option>
-                            <option value="Follower">Follower</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
-                        <input type="text" id="form-partner-name" placeholder="Örn: Maria">
-                    </div>
-
-                    <div class="form-group">
-                        <label id="lbl-tags">Teknik Etiketleri (Virgül koyun veya öneriden seçip Enter'a basın):</label>
-                        <div class="tags-input-container" id="form-tags-wrapper">
-                            <div id="chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
-                            <div class="autocomplete-wrapper" style="flex: 1; min-width: 150px; position: relative;">
-                                <input type="text" id="form-tags-input" placeholder="Yazın ve virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
-                                <div id="autocomplete-list" class="autocomplete-suggestions d-none"></div>
+                            <div class="form-group">
+                                <label id="lbl-tags">Teknik Etiketleri:</label>
+                                <div class="tags-input-container" id="form-tags-wrapper" style="margin-top: 2px;">
+                                    <div id="chips-area" style="display: inline-flex; flex-wrap: wrap; gap: 6px;"></div>
+                                    <div class="autocomplete-wrapper" style="flex: 1; min-width: 140px; position: relative;">
+                                        <input type="text" id="form-tags-input" placeholder="Yazın ve virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; color:white; outline:none;">
+                                        <div id="autocomplete-list" class="autocomplete-suggestions d-none"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <div class="atkk-form-column" style="justify-content: space-between; height: 100%;">
+                            
+                            <div class="form-group">
+                                <label id="lbl-cover-upload">Kapak Resmi:</label>
+                                <div id="drop-area" style="margin-top: 4px;" tabindex="0">
+                                    <span id="drop-area-text">📸 Tıklayıp Ctrl + V ile ekran görüntüsü yapıştırın</span>
+                                    <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                                <label class="checkbox-group" style="margin: 0; cursor: pointer;">
+                                    <input type="checkbox" id="form-is-downloaded">
+                                    <span id="lbl-downloaded" style="font-size: 0.82rem; font-weight: 500;">Google Drive'a Yedeklendi mi?</span>
+                                </label>
+
+                                <div id="drive-url-container" class="d-none" style="margin-top: 8px; animation: fadeIn 0.2s ease;">
+                                    <label id="lbl-drive-url" style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; display: block;">Drive Paylaşım Linki:</label>
+                                    <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/..." style="padding: 6px 10px; font-size: 0.82rem;">
+                                </div>
+                            </div>
+
+                            <div id="assistant-panel" class="compact-assistant-box">
+                                <h4 id="assistant-title">💡 Dosya İsmi Asistanı</h4>
+                                <p id="assistant-text">Drive yüklemesi öncesi önerilen isim şablonu:</p>
+                                <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="form-group">
-                        <label class="checkbox-group">
-                            <input type="checkbox" id="form-is-downloaded">
-                            <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
-                        </label>
-                    </div>
-
-                    <div id="drive-url-container" class="form-group d-none" style="animation: fadeIn 0.3s ease;">
-                        <label id="lbl-drive-url">Google Drive Video Paylaşım Linki:</label>
-                        <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/.../view?usp=sharing">
-                    </div>
-
-                    <div id="assistant-panel" class="assistant-box">
-                        <h4 id="assistant-title">💡 Akıllı Dosya İsmi Asistanı</h4>
-                        <p id="assistant-text" style="font-size: 0.8rem; margin: 4px 0; color: #94a3b8;">İndirdiğiniz videoyu Drive'a yüklemeden önce ismini şu şekilde değiştirmeniz önerilir:</p>
-                        <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
-                    </div>
-
-                    <button type="submit" id="btn-submit-video" class="btn-primary" style="width: 100%; padding: 14px; margin-top: 10px;">
+                    <button type="submit" id="btn-submit-video" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 16px; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.3px;">
                         💾 Veritabanına Kaydet
                     </button>
                 </form>
