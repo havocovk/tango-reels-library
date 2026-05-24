@@ -38,13 +38,7 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     document.getElementById('menu-library').innerText = lang.menuLibrary;
     document.getElementById('menu-favorites').innerText = lang.menuFavorites;
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
-    
-    // HTML'de bulunmayan arama input'u için güvenli kontrol eklendi
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.placeholder = lang.searchPlaceholder;
-    }
-    
+    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
     document.getElementById('opt-all-roles').innerText = lang.allRoles;

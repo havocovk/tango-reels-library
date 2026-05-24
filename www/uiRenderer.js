@@ -186,9 +186,6 @@ export function renderVideoCards(videos, config) {
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
-        // Eğitmen adının app.js üzerindeki map ile veya doğrudan ilişkisel nesneyle doğru beslenmesi sağlandı
-        const displayInstructorName = video.instructor_name || (video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen');
-
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image: url('${coverImg}');">
@@ -201,7 +198,7 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>
             <div class="card-info-content">
-                <strong class="card-instructor">👤 ${displayInstructorName}</strong>
+                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
                 ${partnerDisplay}
                 
                 <div class="card-badges">
