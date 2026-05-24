@@ -2,123 +2,102 @@
  * 💃 ARJANTİN TANGO KOMBİNASYON KÜTÜPHANESİ - AKILLI FİLTRE MOTORU
  * Bu dosya kütüphanedeki videoları süzmeye yarar ve açılır kutuları doldurur.
  */
-import { translations } from './config.js';
 
-// 📅 Yardımcı Fonksiyon: Karmaşık tarihleri "Mayıs 2026" veya "May 2026" formatına çevirir.
-function formatAyYil(tarihString, currentLang = 'tr') {
-    if (!tarihString) return translations[currentLang].unknownDate || 'Bilinmeyen Tarih';
+function formatAyYil(tarihString) {
+    if (!tarihString) return 'Bilinmeyen Tarih';
     const tarih = new Date(tarihString);
-    return tarih.toLocaleDateString(currentLang === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' });
+    return tarih.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
 }
 
-/**
- * 🧺 GÖREV 1: HTML sayfasındaki Açılır Kutuları (Dropdown) Canlı Videolara Göre Doldurur
- * Seçimleri koruma sistemi eklendi.
- */
-export function populateFilterDropdowns(videolar, currentLang = 'tr') {
+export function populateFilterDropdowns(videolar) {
     const instructorSelect = document.getElementById('filter-instructor-select');
     const tagSelect = document.getElementById('filter-tag-select');
     const dateSelect = document.getElementById('filter-date-select');
 
-    // Eğer kutular ekranda yoksa işlemi durdur
     if (!instructorSelect || !tagSelect || !dateSelect) return;
 
-    const lang = translations[currentLang];
-
-    // ⚡ AKILLI KORUMA: Kullanıcının temizlikten önce seçmiş olduğu eski değerleri hafızaya alıyoruz
     const oldInstructor = instructorSelect.value;
     const oldTag = tagSelect.value;
     const oldDate = dateSelect.value;
 
-    // İçerikleri temizle ve ilk "Tümünü Göster" seçeneklerini ekle
-    instructorSelect.innerHTML = `<option value="all">${lang.allInstructors}</option>`;
-    tagSelect.innerHTML = `<option value="all">${lang.allTags}</option>`;
-    dateSelect.innerHTML = `<option value="all">${lang.allDates}</option>`;
+    instructorSelect.innerHTML = '<option value="all">Tüm Eğitmenler</option>';
+    tagSelect.innerHTML = '<option value="all">Tüm Etiketler</option>';
+    dateSelect.innerHTML = '<option value="all">Tüm Tarihler</option>';
 
-    const uniqueInstructors = new Set();
-    const uniqueTags = new Set();
-    const uniqueDates = new Set();
-
+    const egitmenlerTorba = new Set();
     videolar.forEach(video => {
-        if (video.instructor_name) uniqueInstructors.add(video.instructor_name);
-        if (video.tags) {
-            video.tags.split(',').forEach(t => {
-                const cleanTag = t.trim();
-                if (cleanTag) uniqueTags.add(cleanTag);
-            });
-        }
-        if (video.created_at) {
-            uniqueDates.add(formatAyYil(video.created_at, currentLang));
+        if (video.instructor_name) {
+            egitmenlerTorba.add(video.instructor_name.trim());
         }
     });
 
-    // Sıralı olarak elemanları dropdown'lara ekle
-    Array.from(uniqueInstructors).sort().forEach(ins => {
+    Array.from(egitmenlerTorba).sort().forEach(egitmenAdi => {
         const opt = document.createElement('option');
-        opt.value = ins;
-        opt.innerText = ins;
+        opt.value = egitmenAdi;
+        opt.innerText = egitmenAdi;
         instructorSelect.appendChild(opt);
     });
 
-    Array.from(uniqueTags).sort().forEach(tag => {
+    const etiketlerTorba = new Set();
+    videolar.forEach(video => {
+        if (video.tags) {
+            video.tags.split(',').forEach(tag => {
+                const t = tag.trim();
+                if (t) etiketlerTorba.add(t);
+            });
+        }
+    });
+
+    Array.from(etiketlerTorba).sort().forEach(etiketAdi => {
         const opt = document.createElement('option');
-        opt.value = tag;
-        opt.innerText = `#${tag}`;
+        opt.value = etiketAdi;
+        opt.innerText = `#${etiketAdi}`;
         tagSelect.appendChild(opt);
     });
 
-    Array.from(uniqueDates).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+    const tarihlerTorba = new Set();
+    videolar.forEach(video => {
+        if (video.created_at) {
+            tarihlerTorba.add(formatAyYil(video.created_at));
+        }
+    });
+
+    Array.from(tarihlerTorba).forEach(tarihMetni => {
         const opt = document.createElement('option');
-        opt.value = date;
-        opt.innerText = date;
+        opt.value = tarihMetni;
+        opt.innerText = tarihMetni;
         dateSelect.appendChild(opt);
     });
 
-    // Eski seçimleri geri yüklemeye çalış (eğer hala listede varsa)
-    if (Array.from(instructorSelect.options).some(o => o.value === oldInstructor)) {
-        instructorSelect.value = oldInstructor;
-    }
-    if (Array.from(tagSelect.options).some(o => o.value === oldTag)) {
-        tagSelect.value = oldTag;
-    }
-    if (Array.from(dateSelect.options).some(o => o.value === oldDate)) {
-        dateSelect.value = oldDate;
-    }
+    if (Array.from(egitmenlerTorba).includes(oldInstructor)) instructorSelect.value = oldInstructor;
+    if (Array.from(etiketlerTorba).includes(oldTag)) tagSelect.value = oldTag;
+    if (Array.from(tarihlerTorba).includes(oldDate)) dateSelect.value = oldDate;
 }
 
-/**
- * 🔍 GÖREV 2: Gelişmiş Arama ve Filtreleme Motoru
- */
-export function getFilteredVideos(videolar, aramaKelimesi, rol, egitmen, etiket, tarih, ortam, currentLang = 'tr') {
-    const kelime = aramaKelimesi ? aramaKelimesi.trim().toLowerCase() : '';
+export function getFilteredVideos(videolar, filtreler) {
+    const { query, rol, egitmen, etiket, tarih, ortam } = filtreler;
+    const temizQuery = query ? query.toLowerCase().trim() : '';
 
     return videolar.filter(video => {
-        if (kelime) {
-            const egitmenUyuyor = video.instructor_name && video.instructor_name.toLowerCase().includes(kelime);
-            const partnerUyuyor = video.partner_name && video.partner_name.toLowerCase().includes(kelime);
-            const etiketUyuyor = video.tags && video.tags.toLowerCase().includes(kelime);
-
+        if (temizQuery) {
+            const egitmenUyuyor = video.instructor_name?.toLowerCase().includes(temizQuery);
+            const etiketUyuyor = video.tags?.toLowerCase().includes(temizQuery);
+            const partnerUyuyor = video.partner_name?.toLowerCase().includes(temizQuery);
             if (!egitmenUyuyor && !etiketUyuyor && !partnerUyuyor) return false;
         }
 
-        // 1. Rol Tipi Filtresi (Lider / Takipçi / Çift)
         if (rol !== 'all' && video.role_type !== rol) return false;
-
-        // 2. Eğitmen Filtresi
         if (egitmen !== 'all' && video.instructor_name !== egitmen) return false;
 
-        // 3. Etiket Filtresi
         if (etiket !== 'all') {
             if (!video.tags) return false;
             const videoEtiketleri = video.tags.split(',').map(t => t.trim());
             if (!videoEtiketleri.includes(etiket)) return false;
         }
 
-        // 4. Zaman Filtresi (Örn: "Mayıs 2026")
-        if (tarih !== 'all' && formatAyYil(video.created_at, currentLang) !== tarih) return false;
+        if (tarih !== 'all' && formatAyYil(video.created_at) !== tarih) return false;
 
-        // 5. Ortam Filtresi (Google Drive mı, Sosyal Medya mı?)
-        if ( ortam !== 'all') {
+        if (ortam !== 'all') {
             if (ortam === 'drive' && !video.is_downloaded) return false;
             if (ortam === 'social' && video.is_downloaded) return false;
         }
@@ -127,18 +106,15 @@ export function getFilteredVideos(videolar, aramaKelimesi, rol, egitmen, etiket,
     });
 }
 
-/**
- * 🏷️ GÖREV 3: Tüm videolardan benzersiz etiket havuzu oluşturur (Otomatik tamamlama için)
- */
 export function getAllUniqueTagsPool(videolar) {
-    const pool = new Set();
+    const havuz = new Set();
     videolar.forEach(video => {
         if (video.tags) {
             video.tags.split(',').forEach(t => {
-                const clean = t.trim();
-                if (clean) pool.add(clean);
+                const temiz = t.trim();
+                if (temiz) havuz.add(temiz);
             });
         }
     });
-    return Array.from(pool).sort();
+    return Array.from(havuz).sort();
 }
