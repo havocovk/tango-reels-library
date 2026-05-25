@@ -47,11 +47,11 @@
         }
         
         #drop-area {
-            border: 1.5px dashed rgba(255, 255, 255, 0.2);
+            border: 1.5px dashed rgba(168, 85, 247, 0.3);
             border-radius: 10px;
             padding: 10px;
             text-align: center;
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(3, 7, 18, 0.4);
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
@@ -61,8 +61,8 @@
             min-height: 68px;
         }
         #drop-area:hover {
-            border-color: #38bdf8;
-            background: rgba(56, 189, 248, 0.03);
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.05);
         }
         #drop-area-text {
             font-size: 0.78rem;
@@ -77,8 +77,8 @@
         }
         
         .compact-assistant-box {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(3, 7, 18, 0.6);
+            border: 1px solid rgba(168, 85, 247, 0.2);
             border-radius: 10px;
             padding: 10px 14px;
             display: flex;
@@ -88,7 +88,7 @@
         .compact-assistant-box h4 {
             margin: 0;
             font-size: 0.8rem;
-            color: #38bdf8;
+            color: #a855f7;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -100,13 +100,13 @@
             color: #64748b;
         }
         .assistant-code {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(3, 7, 18, 0.6);
+            border: 1px solid rgba(168, 85, 247, 0.2);
             padding: 6px 12px;
             border-radius: 6px;
             font-family: 'Courier New', monospace;
             font-size: 0.78rem;
-            color: #cbd5e1;
+            color: #10b981;
             word-break: break-all;
             margin-top: 2px;
         }
@@ -131,9 +131,9 @@
                 <h2 id="sidebar-title"></h2>
                 <button id="lang-toggle-btn" class="lang-btn">🇬🇧 EN</button>
             </div>
-            <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
+            <hr style="border-color: rgba(168, 85, 247, 0.2); margin: 15px 0;">
             <div class="menu-items">
-                <button id="menu-library" class="menu-btn active">📚 Kütüphane</button>
+                <button id="menu-library" class="menu-btn active">📚 Koleksiyon</button>
                 <button id="menu-favorites" class="menu-btn">⭐ Pratik Listem</button>
                 <button id="menu-add-video" class="menu-btn">➕ Yeni Video Ekle</button>
             </div>
@@ -149,28 +149,28 @@
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; margin-bottom: 12px;">
                     
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <select id="filter-role-select" style="flex: 1; min-width: 120px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-role-select" style="flex: 1; min-width: 120px; background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all" id="opt-all-roles">Tüm Roller</option>
                             <option value="Leader" id="opt-leader">Lider</option>
                             <option value="Follower" id="opt-follower">Takipçi</option>
                             <option value="Both" id="opt-both">Çift</option>
                         </select>
 
-                        <select id="filter-instructor-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-instructor-select" style="flex: 1; min-width: 150px; background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Eğitmenler</option>
                         </select>
 
-                        <select id="filter-tag-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-tag-select" style="flex: 1; min-width: 150px; background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Etiketler</option>
                         </select>
                     </div>
 
                     <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <select id="filter-date-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-date-select" style="flex: 1; min-width: 150px; background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all">Tüm Tarihler</option>
                         </select>
 
-                        <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: white;">
+                        <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(3, 7, 18, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); padding: 10px; border-radius: 10px; color: white;">
                             <option value="all" id="opt-all-locations">Kaynaklar</option>
                             <option value="drive" id="opt-drive">💾 Google Drive</option>
                             <option value="social" id="opt-social">🌐 Sosyal Medya</option>
@@ -178,8 +178,7 @@
                     </div>
                 </div>
 
-                <!-- 📊 Toplam video sayısı göstergesi (yazı boyutu büyütüldü) -->
-                <div id="total-video-count" style="text-align: right; margin: 10px 0 5px 0; color: #94a3b8; font-size: 1.1rem;"></div>
+                <div id="total-video-count" style="text-align: right; margin: 10px 0 5px 0; color: #a855f7; font-size: 1.1rem; font-weight: 500;"></div>
 
                 <div id="clear-favorites-container" class="d-none" style="margin: 10px 0;">
                     <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
@@ -211,11 +210,11 @@
                                 </div>
                             </div>
 
-                            <div id="new-instructor-container" class="form-group d-none" style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                            <div id="new-instructor-container" class="form-group d-none" style="background: rgba(168, 85, 247, 0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(168, 85, 247, 0.2);">
                                 <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
                                 <div style="display: flex; gap: 8px; margin-top: 4px;">
                                     <input type="text" id="form-new-instructor-input" placeholder="Örn: Juan D'Arienzo">
-                                    <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #38bdf8; color: #0f172a;">Ekle</button>
+                                    <button type="button" id="btn-save-instructor" class="lang-btn" style="background: #a855f7; color: #030712;">Ekle</button>
                                 </div>
                             </div>
 
@@ -261,7 +260,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div class="form-group" style="background: rgba(168, 85, 247, 0.05); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(168, 85, 247, 0.2);">
                                 <label class="checkbox-group" style="margin: 0; cursor: pointer;">
                                     <input type="checkbox" id="form-is-downloaded">
                                     <span id="lbl-downloaded" style="font-size: 0.82rem; font-weight: 500;">Google Drive'a Yedeklendi mi?</span>
@@ -300,7 +299,7 @@
     </div>
 
     <div id="tags-edit-modal" class="modal-overlay d-none">
-        <div class="modal-content" style="max-width: 500px; padding: 25px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px);">
+        <div class="modal-content" style="max-width: 500px; padding: 25px; background: #030712; border: 1px solid rgba(168, 85, 247, 0.3);">
             <span id="tags-modal-close-btn" class="modal-close" style="top: 15px; right: 20px;">&times;</span>
             <h3 id="edit-tags-title" style="color: #fff; margin-bottom: 20px; font-weight: 600;">✏️ Etiketleri Düzenle</h3>
             
@@ -317,11 +316,11 @@
     </div>
 
     <div id="custom-dialog-modal" class="modal-overlay d-none" style="z-index: 10000;">
-        <div class="modal-content" style="max-width: 400px; padding: 25px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
+        <div class="modal-content" style="max-width: 400px; padding: 25px; background: #030712; border: 1px solid rgba(168, 85, 247, 0.3); text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
             <p id="custom-dialog-message" style="color: #fff; font-size: 16px; margin-bottom: 25px; line-height: 1.6; font-weight: 500;"></p>
             <div style="display: flex; justify-content: center; gap: 12px;">
-                <button id="custom-dialog-cancel-btn" class="btn d-none" style="padding: 10px 24px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; font-weight: 500;">İptal</button>
-                <button id="custom-dialog-ok-btn" class="btn" style="padding: 10px 24px; border-radius: 8px; background: #3b82f6; color: #fff; border: none; cursor: pointer; font-weight: 500;">Tamam</button>
+                <button id="custom-dialog-cancel-btn" class="btn d-none" style="padding: 10px 24px; border-radius: 8px; background: rgba(168, 85, 247, 0.2); color: #fff; border: 1px solid rgba(168, 85, 247, 0.3); cursor: pointer; font-weight: 500;">İptal</button>
+                <button id="custom-dialog-ok-btn" class="btn" style="padding: 10px 24px; border-radius: 8px; background: #a855f7; color: #030712; border: none; cursor: pointer; font-weight: 500;">Tamam</button>
             </div>
         </div>
     </div>

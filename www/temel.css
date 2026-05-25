@@ -7,8 +7,8 @@
 }
 
 body {
-    background: #0f172a; 
-    color: #f8fafc;
+    background: #030712;  /* Nebula Siyahı */
+    color: #ffffff;
     min-height: 100vh;
     overflow-x: hidden;
     display: flex;
@@ -28,13 +28,13 @@ body {
 }
 
 .current-location-glow {
-    background: linear-gradient(135deg, #38bdf8, #0369a1);
+    background: linear-gradient(135deg, #a855f7, #7c3aed); /* Mor */
     top: -10%;
     left: -10%;
 }
 
 .secondary-glow {
-    background: linear-gradient(135deg, #ec4899, #be185d);
+    background: linear-gradient(135deg, #10b981, #059669); /* Yeşil */
     bottom: -10%;
     right: -10%;
 }
@@ -44,21 +44,21 @@ body {
     width: 95vw;
     height: 90vh;
     max-width: 1400px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(3, 7, 18, 0.6);  /* Nebula siyahı + şeffaflık */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(168, 85, 247, 0.2);  /* Mor border */
     border-radius: 24px;
     z-index: 2;
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 }
 
 /* Sol Menü Tasarımı */
 .sidebar-glass {
     width: 280px;
-    background: rgba(15, 23, 42, 0.4);
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(3, 7, 18, 0.5);
+    border-right: 1px solid rgba(168, 85, 247, 0.2);
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
@@ -74,15 +74,15 @@ body {
 .sidebar-header h2 {
     font-size: 1.4rem;
     font-weight: 700;
-    background: linear-gradient(to right, #38bdf8, #ec4899);
+    background: linear-gradient(135deg, #a855f7, #10b981);  /* Mor -> Yeşil */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .lang-btn {
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: #ffffff;
     padding: 6px 12px;
     border-radius: 10px;
     cursor: pointer;
@@ -92,8 +92,8 @@ body {
 }
 
 .lang-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(168, 85, 247, 0.3);
+    border-color: rgba(168, 85, 247, 0.6);
 }
 
 .menu-items {
@@ -120,15 +120,15 @@ body {
 }
 
 .menu-btn:hover {
-    background: rgba(255, 255, 255, 0.04);
-    color: #f8fafc;
+    background: rgba(168, 85, 247, 0.1);
+    color: #ffffff;
 }
 
 .menu-btn.active {
-    background: rgba(56, 189, 248, 0.1);
-    color: #38bdf8;
+    background: rgba(168, 85, 247, 0.2);
+    color: #a855f7;
     font-weight: 600;
-    border-left: 3px solid #38bdf8;
+    border-left: 3px solid #a855f7;
     border-radius: 4px 12px 12px 4px;
 }
 
@@ -137,7 +137,7 @@ body {
     flex: 1;
     padding: 40px;
     overflow-y: auto;
-    background: rgba(15, 23, 42, 0.15);
+    background: rgba(3, 7, 18, 0.2);
 }
 
 .view-panel {
@@ -160,8 +160,6 @@ body {
    📱 MOBİL VE TABLET UYUMLULUK AYARLARI (max-width: 768px)
    ========================================================================== */
 @media screen and (max-width: 768px) {
-    
-    /* PC'de yan yana (row) olan yapıyı alt alta (column) getiriyoruz */
     .app-container {
         flex-direction: column;
         width: 100vw;
@@ -170,7 +168,6 @@ body {
         padding: 10px;
     }
 
-    /* Sol menüyü (Sidebar) mobile göre tam genişlik yapıyoruz */
     nav.sidebar-glass {
         width: 100%;
         height: auto;
@@ -179,7 +176,6 @@ body {
         border-radius: 16px;
     }
 
-    /* Menü butonlarını mobilde yan yana dizerek alandan tasarruf ediyoruz */
     .menu-items {
         flex-direction: row;
         flex-wrap: wrap;
@@ -189,19 +185,17 @@ body {
 
     .menu-btn {
         flex: 1;
-        min-width: 120px; /* Butonların çok küçülmesini engeller */
+        min-width: 120px;
         padding: 10px 12px;
         font-size: 0.9rem;
-        justify-content: center; /* İkon ve yazıyı ortalar */
+        justify-content: center;
     }
 
-    /* Sağ taraftaki ana içerik alanını mobilde tam genişlik yapıyoruz */
     main.content-area {
         width: 100%;
         padding: 5px;
     }
 
-    /* Arka plandaki parlamaları mobilde biraz küçültüyoruz ki gözü yormasın */
     .bg-glow {
         width: 250px;
         height: 250px;

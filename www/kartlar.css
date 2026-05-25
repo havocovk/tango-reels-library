@@ -7,25 +7,25 @@
 
 .search-header input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(3, 7, 18, 0.6);
+    border: 1px solid rgba(168, 85, 247, 0.2);
     padding: 16px 20px;
     border-radius: 16px;
-    color: #fff;
+    color: #ffffff;
     font-size: 1rem;
     outline: none;
     transition: all 0.3s ease;
 }
 
 .search-header input:focus {
-    border-color: rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
-    background: rgba(0, 0, 0, 0.3);
+    border-color: #a855f7;
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+    background: rgba(3, 7, 18, 0.8);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #38bdf8, #0ea5e9);
-    color: #0f172a;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    color: #ffffff;
     border: none;
     padding: 0 28px;
     border-radius: 16px;
@@ -33,12 +33,13 @@
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.3);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+    background: linear-gradient(135deg, #c084fc, #a855f7);
 }
 
 /* Onaylı Liste Temizleme Buton Stili */
@@ -73,8 +74,8 @@
 
 /* Modern Video Kartı Tasarımı */
 .video-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(3, 7, 18, 0.6);
+    border: 1px solid rgba(168, 85, 247, 0.2);
     border-radius: 20px;
     padding: 15px;
     display: flex;
@@ -85,9 +86,9 @@
 
 .video-card:hover {
     transform: translateY(-6px);
-    background: rgba(30, 41, 59, 0.6);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.6);
+    background: rgba(3, 7, 18, 0.8);
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 12px 24px -10px rgba(168, 85, 247, 0.3);
 }
 
 .video-cover-link {
@@ -101,7 +102,7 @@
 
 .video-cover-container {
     width: 100%;
-    padding-top: 56.25% !important; 
+    padding-top: 56.25% !important;
     background-size: cover;
     background-position: center;
     position: relative;
@@ -115,7 +116,7 @@
 .play-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(3, 7, 18, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -128,8 +129,8 @@
 }
 
 .play-icon {
-    background: #fff;
-    color: #0f172a;
+    background: #a855f7;
+    color: #ffffff;
     width: 46px;
     height: 46px;
     border-radius: 50%;
@@ -144,6 +145,7 @@
 
 .video-card:hover .play-icon {
     transform: scale(1.1);
+    background: #10b981;
 }
 
 .info-msg {
@@ -165,7 +167,7 @@
 
 .card-instructor {
     font-size: 1.05rem;
-    color: #38bdf8;
+    color: #a855f7;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -193,38 +195,39 @@
     align-items: center;
 }
 
+/* Yeni badge renkleri */
 .badge-leader {
-    background: rgba(168, 85, 247, 0.15); 
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-follower {
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.badge-both {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(16, 185, 129, 0.1));
     color: #c084fc;
     border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
-.badge-follower {
-    background: rgba(236, 72, 153, 0.15); 
-    color: #f472b6;
-    border: 1px solid rgba(236, 72, 153, 0.3);
-}
-
-.badge-both {
-    background: rgba(56, 189, 248, 0.15); 
-    color: #38bdf8;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-}
-
 .badge-drive {
-    background: rgba(34, 197, 94, 0.15); 
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .badge-social {
-    background: rgba(245, 158, 11, 0.15); 
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .card-action-link {
-    color: #ec4899;
+    color: #10b981;
     font-size: 0.85rem;
     text-decoration: none;
     font-weight: 600;
@@ -234,7 +237,7 @@
 }
 
 .card-action-link:hover {
-    color: #f472b6;
+    color: #34d399;
     text-decoration: underline;
 }
 
@@ -242,11 +245,11 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(15, 23, 42, 0.6);
+    background: rgba(3, 7, 18, 0.7);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
     width: 34px;
     height: 34px;
@@ -262,15 +265,15 @@
 
 .fav-star-btn:hover {
     transform: scale(1.1);
-    color: #eab308;
-    background: rgba(15, 23, 42, 0.8);
+    color: #fbbf24;
+    background: rgba(3, 7, 18, 0.9);
 }
 
 .fav-star-btn.active {
-    color: #eab308;
-    background: rgba(15, 23, 42, 0.7);
-    border-color: rgba(234, 179, 8, 0.4);
-    box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+    color: #fbbf24;
+    background: rgba(3, 7, 18, 0.8);
+    border-color: rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
 }
 
 .inline-edit-tags-btn {
@@ -285,13 +288,13 @@
 }
 
 .inline-edit-tags-btn:hover {
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.08);
+    color: #a855f7;
+    background: rgba(168, 85, 247, 0.1);
 }
 
 .card-crud-btn {
     background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
+    border: 1px solid rgba(168, 85, 247, 0.2);
     color: #94a3b8;
     width: 32px;
     height: 32px;
@@ -305,15 +308,15 @@
 }
 
 .card-edit-btn:hover {
-    background: rgba(56, 189, 248, 0.15);
-    border-color: rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
+    background: rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.5);
+    color: #a855f7;
     transform: translateY(-1px);
 }
 
 .card-delete-btn:hover {
     background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.4);
     color: #ef4444;
     transform: translateY(-1px);
 }
@@ -326,8 +329,6 @@
    📱 MOBİL İÇİN ARAMA VE FİLTRE AYARLARI (max-width: 768px)
    ========================================================================== */
 @media screen and (max-width: 768px) {
-    
-    /* Yan yana duran Arama Girişi ve "Listeyi Yenile" butonunu alt alta alıyoruz */
     .search-header {
         flex-direction: column;
         gap: 10px;
@@ -336,11 +337,10 @@
 
     .search-header input {
         width: 100%;
-        padding: 12px 16px; /* Mobilde daha kompakt bir padding */
+        padding: 12px 16px;
         font-size: 0.95rem;
     }
 
-    /* "Listeyi Yenile" butonunu mobilde tam genişlik yapıp tıklama alanını büyütüyoruz */
     .btn-primary {
         width: 100%;
         padding: 12px 0;
@@ -350,18 +350,15 @@
         align-items: center;
     }
 
-    /* Yan yana dizilen 5 adet filtre seçim kutusunun (select) konteyner ayarları */
-    /* Not: HTML yapındaki filtrelerin üst kapsayıcısı flex ise otomatik alt alta dizilecekler */
     .content-area select,
     select[id^="filter-"] {
         width: 100% !important;
         margin-bottom: 8px;
         padding: 12px !important;
         font-size: 0.95rem !important;
-        background-position: right 12px center !important; /* Ok ikonunun yeri */
+        background-position: right 12px center !important;
     }
 
-    /* Filtrelerin genel dizilim alanında boşlukları dengeliyoruz */
     .filters-container, 
     main.content-area > div:nth-child(2) {
         display: flex;
@@ -370,12 +367,7 @@
     }
 }
 
-/* ==========================================================================
-   📱 MOBİL İÇİN VİDEO KARTLARI VE DOKUNMATİK AYARLARI (max-width: 768px)
-   ========================================================================== */
 @media screen and (max-width: 768px) {
-    
-    /* PC'de çoklu sütun olan video ızgarasını mobilde TEKLİ sütuna düşürüyoruz */
     .video-grid, 
     #video-grid,
     .cards-container {
@@ -384,20 +376,17 @@
         padding: 5px 0;
     }
 
-    /* Her bir video kartının mobilde ekrana tam oturması */
     .video-card, .tango-card {
         width: 100% !important;
         max-width: 100% !important;
         margin: 0 0 10px 0;
     }
 
-    /* Kartın içindeki kapak görselinin yüksekliğini mobilde dengeliyoruz */
     .card-cover, .video-thumbnail, .preview-img {
-        height: 200px !important; /* Telefon dikey ekranında ideal yükseklik */
+        height: 200px !important;
         object-fit: cover;
     }
 
-    /* Kartın altındaki butonlar ve aksiyon alanı (Düzenle, Sil, İzle) */
     .card-actions, .card-footer {
         display: flex;
         justify-content: space-between;
@@ -406,33 +395,30 @@
         padding-top: 12px;
     }
 
-    /* Yıldız (Favori) butonu ve Sil/Düzenle ikonlarının dokunma alanını büyütüyoruz */
     .fav-star-btn, 
     .btn-card-delete, 
     .btn-card-edit,
     .inline-edit-tags-btn {
-        min-width: 44px;  /* Mobil için ideal parmak basma standardı */
-        min-height: 44px; /* Mobil için ideal parmak basma standardı */
+        min-width: 44px;
+        min-height: 44px;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 1.2rem !important; /* İkonları mobilde daha görünür yapıyoruz */
+        font-size: 1.2rem !important;
     }
 
-    /* "Videoyu İzle" linkini mobilde belirgin bir buton gibi gösterelim */
     .video-watch-link, .watch-btn {
         padding: 10px 16px;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(168, 85, 247, 0.1);
         border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(168, 85, 247, 0.2);
         text-align: center;
-        flex: 1; /* Alandaki boşluğu kaplasın */
+        flex: 1;
     }
 }
 
-/* Mobil Uyumlu "Daha Fazla Yükle" Butonu */
 .btn-load-more {
-    background-color: #cb1c1c; /* Tango kırmızısı / uygulamanın ana rengi */
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
     color: white;
     border: none;
     padding: 14px 35px;
@@ -442,7 +428,7 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    width: 85%; /* Mobilde parmakla rahat basılması için geniş alan */
+    width: 85%;
     max-width: 320px;
 }
 
@@ -451,8 +437,8 @@
 }
 
 .btn-load-more:disabled {
-    background-color: #cccccc;
-    color: #666666;
+    background: #475569;
+    color: #94a3b8;
     cursor: not-allowed;
     box-shadow: none;
 }

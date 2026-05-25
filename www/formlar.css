@@ -1,17 +1,17 @@
 #drop-area {
-    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border: 2px dashed rgba(168, 85, 247, 0.3);
     border-radius: 16px;
     padding: 30px 20px;
     text-align: center;
-    background: rgba(0,0,0,0.15);
+    background: rgba(3, 7, 18, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
     outline: none;
 }
 
 #drop-area:focus, #drop-area:hover {
-    border-color: #38bdf8;
-    background: rgba(56, 189, 248, 0.02);
+    border-color: #a855f7;
+    background: rgba(168, 85, 247, 0.05);
 }
 
 .preview-img {
@@ -19,7 +19,7 @@
     max-height: 200px;
     object-fit: cover;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .glass-form {
@@ -39,30 +39,31 @@
 
 .form-group label {
     font-size: 0.85rem;
-    color: #94a3b8;
+    color: #a855f7;
 }
 
 .form-group input[type="text"],
 .form-group input[type="url"],
 .form-group select {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(3, 7, 18, 0.6);
+    border: 1px solid rgba(168, 85, 247, 0.3);
     padding: 12px 16px;
     border-radius: 12px;
-    color: #fff;
+    color: #ffffff;
     font-size: 0.95rem;
     outline: none;
     transition: all 0.3s ease;
 }
 
 .form-group select option {
-    background: #0f172a;
-    color: #fff;
+    background: #030712;
+    color: #ffffff;
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: rgba(56, 189, 248, 0.4);
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .checkbox-group {
@@ -71,19 +72,19 @@
     gap: 10px;
     cursor: pointer;
     user-select: none;
-    color: #f8fafc !important;
+    color: #ffffff !important;
     font-size: 0.95rem !important;
 }
 
 .checkbox-group input {
     width: 18px;
     height: 18px;
-    accent-color: #38bdf8;
+    accent-color: #a855f7;
 }
 
 .assistant-box {
-    background: rgba(56, 189, 248, 0.04);
-    border: 1px solid rgba(56, 189, 248, 0.15);
+    background: rgba(168, 85, 247, 0.05);
+    border: 1px solid rgba(168, 85, 247, 0.2);
     border-radius: 14px;
     padding: 15px;
     margin-top: 5px;
@@ -91,18 +92,18 @@
 
 .assistant-box h4 {
     font-size: 0.9rem;
-    color: #38bdf8;
+    color: #a855f7;
     font-weight: 600;
 }
 
 .assistant-code {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(3, 7, 18, 0.6);
+    border: 1px solid rgba(168, 85, 247, 0.2);
     padding: 10px 14px;
     border-radius: 10px;
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.9rem;
-    color: #e2e8f0;
+    color: #10b981;
     word-break: break-all;
     margin-top: 8px;
     user-select: all;
@@ -111,7 +112,7 @@
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(3, 7, 18, 0.8);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     z-index: 9999;
@@ -125,11 +126,11 @@
     position: relative;
     width: 90%;
     max-width: 960px;
-    background: #0f172a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #030712;
+    border: 1px solid rgba(168, 85, 247, 0.3);
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+    box-shadow: 0 25px 50px -12px rgba(168, 85, 247, 0.2);
 }
 
 .modal-close {
@@ -144,13 +145,13 @@
 }
 
 .modal-close:hover {
-    color: #f8fafc;
+    color: #a855f7;
 }
 
 .video-container {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%; 
+    padding-bottom: 56.25%;
     height: 0;
 }
 
@@ -162,8 +163,8 @@
 
 /* Modern Etiket Giriş Çerçevesi */
 .tags-input-container {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(3, 7, 18, 0.6);
+    border: 1px solid rgba(168, 85, 247, 0.3);
     padding: 10px 14px;
     border-radius: 12px;
     display: flex;
@@ -175,14 +176,14 @@
 }
 
 .tags-input-container:focus-within {
-    border-color: rgba(56, 189, 248, 0.4);
+    border-color: #10b981;
 }
 
-/* Etiket Kutucuğu (Chip) Tasarımı */
+/* Etiket Kutucuğu (Chip) Tasarımı - Mor & Yeşil geçiş */
 .tag-chip-item {
-    background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(16, 185, 129, 0.1));
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
     padding: 4px 10px;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -194,16 +195,21 @@
     animation: fadeIn 0.2s ease;
 }
 
+.tag-chip-item:hover {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(16, 185, 129, 0.2));
+    border-color: #10b981;
+}
+
 .chip-close-x {
     cursor: pointer;
     font-weight: bold;
-    color: rgba(56, 189, 248, 0.6);
+    color: rgba(168, 85, 247, 0.6);
     font-size: 1rem;
     transition: color 0.2s ease;
 }
 
 .chip-close-x:hover {
-    color: #ef4444;
+    color: #10b981;
 }
 
 /* Autocomplete (Arama Öneri Listesi) Kutusu */
@@ -212,13 +218,13 @@
     top: calc(100% + 8px);
     left: 0;
     width: 100%;
-    background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #030712;
+    border: 1px solid rgba(168, 85, 247, 0.4);
     border-radius: 10px;
     z-index: 999;
     max-height: 180px;
     overflow-y: auto;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
 .autocomplete-suggestion-item {
@@ -231,8 +237,8 @@
 
 .autocomplete-suggestion-item:hover, 
 .autocomplete-active {
-    background: rgba(56, 189, 248, 0.15);
-    color: #38bdf8;
+    background: rgba(168, 85, 247, 0.15);
+    color: #a855f7;
 }
 
 /* Pop-up Etiket Düzenleme Satır Yapısı */
@@ -249,10 +255,10 @@
     display: flex;
     gap: 10px;
     align-items: center;
-    background: rgba(255,255,255,0.02);
+    background: rgba(168, 85, 247, 0.05);
     padding: 6px 12px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.04);
+    border: 1px solid rgba(168, 85, 247, 0.2);
 }
 
 .modal-tag-edit-input {
