@@ -280,7 +280,7 @@ function applyFiltersAndSearch() {
     // currentLang parametresini getFilteredVideos'a gönder
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler, currentLang);
 
-        // 📊 Toplam video sayısını güncelle (dil duyarlı)
+    // 📊 Toplam video sayısını güncelle (dil duyarlı)
     const totalCountElem = document.getElementById('total-video-count');
     if (totalCountElem) {
         const lang = translations[currentLang];
@@ -441,6 +441,9 @@ async function handleFormSubmit(e) {
 document.addEventListener('DOMContentLoaded', () => {
     fetchInstructors();
     fetchVideos();
+
+    // ✅ İlk dil yüklemesi için gerekli çağrı (menü metinleri, başlık vb.)
+    callUpdateInterfaceLanguage();
 
     document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
