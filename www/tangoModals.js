@@ -6,10 +6,7 @@ import { renderChips } from './uiRenderer.js';
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
 
-// Not düzenleme için değişken
-let activeNoteVideoId = null;
-
-// Drive linkini embed formata dönüştürür
+// Drive linkini embed formata dönüştürür (Artık YouTube linklerini de dönüştürüyor!)
 export function convertDriveUrlToEmbed(url) {
     if (!url) return '';
     
@@ -23,6 +20,7 @@ export function convertDriveUrlToEmbed(url) {
     
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         let videoId = '';
+        
         if (url.includes('shorts/')) {
             videoId = url.split('shorts/')[1]?.split(/[?#]/)[0];
         } else if (url.includes('youtu.be/')) {
@@ -32,13 +30,16 @@ export function convertDriveUrlToEmbed(url) {
         } else if (url.includes('embed/')) {
             videoId = url.split('embed/')[1]?.split(/[?#]/)[0];
         }
+        
         if (videoId) {
             return `https://www.youtube.com/embed/${videoId}`;
         }
     }
+    
     return url;
 }
 
+// 🎬 Video Önizleme Modalı Fonksiyonları
 export function openVideoModal(url) {
     const embedUrl = convertDriveUrlToEmbed(url);
     document.getElementById('modal-iframe').src = embedUrl;
@@ -50,6 +51,7 @@ export function closeVideoModal() {
     document.getElementById('modal-iframe').src = '';
 }
 
+// ✏️ Etiket Düzenleme Modalı Fonksiyonları
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
     document.getElementById('tags-edit-modal').classList.remove('d-none');
@@ -58,6 +60,7 @@ export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     if (video.tags) {
         video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
     }
+    
     renderModalChips(globalVideos, applyFiltersAndSearch);
 }
 
@@ -78,10 +81,13 @@ export function renderModalChips(globalVideos, applyFiltersAndSearch) {
 export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
+    
     try {
         await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags);
+        
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
+        
         renderModalChips(globalVideos, applyFiltersAndSearch);
         applyFiltersAndSearch();
     } catch (err) {
@@ -89,63 +95,7 @@ export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSe
     }
 }
 
-// ========== NOT DÜZENLEME MODALI (DÜZELTİLDİ) ==========
-export function openNoteEditModal(video, onNoteSavedCallback) {
-    activeNoteVideoId = video.id;
-    const currentNote = video.notes || ''; // notes alanını oku
-    
-    const modal = document.getElementById('custom-dialog-modal');
-    const msgEl = document.getElementById('custom-dialog-message');
-    const okBtn = document.getElementById('custom-dialog-ok-btn');
-    const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
-    
-    // Textarea içine mevcut notu yaz
-    msgEl.innerHTML = `<textarea id="note-textarea" rows="4" style="width:100%; background:#0b0813; color:#f1f5f9; border:1px solid #ff007f; border-radius:8px; padding:8px;">${escapeHtml(currentNote)}</textarea>`;
-    
-    okBtn.innerText = 'Kaydet';
-    cancelBtn.innerText = 'İptal';
-    cancelBtn.classList.remove('d-none');
-    modal.classList.remove('d-none');
-    
-    const handleOk = async () => {
-        const newNote = document.getElementById('note-textarea').value;
-        try {
-            await dbUpdateNote(activeNoteVideoId, newNote);
-            // Videodaki notu güncelle (global değişken)
-            if (onNoteSavedCallback) onNoteSavedCallback();
-        } catch (err) {
-            console.error(err);
-            alert('Not kaydedilemedi');
-        }
-        modal.classList.add('d-none');
-        cleanup();
-    };
-    
-    const handleCancel = () => {
-        modal.classList.add('d-none');
-        cleanup();
-    };
-    
-    const cleanup = () => {
-        okBtn.removeEventListener('click', handleOk);
-        cancelBtn.removeEventListener('click', handleCancel);
-    };
-    
-    okBtn.addEventListener('click', handleOk);
-    cancelBtn.addEventListener('click', handleCancel);
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-// Alert ve Confirm fonksiyonları (mevcut, değişmedi)
+// 🔔 Modern Özel Alert (Bilgilendirme) Pop-up'ı
 export function showCustomAlert(message, okText = 'Tamam') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
@@ -167,6 +117,7 @@ export function showCustomAlert(message, okText = 'Tamam') {
     });
 }
 
+// ❓ Modern Özel Confirm (Onay) Pop-up'ı
 export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İptal') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
@@ -197,5 +148,62 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
 
         okBtn.addEventListener('click', handleOk);
         cancelBtn.addEventListener('click', handleCancel);
+    });
+}
+
+// 📝 Not düzenleme modalı (GÜNCELLENDİ: callback'e yeni notu gönderir)
+let activeNoteVideoId = null;
+
+export function openNoteEditModal(video, onNoteSavedCallback) {
+    activeNoteVideoId = video.id;
+    const currentNote = video.notes || '';
+    
+    const modal = document.getElementById('custom-dialog-modal');
+    const msgEl = document.getElementById('custom-dialog-message');
+    const okBtn = document.getElementById('custom-dialog-ok-btn');
+    const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+    
+    msgEl.innerHTML = `<textarea id="note-textarea" rows="4" style="width:100%; background:#0b0813; color:#f1f5f9; border:1px solid #ff007f; border-radius:8px; padding:8px;">${escapeHtml(currentNote)}</textarea>`;
+    
+    okBtn.innerText = 'Kaydet';
+    cancelBtn.innerText = 'İptal';
+    cancelBtn.classList.remove('d-none');
+    modal.classList.remove('d-none');
+    
+    const handleOk = async () => {
+        const newNote = document.getElementById('note-textarea').value;
+        try {
+            await dbUpdateNote(activeNoteVideoId, newNote);
+            // Callback'e yeni notu gönder
+            if (onNoteSavedCallback) onNoteSavedCallback(newNote);
+        } catch (err) {
+            console.error(err);
+            alert('Not kaydedilemedi');
+        }
+        modal.classList.add('d-none');
+        cleanup();
+    };
+    
+    const handleCancel = () => {
+        modal.classList.add('d-none');
+        cleanup();
+    };
+    
+    const cleanup = () => {
+        okBtn.removeEventListener('click', handleOk);
+        cancelBtn.removeEventListener('click', handleCancel);
+    };
+    
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
     });
 }

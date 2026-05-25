@@ -1,6 +1,9 @@
+// uiRenderer.js
+
 import { translations } from './config.js';
 import { openNoteEditModal } from './tangoModals.js';
 
+// 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -16,6 +19,7 @@ export function renderChips(containerId, chipsArray, onRemoveCallback) {
     });
 }
 
+// 2. AUTOCOMPLETE (OTOMATİK ÖNERİ) AYARLAMA FONKSİYONU
 export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, onAddCallback, getAllUniqueTagsPool) {
     const input = document.getElementById(inputId);
     const list = document.getElementById(listId);
@@ -113,6 +117,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (DİNAMİK ÇEVİRİ DESTEKLİ)
 export function renderVideoCards(videos, config) {
     const { 
         currentLang, 
@@ -124,7 +129,7 @@ export function renderVideoCards(videos, config) {
         startVideoEditFlow, 
         deleteVideoFlow, 
         openVideoModal,
-        refreshList
+        refreshList  // yedekte dursun, ama artık doğrudan not güncelleme yapacağız
     } = config;
 
     const videoGrid = document.getElementById('video-grid');
@@ -140,6 +145,7 @@ export function renderVideoCards(videos, config) {
     videos.forEach(video => {
         const card = document.createElement('div');
         card.className = 'video-card';
+        card.dataset.videoId = video.id;  // not güncelleme için ID'yi sakla
         
         let roleDisplay = video.role_type || 'Both';
         let roleBadgeClass = '';
@@ -184,7 +190,7 @@ export function renderVideoCards(videos, config) {
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
-        // NOT alanı - dil desteği ile
+        // NOT alanı HTML'i - not varsa göster, yoksa "Not ekle"
         const noteText = video.notes ? (video.notes.length > 60 ? video.notes.substring(0, 60) + '...' : video.notes) : lang.addNote;
         const noteHtml = `
             <div class="card-note-area" style="margin-top: 8px; font-size:0.75rem; color:#94a3b8; display:flex; align-items:center; gap:6px;">
@@ -230,36 +236,54 @@ export function renderVideoCards(videos, config) {
             </div>
         `;
 
+        // Yıldız (favori) butonu
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
 
+        // Etiket düzenleme butonu
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             openTagsEditModal(video);
         });
 
+        // Düzenle butonu
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             startVideoEditFlow(video);
         });
 
+        // Sil butonu
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             deleteVideoFlow(video.id);
         });
 
+        // NOT düzenleme butonu - açılan pencereden not kaydedilince karttaki alanı güncelle
         const noteEditBtn = card.querySelector('.note-edit-btn');
+        const notePreviewSpan = card.querySelector('.note-preview');
+        
         if (noteEditBtn) {
             noteEditBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                openNoteEditModal(video, () => {
-                    if (refreshList) refreshList();
+                openNoteEditModal(video, (newNote) => {
+                    // Callback: yeni not kaydedildiğinde bu çalışacak
+                    if (newNote !== undefined) {
+                        // Karttaki not alanını güncelle
+                        const displayNote = newNote ? (newNote.length > 60 ? newNote.substring(0, 60) + '...' : newNote) : lang.addNote;
+                        if (notePreviewSpan) notePreviewSpan.innerText = displayNote;
+                        // Ayrıca global videolar dizisindeki notu da güncelle (isteğe bağlı)
+                        video.notes = newNote;
+                    } else if (refreshList) {
+                        // Eski davranış: tüm listeyi yenile (yedek)
+                        refreshList();
+                    }
                 });
             });
         }
 
+        // Modal açma (Drive/YouTube embed)
         if (shouldOpenInModal) {
             const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
@@ -278,6 +302,7 @@ export function renderVideoCards(videos, config) {
     });
 }
 
+// YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
     if (url.includes('/shorts/')) {
@@ -304,6 +329,7 @@ function convertYoutubeUrlToEmbed(url) {
     return url;
 }
 
+// XSS koruması (sadece bu dosya için)
 function escapeHtmlForCard(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
