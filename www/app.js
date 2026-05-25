@@ -280,6 +280,16 @@ function applyFiltersAndSearch() {
     // currentLang parametresini getFilteredVideos'a gönder
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler, currentLang);
 
+        // 📊 Toplam video sayısını güncelle (dil duyarlı)
+    const totalCountElem = document.getElementById('total-video-count');
+    if (totalCountElem) {
+        const lang = translations[currentLang];
+        const label = currentView === 'favorites' ? 
+            (currentLang === 'tr' ? 'Pratik Listesinde:' : 'In Practice List:') : 
+            (currentLang === 'tr' ? 'Toplam Video Sayısı:' : 'Total Videos:');
+        totalCountElem.innerText = `${label} ${filtered.length}`;
+    }
+
     const loadMoreContainer = document.getElementById('load-more-container');
     if (loadMoreContainer) {
         if (filtered.length > visibleCount) {

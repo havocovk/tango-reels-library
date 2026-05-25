@@ -16,7 +16,7 @@ function formatAyYil(tarihString, lang) {
 /**
  * 🧺 GÖREV 1: HTML sayfasındaki Açılır Kutuları (Dropdown) Canlı Videolara Göre Doldurur
  * Artık dil parametresi alır ve çeviri metinlerini kullanır.
- * Eğitmenlerin yanına (sayı) eklenir.
+ * Eğitmenlerin ve kaynakların (drive/social) yanına sayı eklenir.
  */
 export function populateFilterDropdowns(videolar, currentLang) {
     const lang = translations[currentLang];
@@ -55,7 +55,7 @@ export function populateFilterDropdowns(videolar, currentLang) {
         instructorSelect.appendChild(opt);
     });
 
-    // Etiketleri ekle (sayı istenmemiş ama aynı mantıkla eklenebilir - isteğe bağlı)
+    // Etiketleri ekle
     const etiketlerTorba = new Set();
     videolar.forEach(video => {
         if (video.tags) {
@@ -85,6 +85,24 @@ export function populateFilterDropdowns(videolar, currentLang) {
         opt.innerText = tarihMetni;
         dateSelect.appendChild(opt);
     });
+
+    // 📊 Kaynaklar (location) seçeneklerine sayı ekle (Google Drive ve Sosyal Medya)
+    const driveCount = videolar.filter(v => v.is_downloaded === true).length;
+    const socialCount = videolar.filter(v => v.is_downloaded === false).length;
+    
+    const driveOption = document.getElementById('opt-drive');
+    const socialOption = document.getElementById('opt-social');
+    if (driveOption) {
+        driveOption.innerText = `${lang.drive} (${driveCount})`;
+    }
+    if (socialOption) {
+        socialOption.innerText = `${lang.social} (${socialCount})`;
+    }
+    // "Tüm Kaynaklar" seçeneğinin metnini güncelle (sayı ekleme isteğe bağlı, sadece başlık)
+    const allLocationsOpt = document.getElementById('opt-all-locations');
+    if (allLocationsOpt) {
+        allLocationsOpt.innerText = lang.allLocations;
+    }
 
     // Önceki seçimleri geri yükle (eğer hala mevcutsa)
     if (Array.from(instructorSelect.options).some(opt => opt.value === oldInstructor))
@@ -117,7 +135,6 @@ export function getFilteredVideos(videolar, filtreler, currentLang) {
             const videoEtiketleri = video.tags.split(',').map(t => t.trim());
             if (!videoEtiketleri.includes(etiket)) return false;
         }
-        // Tarih karşılaştırmasında currentLang kullanılarak formatlanmış değer ile karşılaştır
         if (tarih !== 'all' && formatAyYil(video.created_at, currentLang) !== tarih) return false;
         if (ortam !== 'all') {
             if (ortam === 'drive' && !video.is_downloaded) return false;
