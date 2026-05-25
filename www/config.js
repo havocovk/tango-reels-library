@@ -1,6 +1,6 @@
 // SUPABASE BAĞLANTI BİLGİLERİ
-export const SUPABASE_URL = "https://coasifpuxnykgswnjguh.supabase.co";
-export const SUPABASE_KEY = "sb_publishable_xQ58KgtPyiyCUHWynnHdbQ_k78iXfS1";
+export const SUPABASE_URL = "";
+export const SUPABASE_KEY = "";
 
 // DİL SÖZLÜĞÜ (TR / EN)
 export const translations = {

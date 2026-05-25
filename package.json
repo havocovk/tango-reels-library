@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "node build.js"
+  },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
     "@capacitor/cli": "^8.3.4",
