@@ -19,6 +19,7 @@ export const translations = {
         role: "🎬 Rol",
         location: "📍 Ortam",
         watch: "🔗 Videoyu İzle →",
+        watchInCloud: "☁️ Buluttan İzle →",
         langBtn: "🇬🇧 EN",
         formTitle: "➕ Yeni Video Kaydet",
         formTitleEdit: "✏️ Videoyu Düzenle",
@@ -52,8 +53,11 @@ export const translations = {
         allRoles: "Tüm Roller",
         leader: "Lider",
         follower: "Takipçi",
-        both: "Çift",            // Değiştirildi: "İkisi de" -> "Çift"
+        both: "Çift",                     // Düzeltildi: "İkisi de" yerine "Çift"
         allLocations: "Tüm Ortamlar",
+        allInstructors: "Tüm Eğitmenler",   // Yeni eklendi
+        allTags: "Tüm Etiketler",           // Yeni eklendi
+        allDates: "Tüm Tarihler",           // Yeni eklendi
         drive: "💾 Google Drive",
         social: "🌐 Sosyal Medya",
         closeBtn: "Kapat",
@@ -65,12 +69,7 @@ export const translations = {
         addTagPlaceholder: "Yeni etiket yazıp virgül koyun...",
         btnCardEdit: "✏️ Düzenle",
         btnCardDelete: "🗑️ Sil",
-        // Yeni eklenen çeviriler
-        allInstructors: "Tüm Eğitmenler",
-        allTags: "Tüm Etiketler",
-        allDates: "Tüm Tarihler",
-        loadMore: "➕ Daha Fazla Video Yükle",
-        watchInCloud: "☁️ Buluttan izle →"
+        loadMore: "➕ Daha Fazla Video Yükle"    // Yeni eklendi
     },
     en: {
         brandTitle: "💃 ATKK",
@@ -87,6 +86,7 @@ export const translations = {
         role: "🎬 Role",
         location: "📍 Storage",
         watch: "🔗 Watch Video →",
+        watchInCloud: "☁️ Watch in Cloud →",
         langBtn: "🇹🇷 TR",
         formTitle: "➕ Save New Video",
         formTitleEdit: "✏️ Edit Video",
@@ -122,6 +122,9 @@ export const translations = {
         follower: "Follower",
         both: "Both",
         allLocations: "All Locations",
+        allInstructors: "All Instructors",
+        allTags: "All Tags",
+        allDates: "All Dates",
         drive: "💾 Google Drive",
         social: "🌐 Social Media",
         closeBtn: "Close",
@@ -133,11 +136,6 @@ export const translations = {
         addTagPlaceholder: "Type new tag and put comma...",
         btnCardEdit: "✏️ Edit",
         btnCardDelete: "🗑️ Delete",
-        // Yeni eklenen çeviriler
-        allInstructors: "All Instructors",
-        allTags: "All Tags",
-        allDates: "All Dates",
-        loadMore: "➕ Load More Videos",
-        watchInCloud: "☁️ Watch from Cloud →"
+        loadMore: "➕ Load More Videos"
     }
 };

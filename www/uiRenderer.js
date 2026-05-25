@@ -1,4 +1,5 @@
 // uiRenderer.js
+
 import { translations } from './config.js';
 
 // 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
@@ -115,12 +116,12 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (Çokdilli destek eklendi)
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (DİNAMİK ÇEVİRİ DESTEKLİ)
 export function renderVideoCards(videos, config) {
     const { 
         currentLang, 
         currentView, 
-        translations, 
+        translations: langPack, 
         favs, 
         toggleFavorite, 
         openTagsEditModal, 
@@ -130,7 +131,7 @@ export function renderVideoCards(videos, config) {
     } = config;
 
     const videoGrid = document.getElementById('video-grid');
-    const lang = translations[currentLang];
+    const lang = langPack[currentLang];
     videoGrid.innerHTML = '';
 
     if (videos.length === 0) {
@@ -143,18 +144,21 @@ export function renderVideoCards(videos, config) {
         const card = document.createElement('div');
         card.className = 'video-card';
         
-        // Rol tipi: Artık çeviri kullanılıyor (both "Çift" / "Both")
-        let roleDisplay = lang.both; // varsayılan
-        let roleBadgeClass = 'badge-both';
-        if (video.role_type === 'Leader') {
+        // Rol tipi ve rozet sınıfı
+        let roleDisplay = video.role_type || 'Both';
+        let roleBadgeClass = '';
+        if (roleDisplay === 'Leader') {
             roleDisplay = lang.leader;
             roleBadgeClass = 'badge-leader';
-        } else if (video.role_type === 'Follower') {
+        } else if (roleDisplay === 'Follower') {
             roleDisplay = lang.follower;
             roleBadgeClass = 'badge-follower';
+        } else {
+            roleDisplay = lang.both;
+            roleBadgeClass = 'badge-both';
         }
 
-        // Depolama tipi: Çeviri destekli
+        // Ortam metni (Drive / Sosyal Medya)
         const storageText = video.is_downloaded ? lang.drive : lang.social;
         const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
         
@@ -181,11 +185,10 @@ export function renderVideoCards(videos, config) {
         const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
         const shouldOpenInModal = hasDrive || isYouTube;
 
-        // Modal tetikleyiciler için dinamik nitelik ayarları
+        // Dinamik izleme metni: eğer modalda açılacaksa "watchInCloud" yoksa "watch"
+        const watchLabel = shouldOpenInModal ? lang.watchInCloud : lang.watch;
+
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
-        // İzleme bağlantısı metni: Buluttan izle (watchInCloud) veya normal watch
-        const watchLinkText = shouldOpenInModal ? lang.watchInCloud : lang.watch;
-        // Aynı metni buton için de kullanıyoruz (card-action-link)
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
         card.innerHTML = `
@@ -212,7 +215,7 @@ export function renderVideoCards(videos, config) {
 
                 <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
                     <a ${actionLinkClickAttr}>
-                        ${watchLinkText}
+                        ${watchLabel}
                     </a>
                     
                     <div style="display:flex; gap:8px;">
@@ -223,7 +226,7 @@ export function renderVideoCards(videos, config) {
             </div>
         `;
 
-        // Orijinal buton olay dinleyicileri
+        // Olay dinleyicileri
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
@@ -244,14 +247,12 @@ export function renderVideoCards(videos, config) {
             deleteVideoFlow(video.id);
         });
 
-        // Tıklama durumunda modalı güvenli link formatıyla tetikler
         if (shouldOpenInModal) {
             const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
                 el.addEventListener('click', (e) => {
                     e.preventDefault();
                     let targetUrl = hasDrive ? video.drive_url : video.url;
-                    
                     if (isYouTube) {
                         targetUrl = convertYoutubeUrlToEmbed(targetUrl);
                     }
@@ -267,7 +268,6 @@ export function renderVideoCards(videos, config) {
 // YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
-    // YouTube Shorts kontrolü
     if (url.includes('/shorts/')) {
         const parts = url.split('/shorts/');
         if (parts[1]) {
@@ -275,7 +275,6 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${id}`;
         }
     }
-    // Standart YouTube videoları (?v=...)
     if (url.includes('v=')) {
         const regExp = /[?&]v=([^&#]+)/;
         const matches = url.match(regExp);
@@ -283,7 +282,6 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${matches[1]}`;
         }
     }
-    // Kısaltılmış linkler (youtu.be/...)
     if (url.includes('youtu.be/')) {
         const parts = url.split('youtu.be/');
         if (parts[1]) {

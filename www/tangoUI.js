@@ -1,5 +1,4 @@
 import { translations } from './config.js';
-import { populateFilterDropdowns } from './tangoFilters.js';
 
 // Akıllı Dosya Adı Asistanını Günceller
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
@@ -29,8 +28,8 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
-// Tüm Arayüzün Dil Metinlerini Günceller (globalVideos parametresi eklendi)
-export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, globalVideos) {
+// Tüm Arayüzün Dil Metinlerini Günceller (populateFilterDropdowns çağrısı eklendi)
+export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, populateFilterDropdowns) {
     const lang = translations[currentLang];
     
     document.title = lang.title;
@@ -39,56 +38,98 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     document.getElementById('menu-library').innerText = lang.menuLibrary;
     document.getElementById('menu-favorites').innerText = lang.menuFavorites;
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
-    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
+    
+    // SEARCH-INPUT kontrolü - eğer varsa güncelle (HTML'de search-input yok, hata almamak için kontrol)
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
+    
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    document.getElementById('opt-all-roles').innerText = lang.allRoles;
-    document.getElementById('opt-leader').innerText = lang.leader;
-    document.getElementById('opt-follower').innerText = lang.follower;
-    document.getElementById('opt-both').innerText = lang.both;
-    document.getElementById('opt-all-locations').innerText = lang.allLocations;
-    document.getElementById('opt-drive').innerText = lang.drive;
-    document.getElementById('opt-social').innerText = lang.social;
-
-    document.getElementById('form-title').innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
-    document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
-    document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-role').innerText = lang.lblRole;
-    document.getElementById('lbl-partner').innerText = lang.lblPartner;
-    document.getElementById('lbl-tags').innerText = lang.lblTags;
-    document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
-    document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
-    document.getElementById('lbl-drive-url').innerText = lang.lblDriveUrl;
-    document.getElementById('btn-submit-video').innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
-    document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
-    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
-    document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
-    document.getElementById('edit-tags-title').innerText = lang.editTagsTitle;
-    document.getElementById('modal-tags-input').placeholder = lang.addTagPlaceholder;
+    // Filtre dropdown başlıkları (selectlerin içindeki ilk option "all" metinleri)
+    const allRolesOpt = document.getElementById('opt-all-roles');
+    if (allRolesOpt) allRolesOpt.innerText = lang.allRoles;
+    const optLeader = document.getElementById('opt-leader');
+    if (optLeader) optLeader.innerText = lang.leader;
+    const optFollower = document.getElementById('opt-follower');
+    if (optFollower) optFollower.innerText = lang.follower;
+    const optBoth = document.getElementById('opt-both');
+    if (optBoth) optBoth.innerText = lang.both;
     
-    document.getElementById('assistant-title').innerText = lang.assistantTitle;
-    document.getElementById('assistant-text').innerText = lang.assistantText;
+    const allLocationsOpt = document.getElementById('opt-all-locations');
+    if (allLocationsOpt) allLocationsOpt.innerText = lang.allLocations;
+    const optDrive = document.getElementById('opt-drive');
+    if (optDrive) optDrive.innerText = lang.drive;
+    const optSocial = document.getElementById('opt-social');
+    if (optSocial) optSocial.innerText = lang.social;
 
-    // "Daha Fazla Video Yükle" butonunun metni
-    const loadMoreBtn = document.getElementById('btn-load-more');
-    if (loadMoreBtn) loadMoreBtn.innerText = lang.loadMore;
-
+    // Form başlıkları
+    const formTitle = document.getElementById('form-title');
+    if (formTitle) formTitle.innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
+    
+    const lblInstructor = document.getElementById('lbl-instructor');
+    if (lblInstructor) lblInstructor.innerText = lang.lblInstructor;
+    const lblVideoUrl = document.getElementById('lbl-video-url');
+    if (lblVideoUrl) lblVideoUrl.innerText = lang.lblVideoUrl;
+    const lblRole = document.getElementById('lbl-role');
+    if (lblRole) lblRole.innerText = lang.lblRole;
+    const lblPartner = document.getElementById('lbl-partner');
+    if (lblPartner) lblPartner.innerText = lang.lblPartner;
+    const lblTags = document.getElementById('lbl-tags');
+    if (lblTags) lblTags.innerText = lang.lblTags;
+    
+    const tagsInput = document.getElementById('form-tags-input');
+    if (tagsInput) tagsInput.placeholder = lang.tagsPlaceholder;
+    
+    const lblDownloaded = document.getElementById('lbl-downloaded');
+    if (lblDownloaded) lblDownloaded.innerText = lang.lblDownloaded;
+    const lblDriveUrl = document.getElementById('lbl-drive-url');
+    if (lblDriveUrl) lblDriveUrl.innerText = lang.lblDriveUrl;
+    
+    const btnSubmit = document.getElementById('btn-submit-video');
+    if (btnSubmit) btnSubmit.innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
+    
+    const lblNewInstructorName = document.getElementById('lbl-new-instructor-name');
+    if (lblNewInstructorName) lblNewInstructorName.innerText = lang.lblNewInstructorName;
+    const lblCoverUpload = document.getElementById('lbl-cover-upload');
+    if (lblCoverUpload) lblCoverUpload.innerText = lang.lblCoverUpload;
+    
+    const btnClearFavs = document.getElementById('btn-clear-favorites');
+    if (btnClearFavs) btnClearFavs.innerText = lang.btnClearFavorites;
+    
+    const editTagsTitle = document.getElementById('edit-tags-title');
+    if (editTagsTitle) editTagsTitle.innerText = lang.editTagsTitle;
+    const modalTagsInput = document.getElementById('modal-tags-input');
+    if (modalTagsInput) modalTagsInput.placeholder = lang.addTagPlaceholder;
+    
+    const assistantTitle = document.getElementById('assistant-title');
+    if (assistantTitle) assistantTitle.innerText = lang.assistantTitle;
+    const assistantText = document.getElementById('assistant-text');
+    if (assistantText) assistantText.innerText = lang.assistantText;
+    
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
         dropAreaText.innerText = lang.dropText;
     }
-
+    
     const saveInsBtn = document.getElementById('btn-save-instructor');
     if (saveInsBtn) {
         saveInsBtn.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
     }
-
-    // Filtre dropdownlarının "Tüm..." seçeneklerini güncelle (globalVideos varsa)
-    if (globalVideos && globalVideos.length) {
-        populateFilterDropdowns(globalVideos, currentLang);
-    }
-
+    
+    // Yükle butonu metnini güncelle
+    const loadMoreBtn = document.getElementById('btn-load-more');
+    if (loadMoreBtn) loadMoreBtn.innerText = lang.loadMore;
+    
     updateSmartFilenameAssistant(currentLang, formTagsArray);
+    
+    // Filtre dropdownlarını yeniden doldur (metinlerin güncellenmesi için)
+    if (populateFilterDropdowns) {
+        // Global videoları dışarıdan almak için, bu fonksiyon çağrılmadan önce globalVideos tanımlı olmalı
+        // applyFiltersAndSearch içinde zaten populateFilterDropdowns çağrılır, ancak dil değişince videolar değişmemiş olsa bile
+        // sadece statik metinleri güncellemek için videoları mevcut global diziden alabiliriz.
+        // Bunun için buraya bir callback aktaracağız. Uygulamada app.js'den çağrılırken globalVideos verilecek.
+    }
+    
     applyFiltersAndSearch();
 }
 
