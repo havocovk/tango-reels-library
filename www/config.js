@@ -73,7 +73,15 @@ export const translations = {
         favoritesCountLabel: "Pratik Listesindeki Video Sayısı:",
         // Notlar için
         addNote: "Not ekle",
-        editNote: "Notu düzenle"
+        editNote: "Notu düzenle",
+        // İstatistikler
+        statsTotalVideos: "Toplam Video",
+        statsTotalInstructors: "Eğitmen Sayısı",
+        statsRoleDistribution: "Rol Dağılımı (L/T/Ç)",
+        statsSourceDistribution: "Kaynak Dağılımı",
+        statsTopTags: "En Çok Kullanılan Etiketler",
+        statsMonthlyTrend: "Aylık Video Ekleme Trendi",
+        statsNoTags: "Henüz etiket yok"
     },
     en: {
         brandTitle: "💃 Argentine Tango Combination Collection",
@@ -142,8 +150,14 @@ export const translations = {
         btnCardDelete: "🗑️ Delete",
         loadMore: "➕ Load More Videos",
         favoritesCountLabel: "Number of Videos in Practice List:",
-        // Notes
         addNote: "Add note",
-        editNote: "Edit note"
+        editNote: "Edit note",
+        statsTotalVideos: "Total Videos",
+        statsTotalInstructors: "Instructors",
+        statsRoleDistribution: "Role Dist. (L/F/C)",
+        statsSourceDistribution: "Source Dist.",
+        statsTopTags: "Top Tags",
+        statsMonthlyTrend: "Monthly Trend",
+        statsNoTags: "No tags yet"
     }
 };

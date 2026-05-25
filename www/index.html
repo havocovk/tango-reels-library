@@ -111,6 +111,96 @@
             margin-top: 2px;
         }
 
+        /* İstatistik paneli stilleri */
+        .stats-container {
+            background: rgba(11, 8, 19, 0.5);
+            border-radius: 20px;
+            padding: 15px;
+            margin: 15px 0 20px 0;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00f0ff;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .stat-bar-group {
+            display: flex;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .stat-bar-group span {
+            height: 100%;
+            font-size: 0;
+            transition: width 0.2s;
+        }
+        .stats-tags {
+            margin: 10px 0;
+        }
+        .top-tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .tag-badge {
+            background: rgba(255, 0, 127, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #ff80bf;
+        }
+        .stats-chart {
+            margin-top: 10px;
+        }
+        .monthly-bars {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .month-bar-item {
+            flex: 1;
+            text-align: center;
+        }
+        .bar {
+            background: linear-gradient(180deg, #ff007f, #00f0ff);
+            width: 100%;
+            min-height: 2px;
+            border-radius: 4px;
+            transition: height 0.2s;
+        }
+        .month-label {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+        .bar-count {
+            font-size: 0.7rem;
+            color: #cbd5e1;
+        }
+
         @media (max-width: 992px) {
             .atkk-form-grid {
                 grid-template-columns: 1fr;
@@ -177,6 +267,9 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- İSTATİSTİK PANELİ -->
+                <div id="stats-container" class="stats-container"></div>
 
                 <div id="total-video-count" style="text-align: right; margin: 10px 0 5px 0; color: #00f0ff; font-size: 1.1rem; font-weight: 500; text-shadow: 0 0 4px #00f0ff;"></div>
 
@@ -258,6 +351,7 @@
                                     <span id="drop-area-text">📸 Tıklayıp Ctrl + V ile ekran görüntüsü yapıştırın</span>
                                     <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
                                 </div>
+                                <button type="button" id="btn-reset-cover" class="lang-btn" style="margin-top: 6px; width: 100%; background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4);">🗑️ Resmi Sıfırla</button>
                             </div>
 
                             <div class="form-group" style="background: rgba(255, 0, 127, 0.05); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(0, 240, 255, 0.3);">

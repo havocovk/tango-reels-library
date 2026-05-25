@@ -33,6 +33,7 @@ import {
     getAllUniqueTagsPool,
     populateFilterDropdowns
 } from './tangoFilters.js';
+import { computeStats, renderStats } from './tangoStats.js';  // YENİ
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -41,6 +42,7 @@ let editInstructorId = null;
 let editingVideoId = null; 
 let currentView = 'library'; 
 let visibleCount = 20;
+let globalInstructors = [];  // eğitmen listesini tutmak için
 
 let formTagsArray = [];
 
@@ -118,6 +120,7 @@ function callGetUniqueTagsPool() {
 async function fetchInstructors() {
     try {
         const instructors = await dbFetchInstructors();
+        globalInstructors = instructors;
         const select = document.getElementById('form-instructor-select');
         if (select) {
             select.innerHTML = '';
@@ -134,9 +137,17 @@ async function fetchInstructors() {
     }
 }
 
+// İstatistik panelini güncelle
+function updateStatsPanel() {
+    if (currentView !== 'library') return; // sadece koleksiyon görünümünde göster
+    const stats = computeStats(globalVideos, globalInstructors);
+    renderStats(stats, currentLang);
+}
+
 async function fetchVideos() {
     try {
         const instructors = await dbFetchInstructors();
+        globalInstructors = instructors;
         const rawVideos = await dbFetchVideos();
         
         try {
@@ -157,6 +168,7 @@ async function fetchVideos() {
 
         populateFilterDropdowns(globalVideos, currentLang);
         applyFiltersAndSearch();
+        updateStatsPanel(); // YENİ
     } catch (err) {
         const grid = document.getElementById('video-grid');
         if (grid) {
@@ -244,6 +256,7 @@ async function deleteVideoFlow(videoId) {
         await showCustomAlert(lang.successDeleteVideo, okTxt);
         globalFavorites = globalFavorites.filter(id => id !== videoId);
         await fetchVideos();
+        updateStatsPanel(); // YENİ
     } catch (err) {
         console.error(err);
         await showCustomAlert(currentLang === 'tr' ? "Silme işlemi sırasında hata oluştu!" : "An error occurred during deletion!", okTxt);
@@ -340,6 +353,7 @@ async function handleInstructorSubmit() {
         
         await fetchInstructors();
         await fetchVideos();
+        updateStatsPanel(); // YENİ
     } catch (err) {
         console.error(err);
     }
@@ -359,6 +373,7 @@ async function deleteInstructor() {
         await showCustomAlert(lang.insDeleteSuccess, okTxt);
         await fetchInstructors();
         await fetchVideos();
+        updateStatsPanel(); // YENİ
     } catch (err) {
         console.error(err);
     }
@@ -432,6 +447,7 @@ async function handleFormSubmit(e) {
         resetUploadedCoverUrl();
         callSwitchView('library');
         await fetchVideos();
+        updateStatsPanel(); // YENİ
     } catch (err) {
         console.error(err);
         await showCustomAlert(currentLang === 'tr' ? "İşlem sırasında bir hata oluştu!" : "An error occurred during the operation!", okTxt);
@@ -447,15 +463,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
         callUpdateInterfaceLanguage();
+        updateStatsPanel(); // dil değişince istatistikleri yeniden render et
     });
 
     document.getElementById('menu-library')?.addEventListener('click', () => {
         editingVideoId = null;
         callSwitchView('library');
+        updateStatsPanel(); // koleksiyon görünümüne geçince istatistikleri göster
     });
     document.getElementById('menu-favorites')?.addEventListener('click', () => {
         editingVideoId = null;
         callSwitchView('favorites');
+        // favoriler görünümünde istatistik göstermiyoruz (zaten updateStatsPanel içinde kontrol var)
     });
     document.getElementById('menu-add-video')?.addEventListener('click', () => callSwitchView('add'));
 
@@ -519,6 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleFilterChange = () => {
         visibleCount = 20;
         applyFiltersAndSearch();
+        // filtreleme istatistikleri değiştirmez, sadece gösterilen listeyi değiştirir. İstatistikler tüm koleksiyon bazlıdır.
     };
 
     document.getElementById('filter-role-select')?.addEventListener('change', handleFilterChange);
@@ -551,4 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dropArea) {
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
+
+    window.applyFiltersAndSearch = applyFiltersAndSearch;
 });
