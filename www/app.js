@@ -280,7 +280,6 @@ function applyFiltersAndSearch() {
     const totalCountElem = document.getElementById('total-video-count');
     if (totalCountElem) {
         const lang = translations[currentLang];
-        // 📌 Değişiklik burada: favorites sayfası için özel label kullanılıyor
         let label = '';
         if (currentView === 'favorites') {
             label = lang.favoritesCountLabel;
@@ -310,7 +309,8 @@ function applyFiltersAndSearch() {
         openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
         startVideoEditFlow,
         deleteVideoFlow,
-        openVideoModal
+        openVideoModal,
+        refreshList: applyFiltersAndSearch   // YENİ
     });
 }
 
@@ -551,4 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dropArea) {
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
+    
+    // Global erişim için (uiRenderer içinde kullanılacak)
+    window.applyFiltersAndSearch = applyFiltersAndSearch;
 });

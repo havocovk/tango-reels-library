@@ -1,5 +1,5 @@
 import { translations } from './config.js';
-import { dbUpdateTagsDirectly } from './tangoVeritabani.js';
+import { dbUpdateTagsDirectly, dbUpdateNote } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 
 // Modal durum değişkenleri
@@ -10,7 +10,6 @@ export let activeEditTagsVideoId = null;
 export function convertDriveUrlToEmbed(url) {
     if (!url) return '';
     
-    // 💾 1. Durum: Eğer bu bir Google Drive linki ise
     if (url.includes('drive.google.com')) {
         const regExp = /\/file\/d\/([^/]+)/;
         const matches = url.match(regExp);
@@ -19,30 +18,21 @@ export function convertDriveUrlToEmbed(url) {
         }
     }
     
-    // 📺 2. Durum: Eğer bu bir YouTube linki ise (Normal, Shorts veya Mobil fark etmez)
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         let videoId = '';
-        
         if (url.includes('shorts/')) {
-            // YouTube Shorts (Dikey kısa videolar) için özel kod parçacığını alır
             videoId = url.split('shorts/')[1]?.split(/[?#]/)[0];
         } else if (url.includes('youtu.be/')) {
-            // Telefondan paylaşılan kısa YouTube linkleri için kodu alır
             videoId = url.split('youtu.be/')[1]?.split(/[?#]/)[0];
         } else if (url.includes('v=')) {
-            // Bilgisayardan açılan normal YouTube linkleri için kodu alır
             videoId = url.split('v=')[1]?.split('&')[0]?.split(/[?#]/)[0];
         } else if (url.includes('embed/')) {
-            // Zaten gömülü bir link yapıştırıldıysa kodu doğrudan alır
             videoId = url.split('embed/')[1]?.split(/[?#]/)[0];
         }
-        
-        // Eğer özel kod parçacığını bulabildiysek, televizyona uygun hale getirip gönderiyoruz:
         if (videoId) {
             return `https://www.youtube.com/embed/${videoId}`;
         }
     }
-    
     return url;
 }
 
@@ -63,13 +53,10 @@ export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
     document.getElementById('tags-edit-modal').classList.remove('d-none');
     
-    // 💡 KUTUYU ÇÖPE ATMIYORUZ: İçini boşaltıp yeni etiketleri içine dolduruyoruz (Referans bozulmuyor)
     modalTagsArray.length = 0;
     if (video.tags) {
         video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
     }
-    
-    // Sadece alt kısımdaki akıllı çipleri çizdiriyoruz
     renderModalChips(globalVideos, applyFiltersAndSearch);
 }
 
@@ -80,28 +67,20 @@ export function closeTagsEditModal() {
     document.getElementById('modal-tags-input').value = '';
 }
 
-// Alt alandaki dinamik etiket çiplerini (çarpı butonlu kutuları) ekrana basar
 export function renderModalChips(globalVideos, applyFiltersAndSearch) {
     renderChips('modal-chips-area', modalTagsArray, (index) => {
-        // Çarpıya basıldığında ilgili etiketi siler ve anında Supabase'e kaydeder
         modalTagsArray.splice(index, 1);
         saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
     });
 }
 
-// Değişiklikleri doğrudan Supabase veritabanına gönderir ve arayüzü günceller
 export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
-    
     try {
         await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags);
-        
-        // Yerel hafızadaki videonun etiketlerini de günceller
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
-        
-        // Eski liste yerine artık sadece çipleri ve ana kütüphane filtrelerini yeniliyoruz
         renderModalChips(globalVideos, applyFiltersAndSearch);
         applyFiltersAndSearch();
     } catch (err) {
@@ -119,7 +98,7 @@ export function showCustomAlert(message, okText = 'Tamam') {
 
         msgEl.innerText = message;
         okBtn.innerText = okText;
-        cancelBtn.classList.add('d-none'); // Alert modunda İptal butonu gizlenir
+        cancelBtn.classList.add('d-none');
         modal.classList.remove('d-none');
 
         const handleOk = () => {
@@ -142,7 +121,7 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
         msgEl.innerText = message;
         okBtn.innerText = okText;
         cancelBtn.innerText = cancelText;
-        cancelBtn.classList.remove('d-none'); // Confirm modunda İptal butonu gösterilir
+        cancelBtn.classList.remove('d-none');
         modal.classList.remove('d-none');
 
         const handleOk = () => {
@@ -159,8 +138,63 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
             okBtn.removeEventListener('click', handleOk);
             cancelBtn.removeEventListener('click', handleCancel);
         };
-
         okBtn.addEventListener('click', handleOk);
         cancelBtn.addEventListener('click', handleCancel);
+    });
+}
+
+// 📝 NOT DÜZENLEME MODALI (YENİ)
+let activeNoteVideoId = null;
+
+export function openNoteEditModal(video, onNoteSavedCallback) {
+    activeNoteVideoId = video.id;
+    const currentNote = video.notes || '';
+    
+    const modal = document.getElementById('custom-dialog-modal');
+    const msgEl = document.getElementById('custom-dialog-message');
+    const okBtn = document.getElementById('custom-dialog-ok-btn');
+    const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+    
+    msgEl.innerHTML = `<textarea id="note-textarea" rows="4" style="width:100%; background:#0b0813; color:#f1f5f9; border:1px solid #ff007f; border-radius:8px; padding:8px;">${escapeHtml(currentNote)}</textarea>`;
+    
+    okBtn.innerText = 'Kaydet';
+    cancelBtn.innerText = 'İptal';
+    cancelBtn.classList.remove('d-none');
+    modal.classList.remove('d-none');
+    
+    const handleOk = async () => {
+        const newNote = document.getElementById('note-textarea').value;
+        try {
+            await dbUpdateNote(activeNoteVideoId, newNote);
+            if (onNoteSavedCallback) onNoteSavedCallback();
+        } catch (err) {
+            console.error(err);
+            alert('Not kaydedilemedi');
+        }
+        modal.classList.add('d-none');
+        cleanup();
+    };
+    
+    const handleCancel = () => {
+        modal.classList.add('d-none');
+        cleanup();
+    };
+    
+    const cleanup = () => {
+        okBtn.removeEventListener('click', handleOk);
+        cancelBtn.removeEventListener('click', handleCancel);
+    };
+    
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
     });
 }

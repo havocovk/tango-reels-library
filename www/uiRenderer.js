@@ -1,6 +1,5 @@
-// uiRenderer.js
-
 import { translations } from './config.js';
+import { openNoteEditModal } from './tangoModals.js';
 
 // 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
@@ -116,7 +115,7 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (DİNAMİK ÇEVİRİ DESTEKLİ)
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (DİNAMİK ÇEVİRİ DESTEKLİ + NOTLAR)
 export function renderVideoCards(videos, config) {
     const { 
         currentLang, 
@@ -127,7 +126,8 @@ export function renderVideoCards(videos, config) {
         openTagsEditModal, 
         startVideoEditFlow, 
         deleteVideoFlow, 
-        openVideoModal 
+        openVideoModal,
+        refreshList
     } = config;
 
     const videoGrid = document.getElementById('video-grid');
@@ -144,7 +144,6 @@ export function renderVideoCards(videos, config) {
         const card = document.createElement('div');
         card.className = 'video-card';
         
-        // Rol tipi ve rozet sınıfı
         let roleDisplay = video.role_type || 'Both';
         let roleBadgeClass = '';
         if (roleDisplay === 'Leader') {
@@ -158,7 +157,6 @@ export function renderVideoCards(videos, config) {
             roleBadgeClass = 'badge-both';
         }
 
-        // Ortam metni (Drive / Sosyal Medya)
         const storageText = video.is_downloaded ? lang.drive : lang.social;
         const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
         
@@ -184,12 +182,18 @@ export function renderVideoCards(videos, config) {
         const hasDrive = video.is_downloaded && video.drive_url;
         const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
         const shouldOpenInModal = hasDrive || isYouTube;
-
-        // Dinamik izleme metni: eğer modalda açılacaksa "watchInCloud" yoksa "watch"
         const watchLabel = shouldOpenInModal ? lang.watchInCloud : lang.watch;
 
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+
+        const noteText = video.notes ? (video.notes.length > 60 ? video.notes.substring(0, 60) + '...' : video.notes) : 'Not ekle';
+        const noteHtml = `
+            <div class="card-note-area" style="margin-top: 8px; font-size:0.75rem; color:#94a3b8; display:flex; align-items:center; gap:6px;">
+                <button class="note-edit-btn" style="background:transparent; border:none; color:#00f0ff; cursor:pointer;">📝</button>
+                <span class="note-preview">${escapeHtml(noteText)}</span>
+            </div>
+        `;
 
         card.innerHTML = `
             <div class="video-cover-link">
@@ -212,6 +216,8 @@ export function renderVideoCards(videos, config) {
                 </div>
 
                 <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
+                
+                ${noteHtml}
 
                 <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
                     <a ${actionLinkClickAttr}>
@@ -226,7 +232,6 @@ export function renderVideoCards(videos, config) {
             </div>
         `;
 
-        // Olay dinleyicileri
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
@@ -247,6 +252,16 @@ export function renderVideoCards(videos, config) {
             deleteVideoFlow(video.id);
         });
 
+        const noteEditBtn = card.querySelector('.note-edit-btn');
+        if (noteEditBtn) {
+            noteEditBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openNoteEditModal(video, () => {
+                    if (refreshList) refreshList();
+                });
+            });
+        }
+
         if (shouldOpenInModal) {
             const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
@@ -265,7 +280,6 @@ export function renderVideoCards(videos, config) {
     });
 }
 
-// YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
     if (url.includes('/shorts/')) {
@@ -290,4 +304,14 @@ function convertYoutubeUrlToEmbed(url) {
         }
     }
     return url;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }

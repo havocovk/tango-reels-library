@@ -140,3 +140,18 @@ export async function dbClearAllFavorites() {
     if (!response.ok) throw new Error("Favori listesi temizlenemedi");
     return response;
 }
+
+// 13. Postacı: Sadece videonun notunu günceller (YENİ)
+export async function dbUpdateNote(videoId, note) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
+        method: 'PATCH',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes: note || null })
+    });
+    if (!response.ok) throw new Error("Not kaydedilemedi");
+    return response;
+}
