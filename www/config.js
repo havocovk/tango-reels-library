@@ -5,15 +5,15 @@ export const SUPABASE_KEY = "sb_publishable_xQ58KgtPyiyCUHWynnHdbQ_k78iXfS1";
 // DİL SÖZLÜĞÜ (TR / EN)
 export const translations = {
     tr: {
-        brandTitle: "💃 ATKK",
-        title: "Arjantin Tango Kombinasyon Kütüphanesi",
+        brandTitle: "💃 Arjantin Tango Kombinasyon Koleksiyonu",   // Değiştirildi: ATKK -> tam isim
+        title: "Arjantin Tango Kombinasyon Koleksiyonu",           // Değiştirildi
         menuLibrary: "📚 Kütüphane",
         menuFavorites: "⭐ Pratik Listem",
         menuAddVideo: "➕ Yeni Video Ekle",
         searchPlaceholder: "Eğitmen, partner veya etiket (tag) ara...",
-        filterBtn: "🔄 Listeyi Yenile",   // Değiştirildi: "🔍 Filtrele" -> "🔄 Listeyi Yenile"
+        filterBtn: "🔄 Listeyi Yenile",
         loading: "Veritabanı bağlantısı kuruluyor......",
-        empty: "Kütüphaneniz henüz boş. <br> Sol menüden yeni video eklemeye başlayabilirsiniz! 💃🕺",
+        empty: "Koleksiyonunuz henüz boş. <br> Sol menüden yeni video eklemeye başlayabilirsiniz! 💃🕺",
         emptyFav: "Pratik listeniz henüz boş. <br> Kartların üzerindeki yıldız (⭐) ikonuna basarak bu haftanın pratiklerini buraya toplayabilirsiniz!",
         error: "❌ Veritabanı bağlantısı başarısız oldu. Lütfen anahtarlarınızı kontrol edin.",
         role: "🎬 Rol",
@@ -63,7 +63,7 @@ export const translations = {
         closeBtn: "Kapat",
         btnClearFavorites: "🗑️ Bu Haftaki Pratik Listesini Temizle",
         confirmClearFavs: "Bu haftaki pratik listenizdeki tüm yıldızları kaldırmak istediğinize emin misiniz?",
-        confirmDeleteVideo: "Bu videoyu kütüphanenizden tamamen silmek istediğinize emin misiniz?",
+        confirmDeleteVideo: "Bu videoyu koleksiyonunuzdan tamamen silmek istediğinize emin misiniz?",
         successDeleteVideo: "💥 Video başarıyla silindi!",
         editTagsTitle: "✏️ Etiketleri Düzenle",
         addTagPlaceholder: "Yeni etiket yazıp virgül koyun...",
@@ -72,15 +72,15 @@ export const translations = {
         loadMore: "➕ Daha Fazla Video Yükle"
     },
     en: {
-        brandTitle: "💃 ATKK",
-        title: "Argentine Tango Combination Library",
+        brandTitle: "💃 Argentine Tango Combination Collection",   // Değiştirildi: Library -> Collection
+        title: "Argentine Tango Combination Collection",           // Değiştirildi
         menuLibrary: "📚 Library",
         menuFavorites: "⭐ Practice List",
         menuAddVideo: "➕ Add New Video",
         searchPlaceholder: "Search instructor, partner or tags...",
-        filterBtn: "🔄 Update List",   // Değiştirildi: "🔍 Filter" -> "🔄 Update List"
+        filterBtn: "🔄 Update List",
         loading: "Establishing database connection...",
-        empty: "Your library is empty yet. <br> You can start adding new videos from the left menu! 💃🕺",
+        empty: "Your collection is empty yet. <br> You can start adding new videos from the left menu! 💃🕺",
         emptyFav: "Your practice list is empty yet. <br> Click the star (⭐) icon on the cards to gather this week's practices here!",
         error: "❌ Database connection failed. Please check your keys.",
         role: "🎬 Role",
@@ -130,7 +130,7 @@ export const translations = {
         closeBtn: "Close",
         btnClearFavorites: "🗑️ Clear This Week's Practice List",
         confirmClearFavs: "Are you sure you want to remove all stars from this week's practice list?",
-        confirmDeleteVideo: "Are you sure you want to permanently delete this video from your library?",
+        confirmDeleteVideo: "Are you sure you want to permanently delete this video from your collection?",
         successDeleteVideo: "💥 Video successfully deleted!",
         editTagsTitle: "✏️ Edit Tags",
         addTagPlaceholder: "Type new tag and put comma...",
