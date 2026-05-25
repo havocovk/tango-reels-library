@@ -111,7 +111,7 @@
             margin-top: 2px;
         }
 
-        /* İstatistik paneli stilleri */
+        /* İstatistik paneli stilleri (yatay kaydırmalı) */
         .stats-container {
             background: rgba(11, 8, 19, 0.5);
             border-radius: 20px;
@@ -142,26 +142,34 @@
             color: #94a3b8;
             margin-top: 4px;
         }
-        .stat-bar-group {
+        /* Pie chart için */
+        .pie-chart-container {
             display: flex;
-            height: 6px;
-            border-radius: 3px;
-            overflow: hidden;
+            justify-content: center;
             margin-top: 8px;
         }
-        .stat-bar-group span {
-            height: 100%;
-            font-size: 0;
-            transition: width 0.2s;
+        .pie-chart {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(#00f0ff 0deg, #ff007f 0deg);
+            margin-bottom: 5px;
+        }
+        .pie-legend {
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            margin-top: 4px;
         }
         .stats-tags {
             margin: 10px 0;
         }
         .top-tags-list {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+            flex-direction: column;
+            gap: 6px;
             margin-top: 6px;
+            max-height: 200px;
+            overflow-y: auto;
         }
         .tag-badge {
             background: rgba(255, 0, 127, 0.2);
@@ -169,19 +177,21 @@
             border-radius: 20px;
             font-size: 0.75rem;
             color: #ff80bf;
+            display: inline-block;
+            width: fit-content;
         }
         .stats-chart {
             margin-top: 10px;
+            overflow-x: auto;
         }
         .monthly-bars {
             display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
-            gap: 8px;
-            margin-top: 8px;
+            gap: 16px;
+            padding-bottom: 10px;
+            min-width: max-content;
         }
         .month-bar-item {
-            flex: 1;
+            flex: 0 0 70px;
             text-align: center;
         }
         .bar {
@@ -225,6 +235,7 @@
             <div class="menu-items">
                 <button id="menu-library" class="menu-btn active">📚 Koleksiyon</button>
                 <button id="menu-favorites" class="menu-btn">⭐ Pratik Listem</button>
+                <button id="menu-stats" class="menu-btn">📊 İstatistikler</button>
                 <button id="menu-add-video" class="menu-btn">➕ Yeni Video Ekle</button>
             </div>
         </nav>
@@ -268,9 +279,6 @@
                     </div>
                 </div>
 
-                <!-- İSTATİSTİK PANELİ -->
-                <div id="stats-container" class="stats-container"></div>
-
                 <div id="total-video-count" style="text-align: right; margin: 10px 0 5px 0; color: #00f0ff; font-size: 1.1rem; font-weight: 500; text-shadow: 0 0 4px #00f0ff;"></div>
 
                 <div id="clear-favorites-container" class="d-none" style="margin: 10px 0;">
@@ -284,6 +292,11 @@
                 <div id="load-more-container" class="d-none" style="text-align: center; margin: 25px 0 10px 0;">
                     <button id="btn-load-more" class="btn-primary" style="padding: 12px 35px; font-size: 0.95rem; border-radius: 10px;">➕ Daha Fazla Video Yükle</button>
                 </div>
+            </div>
+
+            <!-- Yeni İSTATİSTİK GÖRÜNÜMÜ -->
+            <div id="view-stats-container" class="view-panel d-none">
+                <div id="stats-container" class="stats-container"></div>
             </div>
 
             <div id="view-add-container" class="view-panel d-none">

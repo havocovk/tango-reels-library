@@ -1,6 +1,5 @@
 import { translations } from './config.js';
 
-// Akıllı Dosya Adı Asistanını Günceller
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     const lang = translations[currentLang];
     const select = document.getElementById('form-instructor-select');
@@ -28,7 +27,6 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
-// Tüm Arayüzün Dil Metinlerini Günceller
 export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, populateFilterDropdowns) {
     const lang = translations[currentLang];
     
@@ -37,6 +35,7 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
     document.getElementById('menu-library').innerText = lang.menuLibrary;
     document.getElementById('menu-favorites').innerText = lang.menuFavorites;
+    document.getElementById('menu-stats').innerText = '📊 ' + (currentLang === 'tr' ? 'İstatistikler' : 'Statistics');
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
     
     const searchInput = document.getElementById('search-input');
@@ -44,7 +43,6 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    // Filtre dropdown başlıkları
     const allRolesOpt = document.getElementById('opt-all-roles');
     if (allRolesOpt) allRolesOpt.innerText = lang.allRoles;
     const optLeader = document.getElementById('opt-leader');
@@ -61,7 +59,6 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const optSocial = document.getElementById('opt-social');
     if (optSocial) optSocial.innerText = lang.social;
 
-    // Form başlıkları
     const formTitle = document.getElementById('form-title');
     if (formTitle) formTitle.innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
     
@@ -118,18 +115,16 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const loadMoreBtn = document.getElementById('btn-load-more');
     if (loadMoreBtn) loadMoreBtn.innerText = lang.loadMore;
     
-    // 📌 YENİ: Rol tipi dropdown seçeneklerinin metinlerini güncelle
     const roleSelect = document.getElementById('form-role-select');
     if (roleSelect) {
         const bothOption = roleSelect.querySelector('option[value="Both"]');
         const leaderOption = roleSelect.querySelector('option[value="Leader"]');
         const followerOption = roleSelect.querySelector('option[value="Follower"]');
-        if (bothOption) bothOption.innerText = lang.both;      // "Çift" veya "Couple"
-        if (leaderOption) leaderOption.innerText = lang.leader; // "Lider" veya "Leader"
-        if (followerOption) followerOption.innerText = lang.follower; // "Takipçi" veya "Follower"
+        if (bothOption) bothOption.innerText = lang.both;
+        if (leaderOption) leaderOption.innerText = lang.leader;
+        if (followerOption) followerOption.innerText = lang.follower;
     }
     
-    // 📌 YENİ: Partner adı input'unun placeholder'ını güncelle
     const partnerInput = document.getElementById('form-partner-name');
     if (partnerInput) {
         partnerInput.placeholder = currentLang === 'tr' ? 'Örn: Maria' : 'Ex: Maria';
@@ -138,24 +133,28 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     updateSmartFilenameAssistant(currentLang, formTagsArray);
     
     if (populateFilterDropdowns) {
-        // Bu fonksiyon dışarıdan globalVideos ile çağrılacak, şimdilik boş
+        // dışarıdan çağrılacak
     }
     
     applyFiltersAndSearch();
 }
 
-// Görünümler (Kütüphane / Ekleme Formu) Arasında Geçiş Yapar
 export function switchView(viewName, state, functions) {
     state.currentView = viewName;
     document.getElementById('menu-library').classList.remove('active');
     document.getElementById('menu-favorites').classList.remove('active');
+    document.getElementById('menu-stats').classList.remove('active');
     document.getElementById('menu-add-video').classList.remove('active');
 
     const clearFavBtnContainer = document.getElementById('clear-favorites-container');
+    const libraryView = document.getElementById('view-library-container');
+    const statsView = document.getElementById('view-stats-container');
+    const addView = document.getElementById('view-add-container');
 
     if (viewName === 'library' || viewName === 'favorites') {
-        document.getElementById('view-library-container').classList.remove('d-none');
-        document.getElementById('view-add-container').classList.add('d-none');
+        libraryView.classList.remove('d-none');
+        statsView.classList.add('d-none');
+        addView.classList.add('d-none');
         document.getElementById(`menu-${viewName}`).classList.add('active');
         
         if (viewName === 'favorites') {
@@ -165,9 +164,17 @@ export function switchView(viewName, state, functions) {
         }
         
         functions.applyFiltersAndSearch();
+    } else if (viewName === 'stats') {
+        libraryView.classList.add('d-none');
+        statsView.classList.remove('d-none');
+        addView.classList.add('d-none');
+        document.getElementById('menu-stats').classList.add('active');
+        // İstatistikleri güncellemek için dışarıdan bir callback alabiliriz
+        if (functions.updateStats) functions.updateStats();
     } else if (viewName === 'add') {
-        document.getElementById('view-library-container').classList.add('d-none');
-        document.getElementById('view-add-container').classList.remove('d-none');
+        libraryView.classList.add('d-none');
+        statsView.classList.add('d-none');
+        addView.classList.remove('d-none');
         document.getElementById('menu-add-video').classList.add('active');
         
         if (!state.editingVideoId) {

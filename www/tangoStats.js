@@ -1,4 +1,4 @@
-// tangoStats.js - İstatistik paneli hesaplama ve render
+// tangoStats.js - İstatistik paneli (gelişmiş)
 
 import { translations } from './config.js';
 
@@ -32,32 +32,31 @@ export function computeStats(videos, instructors) {
     });
     const topTags = Array.from(tagMap.entries())
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
+        .slice(0, 10)  // daha fazla gösterelim
         .map(([tag, count]) => ({ tag, count }));
 
-    // Aylara göre video sayısı (son 12 ay)
-    const now = new Date();
-    const monthMap = new Map();
-    for (let i = 0; i < 12; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
-        monthMap.set(key, { year: d.getFullYear(), month: d.getMonth()+1, count: 0 });
-    }
+    // Aylara göre video sayısı (tüm aylar, en eskiden en yeniye)
+    const monthMap = new Map(); // key: "YYYY-MM"
     videos.forEach(v => {
         if (v.created_at) {
             const date = new Date(v.created_at);
             if (!isNaN(date)) {
                 const key = `${date.getFullYear()}-${date.getMonth()+1}`;
-                if (monthMap.has(key)) {
-                    monthMap.get(key).count++;
-                }
+                const existing = monthMap.get(key) || { year: date.getFullYear(), month: date.getMonth()+1, count: 0 };
+                existing.count++;
+                monthMap.set(key, existing);
             }
         }
     });
-    // Sıralı dizi (en eski -> en yeni) veya en yeni -> en eski, grafik için son 6 ay yeterli
-    const monthlyData = Array.from(monthMap.values())
-        .sort((a,b) => a.year - b.year || a.month - b.month)
-        .slice(-6); // son 6 ay
+    // Sıralı dizi (en eski -> en yeni)
+    let monthlyData = Array.from(monthMap.values())
+        .sort((a,b) => a.year - b.year || a.month - b.month);
+    
+    // Eğer hiç veri yoksa boş dizi döndür
+    if (monthlyData.length === 0) {
+        const now = new Date();
+        monthlyData = [{ year: now.getFullYear(), month: now.getMonth()+1, count: 0 }];
+    }
 
     return {
         totalVideos,
@@ -72,21 +71,34 @@ export function computeStats(videos, instructors) {
     };
 }
 
+// Pie chart için conic-gradient oluştur
+function getPieGradient(drivePercent, socialPercent) {
+    // drivePercent ve socialPercent yüzde (0-100)
+    const driveDeg = (drivePercent / 100) * 360;
+    return `conic-gradient(#00f0ff 0deg ${driveDeg}deg, #ff007f ${driveDeg}deg 360deg)`;
+}
+
 // İstatistik panelini HTML'e yerleştir (dil desteği ile)
 export function renderStats(stats, currentLang) {
     const container = document.getElementById('stats-container');
     if (!container) return;
 
     const lang = translations[currentLang];
-    // Dil sözlüğünde istatistik başlıklarının olması gerekir (config.js'e ekleyeceğiz)
-    // Şimdilik doğrudan yazalım ama config'den almak daha iyi. Aşağıda config.js güncellenecek.
-
+    
     const roleTotal = stats.leaderCount + stats.followerCount + stats.bothCount;
-    const rolePercent = (count) => roleTotal ? ((count / roleTotal) * 100).toFixed(0) : 0;
-
+    const leaderPercent = roleTotal ? (stats.leaderCount / roleTotal) * 100 : 0;
+    const followerPercent = roleTotal ? (stats.followerCount / roleTotal) * 100 : 0;
+    const bothPercent = roleTotal ? (stats.bothCount / roleTotal) * 100 : 0;
+    
+    const drivePercent = stats.totalVideos ? (stats.driveCount / stats.totalVideos) * 100 : 0;
+    const socialPercent = stats.totalVideos ? (stats.socialCount / stats.totalVideos) * 100 : 0;
+    
+    // Bar grafik için max değer (en yüksek aylık video sayısı)
     const maxMonthly = Math.max(...stats.monthlyData.map(m => m.count), 1);
     
-    // HTML oluştur
+    // Pie chart gradient
+    const pieStyle = `background: ${getPieGradient(drivePercent, socialPercent)};`;
+    
     let html = `
         <div class="stats-grid">
             <div class="stat-card">
@@ -100,18 +112,20 @@ export function renderStats(stats, currentLang) {
             <div class="stat-card">
                 <div class="stat-value">${stats.leaderCount} / ${stats.followerCount} / ${stats.bothCount}</div>
                 <div class="stat-label">${lang.statsRoleDistribution}</div>
-                <div class="stat-bar-group">
-                    <span style="width:${rolePercent(stats.leaderCount)}%; background:#00f0ff;">${rolePercent(stats.leaderCount)}%</span>
-                    <span style="width:${rolePercent(stats.followerCount)}%; background:#ff007f;">${rolePercent(stats.followerCount)}%</span>
-                    <span style="width:${rolePercent(stats.bothCount)}%; background:#c084fc;">${rolePercent(stats.bothCount)}%</span>
+                <div class="stat-bar-group" style="margin-top: 6px;">
+                    <span style="width:${leaderPercent}%; background:#00f0ff;" title="Leader ${leaderPercent.toFixed(0)}%"></span>
+                    <span style="width:${followerPercent}%; background:#ff007f;" title="Follower ${followerPercent.toFixed(0)}%"></span>
+                    <span style="width:${bothPercent}%; background:#c084fc;" title="Both ${bothPercent.toFixed(0)}%"></span>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-value">${stats.driveCount} / ${stats.socialCount}</div>
                 <div class="stat-label">${lang.statsSourceDistribution}</div>
-                <div class="stat-bar-group">
-                    <span style="width:${(stats.driveCount/stats.totalVideos*100).toFixed(0)}%; background:#00f0ff;">💾</span>
-                    <span style="width:${(stats.socialCount/stats.totalVideos*100).toFixed(0)}%; background:#ff007f;">🌐</span>
+                <div class="pie-chart-container">
+                    <div class="pie-chart" style="${pieStyle}"></div>
+                </div>
+                <div class="pie-legend">
+                    <span style="color:#00f0ff;">💾 ${stats.driveCount}</span> / <span style="color:#ff007f;">🌐 ${stats.socialCount}</span>
                 </div>
             </div>
         </div>
@@ -125,13 +139,17 @@ export function renderStats(stats, currentLang) {
         <div class="stats-chart">
             <div class="stat-label">${lang.statsMonthlyTrend}</div>
             <div class="monthly-bars">
-                ${stats.monthlyData.map(m => `
-                    <div class="month-bar-item">
-                        <div class="bar" style="height: ${(m.count / maxMonthly) * 100}%;"></div>
-                        <div class="month-label">${m.month}/${m.year}</div>
-                        <div class="bar-count">${m.count}</div>
-                    </div>
-                `).join('')}
+                ${stats.monthlyData.map(m => {
+                    const heightPercent = (m.count / maxMonthly) * 100;
+                    const barHeight = heightPercent > 0 ? `${Math.max(heightPercent, 4)}%` : '2px';
+                    return `
+                        <div class="month-bar-item">
+                            <div class="bar" style="height: ${barHeight};"></div>
+                            <div class="bar-count">${m.count}</div>
+                            <div class="month-label">${m.month}/${m.year}</div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
         </div>
     `;
