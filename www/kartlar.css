@@ -1,3 +1,8 @@
+/* ============================================
+   kartlar.css - Tokyo Cyber-Synthwave Teması
+   Butonlar artık başlıktaki gradyanı kullanıyor
+   ============================================ */
+
 /* Arama ve Filtreleme Başlığı */
 .search-header {
     display: flex;
@@ -7,8 +12,8 @@
 
 .search-header input {
     flex: 1;
-    background: rgba(11, 8, 19, 0.8);
-    border: 1px solid rgba(0, 240, 255, 0.3);
+    background: rgba(11, 8, 19, 0.6);
+    border: 1px solid rgba(255, 0, 127, 0.2);
     padding: 16px 20px;
     border-radius: 16px;
     color: #f1f5f9;
@@ -19,13 +24,14 @@
 
 .search-header input:focus {
     border-color: #ff007f;
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
-    background: rgba(11, 8, 19, 0.9);
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.2);
+    background: rgba(11, 8, 19, 0.8);
 }
 
+/* 🔥 GÜNCELLENEN BUTONLAR – Neon Pembe → Camgöbeği Gradyanı */
 .btn-primary {
-    background: linear-gradient(135deg, #ff007f, #ff40a0);
-    color: #f1f5f9;
+    background: linear-gradient(135deg, #ff007f, #00f0ff);
+    color: #ffffff;
     border: none;
     padding: 0 28px;
     border-radius: 16px;
@@ -33,19 +39,19 @@
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.3s ease;
-    box-shadow: 0 0 12px rgba(255, 0, 127, 0.5);
+    box-shadow: 0 4px 14px rgba(255, 0, 127, 0.3);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
-    background: linear-gradient(135deg, #ff40a0, #ff007f);
+    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
+    background: linear-gradient(135deg, #ff4da6, #3cefff);
 }
 
-/* Onaylı Liste Temizleme Buton Stili */
+/* Onaylı Liste Temizleme Butonu (stil değişmedi) */
 .btn-clear-danger {
     background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.4);
+    border: 1px solid rgba(239, 68, 68, 0.3);
     color: #ef4444;
     padding: 10px 16px;
     border-radius: 12px;
@@ -57,12 +63,11 @@
 
 .btn-clear-danger:hover {
     background: rgba(239, 68, 68, 0.25);
-    border-color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.5);
     transform: translateY(-1px);
-    box-shadow: 0 0 12px rgba(239,68,68,0.4);
 }
 
-/* Video Kartları Grid Altyapısı */
+/* Video Grid ve Kartlar (Tokyo Cyber-Synthwave renkleri) */
 .video-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -73,10 +78,9 @@
     flex: 1;
 }
 
-/* Modern Video Kartı Tasarımı - Neon Kenar */
 .video-card {
-    background: rgba(11, 8, 19, 0.7);
-    border: 1px solid rgba(255, 0, 127, 0.3);
+    background: rgba(11, 8, 19, 0.6);
+    border: 1px solid rgba(255, 0, 127, 0.2);
     border-radius: 20px;
     padding: 15px;
     display: flex;
@@ -87,9 +91,9 @@
 
 .video-card:hover {
     transform: translateY(-6px);
-    background: rgba(11, 8, 19, 0.9);
-    border-color: #00f0ff;
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+    background: rgba(11, 8, 19, 0.8);
+    border-color: rgba(255, 0, 127, 0.5);
+    box-shadow: 0 12px 24px -10px rgba(255, 0, 127, 0.3);
 }
 
 .video-cover-link {
@@ -117,7 +121,7 @@
 .play-overlay {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(11, 8, 19, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -140,14 +144,13 @@
     align-items: center;
     font-size: 1.2rem;
     padding-left: 4px;
-    box-shadow: 0 0 12px #ff007f;
-    transition: transform 0.3s ease, background 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
 }
 
 .video-card:hover .play-icon {
     transform: scale(1.1);
     background: #00f0ff;
-    box-shadow: 0 0 20px #00f0ff;
 }
 
 .info-msg {
@@ -169,15 +172,14 @@
 
 .card-instructor {
     font-size: 1.05rem;
-    color: #00f0ff;
+    color: #ff007f;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-shadow: 0 0 4px #00f0ff;
 }
 
 .card-partner {
-    color: #cbd5e1;
+    color: #94a3b8;
     font-size: 0.85rem;
     margin-top: -4px;
 }
@@ -196,37 +198,36 @@
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
-    backdrop-filter: blur(2px);
 }
 
 .badge-leader {
     background: rgba(0, 240, 255, 0.15);
     color: #00f0ff;
-    border: 1px solid rgba(0, 240, 255, 0.5);
+    border: 1px solid rgba(0, 240, 255, 0.3);
 }
 
 .badge-follower {
     background: rgba(255, 0, 127, 0.15);
     color: #ff007f;
-    border: 1px solid rgba(255, 0, 127, 0.5);
+    border: 1px solid rgba(255, 0, 127, 0.3);
 }
 
 .badge-both {
-    background: linear-gradient(135deg, rgba(255,0,127,0.2), rgba(0,240,255,0.1));
-    color: #ff80bf;
-    border: 1px solid rgba(255,0,127,0.4);
+    background: linear-gradient(135deg, rgba(255, 0, 127, 0.15), rgba(0, 240, 255, 0.1));
+    color: #ff66b5;
+    border: 1px solid rgba(255, 0, 127, 0.3);
 }
 
 .badge-drive {
     background: rgba(0, 240, 255, 0.15);
     color: #00f0ff;
-    border: 1px solid rgba(0, 240, 255, 0.5);
+    border: 1px solid rgba(0, 240, 255, 0.3);
 }
 
 .badge-social {
     background: rgba(255, 0, 127, 0.15);
     color: #ff007f;
-    border: 1px solid rgba(255, 0, 127, 0.5);
+    border: 1px solid rgba(255, 0, 127, 0.3);
 }
 
 .card-action-link {
@@ -234,25 +235,24 @@
     font-size: 0.85rem;
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease;
     align-self: center;
     cursor: pointer;
 }
 
 .card-action-link:hover {
-    color: #ff007f;
+    color: #7cfffe;
     text-decoration: underline;
-    text-shadow: 0 0 4px #ff007f;
 }
 
 .fav-star-btn {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(11, 8, 19, 0.8);
+    background: rgba(11, 8, 19, 0.7);
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 0, 127, 0.5);
-    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 0, 127, 0.3);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
     width: 34px;
     height: 34px;
@@ -263,23 +263,19 @@
     justify-content: center;
     align-items: center;
     transition: all 0.2s ease;
-    padding-bottom: 2px;
 }
 
 .fav-star-btn:hover {
     transform: scale(1.1);
-    color: #ff007f;
-    background: #0b0813;
-    border-color: #ff007f;
-    box-shadow: 0 0 12px #ff007f;
+    color: #fbbf24;
+    background: rgba(11, 8, 19, 0.9);
 }
 
 .fav-star-btn.active {
-    color: #ff007f;
-    background: #0b0813;
-    border-color: #ff007f;
-    box-shadow: 0 0 15px #ff007f;
-    text-shadow: 0 0 5px #ff007f;
+    color: #fbbf24;
+    background: rgba(11, 8, 19, 0.8);
+    border-color: rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
 }
 
 .inline-edit-tags-btn {
@@ -294,14 +290,13 @@
 }
 
 .inline-edit-tags-btn:hover {
-    color: #00f0ff;
-    background: rgba(0, 240, 255, 0.1);
-    text-shadow: 0 0 4px #00f0ff;
+    color: #ff007f;
+    background: rgba(255, 0, 127, 0.1);
 }
 
 .card-crud-btn {
     background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(0, 240, 255, 0.3);
+    border: 1px solid rgba(255, 0, 127, 0.2);
     color: #94a3b8;
     width: 32px;
     height: 32px;
@@ -315,28 +310,24 @@
 }
 
 .card-edit-btn:hover {
-    background: rgba(0, 240, 255, 0.15);
-    border-color: #00f0ff;
-    color: #00f0ff;
+    background: rgba(255, 0, 127, 0.15);
+    border-color: rgba(255, 0, 127, 0.5);
+    color: #ff007f;
     transform: translateY(-1px);
-    box-shadow: 0 0 8px #00f0ff;
 }
 
 .card-delete-btn:hover {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
     color: #ef4444;
     transform: translateY(-1px);
-    box-shadow: 0 0 8px #ef4444;
 }
 
 .card-tags-wrapper-row {
     width: 100%;
 }
 
-/* ==========================================================================
-   📱 MOBİL İÇİN ARAMA VE FİLTRE AYARLARI (max-width: 768px)
-   ========================================================================== */
+/* Mobil uyum */
 @media screen and (max-width: 768px) {
     .search-header {
         flex-direction: column;
@@ -359,93 +350,25 @@
         align-items: center;
     }
 
-    .content-area select,
-    select[id^="filter-"] {
-        width: 100% !important;
-        margin-bottom: 8px;
-        padding: 12px !important;
-        font-size: 0.95rem !important;
-    }
-
-    .filters-container, 
-    main.content-area > div:nth-child(2) {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-}
-
-@media screen and (max-width: 768px) {
-    .video-grid, 
-    #video-grid,
-    .cards-container {
+    .video-grid {
         grid-template-columns: 1fr !important;
         gap: 16px !important;
-        padding: 5px 0;
     }
 
-    .video-card, .tango-card {
+    .video-card {
         width: 100% !important;
         max-width: 100% !important;
-        margin: 0 0 10px 0;
     }
 
-    .card-cover, .video-thumbnail, .preview-img {
-        height: 200px !important;
-        object-fit: cover;
-    }
-
-    .card-actions, .card-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-        padding-top: 12px;
-    }
-
-    .fav-star-btn, 
-    .btn-card-delete, 
-    .btn-card-edit,
+    .fav-star-btn,
+    .card-crud-btn,
     .inline-edit-tags-btn {
         min-width: 44px;
         min-height: 44px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.2rem !important;
-    }
-
-    .video-watch-link, .watch-btn {
-        padding: 10px 16px;
-        background: rgba(255, 0, 127, 0.1);
-        border-radius: 8px;
-        border: 1px solid rgba(0, 240, 255, 0.3);
-        text-align: center;
-        flex: 1;
     }
 }
 
+/* Daha Fazla Yükle butonu (btn-primary miras alır) */
 .btn-load-more {
-    background: linear-gradient(135deg, #ff007f, #ff40a0);
-    color: #f1f5f9;
-    border: none;
-    padding: 14px 35px;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 12px #ff007f;
-    width: 85%;
-    max-width: 320px;
-}
-
-.btn-load-more:active {
-    transform: scale(0.98);
-}
-
-.btn-load-more:disabled {
-    background: #475569;
-    color: #94a3b8;
-    box-shadow: none;
+    /* özel bir stil gerekmez, yukarıdaki .btn-primary yeterli */
 }
