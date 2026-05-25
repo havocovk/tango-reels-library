@@ -11,13 +11,13 @@ export const translations = {
         menuFavorites: "⭐ Pratik Listem",
         menuAddVideo: "➕ Yeni Video Ekle",
         searchPlaceholder: "Eğitmen, partner veya etiket (tag) ara...",
-        filterBtn: "🔍 Filtrele",
+        filterBtn: "🔄 Listeyi Yenile",   // Değiştirildi: "🔍 Filtrele" -> "🔄 Listeyi Yenile"
         loading: "Veritabanı bağlantısı kuruluyor......",
         empty: "Kütüphaneniz henüz boş. <br> Sol menüden yeni video eklemeye başlayabilirsiniz! 💃🕺",
         emptyFav: "Pratik listeniz henüz boş. <br> Kartların üzerindeki yıldız (⭐) ikonuna basarak bu haftanın pratiklerini buraya toplayabilirsiniz!",
         error: "❌ Veritabanı bağlantısı başarısız oldu. Lütfen anahtarlarınızı kontrol edin.",
         role: "🎬 Rol",
-        location: "📍 Kaynaklar",   // Değiştirildi: "Tüm Ortamlar" -> "Kaynaklar"
+        location: "📍 Kaynaklar",
         watch: "🔗 Videoyu İzle →",
         watchInCloud: "☁️ Buluttan İzle →",
         langBtn: "🇬🇧 EN",
@@ -54,7 +54,7 @@ export const translations = {
         leader: "Lider",
         follower: "Takipçi",
         both: "Çift",
-        allLocations: "Kaynaklar",   // Değiştirildi: "Tüm Ortamlar" -> "Kaynaklar"
+        allLocations: "Kaynaklar",
         allInstructors: "Tüm Eğitmenler",
         allTags: "Tüm Etiketler",
         allDates: "Tüm Tarihler",
@@ -78,13 +78,13 @@ export const translations = {
         menuFavorites: "⭐ Practice List",
         menuAddVideo: "➕ Add New Video",
         searchPlaceholder: "Search instructor, partner or tags...",
-        filterBtn: "🔍 Filter",
+        filterBtn: "🔄 Update List",   // Değiştirildi: "🔍 Filter" -> "🔄 Update List"
         loading: "Establishing database connection...",
         empty: "Your library is empty yet. <br> You can start adding new videos from the left menu! 💃🕺",
         emptyFav: "Your practice list is empty yet. <br> Click the star (⭐) icon on the cards to gather this week's practices here!",
         error: "❌ Database connection failed. Please check your keys.",
         role: "🎬 Role",
-        location: "📍 Sources",   // Değiştirildi: "All Locations" -> "Sources"
+        location: "📍 Sources",
         watch: "🔗 Watch Video →",
         watchInCloud: "☁️ Watch in Cloud →",
         langBtn: "🇹🇷 TR",
@@ -120,8 +120,8 @@ export const translations = {
         allRoles: "All Roles",
         leader: "Leader",
         follower: "Follower",
-        both: "Couple",   // Değiştirildi: "Both" -> "Couple"
-        allLocations: "Sources",   // Değiştirildi: "All Locations" -> "Sources"
+        both: "Couple",
+        allLocations: "Sources",
         allInstructors: "All Instructors",
         allTags: "All Tags",
         allDates: "All Dates",
