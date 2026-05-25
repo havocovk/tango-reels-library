@@ -5,9 +5,9 @@ export const SUPABASE_KEY = "";
 // DİL SÖZLÜĞÜ (TR / EN)
 export const translations = {
     tr: {
-        brandTitle: "💃 Arjantin Tango Kombinasyon Koleksiyonu",   // Değiştirildi: ATKK -> tam isim
-        title: "Arjantin Tango Kombinasyon Koleksiyonu",           // Değiştirildi
-        menuLibrary: "📚 Kütüphane",
+        brandTitle: "💃 Arjantin Tango Kombinasyon Koleksiyonu",
+        title: "Arjantin Tango Kombinasyon Koleksiyonu",
+        menuLibrary: "📚 Koleksiyon",          // Değiştirildi: "Kütüphane" -> "Koleksiyon"
         menuFavorites: "⭐ Pratik Listem",
         menuAddVideo: "➕ Yeni Video Ekle",
         searchPlaceholder: "Eğitmen, partner veya etiket (tag) ara...",
@@ -72,9 +72,9 @@ export const translations = {
         loadMore: "➕ Daha Fazla Video Yükle"
     },
     en: {
-        brandTitle: "💃 Argentine Tango Combination Collection",   // Değiştirildi: Library -> Collection
-        title: "Argentine Tango Combination Collection",           // Değiştirildi
-        menuLibrary: "📚 Library",
+        brandTitle: "💃 Argentine Tango Combination Collection",
+        title: "Argentine Tango Combination Collection",
+        menuLibrary: "📚 Collection",          // Değiştirildi: "Library" -> "Collection"
         menuFavorites: "⭐ Practice List",
         menuAddVideo: "➕ Add New Video",
         searchPlaceholder: "Search instructor, partner or tags...",
