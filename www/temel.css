@@ -7,8 +7,8 @@
 }
 
 body {
-    background: #030712;  /* Nebula Siyahı */
-    color: #ffffff;
+    background: #0b0813;  /* Gece Yarısı Moru */
+    color: #f1f5f9;
     min-height: 100vh;
     overflow-x: hidden;
     display: flex;
@@ -23,18 +23,18 @@ body {
     height: 400px;
     border-radius: 50%;
     filter: blur(80px);
-    opacity: 0.4;
+    opacity: 0.5;
     z-index: 1;
 }
 
 .current-location-glow {
-    background: linear-gradient(135deg, #a855f7, #7c3aed); /* Mor */
+    background: radial-gradient(circle, #ff007f, #ff00aa);
     top: -10%;
     left: -10%;
 }
 
 .secondary-glow {
-    background: linear-gradient(135deg, #10b981, #059669); /* Yeşil */
+    background: radial-gradient(circle, #00f0ff, #00b4d8);
     bottom: -10%;
     right: -10%;
 }
@@ -44,21 +44,21 @@ body {
     width: 95vw;
     height: 90vh;
     max-width: 1400px;
-    background: rgba(3, 7, 18, 0.6);  /* Nebula siyahı + şeffaflık */
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(168, 85, 247, 0.2);  /* Mor border */
+    background: rgba(11, 8, 19, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 0, 127, 0.4);
     border-radius: 24px;
     z-index: 2;
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 30px rgba(255, 0, 127, 0.2), 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 }
 
 /* Sol Menü Tasarımı */
 .sidebar-glass {
     width: 280px;
-    background: rgba(3, 7, 18, 0.5);
-    border-right: 1px solid rgba(168, 85, 247, 0.2);
+    background: rgba(11, 8, 19, 0.6);
+    border-right: 1px solid rgba(0, 240, 255, 0.3);
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
@@ -74,15 +74,16 @@ body {
 .sidebar-header h2 {
     font-size: 1.4rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #a855f7, #10b981);  /* Mor -> Yeşil */
+    background: linear-gradient(135deg, #ff007f, #00f0ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 10px rgba(255,0,127,0.3);
 }
 
 .lang-btn {
-    background: rgba(168, 85, 247, 0.15);
-    border: 1px solid rgba(168, 85, 247, 0.3);
-    color: #ffffff;
+    background: rgba(255, 0, 127, 0.15);
+    border: 1px solid rgba(0, 240, 255, 0.4);
+    color: #f1f5f9;
     padding: 6px 12px;
     border-radius: 10px;
     cursor: pointer;
@@ -92,8 +93,9 @@ body {
 }
 
 .lang-btn:hover {
-    background: rgba(168, 85, 247, 0.3);
-    border-color: rgba(168, 85, 247, 0.6);
+    background: rgba(255, 0, 127, 0.3);
+    border-color: #00f0ff;
+    box-shadow: 0 0 8px #00f0ff;
 }
 
 .menu-items {
@@ -120,16 +122,18 @@ body {
 }
 
 .menu-btn:hover {
-    background: rgba(168, 85, 247, 0.1);
-    color: #ffffff;
+    background: rgba(255, 0, 127, 0.1);
+    color: #f1f5f9;
+    text-shadow: 0 0 4px #ff007f;
 }
 
 .menu-btn.active {
-    background: rgba(168, 85, 247, 0.2);
-    color: #a855f7;
+    background: rgba(255, 0, 127, 0.2);
+    color: #ff007f;
     font-weight: 600;
-    border-left: 3px solid #a855f7;
+    border-left: 3px solid #00f0ff;
     border-radius: 4px 12px 12px 4px;
+    box-shadow: inset 0 0 8px rgba(0,240,255,0.2);
 }
 
 /* Ana İçerik Alanı */
@@ -137,7 +141,7 @@ body {
     flex: 1;
     padding: 40px;
     overflow-y: auto;
-    background: rgba(3, 7, 18, 0.2);
+    background: rgba(11, 8, 19, 0.3);
 }
 
 .view-panel {
@@ -154,6 +158,21 @@ body {
 
 .d-none {
     display: none !important;
+}
+
+/* Scrollbar - synthwave havası */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0b0813;
+}
+::-webkit-scrollbar-thumb {
+    background: #ff007f;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #00f0ff;
 }
 
 /* ==========================================================================

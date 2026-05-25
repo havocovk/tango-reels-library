@@ -1,17 +1,18 @@
 #drop-area {
-    border: 2px dashed rgba(168, 85, 247, 0.3);
+    border: 2px dashed rgba(0, 240, 255, 0.4);
     border-radius: 16px;
     padding: 30px 20px;
     text-align: center;
-    background: rgba(3, 7, 18, 0.4);
+    background: rgba(11, 8, 19, 0.6);
     cursor: pointer;
     transition: all 0.3s ease;
     outline: none;
 }
 
 #drop-area:focus, #drop-area:hover {
-    border-color: #a855f7;
-    background: rgba(168, 85, 247, 0.05);
+    border-color: #ff007f;
+    background: rgba(255, 0, 127, 0.08);
+    box-shadow: 0 0 15px rgba(255,0,127,0.2);
 }
 
 .preview-img {
@@ -19,7 +20,7 @@
     max-height: 200px;
     object-fit: cover;
     border-radius: 12px;
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    border: 1px solid rgba(0, 240, 255, 0.5);
 }
 
 .glass-form {
@@ -39,31 +40,32 @@
 
 .form-group label {
     font-size: 0.85rem;
-    color: #a855f7;
+    color: #00f0ff;
+    text-shadow: 0 0 3px #00f0ff;
 }
 
 .form-group input[type="text"],
 .form-group input[type="url"],
 .form-group select {
-    background: rgba(3, 7, 18, 0.6);
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    background: rgba(11, 8, 19, 0.8);
+    border: 1px solid rgba(255, 0, 127, 0.4);
     padding: 12px 16px;
     border-radius: 12px;
-    color: #ffffff;
+    color: #f1f5f9;
     font-size: 0.95rem;
     outline: none;
     transition: all 0.3s ease;
 }
 
 .form-group select option {
-    background: #030712;
-    color: #ffffff;
+    background: #0b0813;
+    color: #f1f5f9;
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: #10b981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    border-color: #00f0ff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
 
 .checkbox-group {
@@ -72,19 +74,19 @@
     gap: 10px;
     cursor: pointer;
     user-select: none;
-    color: #ffffff !important;
+    color: #f1f5f9 !important;
     font-size: 0.95rem !important;
 }
 
 .checkbox-group input {
     width: 18px;
     height: 18px;
-    accent-color: #a855f7;
+    accent-color: #ff007f;
 }
 
 .assistant-box {
-    background: rgba(168, 85, 247, 0.05);
-    border: 1px solid rgba(168, 85, 247, 0.2);
+    background: rgba(255, 0, 127, 0.05);
+    border: 1px solid rgba(0, 240, 255, 0.3);
     border-radius: 14px;
     padding: 15px;
     margin-top: 5px;
@@ -92,18 +94,18 @@
 
 .assistant-box h4 {
     font-size: 0.9rem;
-    color: #a855f7;
+    color: #ff007f;
     font-weight: 600;
 }
 
 .assistant-code {
-    background: rgba(3, 7, 18, 0.6);
-    border: 1px solid rgba(168, 85, 247, 0.2);
+    background: rgba(11, 8, 19, 0.7);
+    border: 1px solid rgba(0, 240, 255, 0.4);
     padding: 10px 14px;
     border-radius: 10px;
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.9rem;
-    color: #10b981;
+    color: #00f0ff;
     word-break: break-all;
     margin-top: 8px;
     user-select: all;
@@ -112,9 +114,8 @@
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(3, 7, 18, 0.8);
+    background: rgba(11, 8, 19, 0.85);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     z-index: 9999;
     display: flex;
     justify-content: center;
@@ -126,11 +127,11 @@
     position: relative;
     width: 90%;
     max-width: 960px;
-    background: #030712;
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    background: #0b0813;
+    border: 1px solid rgba(255, 0, 127, 0.5);
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(168, 85, 247, 0.2);
+    box-shadow: 0 0 40px rgba(255,0,127,0.3);
 }
 
 .modal-close {
@@ -145,7 +146,7 @@
 }
 
 .modal-close:hover {
-    color: #a855f7;
+    color: #ff007f;
 }
 
 .video-container {
@@ -161,10 +162,9 @@
     border: none;
 }
 
-/* Modern Etiket Giriş Çerçevesi */
 .tags-input-container {
-    background: rgba(3, 7, 18, 0.6);
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    background: rgba(11, 8, 19, 0.8);
+    border: 1px solid rgba(0, 240, 255, 0.4);
     padding: 10px 14px;
     border-radius: 12px;
     display: flex;
@@ -176,14 +176,15 @@
 }
 
 .tags-input-container:focus-within {
-    border-color: #10b981;
+    border-color: #ff007f;
+    box-shadow: 0 0 8px #ff007f;
 }
 
-/* Etiket Kutucuğu (Chip) Tasarımı - Mor & Yeşil geçiş */
+/* Etiket Kutucuğu (Chip) - Neon */
 .tag-chip-item {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(16, 185, 129, 0.1));
-    color: #c084fc;
-    border: 1px solid rgba(168, 85, 247, 0.4);
+    background: linear-gradient(135deg, rgba(255,0,127,0.25), rgba(0,240,255,0.1));
+    color: #ff80bf;
+    border: 1px solid rgba(255, 0, 127, 0.5);
     padding: 4px 10px;
     border-radius: 8px;
     font-size: 0.85rem;
@@ -196,35 +197,35 @@
 }
 
 .tag-chip-item:hover {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(16, 185, 129, 0.2));
-    border-color: #10b981;
+    background: rgba(255,0,127,0.4);
+    border-color: #00f0ff;
+    color: #00f0ff;
 }
 
 .chip-close-x {
     cursor: pointer;
     font-weight: bold;
-    color: rgba(168, 85, 247, 0.6);
+    color: rgba(255, 0, 127, 0.7);
     font-size: 1rem;
     transition: color 0.2s ease;
 }
 
 .chip-close-x:hover {
-    color: #10b981;
+    color: #00f0ff;
 }
 
-/* Autocomplete (Arama Öneri Listesi) Kutusu */
 .autocomplete-suggestions {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
     width: 100%;
-    background: #030712;
-    border: 1px solid rgba(168, 85, 247, 0.4);
+    background: #0b0813;
+    border: 1px solid rgba(0, 240, 255, 0.6);
     border-radius: 10px;
     z-index: 999;
     max-height: 180px;
     overflow-y: auto;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
 }
 
 .autocomplete-suggestion-item {
@@ -237,11 +238,11 @@
 
 .autocomplete-suggestion-item:hover, 
 .autocomplete-active {
-    background: rgba(168, 85, 247, 0.15);
-    color: #a855f7;
+    background: rgba(255, 0, 127, 0.2);
+    color: #ff007f;
+    text-shadow: 0 0 4px #ff007f;
 }
 
-/* Pop-up Etiket Düzenleme Satır Yapısı */
 .modal-tags-list {
     display: flex;
     flex-direction: column;
@@ -255,10 +256,10 @@
     display: flex;
     gap: 10px;
     align-items: center;
-    background: rgba(168, 85, 247, 0.05);
+    background: rgba(0, 240, 255, 0.05);
     padding: 6px 12px;
     border-radius: 10px;
-    border: 1px solid rgba(168, 85, 247, 0.2);
+    border: 1px solid rgba(255, 0, 127, 0.3);
 }
 
 .modal-tag-edit-input {
@@ -266,7 +267,7 @@
     background: transparent !important;
     border: none !important;
     padding: 6px 0 !important;
-    color: white;
+    color: #f1f5f9;
     font-size: 0.9rem;
     outline: none;
 }
