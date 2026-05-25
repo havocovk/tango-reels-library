@@ -1,4 +1,5 @@
 import { translations } from './config.js';
+import { populateFilterDropdowns } from './tangoFilters.js';
 
 // Akıllı Dosya Adı Asistanını Günceller
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
@@ -12,10 +13,10 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     }
 
     let instructorName = select.options[select.selectedIndex].text;
-    let cleanName = instructorName.replace(/\\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    let cleanName = instructorName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
 
     let cleanTags = formTagsArray
-        .map(t => t.replace(/\\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, ''))
+        .map(t => t.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, ''))
         .filter(t => t !== '')
         .join('_');
 
@@ -28,109 +29,100 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
-// Tüm Arayüzün Dil Metinlerini Günceller (Çökmeyen Güvenli Versiyon)
-export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch) {
-    const lang = translations[currentLang] || translations['tr'];
+// Tüm Arayüzün Dil Metinlerini Günceller (globalVideos parametresi eklendi)
+export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, globalVideos) {
+    const lang = translations[currentLang];
     
-    // Güvenli yazı yerleştirici: Eleman DOM'da yoksa veya silindiyse hata fırlatmaz.
-    const safeSetText = (id, text) => {
-        const el = document.getElementById(id);
-        if (el && text !== undefined) el.innerText = text;
-    };
-
-    // 1. Sol Menü ve Başlık Alanları
-    safeSetText('brand-title', lang.brandTitle);
-    safeSetText('main-title', lang.title);
-    safeSetText('menu-library-text', lang.menuLibrary);
-    safeSetText('menu-favorites-text', lang.menuFavorites);
-    safeSetText('menu-add-video-text', lang.menuAddVideo);
-    safeSetText('lang-btn', lang.langBtn);
-
-    // 2. Arama ve Filtreleme Alanı Koruması
-    const searchInput = document.getElementById('search-input') || document.querySelector('.search-header input');
-    if (searchInput && lang.searchPlaceholder) {
-        searchInput.placeholder = lang.searchPlaceholder;
-    }
-    safeSetText('filter-btn', lang.filterBtn);
-
-    // 3. Form Etiketleri ve Alanları
-    safeSetText('form-title', lang.formTitle);
-    safeSetText('lbl-select-instructor', lang.lblSelectInstructor);
-    safeSetText('lbl-partner-name', lang.lblPartnerName);
-    safeSetText('lbl-video-url', lang.lblVideoUrl);
-    safeSetText('lbl-role-type', lang.lblRoleType);
-    safeSetText('lbl-location-type', lang.lblLocationType);
-    safeSetText('lbl-video-tags', lang.lblVideoTags);
-    safeSetText('lbl-smart-filename', lang.lblSmartFilename);
-    safeSetText('btn-submit-video', editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo);
+    document.title = lang.title;
+    document.getElementById('sidebar-title').innerText = lang.brandTitle;
+    document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
+    document.getElementById('menu-library').innerText = lang.menuLibrary;
+    document.getElementById('menu-favorites').innerText = lang.menuFavorites;
+    document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
+    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
+    document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    // Eğitmen Yönetim Alanı Metinleri
-    safeSetText('lbl-new-instructor-section', lang.lblNewInstructorSection);
-    safeSetText('lbl-new-instructor-name', lang.lblNewInstructorName);
-    safeSetText('btn-add-instructor', editInstructorId ? lang.btnUpdateIns : lang.btnAddIns);
+    document.getElementById('opt-all-roles').innerText = lang.allRoles;
+    document.getElementById('opt-leader').innerText = lang.leader;
+    document.getElementById('opt-follower').innerText = lang.follower;
+    document.getElementById('opt-both').innerText = lang.both;
+    document.getElementById('opt-all-locations').innerText = lang.allLocations;
+    document.getElementById('opt-drive').innerText = lang.drive;
+    document.getElementById('opt-social').innerText = lang.social;
+
+    document.getElementById('form-title').innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
+    document.getElementById('lbl-instructor').innerText = lang.lblInstructor;
+    document.getElementById('lbl-video-url').innerText = lang.lblVideoUrl;
+    document.getElementById('lbl-role').innerText = lang.lblRole;
+    document.getElementById('lbl-partner').innerText = lang.lblPartner;
+    document.getElementById('lbl-tags').innerText = lang.lblTags;
+    document.getElementById('form-tags-input').placeholder = lang.tagsPlaceholder;
+    document.getElementById('lbl-downloaded').innerText = lang.lblDownloaded;
+    document.getElementById('lbl-drive-url').innerText = lang.lblDriveUrl;
+    document.getElementById('btn-submit-video').innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
+    document.getElementById('lbl-new-instructor-name').innerText = lang.lblNewInstructorName;
+    document.getElementById('lbl-cover-upload').innerText = lang.lblCoverUpload;
+    document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
+    document.getElementById('edit-tags-title').innerText = lang.editTagsTitle;
+    document.getElementById('modal-tags-input').placeholder = lang.addTagPlaceholder;
     
-    // Kapak Görseli Alanı
-    safeSetText('lbl-cover-upload', lang.lblCoverUpload);
+    document.getElementById('assistant-title').innerText = lang.assistantTitle;
+    document.getElementById('assistant-text').innerText = lang.assistantText;
+
+    // "Daha Fazla Video Yükle" butonunun metni
+    const loadMoreBtn = document.getElementById('btn-load-more');
+    if (loadMoreBtn) loadMoreBtn.innerText = lang.loadMore;
+
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
         dropAreaText.innerText = lang.dropText;
     }
 
-    // Favori temizleme butonu metni
-    safeSetText('btn-clear-favorites', lang.btnClearFavorites);
-
-    // 🔄 NE OLURSA OLSUN MOTORU TETİKLE
-    if (typeof applyFiltersAndSearch === 'function') {
-        try {
-            applyFiltersAndSearch();
-        } catch (err) {
-            console.error("Dil güncellemesi sonrası liste yenilenirken hata:", err);
-        }
+    const saveInsBtn = document.getElementById('btn-save-instructor');
+    if (saveInsBtn) {
+        saveInsBtn.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
     }
+
+    // Filtre dropdownlarının "Tüm..." seçeneklerini güncelle (globalVideos varsa)
+    if (globalVideos && globalVideos.length) {
+        populateFilterDropdowns(globalVideos, currentLang);
+    }
+
+    updateSmartFilenameAssistant(currentLang, formTagsArray);
+    applyFiltersAndSearch();
 }
 
-// Görünümler (Kütüphane / Favoriler / Video Ekleme) Arasında Geçiş Yapar
+// Görünümler (Kütüphane / Ekleme Formu) Arasında Geçiş Yapar
 export function switchView(viewName, state, functions) {
     state.currentView = viewName;
-    
-    const libraryContainer = document.getElementById('view-library-container');
-    const addContainer = document.getElementById('view-add-container');
-    const clearFavBtnContainer = document.getElementById('clear-favorites-btn-container');
-    
-    // Menü aktifliklerini sıfırla
-    document.getElementById('menu-library')?.classList.remove('active');
-    document.getElementById('menu-favorites')?.classList.remove('active');
-    document.getElementById('menu-add-video')?.classList.remove('active');
+    document.getElementById('menu-library').classList.remove('active');
+    document.getElementById('menu-favorites').classList.remove('active');
+    document.getElementById('menu-add-video').classList.remove('active');
+
+    const clearFavBtnContainer = document.getElementById('clear-favorites-container');
 
     if (viewName === 'library' || viewName === 'favorites') {
-        if (libraryContainer) libraryContainer.classList.remove('d-none');
-        if (addContainer) addContainer.classList.add('d-none');
+        document.getElementById('view-library-container').classList.remove('d-none');
+        document.getElementById('view-add-container').classList.add('d-none');
+        document.getElementById(`menu-${viewName}`).classList.add('active');
         
-        if (viewName === 'library') {
-            document.getElementById('menu-library')?.classList.add('active');
+        if (viewName === 'favorites') {
+            clearFavBtnContainer.classList.remove('d-none');
         } else {
-            document.getElementById('menu-favorites')?.classList.add('active');
-        }
-        
-        if (clearFavBtnContainer) {
-            if (viewName === 'favorites') {
-                clearFavBtnContainer.classList.remove('d-none');
-            } else {
-                clearFavBtnContainer.classList.add('d-none');
-            }
+            clearFavBtnContainer.classList.add('d-none');
         }
         
         functions.applyFiltersAndSearch();
     } else if (viewName === 'add') {
-        if (libraryContainer) libraryContainer.classList.add('d-none');
-        if (addContainer) addContainer.classList.remove('d-none');
-        document.getElementById('menu-add-video')?.classList.add('active');
+        document.getElementById('view-library-container').classList.add('d-none');
+        document.getElementById('view-add-container').classList.remove('d-none');
+        document.getElementById('menu-add-video').classList.add('active');
         
         if (!state.editingVideoId) {
             const lang = translations[state.currentLang];
-            if (document.getElementById('form-title')) document.getElementById('form-title').innerText = lang.formTitle;
-            if (document.getElementById('btn-submit-video')) document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
-            document.getElementById('add-video-form')?.reset();
+            document.getElementById('form-title').innerText = lang.formTitle;
+            document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
+            document.getElementById('add-video-form').reset();
             state.resetFormTags();
             functions.renderFormChips();
             if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');

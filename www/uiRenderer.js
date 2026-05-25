@@ -1,3 +1,4 @@
+// uiRenderer.js
 import { translations } from './config.js';
 
 // 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
@@ -8,7 +9,7 @@ export function renderChips(containerId, chipsArray, onRemoveCallback) {
     chipsArray.forEach((tag, index) => {
         const chip = document.createElement('span');
         chip.className = 'tag-chip-item';
-        chip.innerHTML = `#${tag} <span class=\"chip-close-x\" data-idx=\"${index}\">&times;</span>`;
+        chip.innerHTML = `#${tag} <span class="chip-close-x" data-idx="${index}">&times;</span>`;
         chip.querySelector('.chip-close-x').addEventListener('click', () => {
             onRemoveCallback(index);
         });
@@ -32,32 +33,32 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
             return;
         }
 
-        const allTags = getAllUniqueTagsPool();
-        const filtered = allTags.filter(t => t.toLowerCase().includes(val) && !chipsArray.includes(t));
+        const pool = getAllUniqueTagsPool();
+        const filtered = pool.filter(tag => tag.toLowerCase().includes(val) && !chipsArray.includes(tag));
 
         if (filtered.length === 0) {
             list.classList.add('d-none');
             return;
         }
 
-        filtered.forEach(tag => {
+        list.classList.remove('d-none');
+        filtered.forEach((tag) => {
             const item = document.createElement('div');
             item.className = 'autocomplete-suggestion-item';
-            item.innerText = tag;
+            const idx = tag.toLowerCase().indexOf(val);
+            item.innerHTML = tag.substring(0, idx) + "<strong>" + tag.substring(idx, idx + val.length) + "</strong>" + tag.substring(idx + val.length);
+            
             item.addEventListener('click', () => {
                 onAddCallback(tag);
                 input.value = '';
-                list.innerHTML = '';
                 list.classList.add('d-none');
-                input.focus();
             });
             list.appendChild(item);
         });
-        list.classList.remove('d-none');
     });
 
     input.addEventListener('keydown', (e) => {
-        const items = list.getElementsByClassName('autocomplete-suggestion-item');
+        const items = list.querySelectorAll('.autocomplete-suggestion-item');
         if (e.key === 'ArrowDown') {
             currentFocus++;
             addActive(items);
@@ -69,153 +70,183 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
             if (currentFocus > -1 && items[currentFocus]) {
                 items[currentFocus].click();
             } else {
-                const val = input.value.trim().replace(/,/g, '');
+                const val = input.value.replace(/,/g, '').trim();
                 if (val && !chipsArray.includes(val)) {
                     onAddCallback(val);
                     input.value = '';
-                    list.innerHTML = '';
                     list.classList.add('d-none');
                 }
+            }
+        } else if (e.key === 'Backspace' && input.value === '') {
+            if (chipsArray.length > 0) {
+                chipsArray.pop();
+                renderChipsFn();
             }
         }
     });
 
+    input.addEventListener('keyup', (e) => {
+        if (e.key === ',' || e.code === 'Comma') {
+            const val = input.value.replace(/,/g, '').trim();
+            if (val && !chipsArray.includes(val)) {
+                onAddCallback(val);
+            }
+            input.value = '';
+            list.classList.add('d-none');
+        }
+    });
+
     function addActive(items) {
-        if (!items) return false;
+        if (!items || items.length === 0) return;
         removeActive(items);
         if (currentFocus >= items.length) currentFocus = 0;
         if (currentFocus < 0) currentFocus = items.length - 1;
         items[currentFocus].classList.add('autocomplete-active');
-        items[currentFocus].scrollIntoView({ block: 'nearest' });
     }
 
     function removeActive(items) {
-        for (let i = 0; i < items.length; i++) {
-            items[i].classList.remove('autocomplete-active');
-        }
+        items.forEach(item => item.classList.remove('autocomplete-active'));
     }
 
     document.addEventListener('click', (e) => {
         if (e.target !== input && e.target !== list) {
-            list.innerHTML = '';
             list.classList.add('d-none');
         }
     });
 }
 
-// 3. VİDEO KARTLARINI EKRANA BASAN GÖRSEL MOTOR (DİL SÖZLÜĞÜ ENTEGRELİ)
-export function renderVideoCards(videoGridId, videosArray, favoritesArray, currentLang, openVideoModal, handleToggleFavorite, openTagsEditModal, handleEditVideo, handleDeleteVideo) {
-    const videoGrid = document.getElementById(videoGridId);
-    if (!videoGrid) return;
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (Çokdilli destek eklendi)
+export function renderVideoCards(videos, config) {
+    const { 
+        currentLang, 
+        currentView, 
+        translations, 
+        favs, 
+        toggleFavorite, 
+        openTagsEditModal, 
+        startVideoEditFlow, 
+        deleteVideoFlow, 
+        openVideoModal 
+    } = config;
+
+    const videoGrid = document.getElementById('video-grid');
+    const lang = translations[currentLang];
     videoGrid.innerHTML = '';
 
-    const lang = translations[currentLang] || translations['tr'];
-
-    if (videosArray.length === 0) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.className = 'empty-state-message';
-        emptyDiv.style.gridColumn = '1 / -1';
-        emptyDiv.style.textAlign = 'center';
-        emptyDiv.style.padding = '40px';
-        emptyDiv.style.color = '#64748b';
-        emptyDiv.style.fontSize = '1.1rem';
-        emptyDiv.style.lineHeight = '1.6';
-        
-        const isFavView = (document.getElementById('menu-favorites')?.classList.contains('active'));
-        emptyDiv.innerHTML = isFavView ? lang.emptyFav : lang.empty;
-        videoGrid.appendChild(emptyDiv);
+    if (videos.length === 0) {
+        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
+        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
         return;
     }
 
-    videosArray.forEach(video => {
-        const isFav = favoritesArray.some(fav => fav.video_id === video.id);
+    videos.forEach(video => {
         const card = document.createElement('div');
         card.className = 'video-card';
-        card.dataset.id = video.id;
-
-        const instructorName = video.instructors?.name || video.instructor_name || 'Bilinmeyen Eğitmen';
-        const partnerText = video.partner_name ? ` ft. ${video.partner_name}` : '';
-
-        // Rol ve Ortam tipini sözlüğe göre çeviriyoruz
-        let displayRole = video.role_type;
-        if (video.role_type === 'Leader') displayRole = lang.leader;
-        else if (video.role_type === 'Follower') displayRole = lang.follower;
-        else if (video.role_type === 'Both') displayRole = lang.both;
-
-        const displayLocation = video.is_downloaded ? lang.drive : lang.social;
-
-        // Etiketleri yerleştirme
-        let tagsHtml = '';
-        if (video.tags) {
-            tagsHtml = video.tags.split(',')
-                .map(t => t.trim())
-                .filter(t => t !== '')
-                .map(t => `<span class="card-tag-item">#${t}</span>`)
-                .join(' ');
+        
+        // Rol tipi: Artık çeviri kullanılıyor (both "Çift" / "Both")
+        let roleDisplay = lang.both; // varsayılan
+        let roleBadgeClass = 'badge-both';
+        if (video.role_type === 'Leader') {
+            roleDisplay = lang.leader;
+            roleBadgeClass = 'badge-leader';
+        } else if (video.role_type === 'Follower') {
+            roleDisplay = lang.follower;
+            roleBadgeClass = 'badge-follower';
         }
 
-        const hasCover = video.cover_url && video.cover_url.trim() !== '';
-        const coverHtml = hasCover 
-            ? `<img src="${video.cover_url}" class="card-cover-img" alt="Cover">`
-            : `<div class="card-no-cover">🎬 No Cover Image</div>`;
+        // Depolama tipi: Çeviri destekli
+        const storageText = video.is_downloaded ? lang.drive : lang.social;
+        const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
+        
+        const partnerDisplay = video.partner_name 
+            ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
+            : '';
+        
+        let tagsHtml = '';
+        if (video.tags && video.tags.trim() !== '') {
+            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+            tagsArray.forEach(tag => {
+                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
+            });
+            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
+        } else {
+            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
+        }
+        
+        const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
+        const coverImg = video.cover_url || defaultCover;
+        const isFav = favs.includes(video.id);
+
+        const hasDrive = video.is_downloaded && video.drive_url;
+        const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
+        const shouldOpenInModal = hasDrive || isYouTube;
+
+        // Modal tetikleyiciler için dinamik nitelik ayarları
+        const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
+        // İzleme bağlantısı metni: Buluttan izle (watchInCloud) veya normal watch
+        const watchLinkText = shouldOpenInModal ? lang.watchInCloud : lang.watch;
+        // Aynı metni buton için de kullanıyoruz (card-action-link)
+        const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
         card.innerHTML = `
-            <div class="card-media-wrapper ${hasCover ? '' : 'clickable-trigger'}">
-                ${coverHtml}
-                <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">
-                    ${isFav ? '⭐' : '☆'}
-                </button>
+            <div class="video-cover-link">
+                <div class="video-cover-container" style="background-image: url('${coverImg}');">
+                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
+                    <a ${actionClickAttr}>
+                        <div class="play-overlay">
+                            <span class="play-icon">▶</span>
+                        </div>
+                    </a>
+                </div>
             </div>
             <div class="card-info-content">
-                <h3 class="card-instructor-title">${instructorName}${partnerText}</h3>
-                <div class="card-meta-details">
-                    <p><strong>${lang.role}:</strong> ${displayRole}</p>
-                    <p><strong>${lang.location}:</strong> ${displayLocation}</p>
+                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
+                ${partnerDisplay}
+                
+                <div class="card-badges">
+                    <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
+                    <span class="badge ${storageClass}">${storageText}</span>
                 </div>
-                <div class="card-tags-wrapper">
-                    ${tagsHtml}
-                    <button class="inline-edit-tags-btn" data-id="${video.id}" title="${lang.editTagsTitle}">✏️</button>
-                </div>
-                <div class="card-action-row">
-                    <a href="#" class="video-watch-link clickable-trigger">${lang.watch}</a>
-                    <div class="card-admin-buttons">
-                        <button class="btn-card-edit" data-id="${video.id}" title="${lang.btnCardEdit}">✏️</button>
-                        <button class="btn-card-delete" data-id="${video.id}" title="${lang.btnCardDelete}">🗑️</button>
+
+                <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
+
+                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
+                    <a ${actionLinkClickAttr}>
+                        ${watchLinkText}
+                    </a>
+                    
+                    <div style="display:flex; gap:8px;">
+                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
+                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
                     </div>
                 </div>
             </div>
         `;
 
-        // Favori Yıldız Butonu Tetikleyicisi
+        // Orijinal buton olay dinleyicileri
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            handleToggleFavorite(video.id);
+            toggleFavorite(video.id);
         });
 
-        // Etiket Düzenleme Butonu Tetikleyicisi
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            openTagsEditModal(video.id, video.tags || '');
+            openTagsEditModal(video);
         });
 
-        // Kart Düzenleme Butonu Tetikleyicisi
-        card.querySelector('.btn-card-edit').addEventListener('click', (e) => {
+        card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            handleEditVideo(video);
+            startVideoEditFlow(video);
         });
 
-        // Kart Silme Butonu Tetikleyicisi
-        card.querySelector('.btn-card-delete').addEventListener('click', (e) => {
+        card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            handleDeleteVideo(video.id);
+            deleteVideoFlow(video.id);
         });
 
-        // Videoyu İzleme Pop-up Tetikleyicileri
-        const hasDrive = video.drive_url && video.drive_url.trim() !== '';
-        const isYouTube = (!hasDrive && video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be')));
-        
-        const triggers = card.querySelectorAll('.clickable-trigger');
-        if (triggers.length > 0) {
+        // Tıklama durumunda modalı güvenli link formatıyla tetikler
+        if (shouldOpenInModal) {
+            const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
                 el.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -236,6 +267,7 @@ export function renderVideoCards(videoGridId, videosArray, favoritesArray, curre
 // YouTube linklerini iframe uyumlu embed yapısına çeviren güvenli fonksiyon
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
+    // YouTube Shorts kontrolü
     if (url.includes('/shorts/')) {
         const parts = url.split('/shorts/');
         if (parts[1]) {
@@ -243,6 +275,7 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${id}`;
         }
     }
+    // Standart YouTube videoları (?v=...)
     if (url.includes('v=')) {
         const regExp = /[?&]v=([^&#]+)/;
         const matches = url.match(regExp);
@@ -250,6 +283,7 @@ function convertYoutubeUrlToEmbed(url) {
             return `https://www.youtube.com/embed/${matches[1]}`;
         }
     }
+    // Kısaltılmış linkler (youtu.be/...)
     if (url.includes('youtu.be/')) {
         const parts = url.split('youtu.be/');
         if (parts[1]) {
