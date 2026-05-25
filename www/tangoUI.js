@@ -1,12 +1,13 @@
 import { translations } from './config.js';
 
+// Akıllı Dosya Adı Asistanını Günceller
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     const lang = translations[currentLang];
     const select = document.getElementById('form-instructor-select');
     const outputDiv = document.getElementById('assistant-filename-output');
 
     if (!select || !select.value || select.selectedIndex === -1) {
-        if (outputDiv) outputDiv.innerText = lang.assistantAlert;
+        if (outputDiv && lang) outputDiv.innerText = lang.assistantAlert;
         return;
     }
 
@@ -27,103 +28,188 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
+// Tüm Arayüzün Dil Metinlerini Günceller (Güvenli Hale Getirildi)
 export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch) {
     const lang = translations[currentLang];
+    if (!lang) return;
     
-    document.title = lang.title;
-    document.getElementById('sidebar-title').innerText = lang.brandTitle;
-    document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
-    document.getElementById('menu-library').innerText = lang.menuLibrary;
-    document.getElementById('menu-favorites').innerText = lang.menuFavorites;
-    document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
-    document.getElementById('search-input').placeholder = lang.searchPlaceholder;
-    document.getElementById('filter-btn').innerText = lang.filterBtn;
-    document.getElementById('opt-all-roles').innerText = lang.allRoles;
-    document.getElementById('opt-leader').innerText = lang.leader;
-    document.getElementById('opt-follower').innerText = lang.follower;
-    document.getElementById('opt-both').innerText = lang.both;
-    document.getElementById('opt-all-locations').innerText = lang.allLocations;
-    document.getElementById('opt-drive').innerText = lang.drive;
-    document.getElementById('opt-social').innerText = lang.social;
-    document.getElementById('btn-clear-favorites').innerText = lang.btnClearFavorites;
+    document.title = lang.title || 'Tango Library';
+    
+    const sidebarTitle = document.getElementById('sidebar-title');
+    if (sidebarTitle) sidebarTitle.innerText = lang.brandTitle;
 
-    document.getElementById('lbl-form-instructor').innerText = lang.lblInstructor;
-    document.getElementById('lbl-form-video-url').innerText = lang.lblVideoUrl;
-    document.getElementById('lbl-form-role').innerText = lang.role;
-    document.getElementById('form-role-select').options[0].text = lang.couple;
-    document.getElementById('form-role-select').options[1].text = lang.leader;
-    document.getElementById('form-role-select').options[2].text = lang.follower;
-    document.getElementById('lbl-form-partner').innerText = lang.lblPartnerName;
-    document.getElementById('form-partner-name').placeholder = lang.partnerPlaceholder;
-    document.getElementById('lbl-form-tags').innerText = lang.lblTags;
-    document.getElementById('form-tags-input').placeholder = lang.addTagPlaceholder;
-    document.getElementById('lbl-form-downloaded').innerText = lang.lblIsDownloaded;
-    document.getElementById('lbl-form-drive-url').innerText = lang.lblDriveUrl;
-    document.getElementById('lbl-form-cover').innerText = lang.lblCoverUpload;
-    document.getElementById('drop-area-text').innerText = lang.dropText;
+    const langToggleBtn = document.getElementById('lang-toggle-btn');
+    if (langToggleBtn) langToggleBtn.innerText = lang.langBtn;
 
-    if (editingVideoId) {
-        document.getElementById('form-title').innerText = lang.formTitleEdit;
-        document.getElementById('btn-submit-video').innerText = lang.btnUpdateVideo;
-    } else {
-        document.getElementById('form-title').innerText = lang.formTitle;
-        document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
+    const menuLibrary = document.getElementById('menu-library');
+    if (menuLibrary) menuLibrary.innerText = lang.menuLibrary;
+
+    const menuFavorites = document.getElementById('menu-favorites');
+    if (menuFavorites) menuFavorites.innerText = lang.menuFavorites;
+
+    const menuAddVideo = document.getElementById('menu-add-video');
+    if (menuAddVideo) menuAddVideo.innerText = lang.menuAddVideo;
+
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
+
+    const filterBtn = document.getElementById('filter-btn');
+    if (filterBtn) filterBtn.innerText = lang.filterBtn;
+    
+    const optAllRoles = document.getElementById('opt-all-roles');
+    if (optAllRoles) optAllRoles.innerText = lang.allRoles;
+
+    const optLeader = document.getElementById('opt-leader');
+    if (optLeader) optLeader.innerText = lang.leader;
+
+    const optFollower = document.getElementById('opt-follower');
+    if (optFollower) optFollower.innerText = lang.follower;
+
+    const optBoth = document.getElementById('opt-both');
+    if (optBoth) optBoth.innerText = lang.both;
+
+    const optAllLocations = document.getElementById('opt-all-locations');
+    if (optAllLocations) optAllLocations.innerText = lang.allLocations;
+
+    const optDrive = document.getElementById('opt-drive');
+    if (optDrive) optDrive.innerText = lang.drive;
+
+    const optSocial = document.getElementById('opt-social');
+    if (optSocial) optSocial.innerText = lang.social;
+
+    const formTitle = document.getElementById('form-title');
+    if (formTitle) formTitle.innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
+
+    const lblInstructor = document.getElementById('lbl-instructor');
+    if (lblInstructor) lblInstructor.innerText = lang.lblInstructor;
+
+    const lblVideoUrl = document.getElementById('lbl-video-url');
+    if (lblVideoUrl) lblVideoUrl.innerText = lang.lblVideoUrl;
+
+    const lblRole = document.getElementById('lbl-role');
+    if (lblRole) lblRole.innerText = lang.lblRole;
+
+    const lblPartner = document.getElementById('lbl-partner');
+    if (lblPartner) lblPartner.innerText = lang.lblPartner;
+
+    const lblTags = document.getElementById('lbl-tags');
+    if (lblTags) lblTags.innerText = lang.lblTags;
+
+    const formTagsInput = document.getElementById('form-tags-input');
+    if (formTagsInput) formTagsInput.placeholder = lang.tagsPlaceholder;
+
+    const lblDownloaded = document.getElementById('lbl-downloaded');
+    if (lblDownloaded) lblDownloaded.innerText = lang.lblDownloaded;
+
+    const lblDriveUrl = document.getElementById('lbl-drive-url');
+    if (lblDriveUrl) lblDriveUrl.innerText = lang.lblDriveUrl;
+
+    const btnSubmitVideo = document.getElementById('btn-submit-video');
+    if (btnSubmitVideo) btnSubmitVideo.innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
+
+    const lblNewInstructorName = document.getElementById('lbl-new-instructor-name');
+    if (lblNewInstructorName) lblNewInstructorName.innerText = lang.lblNewInstructorName;
+
+    const lblCoverUpload = document.getElementById('lbl-cover-upload');
+    if (lblCoverUpload) lblCoverUpload.innerText = lang.lblCoverUpload;
+
+    const btnClearFavorites = document.getElementById('btn-clear-favorites');
+    if (btnClearFavorites) btnClearFavorites.innerText = lang.btnClearFavorites;
+
+    const editTagsTitle = document.getElementById('edit-tags-title');
+    if (editTagsTitle) editTagsTitle.innerText = lang.editTagsTitle;
+
+    const modalTagsInput = document.getElementById('modal-tags-input');
+    if (modalTagsInput) modalTagsInput.placeholder = lang.addTagPlaceholder;
+    
+    const assistantTitle = document.getElementById('assistant-title');
+    if (assistantTitle) assistantTitle.innerText = lang.assistantTitle;
+
+    const assistantText = document.getElementById('assistant-text');
+    if (assistantText) assistantText.innerText = lang.assistantText;
+
+    const dropAreaText = document.getElementById('drop-area-text');
+    if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
+        dropAreaText.innerText = lang.dropText;
     }
 
-    document.getElementById('ins-section-title').innerText = lang.insSectionTitle;
-    document.getElementById('lbl-new-ins-name').innerText = lang.lblNewInstructorName;
-    
-    if (editInstructorId) {
-        document.getElementById('btn-submit-instructor').innerText = lang.btnUpdateIns;
-    } else {
-        document.getElementById('btn-submit-instructor').innerText = lang.btnAddIns;
+    const saveInsBtn = document.getElementById('btn-save-instructor');
+    if (saveInsBtn) {
+        saveInsBtn.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
     }
-
-    document.getElementById('modal-tags-title').innerText = lang.editTagsTitle;
-    document.getElementById('modal-add-tag-input').placeholder = lang.addTagPlaceholder;
 
     updateSmartFilenameAssistant(currentLang, formTagsArray);
+    if (typeof applyFiltersAndSearch === 'function') {
+        applyFiltersAndSearch();
+    }
 }
 
+// Görünümler (Kütüphane / Ekleme Formu) Arasında Geçiş Yapar
 export function switchView(viewName, state, functions) {
-    const clearFavBtnContainer = document.getElementById('clear-fav-btn-container');
+    state.currentView = viewName;
     
-    document.getElementById('menu-library').classList.remove('active');
-    document.getElementById('menu-favorites').classList.remove('active');
-    document.getElementById('menu-add-video').classList.remove('active');
+    const menuLibrary = document.getElementById('menu-library');
+    const menuFavorites = document.getElementById('menu-favorites');
+    const menuAddVideo = document.getElementById('menu-add-video');
+    
+    if (menuLibrary) menuLibrary.classList.remove('active');
+    if (menuFavorites) menuFavorites.classList.remove('active');
+    if (menuAddVideo) menuAddVideo.classList.remove('active');
+
+    const clearFavBtnContainer = document.getElementById('clear-favorites-container');
+    const viewLibraryContainer = document.getElementById('view-library-container');
+    const viewAddContainer = document.getElementById('view-add-container');
 
     if (viewName === 'library' || viewName === 'favorites') {
-        document.getElementById('view-library-container').classList.remove('d-none');
-        document.getElementById('view-add-container').classList.add('d-none');
+        if (viewLibraryContainer) viewLibraryContainer.classList.remove('d-none');
+        if (viewAddContainer) viewAddContainer.classList.add('d-none');
         
-        document.getElementById(`menu-${viewName}`).classList.add('active');
+        const activeMenu = document.getElementById(`menu-${viewName}`);
+        if (activeMenu) activeMenu.classList.add('active');
         
-        if (viewName === 'favorites') {
-            clearFavBtnContainer.classList.remove('d-none');
-        } else {
-            clearFavBtnContainer.classList.add('d-none');
+        if (clearFavBtnContainer) {
+            if (viewName === 'favorites') {
+                clearFavBtnContainer.classList.remove('d-none');
+            } else {
+                clearFavBtnContainer.classList.add('d-none');
+            }
         }
         
-        functions.applyFiltersAndSearch();
+        if (functions && typeof functions.applyFiltersAndSearch === 'function') {
+            functions.applyFiltersAndSearch();
+        }
     } else if (viewName === 'add') {
-        document.getElementById('view-library-container').classList.add('d-none');
-        document.getElementById('view-add-container').classList.remove('d-none');
-        document.getElementById('menu-add-video').classList.add('active');
+        if (viewLibraryContainer) viewLibraryContainer.classList.add('d-none');
+        if (viewAddContainer) viewAddContainer.classList.remove('d-none');
+        if (menuAddVideo) menuAddVideo.classList.add('active');
         
         if (!state.editingVideoId) {
             const lang = translations[state.currentLang];
-            document.getElementById('form-title').innerText = lang.formTitle;
-            document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
-            document.getElementById('add-video-form').reset();
+            const formTitle = document.getElementById('form-title');
+            if (formTitle && lang) formTitle.innerText = lang.formTitle;
+            
+            const btnSubmitVideo = document.getElementById('btn-submit-video');
+            if (btnSubmitVideo && lang) btnSubmitVideo.innerText = lang.btnSubmitVideo;
+            
+            const addVideoForm = document.getElementById('add-video-form');
+            if (addVideoForm) addVideoForm.reset();
+            
             state.resetFormTags();
-            functions.renderFormChips();
-            if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
+            if (functions && typeof functions.renderFormChips === 'function') {
+                functions.renderFormChips();
+            }
+            
+            const imagePreview = document.getElementById('image-preview');
+            if (imagePreview) imagePreview.classList.add('d-none');
+            
             const dropAreaText = document.getElementById('drop-area-text');
-            if (dropAreaText) {
+            if (dropAreaText && lang) {
                 dropAreaText.innerText = lang.dropText;
                 dropAreaText.classList.remove('d-none');
             }
-            functions.resetUploadedCoverUrl();
+            if (functions && typeof functions.resetUploadedCoverUrl === 'function') {
+                functions.resetUploadedCoverUrl();
+            }
         }
         updateSmartFilenameAssistant(state.currentLang, state.getFormTags());
     }

@@ -1,3 +1,6 @@
+// uiRenderer.js
+
+// 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -13,6 +16,7 @@ export function renderChips(containerId, chipsArray, onRemoveCallback) {
     });
 }
 
+// 2. AUTOCOMPLETE (OTOMATİK ÖNERİ) AYARLAMA FONKSİYONU
 export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, onAddCallback, getAllUniqueTagsPool) {
     const input = document.getElementById(inputId);
     const list = document.getElementById(listId);
@@ -110,78 +114,147 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
+// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU
 export function renderVideoCards(videos, config) {
-    const { currentLang, currentView, translations, favs, toggleFavorite, openTagsEditModal, startVideoEditFlow, deleteVideoFlow, openVideoModal } = config;
+    const { 
+        currentLang, 
+        currentView, 
+        translations, 
+        favs, 
+        toggleFavorite, 
+        openTagsEditModal, 
+        startVideoEditFlow, 
+        deleteVideoFlow, 
+        openVideoModal 
+    } = config;
+
     const videoGrid = document.getElementById('video-grid');
+    if (!videoGrid) return;
     const lang = translations[currentLang];
     videoGrid.innerHTML = '';
 
     if (videos.length === 0) {
-        videoGrid.innerHTML = `<div class="info-msg">${currentView === 'favorites' ? lang.emptyFav : lang.empty}</div>`;
+        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
+        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
         return;
     }
 
     videos.forEach(video => {
-        if (currentView === 'favorites' && !favs.includes(video.id)) return;
-
-        const isFav = favs.includes(video.id);
         const card = document.createElement('div');
         card.className = 'video-card';
-
-        const hasDrive = !!video.drive_url;
-        const isYouTube = video.url?.includes('youtube.com') || video.url?.includes('youtu.be');
-
-        let tagsHtml = '';
-        if (video.tags) {
-            video.tags.split(',').forEach(t => {
-                const temiz = t.trim();
-                if (temiz) tagsHtml += `<span class="tag-chip">#${temiz}</span>`;
-            });
+        
+        let roleDisplay = video.role_type || 'Both';
+        let roleBadgeClass = '';
+        if (roleDisplay === 'Leader') {
+            roleDisplay = currentLang === 'tr' ? 'Lider' : 'Leader';
+            roleBadgeClass = 'badge-leader';
+        } else if (roleDisplay === 'Follower') {
+            roleDisplay = currentLang === 'tr' ? 'Takipçi' : 'Follower';
+            roleBadgeClass = 'badge-follower';
+        } else {
+            // Dans bağlamına uygun düzeltme: "Both" yerine "Çift / Couple" yapıldı
+            roleDisplay = currentLang === 'tr' ? 'Çift' : 'Couple';
+            roleBadgeClass = 'badge-both';
         }
 
-        let roleDisplay = lang.couple;
-        if (video.role_type === 'Leader') roleDisplay = lang.leader;
-        if (video.role_type === 'Follower') roleDisplay = lang.follower;
+        const storageText = video.is_downloaded ? '💾 Drive' : '🌐 Sosyal Medya';
+        const storageClass = video.is_downloaded ? 'badge-drive' : 'badge-social';
+        
+        const partnerDisplay = video.partner_name 
+            ? `<span class="card-partner">👥 ${video.partner_name}</span>` 
+            : '';
+        
+        let tagsHtml = '';
+        if (video.tags && video.tags.trim() !== '') {
+            const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+            tagsArray.forEach(tag => {
+                tagsHtml += `<span class="badge" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; padding: 2px 6px;">#${tag}</span>`;
+            });
+            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
+        } else {
+            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
+        }
+        
+        const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
+        const coverImg = video.cover_url || defaultCover;
+        const isFav = favs.includes(video.id);
+
+        const hasDrive = video.is_downloaded && video.drive_url;
+        const isYouTube = video.url && (video.url.includes('youtube.com') || video.url.includes('youtu.be'));
+        const shouldOpenInModal = hasDrive || isYouTube;
+
+        const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
+        const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
         card.innerHTML = `
-            <div class="card-banner">
-                <img src="${video.cover_url || 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500'}" class="card-img" alt="Cover">
-                <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
-                <span class="badge badge-location">${hasDrive ? lang.drive : lang.social}</span>
+            <div class="video-cover-link">
+                <div class="video-cover-container" style="background-image: url('${coverImg}');">
+                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
+                    <a ${actionClickAttr}>
+                        <div class="play-overlay">
+                            <span class="play-icon">▶</span>
+                        </div>
+                    </a>
+                </div>
             </div>
-            <div class="card-body">
-                <h3 class="instructor-title">${video.instructor_name || 'Bilinmeyen Eğitmen'}</h3>
-                ${video.partner_name ? `<p class="partner-text"><b>Partner:</b> ${video.partner_name}</p>` : ''}
-                <p class="role-text"><b>${lang.role}:</b> ${roleDisplay}</p>
-                <div class="card-tags-wrapper">${tagsHtml}</div>
-                <div class="card-actions-row">
-                    <a href="#" class="video-watch-link watch-btn" data-id="${video.id}">${lang.watch}</a>
-                    <div class="admin-buttons">
-                        <button class="inline-edit-tags-btn" data-id="${video.id}">🏷️</button>
-                        <button class="btn-card-edit" data-id="${video.id}">✏️</button>
-                        <button class="btn-card-delete" data-id="${video.id}">🗑️</button>
+            <div class="card-info-content">
+                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
+                ${partnerDisplay}
+                
+                <div class="card-badges">
+                    <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
+                    <span class="badge ${storageClass}">${storageText}</span>
+                </div>
+
+                <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
+
+                <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
+                    <a ${actionLinkClickAttr}>
+                        ${shouldOpenInModal ? (currentLang === 'tr' ? '🎬 Kütüphanede İzle →' : '🎬 Watch in Library →') : lang.watch}
+                    </a>
+                    
+                    <div style="display:flex; gap:8px;">
+                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
+                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
                     </div>
                 </div>
             </div>
         `;
 
-        card.querySelector('.fav-star-btn').addEventListener('click', () => toggleFavorite(video.id));
-        card.querySelector('.btn-card-edit').addEventListener('click', () => startVideoEditFlow(video));
-        card.querySelector('.btn-card-delete').addEventListener('click', () => deleteVideoFlow(video.id));
-        card.querySelector('.inline-edit-tags-btn').addEventListener('click', () => openTagsEditModal(video.id, video.tags || ''));
-
-        const watchTriggers = card.querySelectorAll('.watch-btn, .card-banner');
-        watchTriggers.forEach(el => {
-            el.addEventListener('click', (e) => {
-                if (e.target.classList.contains('fav-star-btn')) return;
-                e.preventDefault();
-                let targetUrl = hasDrive ? video.drive_url : video.url;
-                if (isYouTube) {
-                    targetUrl = convertYoutubeUrlToEmbed(targetUrl);
-                }
-                openVideoModal(targetUrl);
-            });
+        card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(video.id);
         });
+
+        card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openTagsEditModal(video);
+        });
+
+        card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            startVideoEditFlow(video);
+        });
+
+        card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteVideoFlow(video.id);
+        });
+
+        if (shouldOpenInModal) {
+            const triggers = card.querySelectorAll('[data-modal-url]');
+            triggers.forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    let targetUrl = hasDrive ? video.drive_url : video.url;
+                    
+                    if (isYouTube) {
+                        targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+                    }
+                    openVideoModal(targetUrl);
+                });
+            });
+        }
 
         videoGrid.appendChild(card);
     });
