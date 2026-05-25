@@ -58,11 +58,9 @@ function callUpdateSmartAssistant() {
 }
 
 function callUpdateInterfaceLanguage() {
-    // Dil güncellemesi yaparken filtre dropdownlarını da yenile
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, () => {
         if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
     });
-    // Filtre dropdownlarını manuel yenile
     if (globalVideos.length) {
         populateFilterDropdowns(globalVideos, currentLang);
     }
@@ -277,16 +275,18 @@ function applyFiltersAndSearch() {
         ortam: document.getElementById('filter-location-select')?.value || 'all'
     };
 
-    // currentLang parametresini getFilteredVideos'a gönder
     const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler, currentLang);
 
-    // 📊 Toplam video sayısını güncelle (dil duyarlı)
     const totalCountElem = document.getElementById('total-video-count');
     if (totalCountElem) {
         const lang = translations[currentLang];
-        const label = currentView === 'favorites' ? 
-            (currentLang === 'tr' ? 'Pratik Listesinde:' : 'In Practice List:') : 
-            (currentLang === 'tr' ? 'Toplam Video Sayısı:' : 'Total Videos:');
+        // 📌 Değişiklik burada: favorites sayfası için özel label kullanılıyor
+        let label = '';
+        if (currentView === 'favorites') {
+            label = lang.favoritesCountLabel;
+        } else {
+            label = currentLang === 'tr' ? 'Toplam Video Sayısı:' : 'Total Videos:';
+        }
         totalCountElem.innerText = `${label} ${filtered.length}`;
     }
 
@@ -442,7 +442,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchInstructors();
     fetchVideos();
 
-    // ✅ İlk dil yüklemesi için gerekli çağrı (menü metinleri, başlık vb.)
     callUpdateInterfaceLanguage();
 
     document.getElementById('lang-toggle-btn')?.addEventListener('click', () => {

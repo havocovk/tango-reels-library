@@ -7,7 +7,7 @@ export const translations = {
     tr: {
         brandTitle: "💃 Arjantin Tango Kombinasyon Koleksiyonu",
         title: "Arjantin Tango Kombinasyon Koleksiyonu",
-        menuLibrary: "📚 Koleksiyon",          // Değiştirildi: "Kütüphane" -> "Koleksiyon"
+        menuLibrary: "📚 Koleksiyon",
         menuFavorites: "⭐ Pratik Listem",
         menuAddVideo: "➕ Yeni Video Ekle",
         searchPlaceholder: "Eğitmen, partner veya etiket (tag) ara...",
@@ -69,12 +69,14 @@ export const translations = {
         addTagPlaceholder: "Yeni etiket yazıp virgül koyun...",
         btnCardEdit: "✏️ Düzenle",
         btnCardDelete: "🗑️ Sil",
-        loadMore: "➕ Daha Fazla Video Yükle"
+        loadMore: "➕ Daha Fazla Video Yükle",
+        // Yeni: Pratik Listesi sayfasındaki sayaç etiketi
+        favoritesCountLabel: "Pratik Listesindeki Video Sayısı:"
     },
     en: {
         brandTitle: "💃 Argentine Tango Combination Collection",
         title: "Argentine Tango Combination Collection",
-        menuLibrary: "📚 Collection",          // Değiştirildi: "Library" -> "Collection"
+        menuLibrary: "📚 Collection",
         menuFavorites: "⭐ Practice List",
         menuAddVideo: "➕ Add New Video",
         searchPlaceholder: "Search instructor, partner or tags...",
@@ -136,6 +138,8 @@ export const translations = {
         addTagPlaceholder: "Type new tag and put comma...",
         btnCardEdit: "✏️ Edit",
         btnCardDelete: "🗑️ Delete",
-        loadMore: "➕ Load More Videos"
+        loadMore: "➕ Load More Videos",
+        // Yeni: Practice List sayfasındaki sayaç etiketi
+        favoritesCountLabel: "Number of Videos in Practice List:"
     }
 };
