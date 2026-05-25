@@ -28,7 +28,7 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
-// Tüm Arayüzün Dil Metinlerini Günceller (populateFilterDropdowns çağrısı eklendi)
+// Tüm Arayüzün Dil Metinlerini Günceller
 export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, populateFilterDropdowns) {
     const lang = translations[currentLang];
     
@@ -39,13 +39,12 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     document.getElementById('menu-favorites').innerText = lang.menuFavorites;
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
     
-    // SEARCH-INPUT kontrolü - eğer varsa güncelle (HTML'de search-input yok, hata almamak için kontrol)
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
     
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     
-    // Filtre dropdown başlıkları (selectlerin içindeki ilk option "all" metinleri)
+    // Filtre dropdown başlıkları
     const allRolesOpt = document.getElementById('opt-all-roles');
     if (allRolesOpt) allRolesOpt.innerText = lang.allRoles;
     const optLeader = document.getElementById('opt-leader');
@@ -116,18 +115,30 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         saveInsBtn.innerText = editInstructorId ? lang.btnUpdateIns : lang.btnAddIns;
     }
     
-    // Yükle butonu metnini güncelle
     const loadMoreBtn = document.getElementById('btn-load-more');
     if (loadMoreBtn) loadMoreBtn.innerText = lang.loadMore;
     
+    // 📌 YENİ: Rol tipi dropdown seçeneklerinin metinlerini güncelle
+    const roleSelect = document.getElementById('form-role-select');
+    if (roleSelect) {
+        const bothOption = roleSelect.querySelector('option[value="Both"]');
+        const leaderOption = roleSelect.querySelector('option[value="Leader"]');
+        const followerOption = roleSelect.querySelector('option[value="Follower"]');
+        if (bothOption) bothOption.innerText = lang.both;      // "Çift" veya "Couple"
+        if (leaderOption) leaderOption.innerText = lang.leader; // "Lider" veya "Leader"
+        if (followerOption) followerOption.innerText = lang.follower; // "Takipçi" veya "Follower"
+    }
+    
+    // 📌 YENİ: Partner adı input'unun placeholder'ını güncelle
+    const partnerInput = document.getElementById('form-partner-name');
+    if (partnerInput) {
+        partnerInput.placeholder = currentLang === 'tr' ? 'Örn: Maria' : 'Ex: Maria';
+    }
+    
     updateSmartFilenameAssistant(currentLang, formTagsArray);
     
-    // Filtre dropdownlarını yeniden doldur (metinlerin güncellenmesi için)
     if (populateFilterDropdowns) {
-        // Global videoları dışarıdan almak için, bu fonksiyon çağrılmadan önce globalVideos tanımlı olmalı
-        // applyFiltersAndSearch içinde zaten populateFilterDropdowns çağrılır, ancak dil değişince videolar değişmemiş olsa bile
-        // sadece statik metinleri güncellemek için videoları mevcut global diziden alabiliriz.
-        // Bunun için buraya bir callback aktaracağız. Uygulamada app.js'den çağrılırken globalVideos verilecek.
+        // Bu fonksiyon dışarıdan globalVideos ile çağrılacak, şimdilik boş
     }
     
     applyFiltersAndSearch();
