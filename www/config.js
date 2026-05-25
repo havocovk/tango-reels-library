@@ -17,7 +17,7 @@ export const translations = {
         emptyFav: "Pratik listeniz henüz boş. <br> Kartların üzerindeki yıldız (⭐) ikonuna basarak bu haftanın pratiklerini buraya toplayabilirsiniz!",
         error: "❌ Veritabanı bağlantısı başarısız oldu. Lütfen anahtarlarınızı kontrol edin.",
         role: "🎬 Rol",
-        location: "📍 Ortam",
+        location: "📍 Kaynaklar",   // Değiştirildi: "Tüm Ortamlar" -> "Kaynaklar"
         watch: "🔗 Videoyu İzle →",
         watchInCloud: "☁️ Buluttan İzle →",
         langBtn: "🇬🇧 EN",
@@ -53,11 +53,11 @@ export const translations = {
         allRoles: "Tüm Roller",
         leader: "Lider",
         follower: "Takipçi",
-        both: "Çift",                     // Düzeltildi: "İkisi de" yerine "Çift"
-        allLocations: "Tüm Ortamlar",
-        allInstructors: "Tüm Eğitmenler",   // Yeni eklendi
-        allTags: "Tüm Etiketler",           // Yeni eklendi
-        allDates: "Tüm Tarihler",           // Yeni eklendi
+        both: "Çift",
+        allLocations: "Kaynaklar",   // Değiştirildi: "Tüm Ortamlar" -> "Kaynaklar"
+        allInstructors: "Tüm Eğitmenler",
+        allTags: "Tüm Etiketler",
+        allDates: "Tüm Tarihler",
         drive: "💾 Google Drive",
         social: "🌐 Sosyal Medya",
         closeBtn: "Kapat",
@@ -69,7 +69,7 @@ export const translations = {
         addTagPlaceholder: "Yeni etiket yazıp virgül koyun...",
         btnCardEdit: "✏️ Düzenle",
         btnCardDelete: "🗑️ Sil",
-        loadMore: "➕ Daha Fazla Video Yükle"    // Yeni eklendi
+        loadMore: "➕ Daha Fazla Video Yükle"
     },
     en: {
         brandTitle: "💃 ATKK",
@@ -84,7 +84,7 @@ export const translations = {
         emptyFav: "Your practice list is empty yet. <br> Click the star (⭐) icon on the cards to gather this week's practices here!",
         error: "❌ Database connection failed. Please check your keys.",
         role: "🎬 Role",
-        location: "📍 Storage",
+        location: "📍 Sources",   // Değiştirildi: "All Locations" -> "Sources"
         watch: "🔗 Watch Video →",
         watchInCloud: "☁️ Watch in Cloud →",
         langBtn: "🇹🇷 TR",
@@ -120,8 +120,8 @@ export const translations = {
         allRoles: "All Roles",
         leader: "Leader",
         follower: "Follower",
-        both: "Both",
-        allLocations: "All Locations",
+        both: "Couple",   // Değiştirildi: "Both" -> "Couple"
+        allLocations: "Sources",   // Değiştirildi: "All Locations" -> "Sources"
         allInstructors: "All Instructors",
         allTags: "All Tags",
         allDates: "All Dates",

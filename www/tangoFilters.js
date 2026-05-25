@@ -5,11 +5,12 @@
 
 import { translations } from './config.js';
 
-// 📅 Yardımcı Fonksiyon: Karmaşık tarihleri "Mayıs 2026" formatına çevirir.
-function formatAyYil(tarihString) {
-    if (!tarihString) return 'Bilinmeyen Tarih';
+// 📅 Yardımcı Fonksiyon: Tarihi dile göre "Mayıs 2026" veya "May 2026" formatına çevirir.
+function formatAyYil(tarihString, lang) {
+    if (!tarihString) return lang === 'tr' ? 'Bilinmeyen Tarih' : 'Unknown Date';
     const tarih = new Date(tarihString);
-    return tarih.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+    const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+    return tarih.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 }
 
 /**
@@ -63,10 +64,12 @@ export function populateFilterDropdowns(videolar, currentLang) {
         tagSelect.appendChild(opt);
     });
 
-    // Tarihleri ekle
+    // Tarihleri ekle (dile göre formatlanmış)
     const tarihlerTorba = new Set();
     videolar.forEach(video => {
-        if (video.created_at) tarihlerTorba.add(formatAyYil(video.created_at));
+        if (video.created_at) {
+            tarihlerTorba.add(formatAyYil(video.created_at, currentLang));
+        }
     });
     Array.from(tarihlerTorba).forEach(tarihMetni => {
         const opt = document.createElement('option');
@@ -85,9 +88,9 @@ export function populateFilterDropdowns(videolar, currentLang) {
 }
 
 /**
- * 🔍 GÖREV 2: Seçtiğin filtrelere göre eşleşen videoları bulur
+ * 🔍 GÖREV 2: Seçtiğin filtrelere göre eşleşen videoları bulur (dil desteği eklendi)
  */
-export function getFilteredVideos(videolar, filtreler) {
+export function getFilteredVideos(videolar, filtreler, currentLang) {
     const { aramaMetni, rol, egitmen, etiket, tarih, ortam } = filtreler;
 
     return videolar.filter(video => {
@@ -106,7 +109,8 @@ export function getFilteredVideos(videolar, filtreler) {
             const videoEtiketleri = video.tags.split(',').map(t => t.trim());
             if (!videoEtiketleri.includes(etiket)) return false;
         }
-        if (tarih !== 'all' && formatAyYil(video.created_at) !== tarih) return false;
+        // Tarih karşılaştırmasında currentLang kullanılarak formatlanmış değer ile karşılaştır
+        if (tarih !== 'all' && formatAyYil(video.created_at, currentLang) !== tarih) return false;
         if (ortam !== 'all') {
             if (ortam === 'drive' && !video.is_downloaded) return false;
             if (ortam === 'social' && video.is_downloaded) return false;

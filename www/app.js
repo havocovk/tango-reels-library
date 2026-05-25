@@ -62,7 +62,7 @@ function callUpdateInterfaceLanguage() {
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, () => {
         if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
     });
-    // Filtre dropdownlarını manuel yenile (çünkü updateInterfaceLanguage içinde populateFilterDropdowns çağrılmıyor, biz burada çağıralım)
+    // Filtre dropdownlarını manuel yenile
     if (globalVideos.length) {
         populateFilterDropdowns(globalVideos, currentLang);
     }
@@ -277,7 +277,8 @@ function applyFiltersAndSearch() {
         ortam: document.getElementById('filter-location-select')?.value || 'all'
     };
 
-    const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler);
+    // currentLang parametresini getFilteredVideos'a gönder
+    const filtered = getFilteredVideos(kaynakVideolar, secilenFiltreler, currentLang);
 
     const loadMoreContainer = document.getElementById('load-more-container');
     if (loadMoreContainer) {
