@@ -70,8 +70,10 @@ export const translations = {
         btnCardEdit: "✏️ Düzenle",
         btnCardDelete: "🗑️ Sil",
         loadMore: "➕ Daha Fazla Video Yükle",
-        // Yeni: Pratik Listesi sayfasındaki sayaç etiketi
-        favoritesCountLabel: "Pratik Listesindeki Video Sayısı:"
+        favoritesCountLabel: "Pratik Listesindeki Video Sayısı:",
+        // Notlar için
+        addNote: "Not ekle",
+        editNote: "Notu düzenle"
     },
     en: {
         brandTitle: "💃 Argentine Tango Combination Collection",
@@ -139,7 +141,9 @@ export const translations = {
         btnCardEdit: "✏️ Edit",
         btnCardDelete: "🗑️ Delete",
         loadMore: "➕ Load More Videos",
-        // Yeni: Practice List sayfasındaki sayaç etiketi
-        favoritesCountLabel: "Number of Videos in Practice List:"
+        favoritesCountLabel: "Number of Videos in Practice List:",
+        // Notes
+        addNote: "Add note",
+        editNote: "Edit note"
     }
 };

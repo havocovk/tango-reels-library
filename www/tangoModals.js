@@ -2,14 +2,11 @@ import { translations } from './config.js';
 import { dbUpdateTagsDirectly, dbUpdateNote } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 
-// Modal durum değişkenleri
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
 
-// Drive linkini embed formata dönüştürür (Artık YouTube linklerini de dönüştürüyor!)
 export function convertDriveUrlToEmbed(url) {
     if (!url) return '';
-    
     if (url.includes('drive.google.com')) {
         const regExp = /\/file\/d\/([^/]+)/;
         const matches = url.match(regExp);
@@ -17,7 +14,6 @@ export function convertDriveUrlToEmbed(url) {
             return `https://drive.google.com/file/d/${matches[1]}/preview`;
         }
     }
-    
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         let videoId = '';
         if (url.includes('shorts/')) {
@@ -36,7 +32,6 @@ export function convertDriveUrlToEmbed(url) {
     return url;
 }
 
-// 🎬 Video Önizleme Modalı Fonksiyonları
 export function openVideoModal(url) {
     const embedUrl = convertDriveUrlToEmbed(url);
     document.getElementById('modal-iframe').src = embedUrl;
@@ -48,11 +43,9 @@ export function closeVideoModal() {
     document.getElementById('modal-iframe').src = '';
 }
 
-// ✏️ Etiket Düzenleme Modalı Fonksiyonları
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
     document.getElementById('tags-edit-modal').classList.remove('d-none');
-    
     modalTagsArray.length = 0;
     if (video.tags) {
         video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
@@ -88,7 +81,6 @@ export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSe
     }
 }
 
-// 🔔 Modern Özel Alert (Bilgilendirme) Pop-up'ı
 export function showCustomAlert(message, okText = 'Tamam') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
@@ -110,7 +102,6 @@ export function showCustomAlert(message, okText = 'Tamam') {
     });
 }
 
-// ❓ Modern Özel Confirm (Onay) Pop-up'ı
 export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İptal') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
@@ -143,7 +134,7 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
     });
 }
 
-// 📝 NOT DÜZENLEME MODALI (YENİ)
+// 2. ADIM: Not düzenleme modalı
 let activeNoteVideoId = null;
 
 export function openNoteEditModal(video, onNoteSavedCallback) {

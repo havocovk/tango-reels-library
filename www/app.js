@@ -310,7 +310,7 @@ function applyFiltersAndSearch() {
         startVideoEditFlow,
         deleteVideoFlow,
         openVideoModal,
-        refreshList: applyFiltersAndSearch   // YENİ
+        refreshList: applyFiltersAndSearch
     });
 }
 
@@ -551,7 +551,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dropArea) {
         dropArea.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
     }
-    
-    // Global erişim için (uiRenderer içinde kullanılacak)
-    window.applyFiltersAndSearch = applyFiltersAndSearch;
 });

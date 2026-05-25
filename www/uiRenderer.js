@@ -1,7 +1,6 @@
 import { translations } from './config.js';
 import { openNoteEditModal } from './tangoModals.js';
 
-// 1. CHIPS (KUTUCUK) GÖRSELLEŞTİRME SİSTEMİ
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -17,7 +16,6 @@ export function renderChips(containerId, chipsArray, onRemoveCallback) {
     });
 }
 
-// 2. AUTOCOMPLETE (OTOMATİK ÖNERİ) AYARLAMA FONKSİYONU
 export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, onAddCallback, getAllUniqueTagsPool) {
     const input = document.getElementById(inputId);
     const list = document.getElementById(listId);
@@ -115,7 +113,6 @@ export function setupAutocomplete(inputId, listId, chipsArray, renderChipsFn, on
     });
 }
 
-// 3. VİDEO KARTLARINI EKRANA ÇİZME FONKSİYONU (DİNAMİK ÇEVİRİ DESTEKLİ + NOTLAR)
 export function renderVideoCards(videos, config) {
     const { 
         currentLang, 
@@ -187,11 +184,12 @@ export function renderVideoCards(videos, config) {
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
 
-        const noteText = video.notes ? (video.notes.length > 60 ? video.notes.substring(0, 60) + '...' : video.notes) : 'Not ekle';
+        // NOT alanı - dil desteği ile
+        const noteText = video.notes ? (video.notes.length > 60 ? video.notes.substring(0, 60) + '...' : video.notes) : lang.addNote;
         const noteHtml = `
             <div class="card-note-area" style="margin-top: 8px; font-size:0.75rem; color:#94a3b8; display:flex; align-items:center; gap:6px;">
-                <button class="note-edit-btn" style="background:transparent; border:none; color:#00f0ff; cursor:pointer;">📝</button>
-                <span class="note-preview">${escapeHtml(noteText)}</span>
+                <button class="note-edit-btn" style="background:transparent; border:none; color:#00f0ff; cursor:pointer;" title="${lang.editNote}">📝</button>
+                <span class="note-preview">${escapeHtmlForCard(noteText)}</span>
             </div>
         `;
 
@@ -306,7 +304,7 @@ function convertYoutubeUrlToEmbed(url) {
     return url;
 }
 
-function escapeHtml(str) {
+function escapeHtmlForCard(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';

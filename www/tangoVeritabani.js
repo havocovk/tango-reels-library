@@ -1,6 +1,5 @@
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
-// 1. Postacı: Sadece internete gidip eğitmen listesini ham paket olarak getirir
 export async function dbFetchInstructors() {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -9,7 +8,6 @@ export async function dbFetchInstructors() {
     return await response.json();
 }
 
-// 2. Postacı: Sadece internete gidip video listesini ham paket olarak getirir
 export async function dbFetchVideos() {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -18,7 +16,6 @@ export async function dbFetchVideos() {
     return await response.json();
 }
 
-// 3. Postacı: Pop-up içinden yapılan anlık etiket güncellemelerini kaydeder (PATCH)
 export async function dbSaveTags(videoId, cleanTags) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'PATCH',
@@ -32,7 +29,6 @@ export async function dbSaveTags(videoId, cleanTags) {
     return response;
 }
 
-// 4. Postacı: Videoyu kütüphaneden tamamen siler (DELETE)
 export async function dbDeleteVideo(videoId) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'DELETE',
@@ -42,7 +38,6 @@ export async function dbDeleteVideo(videoId) {
     return response;
 }
 
-// 5. Postacı: Yeni eğitmen ekler (POST) veya var olan eğitmeni günceller (PATCH)
 export async function dbSaveInstructor(id, name) {
     const method = id ? 'PATCH' : 'POST';
     const url = id ? `${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/instructors`;
@@ -58,7 +53,6 @@ export async function dbSaveInstructor(id, name) {
     return response;
 }
 
-// 6. Postacı: Eğitmeni ve ona bağlı videoları siler (DELETE)
 export async function dbDeleteInstructor(id) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
         method: 'DELETE',
@@ -68,7 +62,6 @@ export async function dbDeleteInstructor(id) {
     return response;
 }
 
-// 7. Postacı: Yeni video kaydeder (POST) veya var olan videoyu günceller (PATCH)
 export async function dbSaveVideo(id, payload) {
     const method = id ? 'PATCH' : 'POST';
     const url = id ? `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/videos`;
@@ -84,7 +77,6 @@ export async function dbSaveVideo(id, payload) {
     return response;
 }
 
-// 8. Postacı: app.js tarafından pop-up etiket düzenleme alanında doğrudan tetiklenen güncelleme fonksiyonu
 export async function dbUpdateTagsDirectly(videoId, cleanTags) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'PATCH',
@@ -98,7 +90,6 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags) {
     return response;
 }
 
-// 9. Postacı: Tüm favori video ID'lerini buluttan getirir
 export async function dbFetchFavorites() {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites?select=video_id`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -107,7 +98,6 @@ export async function dbFetchFavorites() {
     return await response.json();
 }
 
-// 10. Postacı: Bir videoyu bulutta favorilere ekler
 export async function dbAddFavorite(videoId) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites`, {
         method: 'POST',
@@ -121,7 +111,6 @@ export async function dbAddFavorite(videoId) {
     return response;
 }
 
-// 11. Postacı: Bir videoyu buluttaki favorilerden siler
 export async function dbRemoveFavorite(videoId) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites?video_id=eq.${videoId}`, {
         method: 'DELETE',
@@ -131,7 +120,6 @@ export async function dbRemoveFavorite(videoId) {
     return response;
 }
 
-// 12. Postacı: Tüm favori listesini tek hamlede temizler
 export async function dbClearAllFavorites() {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/favorites?video_id=gt.0`, {
         method: 'DELETE',
@@ -141,7 +129,7 @@ export async function dbClearAllFavorites() {
     return response;
 }
 
-// 13. Postacı: Sadece videonun notunu günceller (YENİ)
+// Not güncelleme fonksiyonu (2. adım)
 export async function dbUpdateNote(videoId, note) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'PATCH',
