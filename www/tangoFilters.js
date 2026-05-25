@@ -1,5 +1,5 @@
 /**
- * 💃 ARJANTİN TANGO KOMBİNASYON KÜTÜPHANESİ - AKILLI FİLTRE MOTORU
+ * 💃 ARJANTİN TANGO KOMBİNASYON KOLEKSİYONU - AKILLI FİLTRE MOTORU
  * Bu dosya kütüphanedeki videoları süzmeye yarar ve açılır kutuları doldurur.
  */
 
@@ -16,6 +16,7 @@ function formatAyYil(tarihString, lang) {
 /**
  * 🧺 GÖREV 1: HTML sayfasındaki Açılır Kutuları (Dropdown) Canlı Videolara Göre Doldurur
  * Artık dil parametresi alır ve çeviri metinlerini kullanır.
+ * Eğitmenlerin yanına (sayı) eklenir.
  */
 export function populateFilterDropdowns(videolar, currentLang) {
     const lang = translations[currentLang];
@@ -35,19 +36,26 @@ export function populateFilterDropdowns(videolar, currentLang) {
     tagSelect.innerHTML = `<option value="all">${lang.allTags}</option>`;
     dateSelect.innerHTML = `<option value="all">${lang.allDates}</option>`;
 
-    // Eğitmenleri ekle
-    const egitmenlerTorba = new Set();
+    // 📊 Eğitmenlere göre video sayılarını hesapla
+    const instructorCountMap = new Map();
     videolar.forEach(video => {
-        if (video.instructor_name) egitmenlerTorba.add(video.instructor_name.trim());
+        if (video.instructor_name) {
+            const name = video.instructor_name.trim();
+            instructorCountMap.set(name, (instructorCountMap.get(name) || 0) + 1);
+        }
     });
-    Array.from(egitmenlerTorba).sort().forEach(egitmenAdi => {
+
+    // Eğitmenleri alfabetik sırayla, yanında sayı ile ekle
+    const sortedInstructors = Array.from(instructorCountMap.keys()).sort();
+    sortedInstructors.forEach(egitmenAdi => {
+        const count = instructorCountMap.get(egitmenAdi);
         const opt = document.createElement('option');
         opt.value = egitmenAdi;
-        opt.innerText = egitmenAdi;
+        opt.innerText = `${egitmenAdi} (${count})`;
         instructorSelect.appendChild(opt);
     });
 
-    // Etiketleri ekle
+    // Etiketleri ekle (sayı istenmemiş ama aynı mantıkla eklenebilir - isteğe bağlı)
     const etiketlerTorba = new Set();
     videolar.forEach(video => {
         if (video.tags) {
