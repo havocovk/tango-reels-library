@@ -70,9 +70,7 @@ export function populateFilterDropdowns(videolar, currentLang) {
         dateSelect.appendChild(opt);
     });
 
-    // Platform seçeneklerini güncelle (isteğe bağlı, manuel de olur)
     if (platformSelect) {
-        // Seçenekler zaten HTML'de var, sadece metin ve sayıları güncelleyelim
         const platformCounts = {
             drive: videolar.filter(v => v.platform === 'drive').length,
             youtube: videolar.filter(v => v.platform === 'youtube').length,

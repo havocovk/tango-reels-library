@@ -126,10 +126,18 @@ export function renderVideoCards(videos, config) {
     }
     videos.forEach(video => {
         const platform = video.platform || 'other';
-        const platformIcon = lang.platformIcons[platform] || '🔗';
         const platformLabel = lang.platformLabels[platform] || 'Diğer';
+        const iconUrl = lang.platformIconUrls[platform] || '';
         const isEmbeddable = (platform === 'drive' || platform === 'youtube');
-        const watchLabel = isEmbeddable ? lang.watchOnPlatform.replace('{platform}', platformLabel) : lang.watchOnPlatform.replace('{platform}', platformLabel);
+        // Türkçe için özel metin: "Videoyu {platform} İzle" -> platformWatchText kullan
+        let watchText = '';
+        if (currentLang === 'tr') {
+            const watchOn = lang.platformWatchText[platform];
+            if (platform === 'drive') watchText = `Videoyu ${watchOn} İzle →`;
+            else watchText = `Videoyu ${watchOn} İzle →`;
+        } else {
+            watchText = lang.watchOnPlatform.replace('{platform}', platformLabel);
+        }
         const shouldOpenInModal = isEmbeddable;
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
@@ -168,6 +176,9 @@ export function renderVideoCards(videos, config) {
                 <span class="note-preview">${escapeHtml(noteText)}</span>
             </div>
         `;
+        const platformBadgeHtml = iconUrl ? 
+            `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px;"><img src="${iconUrl}" style="width: 14px; height: 14px; object-fit: contain;"> ${platformLabel}</span>` :
+            `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff;">${platformLabel}</span>`;
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image: url('${coverImg}');">
@@ -184,12 +195,12 @@ export function renderVideoCards(videos, config) {
                 ${partnerDisplay}
                 <div class="card-badges">
                     <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
-                    <span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff;">${platformIcon} ${platformLabel}</span>
+                    ${platformBadgeHtml}
                 </div>
                 <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
                 ${noteHtml}
                 <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:4px;">
-                    <a ${actionLinkClickAttr}>${watchLabel}</a>
+                    <a ${actionLinkClickAttr}>${watchText}</a>
                     <div style="display:flex; gap:8px;">
                         <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
                         <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>

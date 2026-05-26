@@ -22,18 +22,25 @@ export const translations = {
         watch: "Videoyu İzle →",
         watchOnPlatform: "Videoyu {platform} İzle →",
         platformLabels: {
-            drive: "Drive",
+            drive: "Google Drive",
             youtube: "YouTube",
             instagram: "Instagram",
             facebook: "Facebook",
             other: "Diğer"
         },
-        platformIcons: {
-            drive: "💾",
-            youtube: "▶️",
-            instagram: "📸",
-            facebook: "👍",
-            other: "🔗"
+        platformWatchText: {
+            drive: "Drive'dan",
+            youtube: "YouTube'da",
+            instagram: "Instagram'da",
+            facebook: "Facebook'ta",
+            other: ""
+        },
+        platformIconUrls: {
+            drive: "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",
+            youtube: "https://www.youtube.com/s/desktop/014d3c6a/img/favicon_32x32.png",
+            instagram: "https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsneTY45TJU.png",
+            facebook: "https://static.xx.fbcdn.net/rsrc.php/yD/r/d4ZIVX-5G-b.ico",
+            other: ""
         },
         langBtn: "🇬🇧 EN",
         formTitle: "➕ Yeni Video Kaydet",
@@ -115,18 +122,25 @@ export const translations = {
         watch: "Watch Video →",
         watchOnPlatform: "Watch on {platform} →",
         platformLabels: {
-            drive: "Drive",
+            drive: "Google Drive",
             youtube: "YouTube",
             instagram: "Instagram",
             facebook: "Facebook",
             other: "Other"
         },
-        platformIcons: {
-            drive: "💾",
-            youtube: "▶️",
-            instagram: "📸",
-            facebook: "👍",
-            other: "🔗"
+        platformWatchText: {
+            drive: "Drive",
+            youtube: "YouTube",
+            instagram: "Instagram",
+            facebook: "Facebook",
+            other: ""
+        },
+        platformIconUrls: {
+            drive: "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",
+            youtube: "https://www.youtube.com/s/desktop/014d3c6a/img/favicon_32x32.png",
+            instagram: "https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsneTY45TJU.png",
+            facebook: "https://static.xx.fbcdn.net/rsrc.php/yD/r/d4ZIVX-5G-b.ico",
+            other: ""
         },
         langBtn: "🇹🇷 TR",
         formTitle: "➕ Save New Video",
