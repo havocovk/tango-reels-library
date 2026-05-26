@@ -100,9 +100,9 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
         ${roleCardsHtml}
-        <div class="platform-chart-container" style="min-height: 480px; margin-bottom: 30px;">
+        <div class="platform-chart-container" style="min-height: 520px; margin-bottom: 30px;">
             <div class="stat-label stat-label-centered">${lang.statsPlatformDistribution}</div>
-            <canvas id="platform-pie-chart" width="450" height="400" style="max-width:100%; height:auto; margin-bottom: 10px;"></canvas>
+            <canvas id="platform-pie-chart" width="450" height="400" style="max-width:100%; height:auto; margin-bottom: 20px;"></canvas>
         </div>
         ${topTagsHtml}
         <div class="monthly-chart-container">
@@ -113,7 +113,7 @@ export function renderStats(stats, currentLang) {
         </div>
     `;
     
-    // Pie chart - daha yüksek container, legend sağda, ikonlar içeriye çekildi
+    // Pie chart - legend alt tarafta, ikonlar dışarıda (önceki gibi)
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     const platformKeys = [];
@@ -150,7 +150,7 @@ export function renderStats(stats, currentLang) {
             plugins: {
                 tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} video` } },
                 legend: { 
-                    position: 'right',   // Legend'i sağa alarak alt kısmı ikonlara bırak
+                    position: 'bottom',   // Legend alt tarafta
                     labels: { color: '#f1f5f9', font: { size: 12 } }
                 }
             },
@@ -170,8 +170,8 @@ export function renderStats(stats, currentLang) {
                     const arcs = meta.data;
                     arcs.forEach((arc, index) => {
                         const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-                        // Yarıçapı küçülttüm (outerRadius - 15) böylece ikonlar pastaya daha yakın
-                        const radius = arc.outerRadius - 15;
+                        // Eski mesafe: outerRadius + 35 (daha dışarı)
+                        const radius = arc.outerRadius + 35;
                         const x = arc.x + Math.cos(midAngle) * radius;
                         const y = arc.y + Math.sin(midAngle) * radius;
                         const imgUrl = platformIconUrls[index];
@@ -179,13 +179,13 @@ export function renderStats(stats, currentLang) {
                             const img = new Image();
                             img.src = imgUrl;
                             img.onload = () => {
-                                ctx.drawImage(img, x - 20, y - 20, 40, 40);
+                                ctx.drawImage(img, x - 22, y - 22, 44, 44);
                             };
                         } else {
                             ctx.fillStyle = '#fff';
                             ctx.font = 'bold 16px sans-serif';
                             ctx.shadowBlur = 0;
-                            ctx.fillText(platformCounts[index], x - 10, y + 6);
+                            ctx.fillText(platformCounts[index], x - 12, y + 6);
                         }
                     });
                 }
