@@ -100,9 +100,9 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
         ${roleCardsHtml}
-        <div class="platform-chart-container">
+        <div class="platform-chart-container" style="min-height: 480px; margin-bottom: 30px;">
             <div class="stat-label stat-label-centered">${lang.statsPlatformDistribution}</div>
-            <canvas id="platform-pie-chart" width="400" height="350" style="max-width:100%; height:auto;"></canvas>
+            <canvas id="platform-pie-chart" width="450" height="400" style="max-width:100%; height:auto; margin-bottom: 10px;"></canvas>
         </div>
         ${topTagsHtml}
         <div class="monthly-chart-container">
@@ -113,7 +113,7 @@ export function renderStats(stats, currentLang) {
         </div>
     `;
     
-    // Pie chart
+    // Pie chart - daha yüksek container, legend sağda, ikonlar içeriye çekildi
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     const platformKeys = [];
@@ -133,6 +133,7 @@ export function renderStats(stats, currentLang) {
             }
         }
     }
+    
     platformChart = new Chart(ctxPie, {
         type: 'pie',
         data: {
@@ -148,31 +149,43 @@ export function renderStats(stats, currentLang) {
             maintainAspectRatio: true,
             plugins: {
                 tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} video` } },
-                legend: { position: 'bottom' }
+                legend: { 
+                    position: 'right',   // Legend'i sağa alarak alt kısmı ikonlara bırak
+                    labels: { color: '#f1f5f9', font: { size: 12 } }
+                }
+            },
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 20,
+                    left: 10,
+                    right: 10
+                }
             },
             animation: {
-                onComplete: function () {
+                onComplete: function() {
                     const canvas = document.getElementById('platform-pie-chart');
                     const ctx = canvas.getContext('2d');
                     const meta = platformChart.getDatasetMeta(0);
                     const arcs = meta.data;
                     arcs.forEach((arc, index) => {
                         const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-                        const radius = arc.outerRadius + 35;
+                        // Yarıçapı küçülttüm (outerRadius - 15) böylece ikonlar pastaya daha yakın
+                        const radius = arc.outerRadius - 15;
                         const x = arc.x + Math.cos(midAngle) * radius;
                         const y = arc.y + Math.sin(midAngle) * radius;
                         const imgUrl = platformIconUrls[index];
-                        if (imgUrl) {
+                        if (imgUrl && imgUrl !== '') {
                             const img = new Image();
                             img.src = imgUrl;
                             img.onload = () => {
-                                ctx.drawImage(img, x - 22, y - 22, 44, 44);
+                                ctx.drawImage(img, x - 20, y - 20, 40, 40);
                             };
                         } else {
                             ctx.fillStyle = '#fff';
                             ctx.font = 'bold 16px sans-serif';
                             ctx.shadowBlur = 0;
-                            ctx.fillText(platformCounts[index], x - 12, y + 6);
+                            ctx.fillText(platformCounts[index], x - 10, y + 6);
                         }
                     });
                 }
@@ -203,7 +216,7 @@ export function renderStats(stats, currentLang) {
             responsive: false,
             maintainAspectRatio: true,
             scales: {
-                y: { display: false },  // Y ekseni tamamen gizli
+                y: { display: false },
                 x: {
                     ticks: {
                         autoSkip: false,
@@ -218,14 +231,12 @@ export function renderStats(stats, currentLang) {
                 legend: { display: false }
             },
             layout: {
-                padding: {
-                    top: 25  // Sayı için yer
-                }
+                padding: { top: 25 }
             }
         }
     });
     
-    // Bar'ların üzerine sayıları yaz (beyaz, kalın, bar'ın üst hizasının biraz üstünde)
+    // Bar'ların üzerine sayıları yaz
     setTimeout(() => {
         const canvas = canvasBar;
         const ctx = canvas.getContext('2d');
@@ -240,15 +251,13 @@ export function renderStats(stats, currentLang) {
             if (value === 0) return;
             
             const x = bar.x;
-            const y = bar.y;  // bar'ın üst kenarı (piksel)
-            
+            const y = bar.y;
             ctx.save();
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
             ctx.shadowBlur = 0;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
-            // Bar'ın hemen üstüne, 6px yukarıya yaz
             ctx.fillText(value.toString(), x, y - 6);
             ctx.restore();
         });
