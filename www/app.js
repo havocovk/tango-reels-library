@@ -185,7 +185,7 @@ function startVideoEditFlow(video) {
     document.getElementById('form-title').innerText = lang.formTitleEdit;
     document.getElementById('btn-submit-video').innerText = lang.btnUpdateVideo;
     document.getElementById('form-instructor-select').value = video.instructor_id;
-    document.getElementById('form-video-url').value = video.url;
+    document.getElementById('form-video-url').value = video.url || '';
     document.getElementById('form-role-select').value = video.role_type || 'Both';
     document.getElementById('form-partner-name').value = video.partner_name || '';
     formTagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t !== '') : [];
@@ -337,10 +337,28 @@ async function handleFormSubmit(e) {
         await showCustomAlert(currentLang === 'tr' ? "Lütfen eğitmen seçin!" : "Please select instructor!", okTxt);
         return;
     }
-    const platform = detectPlatform(url, is_downloaded);
+    // URL ve Drive kontrolü
+    if (is_downloaded) {
+        if (!drive_url) {
+            await showCustomAlert(currentLang === 'tr' ? "Drive linki zorunludur!" : "Drive link is required!", okTxt);
+            return;
+        }
+    } else {
+        if (!url) {
+            await showCustomAlert(currentLang === 'tr' ? "Video URL zorunludur!" : "Video URL is required!", okTxt);
+            return;
+        }
+    }
+    let platform;
+    if (is_downloaded) {
+        platform = 'drive';
+    } else {
+        platform = detectPlatform(url, false);
+    }
     const payload = {
         instructor_id: parseInt(instructor_id),
-        url, role_type, partner_name: partner_name || null,
+        url: url || null,
+        role_type, partner_name: partner_name || null,
         tags: tags || null, is_downloaded,
         drive_url: is_downloaded && drive_url ? drive_url : null,
         cover_url, platform
