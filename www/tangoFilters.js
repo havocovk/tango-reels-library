@@ -1,11 +1,5 @@
-/**
- * 💃 ARJANTİN TANGO KOMBİNASYON KOLEKSİYONU - AKILLI FİLTRE MOTORU
- * Bu dosya kütüphanedeki videoları süzmeye yarar ve açılır kutuları doldurur.
- */
-
 import { translations } from './config.js';
 
-// 📅 Yardımcı Fonksiyon: Tarihi dile göre "Mayıs 2026" veya "May 2026" formatına çevirir.
 function formatAyYil(tarihString, lang) {
     if (!tarihString) return lang === 'tr' ? 'Bilinmeyen Tarih' : 'Unknown Date';
     const tarih = new Date(tarihString);
@@ -13,30 +7,24 @@ function formatAyYil(tarihString, lang) {
     return tarih.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 }
 
-/**
- * 🧺 GÖREV 1: HTML sayfasındaki Açılır Kutuları (Dropdown) Canlı Videolara Göre Doldurur
- * Artık dil parametresi alır ve çeviri metinlerini kullanır.
- * Eğitmenlerin ve kaynakların (drive/social) yanına sayı eklenir.
- */
 export function populateFilterDropdowns(videolar, currentLang) {
     const lang = translations[currentLang];
     const instructorSelect = document.getElementById('filter-instructor-select');
     const tagSelect = document.getElementById('filter-tag-select');
     const dateSelect = document.getElementById('filter-date-select');
+    const platformSelect = document.getElementById('filter-platform-select');
 
     if (!instructorSelect || !tagSelect || !dateSelect) return;
 
-    // Önceki seçimleri hafızaya al
     const oldInstructor = instructorSelect.value;
     const oldTag = tagSelect.value;
     const oldDate = dateSelect.value;
+    const oldPlatform = platformSelect ? platformSelect.value : 'all';
 
-    // Kutuları temizle ve çevrilmiş "Tüm ..." seçeneklerini ekle
     instructorSelect.innerHTML = `<option value="all">${lang.allInstructors}</option>`;
     tagSelect.innerHTML = `<option value="all">${lang.allTags}</option>`;
     dateSelect.innerHTML = `<option value="all">${lang.allDates}</option>`;
 
-    // 📊 Eğitmenlere göre video sayılarını hesapla
     const instructorCountMap = new Map();
     videolar.forEach(video => {
         if (video.instructor_name) {
@@ -44,8 +32,6 @@ export function populateFilterDropdowns(videolar, currentLang) {
             instructorCountMap.set(name, (instructorCountMap.get(name) || 0) + 1);
         }
     });
-
-    // Eğitmenleri alfabetik sırayla, yanında sayı ile ekle
     const sortedInstructors = Array.from(instructorCountMap.keys()).sort();
     sortedInstructors.forEach(egitmenAdi => {
         const count = instructorCountMap.get(egitmenAdi);
@@ -55,7 +41,6 @@ export function populateFilterDropdowns(videolar, currentLang) {
         instructorSelect.appendChild(opt);
     });
 
-    // Etiketleri ekle
     const etiketlerTorba = new Set();
     videolar.forEach(video => {
         if (video.tags) {
@@ -72,7 +57,6 @@ export function populateFilterDropdowns(videolar, currentLang) {
         tagSelect.appendChild(opt);
     });
 
-    // Tarihleri ekle (dile göre formatlanmış)
     const tarihlerTorba = new Set();
     videolar.forEach(video => {
         if (video.created_at) {
@@ -86,39 +70,37 @@ export function populateFilterDropdowns(videolar, currentLang) {
         dateSelect.appendChild(opt);
     });
 
-    // 📊 Kaynaklar (location) seçeneklerine sayı ekle (Google Drive ve Sosyal Medya)
-    const driveCount = videolar.filter(v => v.is_downloaded === true).length;
-    const socialCount = videolar.filter(v => v.is_downloaded === false).length;
-    
-    const driveOption = document.getElementById('opt-drive');
-    const socialOption = document.getElementById('opt-social');
-    if (driveOption) {
-        driveOption.innerText = `${lang.drive} (${driveCount})`;
-    }
-    if (socialOption) {
-        socialOption.innerText = `${lang.social} (${socialCount})`;
-    }
-    // "Tüm Kaynaklar" seçeneğinin metnini güncelle (sayı ekleme isteğe bağlı, sadece başlık)
-    const allLocationsOpt = document.getElementById('opt-all-locations');
-    if (allLocationsOpt) {
-        allLocationsOpt.innerText = lang.allLocations;
+    // Platform seçeneklerini güncelle (isteğe bağlı, manuel de olur)
+    if (platformSelect) {
+        // Seçenekler zaten HTML'de var, sadece metin ve sayıları güncelleyelim
+        const platformCounts = {
+            drive: videolar.filter(v => v.platform === 'drive').length,
+            youtube: videolar.filter(v => v.platform === 'youtube').length,
+            instagram: videolar.filter(v => v.platform === 'instagram').length,
+            facebook: videolar.filter(v => v.platform === 'facebook').length
+        };
+        const optDrive = platformSelect.querySelector('option[value="drive"]');
+        const optYoutube = platformSelect.querySelector('option[value="youtube"]');
+        const optInstagram = platformSelect.querySelector('option[value="instagram"]');
+        const optFacebook = platformSelect.querySelector('option[value="facebook"]');
+        if (optDrive) optDrive.innerText = `${lang.platformLabels.drive} (${platformCounts.drive})`;
+        if (optYoutube) optYoutube.innerText = `${lang.platformLabels.youtube} (${platformCounts.youtube})`;
+        if (optInstagram) optInstagram.innerText = `${lang.platformLabels.instagram} (${platformCounts.instagram})`;
+        if (optFacebook) optFacebook.innerText = `${lang.platformLabels.facebook} (${platformCounts.facebook})`;
     }
 
-    // Önceki seçimleri geri yükle (eğer hala mevcutsa)
     if (Array.from(instructorSelect.options).some(opt => opt.value === oldInstructor))
         instructorSelect.value = oldInstructor;
     if (Array.from(tagSelect.options).some(opt => opt.value === oldTag))
         tagSelect.value = oldTag;
     if (Array.from(dateSelect.options).some(opt => opt.value === oldDate))
         dateSelect.value = oldDate;
+    if (platformSelect && Array.from(platformSelect.options).some(opt => opt.value === oldPlatform))
+        platformSelect.value = oldPlatform;
 }
 
-/**
- * 🔍 GÖREV 2: Seçtiğin filtrelere göre eşleşen videoları bulur (dil desteği eklendi)
- */
 export function getFilteredVideos(videolar, filtreler, currentLang) {
-    const { aramaMetni, rol, egitmen, etiket, tarih, ortam } = filtreler;
-
+    const { aramaMetni, rol, egitmen, etiket, tarih, platform } = filtreler;
     return videolar.filter(video => {
         if (aramaMetni) {
             const aranacakKelime = aramaMetni.toLowerCase().trim();
@@ -127,7 +109,6 @@ export function getFilteredVideos(videolar, filtreler, currentLang) {
             const partnerUyuyor = video.partner_name?.toLowerCase().includes(aranacakKelime);
             if (!egitmenUyuyor && !etiketUyuyor && !partnerUyuyor) return false;
         }
-
         if (rol !== 'all' && video.role_type !== rol) return false;
         if (egitmen !== 'all' && video.instructor_name !== egitmen) return false;
         if (etiket !== 'all') {
@@ -136,17 +117,11 @@ export function getFilteredVideos(videolar, filtreler, currentLang) {
             if (!videoEtiketleri.includes(etiket)) return false;
         }
         if (tarih !== 'all' && formatAyYil(video.created_at, currentLang) !== tarih) return false;
-        if (ortam !== 'all') {
-            if (ortam === 'drive' && !video.is_downloaded) return false;
-            if (ortam === 'social' && video.is_downloaded) return false;
-        }
+        if (platform !== 'all' && video.platform !== platform) return false;
         return true;
     });
 }
 
-/**
- * 🏷️ GÖREV 3: Yeni video eklerken alttaki otomatik tamamlama kutusunu besler
- */
 export function getAllUniqueTagsPool(videolar) {
     const torba = new Set();
     videolar.forEach(video => {

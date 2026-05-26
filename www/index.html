@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="temel.css">
     <link rel="stylesheet" href="kartlar.css">
     <link rel="stylesheet" href="formlar.css">
-
+    <!-- Chart.js Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <script>
       if ('serviceWorker' in navigator) {
@@ -111,7 +112,7 @@
             margin-top: 2px;
         }
 
-        /* İstatistik paneli stilleri (yatay kaydırmalı) */
+        /* İstatistik paneli stilleri */
         .stats-container {
             background: rgba(11, 8, 19, 0.5);
             border-radius: 20px;
@@ -142,34 +143,55 @@
             color: #94a3b8;
             margin-top: 4px;
         }
-        /* Pie chart için */
-        .pie-chart-container {
+        /* Rol kartları */
+        .role-cards {
             display: flex;
-            justify-content: center;
-            margin-top: 8px;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
-        .pie-chart {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: conic-gradient(#00f0ff 0deg, #ff007f 0deg);
-            margin-bottom: 5px;
+        .role-card {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            border-top: 3px solid;
         }
-        .pie-legend {
-            font-size: 0.7rem;
-            color: #cbd5e1;
-            margin-top: 4px;
+        .role-card.leader { border-color: #00f0ff; }
+        .role-card.follower { border-color: #ff007f; }
+        .role-card.both { border-color: #c084fc; }
+        .role-count {
+            font-size: 2rem;
+            font-weight: bold;
         }
-        .stats-tags {
-            margin: 10px 0;
+        .role-name {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .platform-chart-container, .monthly-chart-container {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 15px;
+        }
+        canvas {
+            max-height: 300px;
+            width: 100%;
+        }
+        .scrollable-chart {
+            overflow-x: auto;
+            width: 100%;
+        }
+        .monthly-bars-wrapper {
+            min-width: 600px;
+            height: 250px;
         }
         .top-tags-list {
             display: flex;
-            flex-direction: column;
-            gap: 6px;
+            flex-wrap: wrap;
+            gap: 8px;
             margin-top: 6px;
-            max-height: 200px;
-            overflow-y: auto;
         }
         .tag-badge {
             background: rgba(255, 0, 127, 0.2);
@@ -177,44 +199,15 @@
             border-radius: 20px;
             font-size: 0.75rem;
             color: #ff80bf;
-            display: inline-block;
-            width: fit-content;
-        }
-        .stats-chart {
-            margin-top: 10px;
-            overflow-x: auto;
-        }
-        .monthly-bars {
-            display: flex;
-            gap: 16px;
-            padding-bottom: 10px;
-            min-width: max-content;
-        }
-        .month-bar-item {
-            flex: 0 0 70px;
-            text-align: center;
-        }
-        .bar {
-            background: linear-gradient(180deg, #ff007f, #00f0ff);
-            width: 100%;
-            min-height: 2px;
-            border-radius: 4px;
-            transition: height 0.2s;
-        }
-        .month-label {
-            font-size: 0.65rem;
-            color: #94a3b8;
-            margin-top: 5px;
-        }
-        .bar-count {
-            font-size: 0.7rem;
-            color: #cbd5e1;
         }
 
         @media (max-width: 992px) {
             .atkk-form-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
+            }
+            .role-cards {
+                flex-direction: column;
             }
         }
     </style>
@@ -271,10 +264,12 @@
                             <option value="all">Tüm Tarihler</option>
                         </select>
 
-                        <select id="filter-location-select" style="flex: 1; min-width: 150px; background: rgba(11, 8, 19, 0.8); border: 1px solid rgba(255, 0, 127, 0.5); padding: 10px; border-radius: 10px; color: #f1f5f9;">
-                            <option value="all" id="opt-all-locations">Kaynaklar</option>
-                            <option value="drive" id="opt-drive">💾 Google Drive</option>
-                            <option value="social" id="opt-social">🌐 Sosyal Medya</option>
+                        <select id="filter-platform-select" style="flex: 1; min-width: 150px; background: rgba(11, 8, 19, 0.8); border: 1px solid rgba(255, 0, 127, 0.5); padding: 10px; border-radius: 10px; color: #f1f5f9;">
+                            <option value="all" id="opt-all-platforms">Tüm Platformlar</option>
+                            <option value="drive" id="opt-platform-drive">💾 Google Drive</option>
+                            <option value="youtube" id="opt-platform-youtube">▶️ YouTube</option>
+                            <option value="instagram" id="opt-platform-instagram">📸 Instagram</option>
+                            <option value="facebook" id="opt-platform-facebook">👍 Facebook</option>
                         </select>
                     </div>
                 </div>
@@ -294,8 +289,8 @@
                 </div>
             </div>
 
-            <!-- Yeni İSTATİSTİK GÖRÜNÜMÜ -->
             <div id="view-stats-container" class="view-panel d-none">
+                <!-- İstatistikler buraya dinamik olarak doldurulacak -->
                 <div id="stats-container" class="stats-container"></div>
             </div>
 

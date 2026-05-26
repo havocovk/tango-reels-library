@@ -1,5 +1,16 @@
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
+// Platform algılama fonksiyonu
+export function detectPlatform(url, isDownloaded) {
+    if (isDownloaded) return 'drive';
+    if (!url) return 'other';
+    const u = url.toLowerCase();
+    if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+    if (u.includes('instagram.com')) return 'instagram';
+    if (u.includes('facebook.com') || u.includes('fb.com')) return 'facebook';
+    return 'other';
+}
+
 export async function dbFetchInstructors() {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -129,7 +140,6 @@ export async function dbClearAllFavorites() {
     return response;
 }
 
-// Not güncelleme fonksiyonu (2. adım)
 export async function dbUpdateNote(videoId, note) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'PATCH',
