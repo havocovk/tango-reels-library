@@ -337,7 +337,7 @@ async function handleFormSubmit(e) {
         await showCustomAlert(currentLang === 'tr' ? "Lütfen eğitmen seçin!" : "Please select instructor!", okTxt);
         return;
     }
-    // URL ve Drive kontrolü
+    // Validation
     if (is_downloaded) {
         if (!drive_url) {
             await showCustomAlert(currentLang === 'tr' ? "Drive linki zorunludur!" : "Drive link is required!", okTxt);
@@ -349,19 +349,25 @@ async function handleFormSubmit(e) {
             return;
         }
     }
+    
+    // Platform belirleme (Drive ise kesin drive, değilse URL'den algıla)
     let platform;
     if (is_downloaded) {
         platform = 'drive';
     } else {
         platform = detectPlatform(url, false);
     }
+    
     const payload = {
         instructor_id: parseInt(instructor_id),
         url: url || null,
-        role_type, partner_name: partner_name || null,
-        tags: tags || null, is_downloaded,
-        drive_url: is_downloaded && drive_url ? drive_url : null,
-        cover_url, platform
+        role_type,
+        partner_name: partner_name || null,
+        tags: tags || null,
+        is_downloaded,
+        drive_url: is_downloaded ? drive_url : null,
+        cover_url,
+        platform
     };
     try {
         await dbSaveVideo(editingVideoId, payload);

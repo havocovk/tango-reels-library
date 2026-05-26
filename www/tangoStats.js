@@ -102,19 +102,19 @@ export function renderStats(stats, currentLang) {
         </div>
         ${roleCardsHtml}
         <div class="platform-chart-container">
-            <div class="stat-label">${lang.statsPlatformDistribution}</div>
+            <div class="stat-label stat-label-centered">${lang.statsPlatformDistribution}</div>
             <canvas id="platform-pie-chart" width="400" height="350" style="max-width:100%; height:auto;"></canvas>
         </div>
         ${topTagsHtml}
         <div class="monthly-chart-container">
-            <div class="stat-label">${lang.statsMonthlyTrend}</div>
+            <div class="stat-label stat-label-centered">${lang.statsMonthlyTrend}</div>
             <div class="scrollable-chart">
-                <canvas id="monthly-bar-chart" width="${Math.max(600, stats.monthlyData.length * 90)}" height="350" style="width:100%; height:auto;"></canvas>
+                <canvas id="monthly-bar-chart" width="${Math.max(600, stats.monthlyData.length * 85)}" height="350" style="width:100%; height:auto;"></canvas>
             </div>
         </div>
     `;
     
-    // Pie chart
+    // Pie chart (ikonlar dışarıda, temas yok)
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     const platformKeys = [];
@@ -159,7 +159,7 @@ export function renderStats(stats, currentLang) {
                     const arcs = meta.data;
                     arcs.forEach((arc, index) => {
                         const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-                        const radius = arc.outerRadius + 30; // Dışarı çıkarmak için +30
+                        const radius = arc.outerRadius + 35; // Daha dışarı
                         const x = arc.x + Math.cos(midAngle) * radius;
                         const y = arc.y + Math.sin(midAngle) * radius;
                         const imgUrl = platformIconUrls[index];
@@ -167,13 +167,13 @@ export function renderStats(stats, currentLang) {
                             const img = new Image();
                             img.src = imgUrl;
                             img.onload = () => {
-                                ctx.drawImage(img, x - 20, y - 20, 40, 40);
+                                ctx.drawImage(img, x - 22, y - 22, 44, 44);
                             };
                         } else {
                             ctx.fillStyle = '#fff';
                             ctx.font = 'bold 16px sans-serif';
                             ctx.shadowBlur = 0;
-                            ctx.fillText(platformCounts[index], x - 10, y + 6);
+                            ctx.fillText(platformCounts[index], x - 12, y + 6);
                         }
                     });
                 }
@@ -181,7 +181,7 @@ export function renderStats(stats, currentLang) {
         }
     });
     
-    // Bar chart (12 ay, y ekseni yok, üzerinde sayı)
+    // Bar chart (tooltip kapalı, üzerinde sayı)
     const ctxBar = document.getElementById('monthly-bar-chart').getContext('2d');
     if (monthlyChart) monthlyChart.destroy();
     const months = stats.monthlyData.map(m => m.label);
@@ -206,7 +206,7 @@ export function renderStats(stats, currentLang) {
                 x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 11 } } }
             },
             plugins: {
-                tooltip: { callbacks: { label: (ctx) => `${ctx.raw} video` } },
+                tooltip: { enabled: false }, // Tooltip kapalı
                 legend: { display: false }
             },
             onComplete: function() {
@@ -219,9 +219,9 @@ export function renderStats(stats, currentLang) {
                     const x = xScale.getPixelForValue(index);
                     const y = yScale.getPixelForValue(value);
                     ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 14px sans-serif';
+                    ctx.font = 'bold 12px sans-serif';
                     ctx.shadowBlur = 0;
-                    ctx.fillText(value, x - 10, y - 8);
+                    ctx.fillText(value, x - 8, y - 6);
                 });
             }
         }
