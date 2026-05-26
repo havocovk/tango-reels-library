@@ -350,7 +350,7 @@ async function handleFormSubmit(e) {
         }
     }
     
-    // Platform belirleme (Drive ise kesin drive, değilse URL'den algıla)
+        // Platform belirleme (Drive ise kesin drive, değilse URL'den algıla)
     let platform;
     if (is_downloaded) {
         platform = 'drive';
@@ -360,7 +360,7 @@ async function handleFormSubmit(e) {
     
     const payload = {
         instructor_id: parseInt(instructor_id),
-        url: url || null,
+        url: url || '',   // <-- DEĞİŞTİRİLDI: null yerine boş string
         role_type,
         partner_name: partner_name || null,
         tags: tags || null,

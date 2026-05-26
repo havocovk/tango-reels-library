@@ -74,6 +74,11 @@ export async function dbDeleteInstructor(id) {
 }
 
 export async function dbSaveVideo(id, payload) {
+    // url alanı null ise boş string yap (veritabanı NOT NULL constraint'i için)
+    const fixedPayload = { ...payload };
+    if (fixedPayload.url === null || fixedPayload.url === undefined) {
+        fixedPayload.url = '';
+    }
     const method = id ? 'PATCH' : 'POST';
     const url = id ? `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/videos`;
     const response = await fetch(url, {
@@ -82,10 +87,9 @@ export async function dbSaveVideo(id, payload) {
             'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(fixedPayload)
     });
     if (!response.ok) {
-        // Detaylı hata mesajını al
         let errorText = await response.text();
         throw new Error(`Veritabanı hatası (${response.status}): ${errorText}`);
     }

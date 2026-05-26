@@ -34,11 +34,10 @@ export function computeStats(videos, instructors) {
         .map(([tag, count]) => ({ tag, count }));
     
     // 12 aylık periyot: Mayıs 2026'dan Nisan 2027'ye kadar
-    const startDate = new Date(2026, 4, 1); // Mayıs 2026 (ay 0-index: 4 = Mayıs)
+    const startDate = new Date(2026, 4, 1);
     const months = [];
     for (let i = 0; i < 12; i++) {
         const d = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        const key = `${d.getFullYear()}-${d.getMonth()+1}`;
         months.push({
             year: d.getFullYear(),
             month: d.getMonth()+1,
@@ -114,7 +113,7 @@ export function renderStats(stats, currentLang) {
         </div>
     `;
     
-    // Pie chart (ikonlar dışarıda, temas yok)
+    // Pie chart (ikonlar)
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     const platformKeys = [];
@@ -181,7 +180,7 @@ export function renderStats(stats, currentLang) {
         }
     });
     
-    // Bar chart - sayıları bar üzerine yaz, tooltip kapalı, scrollbar aktif
+    // Bar chart - y ekseni tamamen gizli, sadece bar üzerine sayı yaz
     const canvasBar = document.getElementById('monthly-bar-chart');
     const ctxBar = canvasBar.getContext('2d');
     if (monthlyChart) monthlyChart.destroy();
@@ -201,13 +200,10 @@ export function renderStats(stats, currentLang) {
             }]
         },
         options: {
-            responsive: false,  // Sabit genişlik için false
+            responsive: false,
             maintainAspectRatio: true,
             scales: {
-                y: { 
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                },
+                y: { display: false },  // Y eksenini tamamen gizle
                 x: { 
                     ticks: { 
                         autoSkip: false, 
@@ -218,18 +214,18 @@ export function renderStats(stats, currentLang) {
                 }
             },
             plugins: {
-                tooltip: { enabled: false }, // Tooltip tamamen kapalı
+                tooltip: { enabled: false },
                 legend: { display: false }
             },
             layout: {
                 padding: {
-                    top: 20  // Sayılar için üst boşluk
+                    top: 20
                 }
             }
         }
     });
     
-    // Bar'ların üzerine sayıları yaz (Chart.js render tamamlandıktan sonra)
+    // Bar'ların üzerine sayıları yaz
     setTimeout(() => {
         const canvas = canvasBar;
         const ctx = canvas.getContext('2d');
@@ -243,9 +239,8 @@ export function renderStats(stats, currentLang) {
             const value = counts[index];
             if (value === 0) return;
             
-            // Bar'ın konumu
             const x = bar.x;
-            const y = bar.y;
+            const y = bar.y;  // bar'ın üst kenarı
             
             ctx.save();
             ctx.fillStyle = '#ffffff';
@@ -253,9 +248,8 @@ export function renderStats(stats, currentLang) {
             ctx.shadowBlur = 0;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
-            // Sayıyı bar'ın üstüne yaz (y - 4)
             ctx.fillText(value.toString(), x, y - 4);
             ctx.restore();
         });
-    }, 100); // küçük bir gecikme ile render sonrası yaz
+    }, 100);
 }
