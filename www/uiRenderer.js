@@ -129,12 +129,14 @@ export function renderVideoCards(videos, config) {
         const platformLabel = lang.platformLabels[platform] || 'Diğer';
         const iconUrl = lang.platformIconUrls[platform] || '';
         const isEmbeddable = (platform === 'drive' || platform === 'youtube');
-        // Türkçe için özel metin: "Videoyu {platform} İzle" -> platformWatchText kullan
         let watchText = '';
         if (currentLang === 'tr') {
             const watchOn = lang.platformWatchText[platform];
             if (platform === 'drive') watchText = `Videoyu ${watchOn} İzle →`;
-            else watchText = `Videoyu ${watchOn} İzle →`;
+            else if (platform === 'youtube') watchText = `Videoyu ${watchOn} İzle →`;
+            else if (platform === 'instagram') watchText = `Videoyu ${watchOn} İzle →`;
+            else if (platform === 'facebook') watchText = `Videoyu ${watchOn} İzle →`;
+            else watchText = `Videoyu İzle →`;
         } else {
             watchText = lang.watchOnPlatform.replace('{platform}', platformLabel);
         }
@@ -176,9 +178,7 @@ export function renderVideoCards(videos, config) {
                 <span class="note-preview">${escapeHtml(noteText)}</span>
             </div>
         `;
-        const platformBadgeHtml = iconUrl ? 
-            `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px;"><img src="${iconUrl}" style="width: 14px; height: 14px; object-fit: contain;"> ${platformLabel}</span>` :
-            `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff;">${platformLabel}</span>`;
+        const platformBadgeHtml = `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px;"><img src="${iconUrl}" style="width: 14px; height: 14px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none'; this.nextSibling.style.display='inline';"> <span style="display: inline;">${platformLabel}</span></span>`;
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image: url('${coverImg}');">

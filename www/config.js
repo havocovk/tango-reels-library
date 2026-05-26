@@ -36,10 +36,10 @@ export const translations = {
             other: ""
         },
         platformIconUrls: {
-            drive: "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",
-            youtube: "https://www.youtube.com/s/desktop/014d3c6a/img/favicon_32x32.png",
-            instagram: "https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsneTY45TJU.png",
-            facebook: "https://static.xx.fbcdn.net/rsrc.php/yD/r/d4ZIVX-5G-b.ico",
+            drive: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",   // Google Drive
+            youtube: "https://cdn-icons-png.flaticon.com/512/1384/1384060.png", // YouTube
+            instagram: "https://cdn-icons-png.flaticon.com/512/174/174855.png", // Instagram
+            facebook: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",// Facebook (geçici, aşağıda değiştir)
             other: ""
         },
         langBtn: "🇬🇧 EN",
@@ -136,10 +136,10 @@ export const translations = {
             other: ""
         },
         platformIconUrls: {
-            drive: "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",
-            youtube: "https://www.youtube.com/s/desktop/014d3c6a/img/favicon_32x32.png",
-            instagram: "https://static.cdninstagram.com/rsrc.php/v3/yI/r/VsneTY45TJU.png",
-            facebook: "https://static.xx.fbcdn.net/rsrc.php/yD/r/d4ZIVX-5G-b.ico",
+            drive: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",
+            youtube: "https://cdn-icons-png.flaticon.com/512/1384/1384060.png",
+            instagram: "https://cdn-icons-png.flaticon.com/512/174/174855.png",
+            facebook: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",
             other: ""
         },
         langBtn: "🇹🇷 TR",
