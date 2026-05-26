@@ -180,7 +180,7 @@ export function renderStats(stats, currentLang) {
         }
     });
     
-    // Bar chart - y ekseni gizli, bar üzerine sayı yaz (kesin çözüm)
+    // Bar chart - y ekseni yok, sadece bar ve üzerinde sayı
     const canvasBar = document.getElementById('monthly-bar-chart');
     const ctxBar = canvasBar.getContext('2d');
     if (monthlyChart) monthlyChart.destroy();
@@ -203,7 +203,7 @@ export function renderStats(stats, currentLang) {
             responsive: false,
             maintainAspectRatio: true,
             scales: {
-                y: { display: false },
+                y: { display: false },  // Y ekseni tamamen gizli
                 x: {
                     ticks: {
                         autoSkip: false,
@@ -219,32 +219,38 @@ export function renderStats(stats, currentLang) {
             },
             layout: {
                 padding: {
-                    top: 20
+                    top: 25  // Sayı için yer
                 }
-            },
-            // Sayıları bar üzerine yazmak için afterDatasetDraw eklentisi
-            plugins: [{
-                afterDatasetDraw: function(chart) {
-                    const ctx = chart.ctx;
-                    const dataset = chart.data.datasets[0];
-                    const meta = chart.getDatasetMeta(0);
-                    const bars = meta.data;
-                    bars.forEach((bar, index) => {
-                        const value = dataset.data[index];
-                        if (value === 0) return;
-                        const x = bar.x;
-                        const y = bar.y;
-                        ctx.save();
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
-                        ctx.shadowBlur = 0;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'bottom';
-                        ctx.fillText(value.toString(), x, y - 4);
-                        ctx.restore();
-                    });
-                }
-            }]
+            }
         }
     });
+    
+    // Bar'ların üzerine sayıları yaz (beyaz, kalın, bar'ın üst hizasının biraz üstünde)
+    setTimeout(() => {
+        const canvas = canvasBar;
+        const ctx = canvas.getContext('2d');
+        const chart = monthlyChart;
+        if (!chart) return;
+        
+        const meta = chart.getDatasetMeta(0);
+        const bars = meta.data;
+        
+        bars.forEach((bar, index) => {
+            const value = counts[index];
+            if (value === 0) return;
+            
+            const x = bar.x;
+            const y = bar.y;  // bar'ın üst kenarı (piksel)
+            
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+            ctx.shadowBlur = 0;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            // Bar'ın hemen üstüne, 6px yukarıya yaz
+            ctx.fillText(value.toString(), x, y - 6);
+            ctx.restore();
+        });
+    }, 150);
 }

@@ -1,5 +1,6 @@
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
+// Platform algılama fonksiyonu
 export function detectPlatform(url, isDownloaded) {
     if (isDownloaded) return 'drive';
     if (!url) return 'other';
@@ -73,6 +74,7 @@ export async function dbDeleteInstructor(id) {
 }
 
 export async function dbSaveVideo(id, payload) {
+    // url null ise boş string yap (NOT NULL constraint için)
     const fixedPayload = { ...payload };
     if (fixedPayload.url === null || fixedPayload.url === undefined) {
         fixedPayload.url = '';

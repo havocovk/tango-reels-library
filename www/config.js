@@ -36,7 +36,7 @@ export const translations = {
             other: ""
         },
         platformIconUrls: {
-            drive: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/googledrive.svg",  // Google Drive ikonu
+            drive: "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",  // Google Drive resmi renkli logo
             youtube: "https://cdn-icons-png.flaticon.com/512/1384/1384060.png",
             instagram: "https://cdn-icons-png.flaticon.com/512/174/174855.png",
             facebook: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",
@@ -136,7 +136,7 @@ export const translations = {
             other: ""
         },
         platformIconUrls: {
-            drive: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/googledrive.svg",
+            drive: "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",
             youtube: "https://cdn-icons-png.flaticon.com/512/1384/1384060.png",
             instagram: "https://cdn-icons-png.flaticon.com/512/174/174855.png",
             facebook: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",
