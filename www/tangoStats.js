@@ -40,8 +40,8 @@ export function computeStats(videos, instructors) {
         const d = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
         months.push({
             year: d.getFullYear(),
-            month: d.getMonth()+1,
-            label: `${d.getMonth()+1}/${d.getFullYear()}`,
+            month: d.getMonth() + 1,
+            label: `${d.getMonth() + 1}/${d.getFullYear()}`,
             count: 0
         });
     }
@@ -50,7 +50,7 @@ export function computeStats(videos, instructors) {
             const date = new Date(v.created_at);
             if (!isNaN(date)) {
                 const year = date.getFullYear();
-                const month = date.getMonth()+1;
+                const month = date.getMonth() + 1;
                 const found = months.find(m => m.year === year && m.month === month);
                 if (found) found.count++;
             }
@@ -113,7 +113,7 @@ export function renderStats(stats, currentLang) {
         </div>
     `;
     
-    // Pie chart (ikonlar)
+    // Pie chart
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     const platformKeys = [];
@@ -124,7 +124,7 @@ export function renderStats(stats, currentLang) {
         if (count > 0) {
             platformKeys.push(key);
             platformCounts.push(count);
-            switch(key) {
+            switch (key) {
                 case 'drive': platformColors.push('#4285F4'); platformIconUrls.push(lang.platformIconUrls.drive); break;
                 case 'youtube': platformColors.push('#FF0000'); platformIconUrls.push(lang.platformIconUrls.youtube); break;
                 case 'instagram': platformColors.push('#E4405F'); platformIconUrls.push(lang.platformIconUrls.instagram); break;
@@ -151,7 +151,7 @@ export function renderStats(stats, currentLang) {
                 legend: { position: 'bottom' }
             },
             animation: {
-                onComplete: function() {
+                onComplete: function () {
                     const canvas = document.getElementById('platform-pie-chart');
                     const ctx = canvas.getContext('2d');
                     const meta = platformChart.getDatasetMeta(0);
@@ -180,7 +180,7 @@ export function renderStats(stats, currentLang) {
         }
     });
     
-    // Bar chart - y ekseni tamamen gizli, sadece bar üzerine sayı yaz
+    // Bar chart - y ekseni gizli, bar üzerine sayı yaz (kesin çözüm)
     const canvasBar = document.getElementById('monthly-bar-chart');
     const ctxBar = canvasBar.getContext('2d');
     if (monthlyChart) monthlyChart.destroy();
@@ -203,14 +203,14 @@ export function renderStats(stats, currentLang) {
             responsive: false,
             maintainAspectRatio: true,
             scales: {
-                y: { display: false },  // Y eksenini tamamen gizle
-                x: { 
-                    ticks: { 
-                        autoSkip: false, 
-                        maxRotation: 45, 
-                        minRotation: 45, 
-                        font: { size: 11 } 
-                    } 
+                y: { display: false },
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 45,
+                        minRotation: 45,
+                        font: { size: 11 }
+                    }
                 }
             },
             plugins: {
@@ -221,35 +221,30 @@ export function renderStats(stats, currentLang) {
                 padding: {
                     top: 20
                 }
-            }
+            },
+            // Sayıları bar üzerine yazmak için afterDatasetDraw eklentisi
+            plugins: [{
+                afterDatasetDraw: function(chart) {
+                    const ctx = chart.ctx;
+                    const dataset = chart.data.datasets[0];
+                    const meta = chart.getDatasetMeta(0);
+                    const bars = meta.data;
+                    bars.forEach((bar, index) => {
+                        const value = dataset.data[index];
+                        if (value === 0) return;
+                        const x = bar.x;
+                        const y = bar.y;
+                        ctx.save();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+                        ctx.shadowBlur = 0;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText(value.toString(), x, y - 4);
+                        ctx.restore();
+                    });
+                }
+            }]
         }
     });
-    
-    // Bar'ların üzerine sayıları yaz
-    setTimeout(() => {
-        const canvas = canvasBar;
-        const ctx = canvas.getContext('2d');
-        const chart = monthlyChart;
-        if (!chart) return;
-        
-        const meta = chart.getDatasetMeta(0);
-        const bars = meta.data;
-        
-        bars.forEach((bar, index) => {
-            const value = counts[index];
-            if (value === 0) return;
-            
-            const x = bar.x;
-            const y = bar.y;  // bar'ın üst kenarı
-            
-            ctx.save();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
-            ctx.shadowBlur = 0;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText(value.toString(), x, y - 4);
-            ctx.restore();
-        });
-    }, 100);
 }

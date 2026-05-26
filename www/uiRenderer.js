@@ -178,6 +178,7 @@ export function renderVideoCards(videos, config) {
                 <span class="note-preview">${escapeHtml(noteText)}</span>
             </div>
         `;
+        // Platform badge - ikon düzeltildi
         const platformBadgeHtml = `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px;"><img src="${iconUrl}" style="width: 14px; height: 14px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none'; this.nextSibling.style.display='inline';"> <span style="display: inline;">${platformLabel}</span></span>`;
         card.innerHTML = `
             <div class="video-cover-link">
@@ -249,6 +250,7 @@ export function renderVideoCards(videos, config) {
         videoGrid.appendChild(card);
     });
 }
+
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
     if (url.includes('/shorts/')) {
@@ -274,6 +276,7 @@ function convertYoutubeUrlToEmbed(url) {
     }
     return url;
 }
+
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
