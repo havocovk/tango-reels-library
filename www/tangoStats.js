@@ -108,8 +108,8 @@ export function renderStats(stats, currentLang) {
         ${topTagsHtml}
         <div class="monthly-chart-container">
             <div class="stat-label stat-label-centered">${lang.statsMonthlyTrend}</div>
-            <div class="scrollable-chart">
-                <canvas id="monthly-bar-chart" width="${Math.max(600, stats.monthlyData.length * 85)}" height="350" style="width:100%; height:auto;"></canvas>
+            <div class="scrollable-chart" style="overflow-x: auto; width: 100%;">
+                <canvas id="monthly-bar-chart" width="${Math.max(700, stats.monthlyData.length * 80)}" height="350" style="width: auto; height: auto; display: block;"></canvas>
             </div>
         </div>
     `;
@@ -159,7 +159,7 @@ export function renderStats(stats, currentLang) {
                     const arcs = meta.data;
                     arcs.forEach((arc, index) => {
                         const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-                        const radius = arc.outerRadius + 35; // Daha dışarı
+                        const radius = arc.outerRadius + 35;
                         const x = arc.x + Math.cos(midAngle) * radius;
                         const y = arc.y + Math.sin(midAngle) * radius;
                         const imgUrl = platformIconUrls[index];
@@ -181,11 +181,13 @@ export function renderStats(stats, currentLang) {
         }
     });
     
-    // Bar chart (tooltip kapalı, üzerinde sayı)
-    const ctxBar = document.getElementById('monthly-bar-chart').getContext('2d');
+    // Bar chart - sayıları bar üzerine yaz, tooltip kapalı, scrollbar aktif
+    const canvasBar = document.getElementById('monthly-bar-chart');
+    const ctxBar = canvasBar.getContext('2d');
     if (monthlyChart) monthlyChart.destroy();
     const months = stats.monthlyData.map(m => m.label);
     const counts = stats.monthlyData.map(m => m.count);
+    
     monthlyChart = new Chart(ctxBar, {
         type: 'bar',
         data: {
@@ -199,31 +201,61 @@ export function renderStats(stats, currentLang) {
             }]
         },
         options: {
-            responsive: true,
+            responsive: false,  // Sabit genişlik için false
             maintainAspectRatio: true,
             scales: {
-                y: { display: false, beginAtZero: true },
-                x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 11 } } }
+                y: { 
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                },
+                x: { 
+                    ticks: { 
+                        autoSkip: false, 
+                        maxRotation: 45, 
+                        minRotation: 45, 
+                        font: { size: 11 } 
+                    } 
+                }
             },
             plugins: {
-                tooltip: { enabled: false }, // Tooltip kapalı
+                tooltip: { enabled: false }, // Tooltip tamamen kapalı
                 legend: { display: false }
             },
-            onComplete: function() {
-                const chart = monthlyChart;
-                const ctx = chart.ctx;
-                const dataset = chart.data.datasets[0];
-                const yScale = chart.scales.y;
-                const xScale = chart.scales.x;
-                dataset.data.forEach((value, index) => {
-                    const x = xScale.getPixelForValue(index);
-                    const y = yScale.getPixelForValue(value);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.shadowBlur = 0;
-                    ctx.fillText(value, x - 8, y - 6);
-                });
+            layout: {
+                padding: {
+                    top: 20  // Sayılar için üst boşluk
+                }
             }
         }
     });
+    
+    // Bar'ların üzerine sayıları yaz (Chart.js render tamamlandıktan sonra)
+    setTimeout(() => {
+        const canvas = canvasBar;
+        const ctx = canvas.getContext('2d');
+        const chart = monthlyChart;
+        if (!chart) return;
+        
+        const meta = chart.getDatasetMeta(0);
+        const bars = meta.data;
+        
+        bars.forEach((bar, index) => {
+            const value = counts[index];
+            if (value === 0) return;
+            
+            // Bar'ın konumu
+            const x = bar.x;
+            const y = bar.y;
+            
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+            ctx.shadowBlur = 0;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            // Sayıyı bar'ın üstüne yaz (y - 4)
+            ctx.fillText(value.toString(), x, y - 4);
+            ctx.restore();
+        });
+    }, 100); // küçük bir gecikme ile render sonrası yaz
 }

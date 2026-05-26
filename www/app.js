@@ -385,8 +385,10 @@ async function handleFormSubmit(e) {
         callSwitchView('library');
         await fetchVideos();
     } catch (err) {
-        console.error(err);
-        await showCustomAlert(currentLang === 'tr' ? "İşlem hatası!" : "Operation error!", okTxt);
+        console.error("Kayıt hatası:", err);
+        let hataMesaji = currentLang === 'tr' ? "İşlem hatası: " : "Operation error: ";
+        hataMesaji += err.message || (currentLang === 'tr' ? "Bilinmeyen hata" : "Unknown error");
+        await showCustomAlert(hataMesaji, okTxt);
     }
 }
 

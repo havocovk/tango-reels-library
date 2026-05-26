@@ -84,7 +84,11 @@ export async function dbSaveVideo(id, payload) {
         },
         body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error("Video veritabanına yazılamadı");
+    if (!response.ok) {
+        // Detaylı hata mesajını al
+        let errorText = await response.text();
+        throw new Error(`Veritabanı hatası (${response.status}): ${errorText}`);
+    }
     return response;
 }
 
