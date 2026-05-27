@@ -18,6 +18,8 @@ import { initTagManager, updateTagManagerSelection, promptRenameTagModern, delet
 import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData } from './videoHandlers.js';
 import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor, setInstructorHandlersGlobalData } from './instructorHandlers.js';
 import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
+// Yeni importlar
+import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -30,6 +32,7 @@ let globalInstructors = [];
 let formTagsArray = [];
 
 setCurrentLangForUtils(currentLang);
+setBackupLang(currentLang); // Yedekleme modülüne dil bilgisini ver
 
 // ----- ANA VERİ ÇEKME FONKSİYONLARI -----
 async function fetchInstructors() {
@@ -63,7 +66,6 @@ async function fetchVideos() {
         }));
         populateFilterDropdowns(globalVideos, currentLang);
         
-        // Modüllerdeki global verileri güncelle (favoriler ve currentView dahil)
         setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
         setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
@@ -82,6 +84,60 @@ function renderStatsPanel() {
     if (currentView !== 'stats') return;
     const stats = computeStats(globalVideos, globalInstructors);
     renderStats(stats, currentLang);
+    // Her istatistik paneli render edildiğinde yedekleme butonlarını kontrol et/ekle
+    setupBackupButtons();
+}
+
+// İstatistik sayfasına yedekleme butonlarını ekleyen fonksiyon
+function setupBackupButtons() {
+    const statsContainer = document.getElementById('stats-container');
+    if (!statsContainer) return;
+    // Butonlar zaten varsa tekrar ekleme
+    if (document.getElementById('btn-export-backup')) return;
+    
+    const toolbar = document.createElement('div');
+    toolbar.style.display = 'flex';
+    toolbar.style.gap = '15px';
+    toolbar.style.marginBottom = '20px';
+    toolbar.style.justifyContent = 'flex-end';
+    
+    const exportBtn = document.createElement('button');
+    exportBtn.id = 'btn-export-backup';
+    exportBtn.className = 'btn-primary';
+    exportBtn.innerText = currentLang === 'tr' ? '💾 Yedek Al (Dışa Aktar)' : '💾 Backup (Export)';
+    exportBtn.style.padding = '8px 20px';
+    
+    const importBtn = document.createElement('button');
+    importBtn.id = 'btn-import-backup';
+    importBtn.className = 'btn-primary';
+    importBtn.innerText = currentLang === 'tr' ? '📂 Yedekten Geri Yükle (İçe Aktar)' : '📂 Restore from Backup (Import)';
+    importBtn.style.padding = '8px 20px';
+    importBtn.style.background = 'linear-gradient(135deg, #00f0ff, #ff007f)';
+    
+    toolbar.appendChild(exportBtn);
+    toolbar.appendChild(importBtn);
+    
+    // İlk çocuk olarak ekle (istatistik kartlarının üstüne)
+    statsContainer.parentNode.insertBefore(toolbar, statsContainer);
+    
+    // Olayları bağla
+    exportBtn.onclick = () => {
+        exportToJSON(globalVideos, globalInstructors, globalFavorites);
+    };
+    importBtn.onclick = async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            await importFromJSON(file, globalVideos, globalInstructors, globalFavorites, fetchVideos, fetchInstructors);
+            // İçe aktarma sonrası verileri yenile
+            await fetchInstructors();
+            await fetchVideos();
+        };
+        input.click();
+    };
 }
 
 function callUpdateSmartAssistant() {
@@ -101,7 +157,6 @@ function callSwitchView(viewName) {
     currentView = viewName;
     visibleCount = 20;
     setVisibleCount(visibleCount);
-    // videoHandlers içindeki currentView'ı güncelle
     setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
@@ -120,7 +175,6 @@ function clearAllFavorites() {
         if (confirmed) {
             await dbClearAllFavorites();
             globalFavorites = [];
-            // videoHandlers içindeki favorileri güncelle
             setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
             applyFiltersAndSearch();
         }
@@ -231,7 +285,6 @@ const getUIState = () => ({
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
-// Modülleri başlat (ilk değerlerle)
 setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
 setInstructorHandlersGlobalData(currentLang, editInstructorId);
 setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
@@ -243,6 +296,7 @@ initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callS
 
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
+    setBackupLang(currentLang); // Dil değişince yedekleme modülüne bildir
     setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
     setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
