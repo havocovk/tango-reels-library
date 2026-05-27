@@ -446,15 +446,15 @@ async function deleteSingleTag(tag) {
 
 async function deleteSelectedTags() {
     if (selectedTagsForMerge.length === 0) return;
-    const confirmMsg = currentLang === 'tr' ? `${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete ${selectedTagsForMerge.length} tag(s) from all videos?`;
+    const deleteCount = selectedTagsForMerge.length;
+    const confirmMsg = currentLang === 'tr' ? `${deleteCount} etiketi tüm videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete ${deleteCount} tag(s) from all videos?`;
     if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos(selectedTagsForMerge);
         await fetchVideos();
         showLoading(false);
-        await showCustomAlert(currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket silindi.` : `${selectedTagsForMerge.length} tag(s) deleted.`, 'Tamam');
-        renderTagManagerUI();
+        await showCustomAlert(currentLang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`, 'Tamam');
     } catch (err) {
         showLoading(false);
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
@@ -470,14 +470,15 @@ async function mergeSelectedTags() {
     }
     const confirmMsg = currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket "${newTagName}" çatısı altında birleştirilsin mi?` : `Merge ${selectedTagsForMerge.length} tags into "${newTagName}"?`;
     if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
+    
+    const mergeCount = selectedTagsForMerge.length; // Sayıyı şimdi sakla
     showLoading(true);
     try {
         await dbMergeTags(selectedTagsForMerge, newTagName);
         await fetchVideos();
         showLoading(false);
-        await showCustomAlert(currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket birleştirildi → ${newTagName}` : `${selectedTagsForMerge.length} tags merged → ${newTagName}`, 'Tamam');
-        document.getElementById('tag-merge-new-name').value = '';
-        renderTagManagerUI();
+        await showCustomAlert(currentLang === 'tr' ? `${mergeCount} etiket birleştirildi → ${newTagName}` : `${mergeCount} tags merged → ${newTagName}`, 'Tamam');
+        // renderTagManagerUI zaten fetchVideos içinde çağrılıyor
     } catch (err) {
         showLoading(false);
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
