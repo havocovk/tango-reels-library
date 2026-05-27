@@ -157,7 +157,7 @@ export function renderStats(stats, currentLang) {
             if (arc.hidden) return;
 
             const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-            const radius   = arc.outerRadius + 48;
+            const radius   = arc.outerRadius + 24;
 
             // Canvas koordinat uzayındaki ikon merkezi
             const xInCanvas = arc.x + Math.cos(midAngle) * radius;
