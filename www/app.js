@@ -93,20 +93,15 @@ function setupBackupButtons() {
     const exportBtn = document.getElementById('btn-export-backup');
     const importBtn = document.getElementById('btn-import-backup');
 
-    // Butonlar HTML'de yoksa çık
     if (!exportBtn || !importBtn) return;
-
-    // Daha önce zaten bağlandıysa tekrar bağlama (data-wired işareti kontrol et)
     if (exportBtn.dataset.wired === 'true') return;
     exportBtn.dataset.wired = 'true';
     importBtn.dataset.wired = 'true';
 
-    // Yedekle butonunu bağla
     exportBtn.onclick = () => {
         exportToJSON(globalVideos, globalInstructors, globalFavorites);
     };
 
-    // Geri Yükle butonunu bağla
     importBtn.onclick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -114,7 +109,7 @@ function setupBackupButtons() {
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            showLoading(true);
+            // showLoading(true) çağrısı KALDIRILDI - artık backup.js içinde yönetilecek
             try {
                 await importFromJSON(
                     file,
@@ -126,8 +121,6 @@ function setupBackupButtons() {
                 );
             } catch (err) {
                 console.error('Geri yükleme hatası:', err);
-            } finally {
-                showLoading(false);
             }
         };
         fileInput.click();
