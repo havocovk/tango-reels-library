@@ -33,7 +33,6 @@ export function computeStats(videos, instructors) {
         .slice(0, 10)
         .map(([tag, count]) => ({ tag, count }));
     
-    // 12 aylık periyot
     const startDate = new Date(2026, 4, 1);
     const months = [];
     for (let i = 0; i < 12; i++) {
@@ -57,6 +56,44 @@ export function computeStats(videos, instructors) {
         }
     });
     return { totalVideos, totalInstructors, leaderCount, followerCount, bothCount, platformCounts, topTags, monthlyData: months };
+}
+
+// İkonları çizen fonksiyon (sadece görünür dilimler için)
+function drawIcons(chart, iconUrls, counts) {
+    const canvas = document.getElementById('platform-pie-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const meta = chart.getDatasetMeta(0);
+    const arcs = meta.data;
+    
+    // Önce canvas'taki tüm içeriği temizlemeden sadece ikonları çiz (üzerine çiz)
+    // Ama chart zaten güncellendi, biz sadece ekstra ikon çizeceğiz.
+    arcs.forEach((arc, index) => {
+        // Sadece görünür dilimler için ikon çiz
+        if (!arc.hidden) {
+            const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
+            const radius = arc.outerRadius + 60;
+            const x = arc.x + Math.cos(midAngle) * radius;
+            const y = arc.y + Math.sin(midAngle) * radius;
+            const imgUrl = iconUrls[index];
+            if (imgUrl && imgUrl !== '') {
+                const img = new Image();
+                img.src = imgUrl;
+                img.onload = () => {
+                    ctx.drawImage(img, x - 22, y - 22, 44, 44);
+                };
+                // Eğer resim daha önce yüklenmişse hemen çiz, onload zaten çalışır
+                if (img.complete) {
+                    ctx.drawImage(img, x - 22, y - 22, 44, 44);
+                }
+            } else {
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.shadowBlur = 0;
+                ctx.fillText(counts[index], x - 10, y + 6);
+            }
+        }
+    });
 }
 
 export function renderStats(stats, currentLang) {
@@ -89,8 +126,8 @@ export function renderStats(stats, currentLang) {
                 <div class="role-name">${lang.roleBoth}</div>
             </div>
         </div>
-        <div class="platform-chart-container" style="min-height: 600px; margin: 20px 0 30px 0; position: relative;">
-            <div class="stat-label stat-label-centered" style="margin-bottom: 50px;">${lang.statsPlatformDistribution}</div>
+        <div class="platform-chart-container" style="min-height: 550px; margin: 20px 0 30px 0; position: relative;">
+            <div class="stat-label stat-label-centered" style="margin-bottom: 30px;">${lang.statsPlatformDistribution}</div>
             <canvas id="platform-pie-chart" width="450" height="400" style="display: block; margin: 0 auto;"></canvas>
             <div id="custom-legend" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 80px; margin-bottom: 20px;"></div>
         </div>
@@ -108,10 +145,6 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
     `;
-    
-    // Pie Chart - Chart.js legend kapalı, custom legend kullan
-    const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
-    if (platformChart) platformChart.destroy();
     
     const platformKeys = [];
     const platformCounts = [];
@@ -131,6 +164,9 @@ export function renderStats(stats, currentLang) {
         }
     }
     
+    const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
+    if (platformChart) platformChart.destroy();
+    
     platformChart = new Chart(ctxPie, {
         type: 'pie',
         data: {
@@ -149,56 +185,29 @@ export function renderStats(stats, currentLang) {
                 legend: { display: false }
             },
             layout: {
-                padding: {
-                    top: 20,
-                    bottom: 30,
-                    left: 20,
-                    right: 20
-                }
-            },
-            animation: {
-                onComplete: function() {
-                    const canvas = document.getElementById('platform-pie-chart');
-                    const ctx = canvas.getContext('2d');
-                    const meta = platformChart.getDatasetMeta(0);
-                    const arcs = meta.data;
-                    arcs.forEach((arc, index) => {
-                        const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-                        // İkonları pie chart'tan uzaklaştır, ancak canvas dışına taşmayacak şekilde
-                        // Alt dilimler için özel kontrol: eğer y koordinatı canvas altına yakınsa biraz yukarı al
-                        let radius = arc.outerRadius + 55;
-                        let x = arc.x + Math.cos(midAngle) * radius;
-                        let y = arc.y + Math.sin(midAngle) * radius;
-                        
-                        // Canvas sınırlarını kontrol et (canvas yüksekliği 400px civarı)
-                        const canvasHeight = canvas.height;
-                        // Eğer ikon alt sınıra çok yakınsa (y > canvasHeight - 50), y'yi yukarı çek
-                        if (y > canvasHeight - 60) {
-                            y = canvasHeight - 60;
-                        }
-                        // Üst sınır kontrolü
-                        if (y < 40) y = 40;
-                        // Sol-sağ sınır
-                        if (x < 40) x = 40;
-                        if (x > canvas.width - 40) x = canvas.width - 40;
-                        
-                        const imgUrl = platformIconUrls[index];
-                        if (imgUrl && imgUrl !== '') {
-                            const img = new Image();
-                            img.src = imgUrl;
-                            img.onload = () => {
-                                ctx.drawImage(img, x - 22, y - 22, 44, 44);
-                            };
-                        } else {
-                            ctx.fillStyle = '#fff';
-                            ctx.font = 'bold 16px sans-serif';
-                            ctx.fillText(platformCounts[index], x - 10, y + 6);
-                        }
-                    });
-                }
+                padding: { top: 20, bottom: 20, left: 20, right: 20 }
             }
         }
     });
+    
+    // İkon çizim fonksiyonunu çağıracak yardımcı
+    function redrawIcons() {
+        // Canvas temizlenmeden ikon çiz - chart zaten mevcut
+        drawIcons(platformChart, platformIconUrls, platformCounts);
+    }
+    
+    // İlk çizim için animation.onComplete kullan
+    platformChart.options.animation = {
+        onComplete: function() {
+            redrawIcons();
+        }
+    };
+    // Eğer animation yoksa hemen çiz
+    if (!platformChart.options.animation) {
+        setTimeout(redrawIcons, 100);
+    } else {
+        // Zaten onComplete var, tekrar ayarladık
+    }
     
     // Custom Legend oluştur
     const legendContainer = document.getElementById('custom-legend');
@@ -251,13 +260,23 @@ export function renderStats(stats, currentLang) {
                 meta.data[index].hidden = !meta.data[index].hidden;
                 legendItem.style.opacity = meta.data[index].hidden ? '0.5' : '1';
                 platformChart.update();
+                // Güncelleme tamamlandıktan sonra ikonları yeniden çiz
+                setTimeout(() => {
+                    // Önce canvas'taki ikonları temizle? Hayır, üzerine çiz (drawIcons önce temizlemez, sadece çizer)
+                    // Ama eski ikonlar kalmasın diye önce canvas'ın sadece o bölgesini temizlemek zor.
+                    // Daha kolay: chart güncellendikten sonra drawIcons çalışır, ancak eski çizimler kalır.
+                    // Bu yüzden önce tüm canvas'ı temizleyip chart'ı yeniden çizdirmek doğru olur.
+                    // Chart.update() zaten canvas'ı temizler ve yeniden çizer. Biz sadece ekstra ikonları ekleyeceğiz.
+                    // Ama ikonlar da temizlenmiş olur. O yüzden update sonrası drawIcons yeterli.
+                    drawIcons(platformChart, platformIconUrls, platformCounts);
+                }, 50);
             });
             
             legendContainer.appendChild(legendItem);
         });
     }
     
-    // Bar chart
+    // Bar chart (değişmedi)
     const canvasBar = document.getElementById('monthly-bar-chart');
     if (canvasBar) {
         const ctxBar = canvasBar.getContext('2d');
@@ -317,5 +336,11 @@ export function renderStats(stats, currentLang) {
                 ctx.restore();
             });
         }, 150);
+    }
+    
+    // Platform Dağılımı başlığı ile pie chart arasındaki boşluğu artır
+    const titleEl = document.querySelector('.platform-chart-container .stat-label-centered');
+    if (titleEl) {
+        titleEl.style.marginBottom = '50px'; // Daha fazla boşluk
     }
 }
