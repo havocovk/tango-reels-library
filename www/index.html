@@ -181,7 +181,7 @@
             .atkk-form-grid { grid-template-columns: 1fr; gap: 12px; }
             .role-cards { flex-direction: column; }
         }
-        /* Tag manager stilleri - DÜZENLENDİ */
+        /* Tag manager stilleri */
         .tag-manager-table {
             width: 100%;
             border-collapse: collapse;
@@ -199,27 +199,17 @@
             background: rgba(255, 0, 127, 0.2);
             font-weight: 600;
         }
-        /* Checkbox düzenlemeleri - Koyu arka plan, pembe tik */
+        /* Checkbox düzeltmesi: 16x16, koyu arka plan, pembe check */
         .tag-checkbox {
             width: 16px;
             height: 16px;
-            cursor: pointer;
             accent-color: #ff007f;
+            cursor: pointer;
             background-color: #1e1a2f;
             border: 1px solid #ff007f;
             border-radius: 3px;
-            vertical-align: middle;
         }
-        /* Kullanım Sayısı sütunu ortalanmış */
-        .tag-manager-table td:nth-child(3),
-        .tag-manager-table th:nth-child(3) {
-            text-align: center;
-        }
-        td:first-child, th:first-child {
-            text-align: center;
-            width: 40px;
-        }
-        /* Butonlar - eski boyutlarına döndü */
+        /* Butonlar eski boyutlarında (6px 12px, 0.75rem) */
         .tag-action-btn {
             background: rgba(0, 240, 255, 0.15);
             border: 1px solid rgba(0, 240, 255, 0.4);
@@ -227,7 +217,7 @@
             border-radius: 8px;
             color: #00f0ff;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             margin: 0 2px;
             transition: all 0.2s;
         }
@@ -433,12 +423,7 @@
                 <div style="max-height: 65vh; overflow-y: auto;">
                     <table class="tag-manager-table" id="tag-manager-table">
                         <thead>
-                            <tr>
-                                <th style="width:40px"><input type="checkbox" id="tag-select-all" class="tag-checkbox"></th>
-                                <th>Etiket</th>
-                                <th>Kullanım Sayısı</th>
-                                <th style="width:100px">İşlemler</th>
-                            </tr>
+                            <tr><th style="width:40px"><input type="checkbox" id="tag-select-all" class="tag-checkbox"></th><th>Etiket</th><th>Kullanım Sayısı</th><th style="width:120px">İşlemler</th></tr>
                         </thead>
                         <tbody id="tag-manager-tbody"></tbody>
                     </table>
