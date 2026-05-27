@@ -170,6 +170,16 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const mergeCancelBtn = document.getElementById('tag-merge-cancel-btn');
     if (mergeCancelBtn) mergeCancelBtn.innerText = currentLang === 'tr' ? '❌ İptal' : '❌ Cancel';
     
+    // Merge panelindeki label ve placeholder
+    const mergePanelLabel = document.querySelector('#tag-merge-panel label');
+    if (mergePanelLabel) {
+        mergePanelLabel.innerText = currentLang === 'tr' ? 'Yeni Etiket Adı:' : 'New Tag Name:';
+    }
+    const mergeInput = document.getElementById('tag-merge-new-name');
+    if (mergeInput) {
+        mergeInput.placeholder = currentLang === 'tr' ? 'Örn: sacada' : 'Ex: sacada';
+    }
+    
     updateSmartFilenameAssistant(currentLang, formTagsArray);
     
     if (populateFilterDropdowns) {
