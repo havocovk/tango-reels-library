@@ -64,15 +64,36 @@ export function renderStats(stats, currentLang) {
     if (!container) return;
     const lang = translations[currentLang];
     
-    const roleCardsHtml = `
-        <div class="role-cards">
-            <div class="role-card leader"><div class="role-count">${stats.leaderCount}</div><div class="role-name">${lang.roleLeader}</div></div>
-            <div class="role-card follower"><div class="role-count">${stats.followerCount}</div><div class="role-name">${lang.roleFollower}</div></div>
-            <div class="role-card both"><div class="role-count">${stats.bothCount}</div><div class="role-name">${lang.roleBoth}</div></div>
+    // HTML yapısı - container geniş ve yeterli boşluklu
+    container.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">${stats.totalVideos}</div>
+                <div class="stat-label">${lang.statsTotalVideos}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${stats.totalInstructors}</div>
+                <div class="stat-label">${lang.statsTotalInstructors}</div>
+            </div>
         </div>
-    `;
-    
-    const topTagsHtml = `
+        <div class="role-cards">
+            <div class="role-card leader">
+                <div class="role-count">${stats.leaderCount}</div>
+                <div class="role-name">${lang.roleLeader}</div>
+            </div>
+            <div class="role-card follower">
+                <div class="role-count">${stats.followerCount}</div>
+                <div class="role-name">${lang.roleFollower}</div>
+            </div>
+            <div class="role-card both">
+                <div class="role-count">${stats.bothCount}</div>
+                <div class="role-name">${lang.roleBoth}</div>
+            </div>
+        </div>
+        <div class="platform-chart-container" style="min-height: 550px; margin: 20px 0 30px 0; position: relative;">
+            <div class="stat-label stat-label-centered" style="margin-bottom: 30px;">${lang.statsPlatformDistribution}</div>
+            <canvas id="platform-pie-chart" width="450" height="400" style="display: block; margin: 0 auto;"></canvas>
+        </div>
         <div class="stats-tags">
             <div class="stat-label">${lang.statsTopTags}</div>
             <div class="top-tags-list">
@@ -80,20 +101,6 @@ export function renderStats(stats, currentLang) {
                 ${stats.topTags.length === 0 ? `<span class="tag-badge">${lang.statsNoTags}</span>` : ''}
             </div>
         </div>
-    `;
-    
-    // Container: yüksekliği artır, legend'in altında boşluk kalması için padding-bottom
-    container.innerHTML = `
-        <div class="stats-grid">
-            <div class="stat-card"><div class="stat-value">${stats.totalVideos}</div><div class="stat-label">${lang.statsTotalVideos}</div></div>
-            <div class="stat-card"><div class="stat-value">${stats.totalInstructors}</div><div class="stat-label">${lang.statsTotalInstructors}</div></div>
-        </div>
-        ${roleCardsHtml}
-        <div class="platform-chart-container" style="min-height: 520px; margin-bottom: 40px; position: relative;">
-            <div class="stat-label stat-label-centered" style="margin-bottom: 20px;">${lang.statsPlatformDistribution}</div>
-            <canvas id="platform-pie-chart" width="500" height="420" style="max-width:100%; height:auto; display: block; margin: 0 auto;"></canvas>
-        </div>
-        ${topTagsHtml}
         <div class="monthly-chart-container">
             <div class="stat-label stat-label-centered">${lang.statsMonthlyTrend}</div>
             <div class="scrollable-chart" style="overflow-x: auto; width: 100%;">
@@ -102,7 +109,7 @@ export function renderStats(stats, currentLang) {
         </div>
     `;
     
-    // ---- PIE CHART ----
+    // Pie Chart - Legend bottom, büyük boşluklu, ikonlar uzakta
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     
@@ -140,111 +147,108 @@ export function renderStats(stats, currentLang) {
             plugins: {
                 tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} video` } },
                 legend: {
-                    position: 'bottom',      // Legend en altta
-                    align: 'center',
-                    labels: { color: '#f1f5f9', font: { size: 12 }, boxWidth: 12 },
-                    onClick: (e, legendItem, legend) => {
-                        // Tıklanabilir legend özelliğini koru (platform gizleme)
-                        const index = legendItem.datasetIndex;
-                        const ci = legend.chart;
-                        const meta = ci.getDatasetMeta(0);
-                        meta.data[index].hidden = !meta.data[index].hidden;
-                        ci.update();
-                    }
+                    position: 'bottom',
+                    labels: { color: '#f1f5f9', font: { size: 12 } },
+                    align: 'center'
                 }
             },
             layout: {
                 padding: {
                     top: 20,
-                    bottom: 40,    // Bu sayede legend ile pie chart arasında 40px boşluk (ekran görüntüsünde ~3cm)
+                    bottom: 80,    // 3cm'ye yakın büyük boşluk
                     left: 20,
                     right: 20
                 }
-            }
-        }
-    });
-    
-    // İkonları pie chart'ın dışına, eski mesafesine (daha uzak) yerleştir
-    setTimeout(() => {
-        const canvas = document.getElementById('platform-pie-chart');
-        const ctx = canvas.getContext('2d');
-        const chart = platformChart;
-        if (!chart) return;
-        const meta = chart.getDatasetMeta(0);
-        const arcs = meta.data;
-        arcs.forEach((arc, index) => {
-            const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-            // Eski mesafe: outerRadius + 35 (daha uzak)
-            const radius = arc.outerRadius + 35;
-            const x = arc.x + Math.cos(midAngle) * radius;
-            const y = arc.y + Math.sin(midAngle) * radius;
-            const imgUrl = platformIconUrls[index];
-            if (imgUrl && imgUrl !== '') {
-                const img = new Image();
-                img.src = imgUrl;
-                img.onload = () => {
-                    ctx.drawImage(img, x - 22, y - 22, 44, 44);
-                };
-            } else if (platformCounts[index]) {
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.fillText(platformCounts[index], x - 8, y + 6);
-            }
-        });
-    }, 150);
-    
-    // ---- BAR CHART ----
-    const canvasBar = document.getElementById('monthly-bar-chart');
-    if (!canvasBar) return;
-    const ctxBar = canvasBar.getContext('2d');
-    if (monthlyChart) monthlyChart.destroy();
-    const months = stats.monthlyData.map(m => m.label);
-    const counts = stats.monthlyData.map(m => m.count);
-    
-    monthlyChart = new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: months,
-            datasets: [{
-                data: counts,
-                backgroundColor: '#ff007f',
-                borderRadius: 8,
-                barPercentage: 0.7,
-                categoryPercentage: 0.8
-            }]
-        },
-        options: {
-            responsive: false,
-            maintainAspectRatio: true,
-            scales: {
-                y: { display: false },
-                x: {
-                    ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 11 } }
-                }
             },
-            plugins: { tooltip: { enabled: false }, legend: { display: false } },
-            layout: { padding: { top: 25 } }
+            animation: {
+                onComplete: function() {
+                    const canvas = document.getElementById('platform-pie-chart');
+                    const ctx = canvas.getContext('2d');
+                    const meta = platformChart.getDatasetMeta(0);
+                    const arcs = meta.data;
+                    arcs.forEach((arc, index) => {
+                        const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
+                        // İkonları pie chart'tan uzaklaştır (yarıçap + 45)
+                        const radius = arc.outerRadius + 45;
+                        const x = arc.x + Math.cos(midAngle) * radius;
+                        const y = arc.y + Math.sin(midAngle) * radius;
+                        const imgUrl = platformIconUrls[index];
+                        if (imgUrl && imgUrl !== '') {
+                            const img = new Image();
+                            img.src = imgUrl;
+                            img.onload = () => {
+                                ctx.drawImage(img, x - 22, y - 22, 44, 44);
+                            };
+                        } else {
+                            ctx.fillStyle = '#fff';
+                            ctx.font = 'bold 16px sans-serif';
+                            ctx.fillText(platformCounts[index], x - 10, y + 6);
+                        }
+                    });
+                }
+            }
         }
     });
     
-    setTimeout(() => {
-        const canvas = canvasBar;
-        const ctx = canvas.getContext('2d');
-        const chart = monthlyChart;
-        if (!chart) return;
-        const meta = chart.getDatasetMeta(0);
-        const bars = meta.data;
-        bars.forEach((bar, idx) => {
-            const value = counts[idx];
-            if (value === 0) return;
-            ctx.save();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
-            ctx.shadowBlur = 0;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText(value.toString(), bar.x, bar.y - 6);
-            ctx.restore();
+    // Bar chart
+    const canvasBar = document.getElementById('monthly-bar-chart');
+    if (canvasBar) {
+        const ctxBar = canvasBar.getContext('2d');
+        if (monthlyChart) monthlyChart.destroy();
+        const months = stats.monthlyData.map(m => m.label);
+        const counts = stats.monthlyData.map(m => m.count);
+        
+        monthlyChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: '#ff007f',
+                    borderRadius: 8,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                scales: {
+                    y: { display: false },
+                    x: {
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: { enabled: false },
+                    legend: { display: false }
+                },
+                layout: { padding: { top: 25 } }
+            }
         });
-    }, 150);
+        
+        setTimeout(() => {
+            const ctx = canvasBar.getContext('2d');
+            const chart = monthlyChart;
+            if (!chart) return;
+            const meta = chart.getDatasetMeta(0);
+            const bars = meta.data;
+            bars.forEach((bar, index) => {
+                const value = counts[index];
+                if (value === 0) return;
+                ctx.save();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(value.toString(), bar.x, bar.y - 6);
+                ctx.restore();
+            });
+        }, 150);
+    }
 }
