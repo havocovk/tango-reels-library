@@ -38,6 +38,12 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     document.getElementById('menu-stats').innerText = '📊 ' + (currentLang === 'tr' ? 'İstatistikler' : 'Statistics');
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
     
+    // Tag Manager menü butonu varsa
+    const tagManagerBtn = document.getElementById('menu-tag-manager');
+    if (tagManagerBtn) {
+        tagManagerBtn.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
+    }
+    
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
     
@@ -59,6 +65,15 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         if (allPlatformsOption) {
             allPlatformsOption.innerText = lang.allPlatforms;
         }
+        // Diğer platform seçeneklerinin etiketlerini de güncelle
+        const driveOpt = platformSelect.querySelector('option[value="drive"]');
+        if (driveOpt) driveOpt.innerText = lang.platformLabels.drive;
+        const youtubeOpt = platformSelect.querySelector('option[value="youtube"]');
+        if (youtubeOpt) youtubeOpt.innerText = lang.platformLabels.youtube;
+        const instagramOpt = platformSelect.querySelector('option[value="instagram"]');
+        if (instagramOpt) instagramOpt.innerText = lang.platformLabels.instagram;
+        const facebookOpt = platformSelect.querySelector('option[value="facebook"]');
+        if (facebookOpt) facebookOpt.innerText = lang.platformLabels.facebook;
     }
     
     const formTitle = document.getElementById('form-title');
@@ -136,6 +151,12 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         partnerInput.placeholder = currentLang === 'tr' ? 'Örn: Maria' : 'Ex: Maria';
     }
     
+    // Tag Manager başlığı
+    const tagManagerTitle = document.getElementById('tag-manager-title');
+    if (tagManagerTitle) {
+        tagManagerTitle.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
+    }
+    
     updateSmartFilenameAssistant(currentLang, formTagsArray);
     
     if (populateFilterDropdowns) {
@@ -151,16 +172,20 @@ export function switchView(viewName, state, functions) {
     document.getElementById('menu-favorites').classList.remove('active');
     document.getElementById('menu-stats').classList.remove('active');
     document.getElementById('menu-add-video').classList.remove('active');
+    const tagManagerBtn = document.getElementById('menu-tag-manager');
+    if (tagManagerBtn) tagManagerBtn.classList.remove('active');
 
     const clearFavBtnContainer = document.getElementById('clear-favorites-container');
     const libraryView = document.getElementById('view-library-container');
     const statsView = document.getElementById('view-stats-container');
     const addView = document.getElementById('view-add-container');
+    const tagView = document.getElementById('view-tag-manager-container');
 
     if (viewName === 'library' || viewName === 'favorites') {
         libraryView.classList.remove('d-none');
         statsView.classList.add('d-none');
         addView.classList.add('d-none');
+        if (tagView) tagView.classList.add('d-none');
         document.getElementById(`menu-${viewName}`).classList.add('active');
         
         if (viewName === 'favorites') {
@@ -174,12 +199,14 @@ export function switchView(viewName, state, functions) {
         libraryView.classList.add('d-none');
         statsView.classList.remove('d-none');
         addView.classList.add('d-none');
+        if (tagView) tagView.classList.add('d-none');
         document.getElementById('menu-stats').classList.add('active');
         if (functions.updateStats) functions.updateStats();
     } else if (viewName === 'add') {
         libraryView.classList.add('d-none');
         statsView.classList.add('d-none');
         addView.classList.remove('d-none');
+        if (tagView) tagView.classList.add('d-none');
         document.getElementById('menu-add-video').classList.add('active');
         
         if (!state.editingVideoId) {
@@ -198,5 +225,12 @@ export function switchView(viewName, state, functions) {
             functions.resetUploadedCoverUrl();
         }
         updateSmartFilenameAssistant(state.currentLang, state.getFormTags());
+    } else if (viewName === 'tagManager' && tagView) {
+        libraryView.classList.add('d-none');
+        statsView.classList.add('d-none');
+        addView.classList.add('d-none');
+        tagView.classList.remove('d-none');
+        if (tagManagerBtn) tagManagerBtn.classList.add('active');
+        if (functions.renderTagManager) functions.renderTagManager();
     }
 }
