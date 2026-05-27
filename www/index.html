@@ -191,34 +191,36 @@
         }
         .tag-manager-table th, .tag-manager-table td {
             padding: 12px 10px;
-            text-align: left;
             border-bottom: 1px solid rgba(0, 240, 255, 0.2);
             color: #f1f5f9;
-        }
-        /* Kullanım sayısı sütununu ortala */
-        .tag-manager-table td:nth-child(3),
-        .tag-manager-table th:nth-child(3) {
-            text-align: center;
         }
         .tag-manager-table th {
             background: rgba(255, 0, 127, 0.2);
             font-weight: 600;
+            text-align: left;
         }
+        /* İlk sütun (checkbox) ve Kullanım Sayısı sütunu ortalanacak */
+        .tag-manager-table th:first-child,
+        .tag-manager-table td:first-child {
+            text-align: center;
+            width: 40px;
+        }
+        .tag-manager-table th:nth-child(3),
+        .tag-manager-table td:nth-child(3) {
+            text-align: center;
+        }
+        /* Checkbox düzenlemesi */
         .tag-checkbox {
             width: 16px;
             height: 16px;
+            cursor: pointer;
             accent-color: #ff007f;
-            background-color: #1a1a2e;
+            background-color: #0b0813;
             border: 1px solid #ff007f;
             border-radius: 3px;
-            cursor: pointer;
             vertical-align: middle;
         }
-        /* İşlemler hücresi - butonlar orijinal boyutunda */
-        .tag-manager-table td:last-child {
-            white-space: nowrap;
-            text-align: center;
-        }
+        /* Kalem ve silme butonları (eski boyutlar) */
         .tag-action-btn {
             background: rgba(0, 240, 255, 0.15);
             border: 1px solid rgba(0, 240, 255, 0.4);
@@ -226,7 +228,7 @@
             border-radius: 6px;
             color: #00f0ff;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             margin: 0 2px;
             transition: all 0.2s;
             display: inline-flex;
@@ -266,11 +268,16 @@
             flex-direction: column;
             gap: 15px;
         }
-        /* Tablodaki işlem butonları için özel simge boyutları */
-        .tag-action-btn .icon-edit,
-        .tag-action-btn .icon-delete {
-            font-size: 1rem;
-            line-height: 1;
+        /* Responsive düzenlemeler */
+        @media screen and (max-width: 768px) {
+            .tag-manager-table th, .tag-manager-table td {
+                padding: 8px 4px;
+                font-size: 0.75rem;
+            }
+            .tag-action-btn {
+                padding: 2px 6px;
+                font-size: 0.65rem;
+            }
         }
     </style>
 </head>
@@ -441,7 +448,12 @@
                 <div style="max-height: 65vh; overflow-y: auto;">
                     <table class="tag-manager-table" id="tag-manager-table">
                         <thead>
-                            <tr><th style="width:40px"><input type="checkbox" id="tag-select-all" class="tag-checkbox"></th><th>Etiket</th><th>Kullanım Sayısı</th><th style="width:100px">İşlemler</th></tr>
+                            <tr>
+                                <th style="width:40px"><input type="checkbox" id="tag-select-all" class="tag-checkbox"></th>
+                                <th>Etiket</th>
+                                <th style="text-align:center">Kullanım Sayısı</th>
+                                <th style="width:100px; text-align:center">İşlemler</th>
+                            </tr>
                         </thead>
                         <tbody id="tag-manager-tbody"></tbody>
                     </table>

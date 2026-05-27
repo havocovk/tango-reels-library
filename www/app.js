@@ -25,7 +25,6 @@ let visibleCount = 20;
 let globalInstructors = [];
 let formTagsArray = [];
 
-// Tag Manager seçimli etiketler
 let selectedTagsForMerge = [];
 
 const getUIState = () => ({
@@ -34,9 +33,7 @@ const getUIState = () => ({
     resetFormTags: () => { formTagsArray = []; }
 });
 
-function callUpdateSmartAssistant() {
-    updateSmartFilenameAssistant(currentLang, formTagsArray);
-}
+function callUpdateSmartAssistant() { updateSmartFilenameAssistant(currentLang, formTagsArray); }
 function callUpdateInterfaceLanguage() {
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, () => {
         if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
@@ -284,7 +281,65 @@ async function handleFormSubmit(e) {
     }
 }
 
-// ----- TAG MANAGER İŞLEVLERİ -----
+// ----- MODERN PROMPT DIALOG (prompt yerine) -----
+function showModernPrompt(title, defaultValue = '', placeholder = '') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-dialog-modal');
+        const msgEl = document.getElementById('custom-dialog-message');
+        const okBtn = document.getElementById('custom-dialog-ok-btn');
+        const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+        
+        // Input alanı oluştur
+        msgEl.innerHTML = `
+            <div style="margin-bottom: 10px; font-weight: 500;">${title}</div>
+            <input type="text" id="modern-prompt-input" value="${escapeHtml(defaultValue)}" placeholder="${escapeHtml(placeholder)}" style="width:100%; padding:10px; background:#0b0813; border:1px solid #ff007f; border-radius:8px; color:#f1f5f9; outline:none;">
+        `;
+        
+        okBtn.innerText = currentLang === 'tr' ? 'Tamam' : 'OK';
+        cancelBtn.innerText = currentLang === 'tr' ? 'İptal' : 'Cancel';
+        cancelBtn.classList.remove('d-none');
+        modal.classList.remove('d-none');
+        
+        const input = document.getElementById('modern-prompt-input');
+        input.focus();
+        
+        const handleOk = () => {
+            const value = input.value.trim();
+            modal.classList.add('d-none');
+            cleanup();
+            resolve(value || null);
+        };
+        const handleCancel = () => {
+            modal.classList.add('d-none');
+            cleanup();
+            resolve(null);
+        };
+        const cleanup = () => {
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+            input.removeEventListener('keypress', keyHandler);
+        };
+        const keyHandler = (e) => {
+            if (e.key === 'Enter') handleOk();
+            if (e.key === 'Escape') handleCancel();
+        };
+        input.addEventListener('keypress', keyHandler);
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// ----- TAG MANAGER İŞLEVLERİ (güncellendi) -----
 function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -310,22 +365,24 @@ function renderTagManagerUI() {
         cb.addEventListener('change', () => updateTagManagerSelection());
         cbCell.appendChild(cb);
         row.insertCell(1).innerText = tag;
-        row.insertCell(2).innerText = count;
+        const countCell = row.insertCell(2);
+        countCell.innerText = count;
+        countCell.style.textAlign = 'center';
         const actionCell = row.insertCell(3);
+        actionCell.style.textAlign = 'center';
         const renameBtn = document.createElement('button');
         renameBtn.innerText = '✏️';
         renameBtn.className = 'tag-action-btn';
-        renameBtn.title = 'Yeniden Adlandır';
-        renameBtn.onclick = () => promptRenameTag(tag);
+        renameBtn.title = currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename';
+        renameBtn.onclick = () => promptRenameTagModern(tag);
         const deleteBtn = document.createElement('button');
         deleteBtn.innerText = '🗑️';
         deleteBtn.className = 'tag-action-btn tag-danger-btn';
-        deleteBtn.title = 'Tüm Videolardan Sil';
+        deleteBtn.title = currentLang === 'tr' ? 'Tüm Videolardan Sil' : 'Delete from all videos';
         deleteBtn.onclick = () => deleteSingleTag(tag);
         actionCell.appendChild(renameBtn);
         actionCell.appendChild(deleteBtn);
     });
-    // Toplu seçim checkbox
     const selectAll = document.getElementById('tag-select-all');
     if (selectAll) {
         selectAll.checked = false;
@@ -351,27 +408,30 @@ function updateTagManagerSelection() {
     }
 }
 
-async function promptRenameTag(oldTag) {
-    const newTag = prompt(`"${oldTag}" etiketini yeni adıyla değiştir:`, oldTag);
+// Modern rename dialog kullanan yeni fonksiyon
+async function promptRenameTagModern(oldTag) {
+    const title = currentLang === 'tr' ? `"${oldTag}" etiketini yeni adıyla değiştir:` : `Rename "${oldTag}" to:`;
+    const newTag = await showModernPrompt(title, oldTag, currentLang === 'tr' ? 'Yeni etiket adı' : 'New tag name');
     if (!newTag || newTag === oldTag) return;
     showLoading(true);
     try {
         await dbRenameTag(oldTag, newTag);
         await fetchVideos();
-        await showCustomAlert(`"${oldTag}" → "${newTag}" olarak değiştirildi.`, 'Tamam');
+        await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
     } finally { showLoading(false); }
 }
 
+// Eski prompt'u kullanan fonksiyonu kaldırıyoruz, yerine yukarıdaki kullanılacak
 async function deleteSingleTag(tag) {
-    if (!await showCustomConfirm(`"${tag}" etiketini TÜM videolardan silmek istediğinize emin misiniz?`, 'Evet', 'Hayır')) return;
+    if (!await showCustomConfirm(currentLang === 'tr' ? `"${tag}" etiketini TÜM videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete "${tag}" from ALL videos?`, 'Evet', 'Hayır')) return;
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos([tag]);
         await fetchVideos();
-        await showCustomAlert(`"${tag}" etiketi kaldırıldı.`, 'Tamam');
+        await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
@@ -380,12 +440,13 @@ async function deleteSingleTag(tag) {
 
 async function deleteSelectedTags() {
     if (selectedTagsForMerge.length === 0) return;
-    if (!await showCustomConfirm(`${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?`, 'Evet', 'Hayır')) return;
+    const confirmMsg = currentLang === 'tr' ? `${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete ${selectedTagsForMerge.length} tag(s) from all videos?`;
+    if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos(selectedTagsForMerge);
         await fetchVideos();
-        await showCustomAlert(`${selectedTagsForMerge.length} etiket silindi.`, 'Tamam');
+        await showCustomAlert(currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket silindi.` : `${selectedTagsForMerge.length} tag(s) deleted.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
@@ -396,15 +457,16 @@ async function mergeSelectedTags() {
     if (selectedTagsForMerge.length < 2) return;
     const newTagName = document.getElementById('tag-merge-new-name').value.trim();
     if (!newTagName) {
-        await showCustomAlert('Lütfen yeni etiket adını girin.', 'Tamam');
+        await showCustomAlert(currentLang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.', 'Tamam');
         return;
     }
-    if (!await showCustomConfirm(`${selectedTagsForMerge.length} etiket "${newTagName}" çatısı altında birleştirilsin mi?`, 'Evet', 'Hayır')) return;
+    const confirmMsg = currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket "${newTagName}" çatısı altında birleştirilsin mi?` : `Merge ${selectedTagsForMerge.length} tags into "${newTagName}"?`;
+    if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
     showLoading(true);
     try {
         await dbMergeTags(selectedTagsForMerge, newTagName);
         await fetchVideos();
-        await showCustomAlert(`${selectedTagsForMerge.length} etiket birleştirildi → ${newTagName}`, 'Tamam');
+        await showCustomAlert(currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket birleştirildi → ${newTagName}` : `${selectedTagsForMerge.length} tags merged → ${newTagName}`, 'Tamam');
         document.getElementById('tag-merge-new-name').value = '';
         renderTagManagerUI();
     } catch (err) {
@@ -413,12 +475,13 @@ async function mergeSelectedTags() {
 }
 
 async function cleanupUnusedTags() {
-    if (!await showCustomConfirm('Hiçbir videoda kullanılmayan etiketleri temizlemek istediğinize emin misiniz?', 'Evet', 'Hayır')) return;
+    const confirmMsg = currentLang === 'tr' ? 'Hiçbir videoda kullanılmayan etiketleri temizlemek istediğinize emin misiniz?' : 'Are you sure you want to clean up unused tags?';
+    if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
     showLoading(true);
     try {
         const result = await dbCleanupUnusedTags();
         await fetchVideos();
-        await showCustomAlert(`${result.removedCount} kullanılmayan etiket temizlendi.`, 'Tamam');
+        await showCustomAlert(currentLang === 'tr' ? `${result.removedCount} kullanılmayan etiket temizlendi.` : `${result.removedCount} unused tag(s) removed.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
@@ -433,7 +496,7 @@ function showLoading(show) {
     }
 }
 
-// Olay dinleyicileri
+// Olay dinleyicileri (aynı kalacak)
 document.addEventListener('DOMContentLoaded', () => {
     fetchInstructors();
     fetchVideos();
@@ -503,7 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tags-modal-close-btn').onclick = closeTagsEditModal;
     document.getElementById('tags-edit-modal').onclick = (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); };
     document.getElementById('drop-area')?.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
-    // Tag manager butonları
     document.getElementById('tag-manager-merge-btn').onclick = mergeSelectedTags;
     document.getElementById('tag-manager-delete-btn').onclick = deleteSelectedTags;
     document.getElementById('tag-manager-cleanup-btn').onclick = cleanupUnusedTags;

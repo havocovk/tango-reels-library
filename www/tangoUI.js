@@ -38,7 +38,6 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     document.getElementById('menu-stats').innerText = '📊 ' + (currentLang === 'tr' ? 'İstatistikler' : 'Statistics');
     document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
     
-    // Tag Manager menü butonu varsa
     const tagManagerBtn = document.getElementById('menu-tag-manager');
     if (tagManagerBtn) {
         tagManagerBtn.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
@@ -58,14 +57,10 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const optBoth = document.getElementById('opt-both');
     if (optBoth) optBoth.innerText = lang.both;
     
-    // Platform filter - "Tüm Platformlar" seçeneğini güncelle
     const platformSelect = document.getElementById('filter-platform-select');
     if (platformSelect) {
         const allPlatformsOption = platformSelect.querySelector('option[value="all"]');
-        if (allPlatformsOption) {
-            allPlatformsOption.innerText = lang.allPlatforms;
-        }
-        // Diğer platform seçeneklerinin etiketlerini de güncelle
+        if (allPlatformsOption) allPlatformsOption.innerText = lang.allPlatforms;
         const driveOpt = platformSelect.querySelector('option[value="drive"]');
         if (driveOpt) driveOpt.innerText = lang.platformLabels.drive;
         const youtubeOpt = platformSelect.querySelector('option[value="youtube"]');
@@ -109,9 +104,8 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const btnClearFavs = document.getElementById('btn-clear-favorites');
     if (btnClearFavs) btnClearFavs.innerText = lang.btnClearFavorites;
     
-    // Reset Cover butonu
     const btnResetCover = document.getElementById('btn-reset-cover');
-    if (btnResetCover) btnResetCover.innerText = lang.resetCoverBtn || (currentLang === 'tr' ? "🗑️ Resmi Sıfırla" : "🗑️ Reset Image");
+    if (btnResetCover) btnResetCover.innerText = lang.resetCoverBtn || (currentLang === 'tr' ? '🗑️ Resmi Sıfırla' : '🗑️ Reset Image');
     
     const editTagsTitle = document.getElementById('edit-tags-title');
     if (editTagsTitle) editTagsTitle.innerText = lang.editTagsTitle;
@@ -151,11 +145,30 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         partnerInput.placeholder = currentLang === 'tr' ? 'Örn: Maria' : 'Ex: Maria';
     }
     
-    // Tag Manager başlığı
     const tagManagerTitle = document.getElementById('tag-manager-title');
     if (tagManagerTitle) {
         tagManagerTitle.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
     }
+    
+    // Etiket yönetimi tablo başlıklarını güncelle
+    const tableHeaders = document.querySelectorAll('#tag-manager-table th');
+    if (tableHeaders.length >= 4) {
+        tableHeaders[1].innerText = currentLang === 'tr' ? 'Etiket' : 'Tag';
+        tableHeaders[2].innerText = currentLang === 'tr' ? 'Kullanım Sayısı' : 'Usage Count';
+        tableHeaders[3].innerText = currentLang === 'tr' ? 'İşlemler' : 'Actions';
+    }
+    
+    // Buton metinleri
+    const mergeBtn = document.getElementById('tag-manager-merge-btn');
+    if (mergeBtn) mergeBtn.innerText = currentLang === 'tr' ? '🔗 Birleştir' : '🔗 Merge';
+    const deleteBtn = document.getElementById('tag-manager-delete-btn');
+    if (deleteBtn) deleteBtn.innerText = currentLang === 'tr' ? '🗑️ Seçilenleri Sil' : '🗑️ Delete Selected';
+    const cleanupBtn = document.getElementById('tag-manager-cleanup-btn');
+    if (cleanupBtn) cleanupBtn.innerText = currentLang === 'tr' ? '🧹 Kullanılmayanları Temizle' : '🧹 Clean Unused';
+    const mergeConfirmBtn = document.getElementById('tag-merge-confirm-btn');
+    if (mergeConfirmBtn) mergeConfirmBtn.innerText = currentLang === 'tr' ? '✅ Birleştir' : '✅ Merge';
+    const mergeCancelBtn = document.getElementById('tag-merge-cancel-btn');
+    if (mergeCancelBtn) mergeCancelBtn.innerText = currentLang === 'tr' ? '❌ İptal' : '❌ Cancel';
     
     updateSmartFilenameAssistant(currentLang, formTagsArray);
     
