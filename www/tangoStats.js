@@ -129,35 +129,77 @@ export function renderStats(stats, currentLang) {
         }
     }
     
-    // İkonları çizme fonksiyonu (hem başlangıç hem güncelleme için)
-    function drawIcons() {
+    // İkonları HTML <img> elemanları olarak yerleştir (canvas sınırlarına takılmaz)
+    function placeIconOverlays() {
+        // Önceki ikonları temizle
+        document.querySelectorAll('.pie-icon-overlay').forEach(el => el.remove());
+
         const canvas = document.getElementById('platform-pie-chart');
-        const ctx = canvas.getContext('2d');
+        const chartContainer = document.querySelector('.platform-chart-container');
+        if (!canvas || !chartContainer || !platformChart) return;
+
         const meta = platformChart.getDatasetMeta(0);
         const arcs = meta.data;
+
+        // Canvas'ın container içindeki konumunu hesapla
+        const canvasRect = canvas.getBoundingClientRect();
+        const containerRect = chartContainer.getBoundingClientRect();
+        if (canvasRect.width === 0) return; // Henüz görünür değil
+
+        const canvasOffsetLeft = canvasRect.left - containerRect.left;
+        const canvasOffsetTop  = canvasRect.top  - containerRect.top;
+
+        // Canvas mantıksal boyutu ile ekran boyutu arasındaki oran
+        const scaleX = canvasRect.width  / canvas.width;
+        const scaleY = canvasRect.height / canvas.height;
+
         arcs.forEach((arc, index) => {
-            // Sadece görünür dilimler için ikon çiz
             if (arc.hidden) return;
+
             const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-            // Yarıçap: pastanın yarıçapı + 50px (sabit offset, ama pastanın boyutuna göre)
-            const radius = arc.outerRadius + 50;
-            const x = arc.x + Math.cos(midAngle) * radius;
-            const y = arc.y + Math.sin(midAngle) * radius;
+            const radius   = arc.outerRadius + 48;
+
+            // Canvas koordinat uzayındaki ikon merkezi
+            const xInCanvas = arc.x + Math.cos(midAngle) * radius;
+            const yInCanvas = arc.y + Math.sin(midAngle) * radius;
+
+            // Container'a göre gerçek piksel konumu
+            const x = canvasOffsetLeft + xInCanvas * scaleX;
+            const y = canvasOffsetTop  + yInCanvas * scaleY;
+
             const imgUrl = platformIconUrls[index];
             if (imgUrl && imgUrl !== '') {
-                const img = new Image();
+                const img = document.createElement('img');
                 img.src = imgUrl;
-                img.onload = () => {
-                    ctx.drawImage(img, x - 22, y - 22, 44, 44);
-                };
-                // Eğer resim zaten cache'deyse hemen çiz
-                if (img.complete) {
-                    ctx.drawImage(img, x - 22, y - 22, 44, 44);
-                }
+                img.className = 'pie-icon-overlay';
+                img.style.cssText = `
+                    position: absolute;
+                    width: 36px;
+                    height: 36px;
+                    object-fit: contain;
+                    left: ${x - 18}px;
+                    top: ${y - 18}px;
+                    pointer-events: none;
+                    z-index: 10;
+                    transform: translate(0, 0);
+                `;
+                chartContainer.appendChild(img);
             } else {
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.fillText(platformCounts[index], x - 10, y + 6);
+                // İkon URL yoksa sayıyı metin olarak göster
+                const label = document.createElement('div');
+                label.className = 'pie-icon-overlay';
+                label.innerText = platformCounts[index];
+                label.style.cssText = `
+                    position: absolute;
+                    color: #fff;
+                    font-weight: bold;
+                    font-size: 14px;
+                    left: ${x - 10}px;
+                    top: ${y - 8}px;
+                    pointer-events: none;
+                    z-index: 10;
+                `;
+                chartContainer.appendChild(label);
             }
         });
     }
@@ -192,7 +234,7 @@ export function renderStats(stats, currentLang) {
                 }
             },
             animation: {
-                onComplete: drawIcons
+                onComplete: placeIconOverlays
             }
         }
     });
@@ -247,9 +289,9 @@ export function renderStats(stats, currentLang) {
                 meta.data[index].hidden = !meta.data[index].hidden;
                 legendItem.style.opacity = meta.data[index].hidden ? '0.5' : '1';
                 platformChart.update();
-                // Güncelleme tamamlandıktan sonra ikonları yeniden çiz
+                // Güncelleme tamamlandıktan sonra ikonları yeniden yerleştir
                 setTimeout(() => {
-                    drawIcons();
+                    placeIconOverlays();
                 }, 200);
             });
             
@@ -257,6 +299,12 @@ export function renderStats(stats, currentLang) {
         });
     }
     
+    // Ekran boyutu değişince ikonları yeniden konumlandır (mobil döndürme vb.)
+    const resizeHandler = () => { placeIconOverlays(); };
+    window.removeEventListener('resize', window._pieResizeHandler);
+    window._pieResizeHandler = resizeHandler;
+    window.addEventListener('resize', resizeHandler);
+
     // Bar chart
     const canvasBar = document.getElementById('monthly-bar-chart');
     if (canvasBar) {
