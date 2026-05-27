@@ -93,6 +93,7 @@ export function renderStats(stats, currentLang) {
         <div class="platform-chart-container" style="min-height: 550px; margin: 20px 0 30px 0; position: relative;">
             <div class="stat-label stat-label-centered" style="margin-bottom: 30px;">${lang.statsPlatformDistribution}</div>
             <canvas id="platform-pie-chart" width="450" height="400" style="display: block; margin: 0 auto;"></canvas>
+            <div id="custom-legend" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 80px; margin-bottom: 20px;"></div>
         </div>
         <div class="stats-tags">
             <div class="stat-label">${lang.statsTopTags}</div>
@@ -109,7 +110,7 @@ export function renderStats(stats, currentLang) {
         </div>
     `;
     
-    // Pie Chart - Legend bottom, büyük boşluklu, ikonlar uzakta
+    // Pie Chart - Chart.js legend'ı kapalı, custom legend oluşturulacak
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     
@@ -146,16 +147,12 @@ export function renderStats(stats, currentLang) {
             maintainAspectRatio: true,
             plugins: {
                 tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} video` } },
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#f1f5f9', font: { size: 12 } },
-                    align: 'center'
-                }
+                legend: { display: false }  // Chart.js legend'ını kapat
             },
             layout: {
                 padding: {
                     top: 20,
-                    bottom: 80,    // 3cm'ye yakın büyük boşluk
+                    bottom: 20,
                     left: 20,
                     right: 20
                 }
@@ -168,8 +165,8 @@ export function renderStats(stats, currentLang) {
                     const arcs = meta.data;
                     arcs.forEach((arc, index) => {
                         const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-                        // İkonları pie chart'tan uzaklaştır (yarıçap + 45)
-                        const radius = arc.outerRadius + 45;
+                        // İkonları pie chart'tan uzaklaştır (yarıçap + 60)
+                        const radius = arc.outerRadius + 60;
                         const x = arc.x + Math.cos(midAngle) * radius;
                         const y = arc.y + Math.sin(midAngle) * radius;
                         const imgUrl = platformIconUrls[index];
@@ -189,6 +186,66 @@ export function renderStats(stats, currentLang) {
             }
         }
     });
+    
+    // Custom Legend oluştur (tıklanabilir, platformları gizle/göster özellikli)
+    const legendContainer = document.getElementById('custom-legend');
+    if (legendContainer) {
+        legendContainer.innerHTML = '';
+        platformKeys.forEach((key, index) => {
+            const label = lang.platformLabels[key] || key;
+            const count = platformCounts[index];
+            const color = platformColors[index];
+            const iconUrl = platformIconUrls[index];
+            
+            const legendItem = document.createElement('div');
+            legendItem.style.display = 'flex';
+            legendItem.style.alignItems = 'center';
+            legendItem.style.gap = '8px';
+            legendItem.style.cursor = 'pointer';
+            legendItem.style.backgroundColor = 'rgba(0,0,0,0.4)';
+            legendItem.style.padding = '6px 14px';
+            legendItem.style.borderRadius = '20px';
+            legendItem.style.border = `1px solid ${color}`;
+            legendItem.style.transition = 'all 0.2s';
+            legendItem.style.color = '#f1f5f9';
+            legendItem.style.fontSize = '0.85rem';
+            
+            // İkon (varsa)
+            if (iconUrl && iconUrl !== '') {
+                const img = document.createElement('img');
+                img.src = iconUrl;
+                img.style.width = '20px';
+                img.style.height = '20px';
+                img.style.marginRight = '6px';
+                legendItem.appendChild(img);
+            } else {
+                const colorBox = document.createElement('span');
+                colorBox.style.display = 'inline-block';
+                colorBox.style.width = '16px';
+                colorBox.style.height = '16px';
+                colorBox.style.backgroundColor = color;
+                colorBox.style.borderRadius = '50%';
+                colorBox.style.marginRight = '6px';
+                legendItem.appendChild(colorBox);
+            }
+            
+            const textSpan = document.createElement('span');
+            textSpan.innerText = `${label} (${count})`;
+            legendItem.appendChild(textSpan);
+            
+            // Tıklama olayı: ilgili dilimi gizle/göster
+            let hidden = false;
+            legendItem.addEventListener('click', () => {
+                const meta = platformChart.getDatasetMeta(0);
+                const hiddenStatus = meta.data[index].hidden;
+                meta.data[index].hidden = !hiddenStatus;
+                legendItem.style.opacity = meta.data[index].hidden ? '0.5' : '1';
+                platformChart.update();
+            });
+            
+            legendContainer.appendChild(legendItem);
+        });
+    }
     
     // Bar chart
     const canvasBar = document.getElementById('monthly-bar-chart');
