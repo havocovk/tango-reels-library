@@ -74,11 +74,13 @@ export async function dbDeleteInstructor(id) {
 }
 
 export async function dbSaveVideo(id, payload) {
-    // url null ise boş string yap (NOT NULL constraint için)
-    const fixedPayload = { ...payload };
-    if (fixedPayload.url === null || fixedPayload.url === undefined) {
-        fixedPayload.url = '';
+    // Drive videosu için benzersiz url oluştur (UNIQUE constraint için)
+    let fixedPayload = { ...payload };
+    if (fixedPayload.is_downloaded === true && (!fixedPayload.url || fixedPayload.url === '' || fixedPayload.url.startsWith('drive_temp'))) {
+        const uniqueSuffix = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+        fixedPayload.url = `drive_video_${uniqueSuffix}`;
     }
+    
     const method = id ? 'PATCH' : 'POST';
     const url = id ? `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/videos`;
     const response = await fetch(url, {

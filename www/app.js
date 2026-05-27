@@ -337,7 +337,6 @@ async function handleFormSubmit(e) {
         await showCustomAlert(currentLang === 'tr' ? "Lütfen eğitmen seçin!" : "Please select instructor!", okTxt);
         return;
     }
-    // Validation
     if (is_downloaded) {
         if (!drive_url) {
             await showCustomAlert(currentLang === 'tr' ? "Drive linki zorunludur!" : "Drive link is required!", okTxt);
@@ -350,7 +349,6 @@ async function handleFormSubmit(e) {
         }
     }
     
-        // Platform belirleme (Drive ise kesin drive, değilse URL'den algıla)
     let platform;
     if (is_downloaded) {
         platform = 'drive';
@@ -358,9 +356,15 @@ async function handleFormSubmit(e) {
         platform = detectPlatform(url, false);
     }
     
+    // Drive videosu için benzersiz url oluştur (UNIQUE constraint için)
+    let finalUrl = url;
+    if (is_downloaded && (!finalUrl || finalUrl === '')) {
+        finalUrl = `drive_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    }
+    
     const payload = {
         instructor_id: parseInt(instructor_id),
-        url: url || '',   // <-- DEĞİŞTİRİLDI: null yerine boş string
+        url: finalUrl,
         role_type,
         partner_name: partner_name || null,
         tags: tags || null,
