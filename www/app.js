@@ -66,9 +66,12 @@ async function toggleFavorite(videoId) {
         applyFiltersAndSearch();
     } catch (err) { console.error(err); }
 }
+
 function clearAllFavorites() {
     const lang = translations[currentLang];
-    showCustomConfirm(lang.confirmClearFavs, 'Tamam', 'İptal').then(async confirmed => {
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
+    showCustomConfirm(lang.confirmClearFavs, okText, cancelText).then(async confirmed => {
         if (confirmed) {
             await dbClearAllFavorites();
             globalFavorites = [];
@@ -76,7 +79,9 @@ function clearAllFavorites() {
         }
     });
 }
+
 function callGetUniqueTagsPool() { return getAllUniqueTagsPool(globalVideos); }
+
 async function fetchInstructors() {
     try {
         const instructors = await dbFetchInstructors();
@@ -94,11 +99,13 @@ async function fetchInstructors() {
         callUpdateSmartAssistant();
     } catch (err) { console.error(err); }
 }
+
 function renderStatsPanel() {
     if (currentView !== 'stats') return;
     const stats = computeStats(globalVideos, globalInstructors);
     renderStats(stats, currentLang);
 }
+
 async function fetchVideos() {
     try {
         const instructors = await dbFetchInstructors();
@@ -119,6 +126,7 @@ async function fetchVideos() {
         console.error(err);
     }
 }
+
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
     callSwitchView('add');
@@ -158,16 +166,22 @@ function startVideoEditFlow(video) {
     }
     callUpdateSmartAssistant();
 }
+
 async function deleteVideoFlow(videoId) {
     const lang = translations[currentLang];
-    if (!await showCustomConfirm(lang.confirmDeleteVideo, 'Tamam', 'İptal')) return;
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
+    if (!await showCustomConfirm(lang.confirmDeleteVideo, okText, cancelText)) return;
     try {
         await dbDeleteVideo(videoId);
-        await showCustomAlert(lang.successDeleteVideo, 'Tamam');
+        await showCustomAlert(lang.successDeleteVideo, okText);
         globalFavorites = globalFavorites.filter(id => id !== videoId);
         await fetchVideos();
-    } catch (err) { await showCustomAlert('Silme hatası!', 'Tamam'); }
+    } catch (err) { 
+        await showCustomAlert(currentLang === 'tr' ? 'Silme hatası!' : 'Deletion error!', okText);
+    }
 }
+
 function renderFormChips() {
     renderChips('chips-area', formTagsArray, (index) => {
         formTagsArray.splice(index, 1);
@@ -175,6 +189,7 @@ function renderFormChips() {
         callUpdateSmartAssistant();
     });
 }
+
 function applyFiltersAndSearch() {
     let source = globalVideos;
     if (currentView === 'favorites') source = globalVideos.filter(v => globalFavorites.includes(v.id));
@@ -203,14 +218,16 @@ function applyFiltersAndSearch() {
         startVideoEditFlow, deleteVideoFlow, openVideoModal, refreshList: applyFiltersAndSearch
     });
 }
+
 async function handleInstructorSubmit() {
     const input = document.getElementById('form-new-instructor-input');
     const name = input.value.trim();
     const lang = translations[currentLang];
-    if (!name) return showCustomAlert(lang.insAlert, 'Tamam');
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+    if (!name) return showCustomAlert(lang.insAlert, okText);
     try {
         await dbSaveInstructor(editInstructorId, name);
-        await showCustomAlert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess, 'Tamam');
+        await showCustomAlert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess, okText);
         input.value = '';
         editInstructorId = null;
         document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
@@ -219,21 +236,26 @@ async function handleInstructorSubmit() {
         await fetchVideos();
     } catch (err) { console.error(err); }
 }
+
 async function deleteInstructor() {
     const select = document.getElementById('form-instructor-select');
     if (!select.value) return;
     const lang = translations[currentLang];
-    if (!await showCustomConfirm(lang.deleteConfirm, 'Tamam', 'İptal')) return;
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
+    if (!await showCustomConfirm(lang.deleteConfirm, okText, cancelText)) return;
     try {
         await dbDeleteInstructor(select.value);
-        await showCustomAlert(lang.insDeleteSuccess, 'Tamam');
+        await showCustomAlert(lang.insDeleteSuccess, okText);
         await fetchInstructors();
         await fetchVideos();
     } catch (err) { console.error(err); }
 }
+
 async function handleFormSubmit(e) {
     e.preventDefault();
     const lang = translations[currentLang];
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const instructor_id = document.getElementById('form-instructor-select').value;
     let url = document.getElementById('form-video-url').value.trim();
     const role_type = document.getElementById('form-role-select').value;
@@ -246,9 +268,9 @@ async function handleFormSubmit(e) {
         const curr = globalVideos.find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
     }
-    if (!instructor_id) return showCustomAlert('Lütfen eğitmen seçin!', 'Tamam');
-    if (is_downloaded && !drive_url) return showCustomAlert('Drive linki zorunludur!', 'Tamam');
-    if (!is_downloaded && !url) return showCustomAlert('Video URL zorunludur!', 'Tamam');
+    if (!instructor_id) return showCustomAlert(currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText);
+    if (is_downloaded && !drive_url) return showCustomAlert(currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText);
+    if (!is_downloaded && !url) return showCustomAlert(currentLang === 'tr' ? 'Video URL zorunludur!' : 'Video URL is required!', okText);
     let platform = is_downloaded ? 'drive' : detectPlatform(url, false);
     let finalUrl = url;
     if (is_downloaded && (!finalUrl || finalUrl === '')) {
@@ -264,7 +286,7 @@ async function handleFormSubmit(e) {
     };
     try {
         await dbSaveVideo(editingVideoId, payload);
-        await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, 'Tamam');
+        await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         editingVideoId = null;
         formTagsArray = [];
         renderFormChips();
@@ -276,12 +298,12 @@ async function handleFormSubmit(e) {
         callSwitchView('library');
         await fetchVideos();
     } catch (err) {
-        let hata = `İşlem hatası: ${err.message}`;
-        await showCustomAlert(hata, 'Tamam');
+        let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
+        await showCustomAlert(hata, okText);
     }
 }
 
-// ----- MODERN PROMPT DIALOG (prompt yerine) -----
+// ----- MODERN PROMPT DIALOG -----
 function showModernPrompt(title, defaultValue = '', placeholder = '') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
@@ -289,9 +311,8 @@ function showModernPrompt(title, defaultValue = '', placeholder = '') {
         const okBtn = document.getElementById('custom-dialog-ok-btn');
         const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
         
-        // Input alanı oluştur
         msgEl.innerHTML = `
-            <div style="margin-bottom: 10px; font-weight: 500;">${title}</div>
+            <div style="margin-bottom: 10px; font-weight: 500;">${escapeHtml(title)}</div>
             <input type="text" id="modern-prompt-input" value="${escapeHtml(defaultValue)}" placeholder="${escapeHtml(placeholder)}" style="width:100%; padding:10px; background:#0b0813; border:1px solid #ff007f; border-radius:8px; color:#f1f5f9; outline:none;">
         `;
         
@@ -339,7 +360,7 @@ function escapeHtml(str) {
     });
 }
 
-// ----- TAG MANAGER İŞLEVLERİ (güncellendi) -----
+// ----- TAG MANAGER İŞLEVLERİ -----
 function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -408,56 +429,64 @@ function updateTagManagerSelection() {
     }
 }
 
-// Modern rename dialog kullanan yeni fonksiyon
 async function promptRenameTagModern(oldTag) {
     const title = currentLang === 'tr' ? `"${oldTag}" etiketini yeni adıyla değiştir:` : `Rename "${oldTag}" to:`;
-    const newTag = await showModernPrompt(title, oldTag, currentLang === 'tr' ? 'Yeni etiket adı' : 'New tag name');
+    const placeholder = currentLang === 'tr' ? 'Yeni etiket adı' : 'New tag name';
+    const newTag = await showModernPrompt(title, oldTag, placeholder);
     if (!newTag || newTag === oldTag) return;
     
     showLoading(true);
     try {
         await dbRenameTag(oldTag, newTag);
         await fetchVideos();
-        // Loading kapat, sonra alert göster
         showLoading(false);
-        await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, 'Tamam');
+        const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, okText);
         renderTagManagerUI();
     } catch (err) {
         showLoading(false);
-        await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
+        const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(`Hata: ${err.message}`, okText);
     }
 }
 
-// Eski prompt'u kullanan fonksiyonu kaldırıyoruz, yerine yukarıdaki kullanılacak
 async function deleteSingleTag(tag) {
-    if (!await showCustomConfirm(currentLang === 'tr' ? `"${tag}" etiketini TÜM videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete "${tag}" from ALL videos?`, 'Evet', 'Hayır')) return;
+    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
+    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
+    if (!await showCustomConfirm(currentLang === 'tr' ? `"${tag}" etiketini TÜM videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete "${tag}" from ALL videos?`, okText, cancelText)) return;
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos([tag]);
         await fetchVideos();
         showLoading(false);
-        await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, alertOk);
         renderTagManagerUI();
     } catch (err) {
         showLoading(false);
-        await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(`Hata: ${err.message}`, alertOk);
     }
 }
 
 async function deleteSelectedTags() {
     if (selectedTagsForMerge.length === 0) return;
     const deleteCount = selectedTagsForMerge.length;
+    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
+    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
     const confirmMsg = currentLang === 'tr' ? `${deleteCount} etiketi tüm videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete ${deleteCount} tag(s) from all videos?`;
-    if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
+    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos(selectedTagsForMerge);
         await fetchVideos();
         showLoading(false);
-        await showCustomAlert(currentLang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`, 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(currentLang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`, alertOk);
     } catch (err) {
         showLoading(false);
-        await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(`Hata: ${err.message}`, alertOk);
     }
 }
 
@@ -465,39 +494,49 @@ async function mergeSelectedTags() {
     if (selectedTagsForMerge.length < 2) return;
     const newTagName = document.getElementById('tag-merge-new-name').value.trim();
     if (!newTagName) {
-        await showCustomAlert(currentLang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.', 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(currentLang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.', alertOk);
         return;
     }
-    const confirmMsg = currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket "${newTagName}" çatısı altında birleştirilsin mi?` : `Merge ${selectedTagsForMerge.length} tags into "${newTagName}"?`;
-    if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
+    const mergeCount = selectedTagsForMerge.length;
+    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
+    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
+    const confirmMsg = currentLang === 'tr' ? `${mergeCount} etiket "${newTagName}" çatısı altında birleştirilsin mi?` : `Merge ${mergeCount} tags into "${newTagName}"?`;
+    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
     
-    const mergeCount = selectedTagsForMerge.length; // Sayıyı şimdi sakla
     showLoading(true);
     try {
         await dbMergeTags(selectedTagsForMerge, newTagName);
         await fetchVideos();
         showLoading(false);
-        await showCustomAlert(currentLang === 'tr' ? `${mergeCount} etiket birleştirildi → ${newTagName}` : `${mergeCount} tags merged → ${newTagName}`, 'Tamam');
-        // renderTagManagerUI zaten fetchVideos içinde çağrılıyor
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(currentLang === 'tr' ? `${mergeCount} etiket birleştirildi → ${newTagName}` : `${mergeCount} tags merged → ${newTagName}`, alertOk);
+        document.getElementById('tag-merge-new-name').value = '';
+        renderTagManagerUI();
     } catch (err) {
         showLoading(false);
-        await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(`Hata: ${err.message}`, alertOk);
     }
 }
 
 async function cleanupUnusedTags() {
+    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
+    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
     const confirmMsg = currentLang === 'tr' ? 'Hiçbir videoda kullanılmayan etiketleri temizlemek istediğinize emin misiniz?' : 'Are you sure you want to clean up unused tags?';
-    if (!await showCustomConfirm(confirmMsg, 'Evet', 'Hayır')) return;
+    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
     showLoading(true);
     try {
         const result = await dbCleanupUnusedTags();
         await fetchVideos();
         showLoading(false);
-        await showCustomAlert(currentLang === 'tr' ? `${result.removedCount} kullanılmayan etiket temizlendi.` : `${result.removedCount} unused tag(s) removed.`, 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(currentLang === 'tr' ? `${result.removedCount} kullanılmayan etiket temizlendi.` : `${result.removedCount} unused tag(s) removed.`, alertOk);
         renderTagManagerUI();
     } catch (err) {
         showLoading(false);
-        await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(`Hata: ${err.message}`, alertOk);
     }
 }
 
@@ -509,7 +548,7 @@ function showLoading(show) {
     }
 }
 
-// Olay dinleyicileri (aynı kalacak)
+// Olay dinleyicileri
 document.addEventListener('DOMContentLoaded', () => {
     fetchInstructors();
     fetchVideos();
