@@ -33,7 +33,7 @@ export function computeStats(videos, instructors) {
         .slice(0, 10)
         .map(([tag, count]) => ({ tag, count }));
     
-    // 12 aylık periyot: Mayıs 2026'dan Nisan 2027'ye kadar
+    // 12 aylık periyot
     const startDate = new Date(2026, 4, 1);
     const months = [];
     for (let i = 0; i < 12; i++) {
@@ -100,9 +100,9 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
         ${roleCardsHtml}
-        <div class="platform-chart-container" style="min-height: 520px; margin-bottom: 30px;">
+        <div class="platform-chart-container" style="min-height: 520px; margin-bottom: 20px; overflow: visible;">
             <div class="stat-label stat-label-centered">${lang.statsPlatformDistribution}</div>
-            <canvas id="platform-pie-chart" width="450" height="400" style="max-width:100%; height:auto; margin-bottom: 20px;"></canvas>
+            <canvas id="platform-pie-chart" width="450" height="400" style="max-width:100%; height:auto; display: block; margin: 0 auto;"></canvas>
         </div>
         ${topTagsHtml}
         <div class="monthly-chart-container">
@@ -113,7 +113,7 @@ export function renderStats(stats, currentLang) {
         </div>
     `;
     
-    // Pie chart - legend alt tarafta, ikonlar dışarıda (önceki gibi)
+    // Pie chart - Legend altta, ikonlar dış çevrede (eski gibi)
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     const platformKeys = [];
@@ -149,15 +149,15 @@ export function renderStats(stats, currentLang) {
             maintainAspectRatio: true,
             plugins: {
                 tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} video` } },
-                legend: { 
-                    position: 'bottom',   // Legend alt tarafta
+                legend: {
+                    position: 'bottom',   // Legend altta
                     labels: { color: '#f1f5f9', font: { size: 12 } }
                 }
             },
             layout: {
                 padding: {
                     top: 10,
-                    bottom: 20,
+                    bottom: 30,   // Altta legend için ekstra boşluk
                     left: 10,
                     right: 10
                 }
@@ -170,8 +170,7 @@ export function renderStats(stats, currentLang) {
                     const arcs = meta.data;
                     arcs.forEach((arc, index) => {
                         const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-                        // Eski mesafe: outerRadius + 35 (daha dışarı)
-                        const radius = arc.outerRadius + 35;
+                        const radius = arc.outerRadius + 35;  // Eski mesafe (dışarıda)
                         const x = arc.x + Math.cos(midAngle) * radius;
                         const y = arc.y + Math.sin(midAngle) * radius;
                         const imgUrl = platformIconUrls[index];
@@ -193,7 +192,7 @@ export function renderStats(stats, currentLang) {
         }
     });
     
-    // Bar chart - y ekseni yok, sadece bar ve üzerinde sayı
+    // Bar chart - aynı, y ekseni yok
     const canvasBar = document.getElementById('monthly-bar-chart');
     const ctxBar = canvasBar.getContext('2d');
     if (monthlyChart) monthlyChart.destroy();
@@ -236,20 +235,16 @@ export function renderStats(stats, currentLang) {
         }
     });
     
-    // Bar'ların üzerine sayıları yaz
     setTimeout(() => {
         const canvas = canvasBar;
         const ctx = canvas.getContext('2d');
         const chart = monthlyChart;
         if (!chart) return;
-        
         const meta = chart.getDatasetMeta(0);
         const bars = meta.data;
-        
         bars.forEach((bar, index) => {
             const value = counts[index];
             if (value === 0) return;
-            
             const x = bar.x;
             const y = bar.y;
             ctx.save();
