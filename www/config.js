@@ -36,7 +36,7 @@ export const translations = {
             other: ""
         },
         platformIconUrls: {
-            drive: "./images/google-drive.png",      // Kendi Google Drive ikonunuz (varsa)
+            drive: "./images/google-drive-icon-2026.png",      // Kendi Google Drive ikonunuz (varsa)
             youtube: "./images/youtube-icon.png",
             instagram: "./images/instagram-icon-2022.png",
             facebook: "./images/facebook-icon-2023.png",
