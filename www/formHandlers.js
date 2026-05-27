@@ -11,20 +11,20 @@ let formTagsArray = [];
 let globalVideos = [];
 let fetchVideosCallback = null;
 let callSwitchViewCallback = null;
-let renderFormChipsCallback = null;
 
-export function initFormHandlers(lang, editId, tagsArray, videos, callbacks) {
+export function setFormHandlersGlobalData(lang, editId, tagsArray, videos) {
     currentLang = lang;
     editingVideoId = editId;
     formTagsArray = tagsArray;
     globalVideos = videos;
-    fetchVideosCallback = callbacks.fetchVideos;
-    callSwitchViewCallback = callbacks.switchView;
-    renderFormChipsCallback = callbacks.renderFormChips;
 }
 
-export function setFormHandlersLanguage(lang) {
-    currentLang = lang;
+export function initFormHandlers(editId, tagsArray, videos, fetchCb, switchCb) {
+    editingVideoId = editId;
+    formTagsArray = tagsArray;
+    globalVideos = videos;
+    fetchVideosCallback = fetchCb;
+    callSwitchViewCallback = switchCb;
 }
 
 export function setEditingVideoId(id) {
@@ -43,7 +43,7 @@ export function getFormTagsArray() {
 export function renderFormChips() {
     renderChips('chips-area', formTagsArray, (index) => {
         formTagsArray.splice(index, 1);
-        if (renderFormChipsCallback) renderFormChipsCallback();
+        renderFormChips();
         updateSmartFilenameAssistant(currentLang, formTagsArray);
     });
 }
@@ -85,7 +85,7 @@ export async function handleFormSubmit(e) {
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         editingVideoId = null;
         formTagsArray = [];
-        if (renderFormChipsCallback) renderFormChipsCallback();
+        renderFormChips();
         document.getElementById('add-video-form').reset();
         document.getElementById('image-preview').classList.add('d-none');
         document.getElementById('drop-area-text').innerText = lang.dropText;

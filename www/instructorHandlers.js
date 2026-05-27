@@ -1,43 +1,21 @@
-import { dbFetchInstructors, dbSaveInstructor, dbDeleteInstructor } from './tangoVeritabani.js';
+import { dbSaveInstructor, dbDeleteInstructor } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { translations } from './config.js';
-import { updateSmartFilenameAssistant } from './tangoUI.js';
 
 let currentLang = 'tr';
 let editInstructorId = null;
-let globalInstructors = [];
+let fetchInstructorsCallback = null;
 let fetchVideosCallback = null;
-let applyFiltersAndSearchCallback = null;
 
-export function initInstructorHandlers(lang, editId, instructors, callbacks) {
+export function setInstructorHandlersGlobalData(lang, editId) {
     currentLang = lang;
     editInstructorId = editId;
-    globalInstructors = instructors;
-    fetchVideosCallback = callbacks.fetchVideos;
-    applyFiltersAndSearchCallback = callbacks.applyFiltersAndSearch;
 }
 
-export function setInstructorHandlersLanguage(lang) {
-    currentLang = lang;
-}
-
-export async function fetchInstructors() {
-    try {
-        const instructors = await dbFetchInstructors();
-        globalInstructors = instructors;
-        const select = document.getElementById('form-instructor-select');
-        if (select) {
-            select.innerHTML = '';
-            instructors.forEach(ins => {
-                const opt = document.createElement('option');
-                opt.value = ins.id;
-                opt.innerText = ins.name;
-                select.appendChild(opt);
-            });
-        }
-        updateSmartFilenameAssistant(currentLang, []); // formTagsArray boş, dışarıdan set edilmeli; ancak şimdilik böyle
-        // Not: formTagsArray aslında app.js'de, burada erişemiyoruz, sonra düzeltilebilir.
-    } catch (err) { console.error(err); }
+export function initInstructorHandlers(editId, fetchInstructorsFn, fetchVideosFn) {
+    editInstructorId = editId;
+    fetchInstructorsCallback = fetchInstructorsFn;
+    fetchVideosCallback = fetchVideosFn;
 }
 
 export async function handleInstructorSubmit() {
@@ -53,7 +31,7 @@ export async function handleInstructorSubmit() {
         editInstructorId = null;
         document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
         document.getElementById('new-instructor-container').classList.add('d-none');
-        await fetchInstructors();
+        if (fetchInstructorsCallback) await fetchInstructorsCallback();
         if (fetchVideosCallback) await fetchVideosCallback();
     } catch (err) { console.error(err); }
 }
@@ -68,7 +46,7 @@ export async function deleteInstructor() {
     try {
         await dbDeleteInstructor(select.value);
         await showCustomAlert(lang.insDeleteSuccess, okText);
-        await fetchInstructors();
+        if (fetchInstructorsCallback) await fetchInstructorsCallback();
         if (fetchVideosCallback) await fetchVideosCallback();
     } catch (err) { console.error(err); }
 }

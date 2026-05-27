@@ -10,7 +10,6 @@ let globalFavorites = [];
 let currentView = 'library';
 let visibleCount = 20;
 
-// Bu fonksiyonları dışarıdan set edeceğiz
 let applyFiltersAndSearchCallback = null;
 let fetchVideosCallback = null;
 let openVideoModalCallback = null;
@@ -18,22 +17,21 @@ let openTagsEditModalCallback = null;
 let startVideoEditFlowCallback = null;
 let deleteVideoFlowCallback = null;
 
-export function initVideoHandlers(lang, videos, favorites, view, visible, callbacks) {
+export function setVideoHandlersGlobalData(lang, videos, favorites, view, visible) {
     currentLang = lang;
     globalVideos = videos;
     globalFavorites = favorites;
     currentView = view;
     visibleCount = visible;
-    applyFiltersAndSearchCallback = callbacks.applyFiltersAndSearch;
-    fetchVideosCallback = callbacks.fetchVideos;
-    openVideoModalCallback = callbacks.openVideoModal;
-    openTagsEditModalCallback = callbacks.openTagsEditModal;
-    startVideoEditFlowCallback = callbacks.startVideoEditFlow;
-    deleteVideoFlowCallback = callbacks.deleteVideoFlow;
 }
 
-export function setVideoHandlersLanguage(lang) {
-    currentLang = lang;
+export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, startEditCb, deleteCb) {
+    applyFiltersAndSearchCallback = applyCb;
+    fetchVideosCallback = fetchCb;
+    openVideoModalCallback = openModalCb;
+    openTagsEditModalCallback = openTagsCb;
+    startVideoEditFlowCallback = startEditCb;
+    deleteVideoFlowCallback = deleteCb;
 }
 
 export async function toggleFavorite(videoId) {

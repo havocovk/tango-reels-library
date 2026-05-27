@@ -1,21 +1,23 @@
 import { translations } from './config.js';
-import { handlePasteEvent } from './storage.js';
+import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { 
-    dbFetchFavorites, dbClearAllFavorites
+    dbSaveVideo, dbDeleteVideo, dbFetchInstructors, dbFetchVideos, 
+    dbSaveInstructor, dbDeleteInstructor, dbFetchFavorites, dbAddFavorite,
+    dbRemoveFavorite, dbClearAllFavorites, detectPlatform
 } from './tangoVeritabani.js';
-import { setupAutocomplete } from './uiRenderer.js';
+import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly
 } from './tangoModals.js';
-import { updateInterfaceLanguage, switchView, updateSmartFilenameAssistant } from './tangoUI.js';
-import { getAllUniqueTagsPool, populateFilterDropdowns } from './tangoFilters.js';
+import { updateSmartFilenameAssistant, updateInterfaceLanguage, switchView } from './tangoUI.js';
+import { getFilteredVideos, getAllUniqueTagsPool, populateFilterDropdowns } from './tangoFilters.js';
 import { computeStats, renderStats } from './tangoStats.js';
 import { showLoading, setCurrentLangForUtils, showModernPrompt } from './utils.js';
 import { initTagManager, updateTagManagerSelection, promptRenameTagModern, deleteSingleTag, deleteSelectedTags, mergeSelectedTags, cleanupUnusedTags } from './tagManager.js';
-import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow } from './videoHandlers.js';
-import { initInstructorHandlers, fetchInstructors, handleInstructorSubmit, deleteInstructor } from './instructorHandlers.js';
-import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray } from './formHandlers.js';
+import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData } from './videoHandlers.js';
+import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor, setInstructorHandlersGlobalData } from './instructorHandlers.js';
+import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -27,39 +29,66 @@ let visibleCount = 20;
 let globalInstructors = [];
 let formTagsArray = [];
 
-// Utils dilini güncelle
 setCurrentLangForUtils(currentLang);
 
-// Callback'leri hazırla
-const callbacks = {
-    applyFiltersAndSearch: () => applyFiltersAndSearch(),
-    fetchVideos: async () => { await fetchVideos(); },
-    openVideoModal: (url) => openVideoModal(url),
-    openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
-    startVideoEditFlow: (video) => startVideoEditFlow(video),
-    deleteVideoFlow: (videoId) => deleteVideoFlow(videoId),
-    switchView: (viewName) => callSwitchView(viewName),
-    renderFormChips: () => renderFormChips()
-};
+// ----- ANA VERİ ÇEKME FONKSİYONLARI -----
+async function fetchInstructors() {
+    try {
+        const instructors = await dbFetchInstructors();
+        globalInstructors = instructors;
+        const select = document.getElementById('form-instructor-select');
+        if (select) {
+            select.innerHTML = '';
+            instructors.forEach(ins => {
+                const opt = document.createElement('option');
+                opt.value = ins.id;
+                opt.innerText = ins.name;
+                select.appendChild(opt);
+            });
+        }
+        updateSmartFilenameAssistant(currentLang, formTagsArray);
+    } catch (err) { console.error(err); }
+}
 
-// Modülleri başlat
-initVideoHandlers(currentLang, globalVideos, globalFavorites, currentView, visibleCount, callbacks);
-initInstructorHandlers(currentLang, editInstructorId, globalInstructors, callbacks);
-initFormHandlers(currentLang, editingVideoId, formTagsArray, globalVideos, callbacks);
-initTagManager(currentLang, globalVideos, callbacks.fetchVideos, renderTagManagerUI);
+async function fetchVideos() {
+    try {
+        const instructors = await dbFetchInstructors();
+        globalInstructors = instructors;
+        const rawVideos = await dbFetchVideos();
+        const favRows = await dbFetchFavorites().catch(() => []);
+        globalFavorites = favRows.map(f => f.video_id);
+        globalVideos = rawVideos.map(video => ({
+            ...video,
+            instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
+        }));
+        populateFilterDropdowns(globalVideos, currentLang);
+        applyFiltersAndSearch();
+        if (currentView === 'stats') renderStatsPanel();
+        if (currentView === 'tagManager') renderTagManagerUI();
 
-const getUIState = () => ({
-    currentLang, editingVideoId, editInstructorId, currentView,
-    getFormTags: () => getFormTagsArray(),
-    resetFormTags: () => { setFormTagsArray([]); }
-});
+        // Modüllerdeki global verileri güncelle
+        setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+        setInstructorHandlersGlobalData(currentLang, editInstructorId, globalInstructors);
+        setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
+        initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+    } catch (err) {
+        document.getElementById('video-grid').innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[currentLang].error}</div>`;
+        console.error(err);
+    }
+}
+
+function renderStatsPanel() {
+    if (currentView !== 'stats') return;
+    const stats = computeStats(globalVideos, globalInstructors);
+    renderStats(stats, currentLang);
+}
 
 function callUpdateSmartAssistant() {
-    updateSmartFilenameAssistant(currentLang, getFormTagsArray());
+    updateSmartFilenameAssistant(currentLang, formTagsArray);
 }
 
 function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, getFormTagsArray(), applyFiltersAndSearch, () => {
+    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, () => {
         if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
     });
     if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
@@ -94,36 +123,6 @@ function clearAllFavorites() {
 }
 
 function callGetUniqueTagsPool() { return getAllUniqueTagsPool(globalVideos); }
-
-function renderStatsPanel() {
-    if (currentView !== 'stats') return;
-    const stats = computeStats(globalVideos, globalInstructors);
-    renderStats(stats, currentLang);
-}
-
-async function fetchVideos() {
-    try {
-        const instructors = await dbFetchInstructors();
-        globalInstructors = instructors;
-        const rawVideos = await dbFetchVideos();
-        const favRows = await dbFetchFavorites().catch(() => []);
-        globalFavorites = favRows.map(f => f.video_id);
-        globalVideos = rawVideos.map(video => ({
-            ...video,
-            instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
-        }));
-        populateFilterDropdowns(globalVideos, currentLang);
-        applyFiltersAndSearch();
-        if (currentView === 'stats') renderStatsPanel();
-        if (currentView === 'tagManager') renderTagManagerUI();
-        // Video handlers'daki global dizileri güncelle
-        initVideoHandlers(currentLang, globalVideos, globalFavorites, currentView, visibleCount, callbacks);
-        initTagManager(currentLang, globalVideos, callbacks.fetchVideos, renderTagManagerUI);
-    } catch (err) {
-        document.getElementById('video-grid').innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[currentLang].error}</div>`;
-        console.error(err);
-    }
-}
 
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
@@ -221,16 +220,30 @@ function renderTagManagerUI() {
     updateTagManagerSelection();
 }
 
-// Dil değişiminde modüllerin dilini güncelle
+const getUIState = () => ({
+    currentLang, editingVideoId, editInstructorId, currentView,
+    getFormTags: () => getFormTagsArray(),
+    resetFormTags: () => { setFormTagsArray([]); }
+});
+
+// Modülleri başlat
+setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+setInstructorHandlersGlobalData(currentLang, editInstructorId, globalInstructors);
+setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
+initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+
+initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
+initInstructorHandlers(editInstructorId, fetchInstructors, fetchVideos);
+initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callSwitchView);
+
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
-    initVideoHandlers(currentLang, globalVideos, globalFavorites, currentView, visibleCount, callbacks);
-    initInstructorHandlers(currentLang, editInstructorId, globalInstructors, callbacks);
-    initFormHandlers(currentLang, editingVideoId, getFormTagsArray(), globalVideos, callbacks);
-    initTagManager(currentLang, globalVideos, callbacks.fetchVideos, renderTagManagerUI);
+    setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+    setInstructorHandlersGlobalData(currentLang, editInstructorId, globalInstructors);
+    setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
+    initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
 }
 
-// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     fetchInstructors();
     fetchVideos();
