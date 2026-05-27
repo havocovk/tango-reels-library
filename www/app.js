@@ -413,15 +413,19 @@ async function promptRenameTagModern(oldTag) {
     const title = currentLang === 'tr' ? `"${oldTag}" etiketini yeni adıyla değiştir:` : `Rename "${oldTag}" to:`;
     const newTag = await showModernPrompt(title, oldTag, currentLang === 'tr' ? 'Yeni etiket adı' : 'New tag name');
     if (!newTag || newTag === oldTag) return;
+    
     showLoading(true);
     try {
         await dbRenameTag(oldTag, newTag);
         await fetchVideos();
+        // Loading kapat, sonra alert göster
+        showLoading(false);
         await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
+        showLoading(false);
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
-    } finally { showLoading(false); }
+    }
 }
 
 // Eski prompt'u kullanan fonksiyonu kaldırıyoruz, yerine yukarıdaki kullanılacak
@@ -431,11 +435,13 @@ async function deleteSingleTag(tag) {
     try {
         await dbDeleteTagFromAllVideos([tag]);
         await fetchVideos();
+        showLoading(false);
         await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
+        showLoading(false);
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
-    } finally { showLoading(false); }
+    }
 }
 
 async function deleteSelectedTags() {
@@ -446,11 +452,13 @@ async function deleteSelectedTags() {
     try {
         await dbDeleteTagFromAllVideos(selectedTagsForMerge);
         await fetchVideos();
+        showLoading(false);
         await showCustomAlert(currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket silindi.` : `${selectedTagsForMerge.length} tag(s) deleted.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
+        showLoading(false);
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
-    } finally { showLoading(false); }
+    }
 }
 
 async function mergeSelectedTags() {
@@ -466,12 +474,14 @@ async function mergeSelectedTags() {
     try {
         await dbMergeTags(selectedTagsForMerge, newTagName);
         await fetchVideos();
+        showLoading(false);
         await showCustomAlert(currentLang === 'tr' ? `${selectedTagsForMerge.length} etiket birleştirildi → ${newTagName}` : `${selectedTagsForMerge.length} tags merged → ${newTagName}`, 'Tamam');
         document.getElementById('tag-merge-new-name').value = '';
         renderTagManagerUI();
     } catch (err) {
+        showLoading(false);
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
-    } finally { showLoading(false); }
+    }
 }
 
 async function cleanupUnusedTags() {
@@ -481,11 +491,13 @@ async function cleanupUnusedTags() {
     try {
         const result = await dbCleanupUnusedTags();
         await fetchVideos();
+        showLoading(false);
         await showCustomAlert(currentLang === 'tr' ? `${result.removedCount} kullanılmayan etiket temizlendi.` : `${result.removedCount} unused tag(s) removed.`, 'Tamam');
         renderTagManagerUI();
     } catch (err) {
+        showLoading(false);
         await showCustomAlert(`Hata: ${err.message}`, 'Tamam');
-    } finally { showLoading(false); }
+    }
 }
 
 function showLoading(show) {
