@@ -11,7 +11,7 @@ export function detectPlatform(url, isDownloaded) {
     return 'other';
 }
 
-// Mevcut fonksiyonlar (kısaltmak için aynen bırakıyorum, ancak hepsi burada olacak)
+// Mevcut fonksiyonlar
 export async function dbFetchInstructors() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -144,14 +144,11 @@ export async function dbUpdateNote(videoId, note) {
     return res;
 }
 
-// ---------- YENİ TOPLU ETİKET FONKSİYONLARI ----------
+// ---------- TOPLU ETİKET FONKSİYONLARI (app.js'deki çağrılarla uyumlu) ----------
 
-// Tüm videoları çeker, her bir video için tags stringini günceller ve toplu PATCH gönderir
+// Yardımcı: videoların tags alanını toplu güncelle
 async function batchUpdateVideosTag(updates) {
-    // updates: [{ id: videoId, newTags: string }]
     if (!updates.length) return;
-    // Supabase'de in() filtresiyle toplu güncelleme yapmak için her bir video için ayrı PATCH gerekiyor? 
-    // Aslında tek bir PATCH ile birden çok video güncellenemez. Bu yüzden Promise.all ile paralel göndereceğiz.
     const promises = updates.map(({ id, newTags }) => {
         return fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
             method: 'PATCH',
@@ -164,7 +161,7 @@ async function batchUpdateVideosTag(updates) {
     if (failed.length) throw new Error(`${failed.length} video güncellenemedi`);
 }
 
-// Etiket birleştirme: eskiEtiketler dizisi, yeniEtiket
+// Etiket birleştirme (app.js'de dbMergeTags çağrılıyor)
 export async function dbMergeTags(oldTagsArray, newTag) {
     const videos = await dbFetchVideos();
     const updates = [];
@@ -180,14 +177,14 @@ export async function dbMergeTags(oldTagsArray, newTag) {
             }
         }
         if (changed) {
-            updates.push({ id: video.id, newTags: tags.join(', ') });
+            updates.push({ id: video.id, newTags: tags.join(', ') || null });
         }
     }
     await batchUpdateVideosTag(updates);
 }
 
-// Etiket silme: tagsArray içindeki etiketleri tüm videolardan kaldır
-export async function dbDeleteTagsFromAllVideos(tagsArray) {
+// Etiket silme (app.js'de dbDeleteTagFromAllVideos çağrılıyor) - dizi alır
+export async function dbDeleteTagFromAllVideos(tagsArray) {
     const videos = await dbFetchVideos();
     const updates = [];
     for (const video of videos) {
@@ -201,13 +198,13 @@ export async function dbDeleteTagsFromAllVideos(tagsArray) {
             }
         });
         if (changed) {
-            updates.push({ id: video.id, newTags: tags.join(', ') });
+            updates.push({ id: video.id, newTags: tags.join(', ') || null });
         }
     }
     await batchUpdateVideosTag(updates);
 }
 
-// Etiket yeniden adlandırma: oldTag -> newTag
+// Etiket yeniden adlandırma (app.js'de dbRenameTag çağrılıyor)
 export async function dbRenameTag(oldTag, newTag) {
     const videos = await dbFetchVideos();
     const updates = [];
@@ -222,19 +219,31 @@ export async function dbRenameTag(oldTag, newTag) {
     await batchUpdateVideosTag(updates);
 }
 
-// Normalize: tüm videoların tags alanındaki boşlukları, çift virgülleri temizle (isteğe bağlı)
-export async function dbNormalizeAllTags() {
+// Kullanılmayan etiketleri temizle (app.js'de dbCleanupUnusedTags çağrılıyor)
+export async function dbCleanupUnusedTags() {
     const videos = await dbFetchVideos();
+    const usedTagsSet = new Set();
+    videos.forEach(v => {
+        if (v.tags) {
+            v.tags.split(',').forEach(t => {
+                const tag = t.trim();
+                if (tag) usedTagsSet.add(tag);
+            });
+        }
+    });
+    // Kullanılmayan etiket yok, sadece boşluk temizliği yapılabilir
+    let removedCount = 0;
     const updates = [];
     for (const video of videos) {
         if (!video.tags) continue;
-        let normalized = video.tags.split(',')
-            .map(t => t.trim())
-            .filter(t => t !== '')
-            .join(', ');
-        if (normalized !== video.tags) {
-            updates.push({ id: video.id, newTags: normalized || null });
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        // Geçerli tüm etiketler zaten kullanılıyor, sadece tekrarları kaldır
+        const uniqueTags = [...new Set(tags)];
+        if (uniqueTags.length !== tags.length) {
+            updates.push({ id: video.id, newTags: uniqueTags.join(', ') });
+            removedCount += (tags.length - uniqueTags.length);
         }
     }
     await batchUpdateVideosTag(updates);
+    return { removedCount };
 }
