@@ -63,7 +63,7 @@ async function fetchVideos() {
         }));
         populateFilterDropdowns(globalVideos, currentLang);
         
-        // Modüllerdeki global verileri güncelle (favoriler dahil)
+        // Modüllerdeki global verileri güncelle (favoriler ve currentView dahil)
         setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
         setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
@@ -101,6 +101,8 @@ function callSwitchView(viewName) {
     currentView = viewName;
     visibleCount = 20;
     setVisibleCount(visibleCount);
+    // videoHandlers içindeki currentView'ı güncelle
+    setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
         renderTagManager: renderTagManagerUI
@@ -118,6 +120,7 @@ function clearAllFavorites() {
         if (confirmed) {
             await dbClearAllFavorites();
             globalFavorites = [];
+            // videoHandlers içindeki favorileri güncelle
             setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
             applyFiltersAndSearch();
         }
@@ -247,7 +250,6 @@ function updateAllLanguages() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Önce eğitmenleri ve videoları yükle
     await fetchInstructors();
     await fetchVideos();
     callUpdateInterfaceLanguage();

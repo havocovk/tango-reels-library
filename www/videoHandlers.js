@@ -6,7 +6,7 @@ import { translations } from './config.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
-let globalFavorites = [];     // Bu referans, app.js'deki ile aynı olacak (setVideoHandlersGlobalData ile)
+let globalFavorites = [];
 let currentView = 'library';
 let visibleCount = 20;
 
@@ -20,7 +20,7 @@ let deleteVideoFlowCallback = null;
 export function setVideoHandlersGlobalData(lang, videos, favorites, view, visible) {
     currentLang = lang;
     globalVideos = videos;
-    globalFavorites = favorites;   // Bu artık app.js'deki globalFavorites referansını tutuyor
+    globalFavorites = favorites;
     currentView = view;
     visibleCount = visible;
 }
@@ -50,7 +50,9 @@ export async function toggleFavorite(videoId) {
 
 export function applyFiltersAndSearch() {
     let source = globalVideos;
-    if (currentView === 'favorites') source = globalVideos.filter(v => globalFavorites.includes(v.id));
+    if (currentView === 'favorites') {
+        source = globalVideos.filter(v => globalFavorites.includes(v.id));
+    }
     const filters = {
         aramaMetni: '',
         rol: document.getElementById('filter-role-select')?.value || 'all',
