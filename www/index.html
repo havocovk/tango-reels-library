@@ -190,7 +190,7 @@
             overflow: hidden;
         }
         .tag-manager-table th, .tag-manager-table td {
-            padding: 10px 8px;
+            padding: 12px 10px;
             text-align: left;
             border-bottom: 1px solid rgba(0, 240, 255, 0.2);
             color: #f1f5f9;
@@ -199,29 +199,35 @@
             background: rgba(255, 0, 127, 0.2);
             font-weight: 600;
         }
-        /* Checkbox düzenlemeleri */
+        /* Checkbox düzenlemeleri - Koyu arka plan, pembe tik */
         .tag-checkbox {
             width: 16px;
             height: 16px;
             cursor: pointer;
             accent-color: #ff007f;
-            background-color: #0b0813;
+            background-color: #1e1a2f;
             border: 1px solid #ff007f;
             border-radius: 3px;
             vertical-align: middle;
+        }
+        /* Kullanım Sayısı sütunu ortalanmış */
+        .tag-manager-table td:nth-child(3),
+        .tag-manager-table th:nth-child(3) {
+            text-align: center;
         }
         td:first-child, th:first-child {
             text-align: center;
             width: 40px;
         }
+        /* Butonlar - eski boyutlarına döndü */
         .tag-action-btn {
             background: rgba(0, 240, 255, 0.15);
             border: 1px solid rgba(0, 240, 255, 0.4);
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 8px;
             color: #00f0ff;
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             margin: 0 2px;
             transition: all 0.2s;
         }
