@@ -3,8 +3,7 @@ import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './
 import { 
     dbSaveVideo, dbDeleteVideo, dbFetchInstructors, dbFetchVideos, 
     dbSaveInstructor, dbDeleteInstructor, dbFetchFavorites, dbAddFavorite,
-    dbRemoveFavorite, dbClearAllFavorites, detectPlatform,
-    dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags
+    dbRemoveFavorite, dbClearAllFavorites, detectPlatform
 } from './tangoVeritabani.js';
 import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
 import { 
@@ -14,6 +13,8 @@ import {
 import { updateSmartFilenameAssistant, updateInterfaceLanguage, switchView } from './tangoUI.js';
 import { getFilteredVideos, getAllUniqueTagsPool, populateFilterDropdowns } from './tangoFilters.js';
 import { computeStats, renderStats } from './tangoStats.js';
+import { showLoading, setCurrentLangForUtils, showModernPrompt } from './utils.js';
+import { initTagManager, updateTagManagerSelection, promptRenameTagModern, deleteSingleTag, deleteSelectedTags, mergeSelectedTags, cleanupUnusedTags } from './tagManager.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -26,6 +27,9 @@ let globalInstructors = [];
 let formTagsArray = [];
 
 let selectedTagsForMerge = [];
+
+// Utils'in dil bilgisini güncelle
+setCurrentLangForUtils(currentLang);
 
 const getUIState = () => ({
     currentLang, editingVideoId, editInstructorId, currentView,
@@ -303,64 +307,7 @@ async function handleFormSubmit(e) {
     }
 }
 
-// ----- MODERN PROMPT DIALOG -----
-function showModernPrompt(title, defaultValue = '', placeholder = '') {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('custom-dialog-modal');
-        const msgEl = document.getElementById('custom-dialog-message');
-        const okBtn = document.getElementById('custom-dialog-ok-btn');
-        const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
-        
-        msgEl.innerHTML = `
-            <div style="margin-bottom: 10px; font-weight: 500;">${escapeHtml(title)}</div>
-            <input type="text" id="modern-prompt-input" value="${escapeHtml(defaultValue)}" placeholder="${escapeHtml(placeholder)}" style="width:100%; padding:10px; background:#0b0813; border:1px solid #ff007f; border-radius:8px; color:#f1f5f9; outline:none;">
-        `;
-        
-        okBtn.innerText = currentLang === 'tr' ? 'Tamam' : 'OK';
-        cancelBtn.innerText = currentLang === 'tr' ? 'İptal' : 'Cancel';
-        cancelBtn.classList.remove('d-none');
-        modal.classList.remove('d-none');
-        
-        const input = document.getElementById('modern-prompt-input');
-        input.focus();
-        
-        const handleOk = () => {
-            const value = input.value.trim();
-            modal.classList.add('d-none');
-            cleanup();
-            resolve(value || null);
-        };
-        const handleCancel = () => {
-            modal.classList.add('d-none');
-            cleanup();
-            resolve(null);
-        };
-        const cleanup = () => {
-            okBtn.removeEventListener('click', handleOk);
-            cancelBtn.removeEventListener('click', handleCancel);
-            input.removeEventListener('keypress', keyHandler);
-        };
-        const keyHandler = (e) => {
-            if (e.key === 'Enter') handleOk();
-            if (e.key === 'Escape') handleCancel();
-        };
-        input.addEventListener('keypress', keyHandler);
-        okBtn.addEventListener('click', handleOk);
-        cancelBtn.addEventListener('click', handleCancel);
-    });
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-// ----- TAG MANAGER İŞLEVLERİ -----
+// ----- TAG MANAGER UI RENDER (app.js içinde kalıyor) -----
 function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -415,138 +362,8 @@ function renderTagManagerUI() {
     updateTagManagerSelection();
 }
 
-function updateTagManagerSelection() {
-    const checked = Array.from(document.querySelectorAll('#tag-manager-tbody .tag-checkbox:checked')).map(cb => cb.dataset.tag);
-    selectedTagsForMerge = checked;
-    const mergeBtn = document.getElementById('tag-manager-merge-btn');
-    const deleteBtn = document.getElementById('tag-manager-delete-btn');
-    if (mergeBtn) mergeBtn.disabled = checked.length < 2;
-    if (deleteBtn) deleteBtn.disabled = checked.length === 0;
-    const mergePanel = document.getElementById('tag-merge-panel');
-    if (mergePanel) {
-        if (checked.length >= 2) mergePanel.classList.remove('d-none');
-        else mergePanel.classList.add('d-none');
-    }
-}
-
-async function promptRenameTagModern(oldTag) {
-    const title = currentLang === 'tr' ? `"${oldTag}" etiketini yeni adıyla değiştir:` : `Rename "${oldTag}" to:`;
-    const placeholder = currentLang === 'tr' ? 'Yeni etiket adı' : 'New tag name';
-    const newTag = await showModernPrompt(title, oldTag, placeholder);
-    if (!newTag || newTag === oldTag) return;
-    
-    showLoading(true);
-    try {
-        await dbRenameTag(oldTag, newTag);
-        await fetchVideos();
-        showLoading(false);
-        const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, okText);
-        renderTagManagerUI();
-    } catch (err) {
-        showLoading(false);
-        const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(`Hata: ${err.message}`, okText);
-    }
-}
-
-async function deleteSingleTag(tag) {
-    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
-    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
-    if (!await showCustomConfirm(currentLang === 'tr' ? `"${tag}" etiketini TÜM videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete "${tag}" from ALL videos?`, okText, cancelText)) return;
-    showLoading(true);
-    try {
-        await dbDeleteTagFromAllVideos([tag]);
-        await fetchVideos();
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, alertOk);
-        renderTagManagerUI();
-    } catch (err) {
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-    }
-}
-
-async function deleteSelectedTags() {
-    if (selectedTagsForMerge.length === 0) return;
-    const deleteCount = selectedTagsForMerge.length;
-    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
-    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
-    const confirmMsg = currentLang === 'tr' ? `${deleteCount} etiketi tüm videolardan silmek istediğinize emin misiniz?` : `Are you sure you want to delete ${deleteCount} tag(s) from all videos?`;
-    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
-    showLoading(true);
-    try {
-        await dbDeleteTagFromAllVideos(selectedTagsForMerge);
-        await fetchVideos();
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`, alertOk);
-    } catch (err) {
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-    }
-}
-
-async function mergeSelectedTags() {
-    if (selectedTagsForMerge.length < 2) return;
-    const newTagName = document.getElementById('tag-merge-new-name').value.trim();
-    if (!newTagName) {
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.', alertOk);
-        return;
-    }
-    const mergeCount = selectedTagsForMerge.length;
-    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
-    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
-    const confirmMsg = currentLang === 'tr' ? `${mergeCount} etiket "${newTagName}" çatısı altında birleştirilsin mi?` : `Merge ${mergeCount} tags into "${newTagName}"?`;
-    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
-    
-    showLoading(true);
-    try {
-        await dbMergeTags(selectedTagsForMerge, newTagName);
-        await fetchVideos();
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? `${mergeCount} etiket birleştirildi → ${newTagName}` : `${mergeCount} tags merged → ${newTagName}`, alertOk);
-        document.getElementById('tag-merge-new-name').value = '';
-        renderTagManagerUI();
-    } catch (err) {
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-    }
-}
-
-async function cleanupUnusedTags() {
-    const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
-    const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
-    const confirmMsg = currentLang === 'tr' ? 'Hiçbir videoda kullanılmayan etiketleri temizlemek istediğinize emin misiniz?' : 'Are you sure you want to clean up unused tags?';
-    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
-    showLoading(true);
-    try {
-        const result = await dbCleanupUnusedTags();
-        await fetchVideos();
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? `${result.removedCount} kullanılmayan etiket temizlendi.` : `${result.removedCount} unused tag(s) removed.`, alertOk);
-        renderTagManagerUI();
-    } catch (err) {
-        showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-    }
-}
-
-function showLoading(show) {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-        if (show) overlay.classList.remove('d-none');
-        else overlay.classList.add('d-none');
-    }
-}
+// Tag Manager modülünü başlat
+initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
 
 // Olay dinleyicileri
 document.addEventListener('DOMContentLoaded', () => {
@@ -556,6 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('lang-toggle-btn').onclick = () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
+        setCurrentLangForUtils(currentLang);
+        initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
         callUpdateInterfaceLanguage();
         if (currentView === 'stats') renderStatsPanel();
         if (currentView === 'tagManager') renderTagManagerUI();
@@ -618,14 +437,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tags-modal-close-btn').onclick = closeTagsEditModal;
     document.getElementById('tags-edit-modal').onclick = (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); };
     document.getElementById('drop-area')?.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
-    document.getElementById('tag-manager-merge-btn').onclick = mergeSelectedTags;
-    document.getElementById('tag-manager-delete-btn').onclick = deleteSelectedTags;
-    document.getElementById('tag-manager-cleanup-btn').onclick = cleanupUnusedTags;
+    document.getElementById('tag-manager-merge-btn').onclick = () => mergeSelectedTags();
+    document.getElementById('tag-manager-delete-btn').onclick = () => deleteSelectedTags();
+    document.getElementById('tag-manager-cleanup-btn').onclick = () => cleanupUnusedTags();
     document.getElementById('tag-merge-cancel-btn').onclick = () => {
         document.getElementById('tag-merge-panel').classList.add('d-none');
         selectedTagsForMerge = [];
         updateTagManagerSelection();
     };
-    document.getElementById('tag-merge-confirm-btn').onclick = mergeSelectedTags;
+    document.getElementById('tag-merge-confirm-btn').onclick = () => mergeSelectedTags();
     window.applyFiltersAndSearch = applyFiltersAndSearch;
 });
