@@ -91,7 +91,10 @@ function renderStatsPanel() {
 // İstatistik sayfasına yedekleme butonlarını ekleyen fonksiyon
 function setupBackupButtons() {
     const statsContainer = document.getElementById('stats-container');
-    if (!statsContainer) return;
+    if (!statsContainer) {
+        console.warn('stats-container bulunamadı');
+        return;
+    }
     // Butonlar zaten varsa tekrar ekleme
     if (document.getElementById('btn-export-backup')) return;
     
@@ -120,17 +123,23 @@ function setupBackupButtons() {
     // İlk çocuk olarak ekle (istatistik kartlarının üstüne)
     statsContainer.parentNode.insertBefore(toolbar, statsContainer);
     
-    // Olayları bağla
-    exportBtn.onclick = () => {
+    // Olayları bağla - doğrudan fonksiyonları ata
+    exportBtn.onclick = (event) => {
+        event.preventDefault();
+        console.log('Dışa aktar butonuna tıklandı');
         exportToJSON(globalVideos, globalInstructors, globalFavorites);
     };
-    importBtn.onclick = async () => {
+    
+    importBtn.onclick = async (event) => {
+        event.preventDefault();
+        console.log('İçe aktar butonuna tıklandı');
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'application/json';
         input.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            console.log('Seçilen dosya:', file);
             await importFromJSON(file, globalVideos, globalInstructors, globalFavorites, fetchVideos, fetchInstructors);
             // İçe aktarma sonrası verileri yenile
             await fetchInstructors();
