@@ -52,13 +52,15 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const optBoth = document.getElementById('opt-both');
     if (optBoth) optBoth.innerText = lang.both;
     
-    const allLocationsOpt = document.getElementById('opt-all-locations');
-    if (allLocationsOpt) allLocationsOpt.innerText = lang.allLocations;
-    const optDrive = document.getElementById('opt-drive');
-    if (optDrive) optDrive.innerText = lang.drive;
-    const optSocial = document.getElementById('opt-social');
-    if (optSocial) optSocial.innerText = lang.social;
-
+    // Platform filter - "Tüm Platformlar" seçeneğini güncelle
+    const platformSelect = document.getElementById('filter-platform-select');
+    if (platformSelect) {
+        const allPlatformsOption = platformSelect.querySelector('option[value="all"]');
+        if (allPlatformsOption) {
+            allPlatformsOption.innerText = lang.allPlatforms;
+        }
+    }
+    
     const formTitle = document.getElementById('form-title');
     if (formTitle) formTitle.innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
     
@@ -91,6 +93,10 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     
     const btnClearFavs = document.getElementById('btn-clear-favorites');
     if (btnClearFavs) btnClearFavs.innerText = lang.btnClearFavorites;
+    
+    // Reset Cover butonu
+    const btnResetCover = document.getElementById('btn-reset-cover');
+    if (btnResetCover) btnResetCover.innerText = lang.resetCoverBtn || (currentLang === 'tr' ? "🗑️ Resmi Sıfırla" : "🗑️ Reset Image");
     
     const editTagsTitle = document.getElementById('edit-tags-title');
     if (editTagsTitle) editTagsTitle.innerText = lang.editTagsTitle;
@@ -169,7 +175,6 @@ export function switchView(viewName, state, functions) {
         statsView.classList.remove('d-none');
         addView.classList.add('d-none');
         document.getElementById('menu-stats').classList.add('active');
-        // İstatistikleri güncellemek için dışarıdan bir callback alabiliriz
         if (functions.updateStats) functions.updateStats();
     } else if (viewName === 'add') {
         libraryView.classList.add('d-none');
