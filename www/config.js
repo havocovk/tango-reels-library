@@ -36,10 +36,10 @@ export const translations = {
             other: ""
         },
         platformIconUrls: {
-            drive: "./images/google-drive-icon-2026.png",  // Google Drive resmi renkli logo
-            youtube: "https://cdn-icons-png.flaticon.com/512/1384/1384060.png",
-            instagram: "https://cdn-icons-png.flaticon.com/512/174/174855.png",
-            facebook: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",
+            drive: "./images/google-drive.png",      // Kendi Google Drive ikonunuz (varsa)
+            youtube: "./images/youtube-icon.png",
+            instagram: "./images/instagram-icon-2022.png",
+            facebook: "./images/facebook-icon-2023.png",
             other: ""
         },
         langBtn: "🇬🇧 EN",
@@ -82,7 +82,6 @@ export const translations = {
         allDates: "Tüm Tarihler",
         closeBtn: "Kapat",
         btnClearFavorites: "🗑️ Bu Haftaki Pratik Listesini Temizle",
-        resetCoverBtn: "🗑️ Resmi Sıfırla",
         confirmClearFavs: "Bu haftaki pratik listenizdeki tüm yıldızları kaldırmak istediğinize emin misiniz?",
         confirmDeleteVideo: "Bu videoyu koleksiyonunuzdan tamamen silmek istediğinize emin misiniz?",
         successDeleteVideo: "💥 Video başarıyla silindi!",
@@ -103,7 +102,8 @@ export const translations = {
         statsNoTags: "Henüz etiket yok",
         roleLeader: "Lider",
         roleFollower: "Takipçi",
-        roleBoth: "Çift"
+        roleBoth: "Çift",
+        resetCoverBtn: "🗑️ Resmi Sıfırla"
     },
     en: {
         brandTitle: "💃 Argentine Tango Combination Collection",
@@ -137,10 +137,10 @@ export const translations = {
             other: ""
         },
         platformIconUrls: {
-            drive: "https://www.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png",
-            youtube: "https://cdn-icons-png.flaticon.com/512/1384/1384060.png",
-            instagram: "https://cdn-icons-png.flaticon.com/512/174/174855.png",
-            facebook: "https://cdn-icons-png.flaticon.com/512/5968/5968764.png",
+            drive: "./images/google-drive.png",
+            youtube: "./images/youtube-icon.png",
+            instagram: "./images/instagram-icon-2022.png",
+            facebook: "./images/facebook-icon-2023.png",
             other: ""
         },
         langBtn: "🇹🇷 TR",
@@ -183,7 +183,6 @@ export const translations = {
         allDates: "All Dates",
         closeBtn: "Close",
         btnClearFavorites: "🗑️ Clear This Week's Practice List",
-        resetCoverBtn: "🗑️ Reset Image",
         confirmClearFavs: "Are you sure you want to remove all stars from this week's practice list?",
         confirmDeleteVideo: "Are you sure you want to permanently delete this video from your collection?",
         successDeleteVideo: "💥 Video successfully deleted!",
@@ -204,6 +203,7 @@ export const translations = {
         statsNoTags: "No tags yet",
         roleLeader: "Leader",
         roleFollower: "Follower",
-        roleBoth: "Couple"
+        roleBoth: "Couple",
+        resetCoverBtn: "🗑️ Reset Image"
     }
 };
