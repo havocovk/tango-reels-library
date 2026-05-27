@@ -1,20 +1,21 @@
 import { translations } from './config.js';
-import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
+import { handlePasteEvent } from './storage.js';
 import { 
-    dbSaveVideo, dbDeleteVideo, dbFetchInstructors, dbFetchVideos, 
-    dbSaveInstructor, dbDeleteInstructor, dbFetchFavorites, dbAddFavorite,
-    dbRemoveFavorite, dbClearAllFavorites, detectPlatform
+    dbFetchFavorites, dbClearAllFavorites
 } from './tangoVeritabani.js';
-import { renderChips, setupAutocomplete, renderVideoCards } from './uiRenderer.js';
+import { setupAutocomplete } from './uiRenderer.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly
 } from './tangoModals.js';
-import { updateSmartFilenameAssistant, updateInterfaceLanguage, switchView } from './tangoUI.js';
-import { getFilteredVideos, getAllUniqueTagsPool, populateFilterDropdowns } from './tangoFilters.js';
+import { updateInterfaceLanguage, switchView, updateSmartFilenameAssistant } from './tangoUI.js';
+import { getAllUniqueTagsPool, populateFilterDropdowns } from './tangoFilters.js';
 import { computeStats, renderStats } from './tangoStats.js';
 import { showLoading, setCurrentLangForUtils, showModernPrompt } from './utils.js';
 import { initTagManager, updateTagManagerSelection, promptRenameTagModern, deleteSingleTag, deleteSelectedTags, mergeSelectedTags, cleanupUnusedTags } from './tagManager.js';
+import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow } from './videoHandlers.js';
+import { initInstructorHandlers, fetchInstructors, handleInstructorSubmit, deleteInstructor } from './instructorHandlers.js';
+import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray } from './formHandlers.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -26,49 +27,57 @@ let visibleCount = 20;
 let globalInstructors = [];
 let formTagsArray = [];
 
-let selectedTagsForMerge = [];
-
-// Utils'in dil bilgisini güncelle
+// Utils dilini güncelle
 setCurrentLangForUtils(currentLang);
+
+// Callback'leri hazırla
+const callbacks = {
+    applyFiltersAndSearch: () => applyFiltersAndSearch(),
+    fetchVideos: async () => { await fetchVideos(); },
+    openVideoModal: (url) => openVideoModal(url),
+    openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
+    startVideoEditFlow: (video) => startVideoEditFlow(video),
+    deleteVideoFlow: (videoId) => deleteVideoFlow(videoId),
+    switchView: (viewName) => callSwitchView(viewName),
+    renderFormChips: () => renderFormChips()
+};
+
+// Modülleri başlat
+initVideoHandlers(currentLang, globalVideos, globalFavorites, currentView, visibleCount, callbacks);
+initInstructorHandlers(currentLang, editInstructorId, globalInstructors, callbacks);
+initFormHandlers(currentLang, editingVideoId, formTagsArray, globalVideos, callbacks);
+initTagManager(currentLang, globalVideos, callbacks.fetchVideos, renderTagManagerUI);
 
 const getUIState = () => ({
     currentLang, editingVideoId, editInstructorId, currentView,
-    getFormTags: () => formTagsArray,
-    resetFormTags: () => { formTagsArray = []; }
+    getFormTags: () => getFormTagsArray(),
+    resetFormTags: () => { setFormTagsArray([]); }
 });
 
-function callUpdateSmartAssistant() { updateSmartFilenameAssistant(currentLang, formTagsArray); }
+function callUpdateSmartAssistant() {
+    updateSmartFilenameAssistant(currentLang, getFormTagsArray());
+}
+
 function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, () => {
+    updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, getFormTagsArray(), applyFiltersAndSearch, () => {
         if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
     });
     if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
     applyFiltersAndSearch();
     if (currentView === 'stats') renderStatsPanel();
 }
+
 function callSwitchView(viewName) {
     currentView = viewName;
     visibleCount = 20;
+    setVisibleCount(visibleCount);
     switchView(viewName, getUIState(), {
-        applyFiltersAndSearch, renderFormChips, resetUploadedCoverUrl,
+        applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
         renderTagManager: renderTagManagerUI
     });
     if (viewName === 'stats') renderStatsPanel();
     if (viewName === 'tagManager') renderTagManagerUI();
     applyFiltersAndSearch();
-}
-
-async function toggleFavorite(videoId) {
-    try {
-        if (globalFavorites.includes(videoId)) {
-            await dbRemoveFavorite(videoId);
-            globalFavorites = globalFavorites.filter(id => id !== videoId);
-        } else {
-            await dbAddFavorite(videoId);
-            globalFavorites.push(videoId);
-        }
-        applyFiltersAndSearch();
-    } catch (err) { console.error(err); }
 }
 
 function clearAllFavorites() {
@@ -85,24 +94,6 @@ function clearAllFavorites() {
 }
 
 function callGetUniqueTagsPool() { return getAllUniqueTagsPool(globalVideos); }
-
-async function fetchInstructors() {
-    try {
-        const instructors = await dbFetchInstructors();
-        globalInstructors = instructors;
-        const select = document.getElementById('form-instructor-select');
-        if (select) {
-            select.innerHTML = '';
-            instructors.forEach(ins => {
-                const opt = document.createElement('option');
-                opt.value = ins.id;
-                opt.innerText = ins.name;
-                select.appendChild(opt);
-            });
-        }
-        callUpdateSmartAssistant();
-    } catch (err) { console.error(err); }
-}
 
 function renderStatsPanel() {
     if (currentView !== 'stats') return;
@@ -125,6 +116,9 @@ async function fetchVideos() {
         applyFiltersAndSearch();
         if (currentView === 'stats') renderStatsPanel();
         if (currentView === 'tagManager') renderTagManagerUI();
+        // Video handlers'daki global dizileri güncelle
+        initVideoHandlers(currentLang, globalVideos, globalFavorites, currentView, visibleCount, callbacks);
+        initTagManager(currentLang, globalVideos, callbacks.fetchVideos, renderTagManagerUI);
     } catch (err) {
         document.getElementById('video-grid').innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[currentLang].error}</div>`;
         console.error(err);
@@ -133,6 +127,7 @@ async function fetchVideos() {
 
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
+    setEditingVideoId(video.id);
     callSwitchView('add');
     const lang = translations[currentLang];
     document.getElementById('form-title').innerText = lang.formTitleEdit;
@@ -141,7 +136,8 @@ function startVideoEditFlow(video) {
     document.getElementById('form-video-url').value = video.url || '';
     document.getElementById('form-role-select').value = video.role_type || 'Both';
     document.getElementById('form-partner-name').value = video.partner_name || '';
-    formTagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+    const tagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+    setFormTagsArray(tagsArray);
     renderFormChips();
     const isDownloaded = document.getElementById('form-is-downloaded');
     const driveUrlContainer = document.getElementById('drive-url-container');
@@ -171,143 +167,6 @@ function startVideoEditFlow(video) {
     callUpdateSmartAssistant();
 }
 
-async function deleteVideoFlow(videoId) {
-    const lang = translations[currentLang];
-    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-    const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
-    if (!await showCustomConfirm(lang.confirmDeleteVideo, okText, cancelText)) return;
-    try {
-        await dbDeleteVideo(videoId);
-        await showCustomAlert(lang.successDeleteVideo, okText);
-        globalFavorites = globalFavorites.filter(id => id !== videoId);
-        await fetchVideos();
-    } catch (err) { 
-        await showCustomAlert(currentLang === 'tr' ? 'Silme hatası!' : 'Deletion error!', okText);
-    }
-}
-
-function renderFormChips() {
-    renderChips('chips-area', formTagsArray, (index) => {
-        formTagsArray.splice(index, 1);
-        renderFormChips();
-        callUpdateSmartAssistant();
-    });
-}
-
-function applyFiltersAndSearch() {
-    let source = globalVideos;
-    if (currentView === 'favorites') source = globalVideos.filter(v => globalFavorites.includes(v.id));
-    const filters = {
-        aramaMetni: '',
-        rol: document.getElementById('filter-role-select')?.value || 'all',
-        egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
-        etiket: document.getElementById('filter-tag-select')?.value || 'all',
-        tarih: document.getElementById('filter-date-select')?.value || 'all',
-        platform: document.getElementById('filter-platform-select')?.value || 'all'
-    };
-    const filtered = getFilteredVideos(source, filters, currentLang);
-    const totalElem = document.getElementById('total-video-count');
-    if (totalElem) {
-        let label = currentView === 'favorites' ? translations[currentLang].favoritesCountLabel : (currentLang === 'tr' ? 'Toplam Video Sayısı:' : 'Total Videos:');
-        totalElem.innerText = `${label} ${filtered.length}`;
-    }
-    const loadMoreDiv = document.getElementById('load-more-container');
-    if (loadMoreDiv) {
-        if (filtered.length > visibleCount) loadMoreDiv.classList.remove('d-none');
-        else loadMoreDiv.classList.add('d-none');
-    }
-    renderVideoCards(filtered.slice(0, visibleCount), {
-        currentLang, currentView, translations, favs: globalFavorites, toggleFavorite,
-        openTagsEditModal: (video) => openTagsEditModal(video, globalVideos, applyFiltersAndSearch),
-        startVideoEditFlow, deleteVideoFlow, openVideoModal, refreshList: applyFiltersAndSearch
-    });
-}
-
-async function handleInstructorSubmit() {
-    const input = document.getElementById('form-new-instructor-input');
-    const name = input.value.trim();
-    const lang = translations[currentLang];
-    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-    if (!name) return showCustomAlert(lang.insAlert, okText);
-    try {
-        await dbSaveInstructor(editInstructorId, name);
-        await showCustomAlert(editInstructorId ? lang.insUpdateSuccess : lang.insSuccess, okText);
-        input.value = '';
-        editInstructorId = null;
-        document.getElementById('btn-save-instructor').innerText = lang.btnAddIns;
-        document.getElementById('new-instructor-container').classList.add('d-none');
-        await fetchInstructors();
-        await fetchVideos();
-    } catch (err) { console.error(err); }
-}
-
-async function deleteInstructor() {
-    const select = document.getElementById('form-instructor-select');
-    if (!select.value) return;
-    const lang = translations[currentLang];
-    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-    const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
-    if (!await showCustomConfirm(lang.deleteConfirm, okText, cancelText)) return;
-    try {
-        await dbDeleteInstructor(select.value);
-        await showCustomAlert(lang.insDeleteSuccess, okText);
-        await fetchInstructors();
-        await fetchVideos();
-    } catch (err) { console.error(err); }
-}
-
-async function handleFormSubmit(e) {
-    e.preventDefault();
-    const lang = translations[currentLang];
-    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-    const instructor_id = document.getElementById('form-instructor-select').value;
-    let url = document.getElementById('form-video-url').value.trim();
-    const role_type = document.getElementById('form-role-select').value;
-    const partner_name = document.getElementById('form-partner-name').value.trim();
-    const tags = formTagsArray.join(', ');
-    const is_downloaded = document.getElementById('form-is-downloaded').checked;
-    const drive_url = document.getElementById('form-drive-url').value.trim();
-    let cover_url = getUploadedCoverUrl();
-    if (!cover_url && editingVideoId) {
-        const curr = globalVideos.find(v => v.id === editingVideoId);
-        if (curr) cover_url = curr.cover_url;
-    }
-    if (!instructor_id) return showCustomAlert(currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText);
-    if (is_downloaded && !drive_url) return showCustomAlert(currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText);
-    if (!is_downloaded && !url) return showCustomAlert(currentLang === 'tr' ? 'Video URL zorunludur!' : 'Video URL is required!', okText);
-    let platform = is_downloaded ? 'drive' : detectPlatform(url, false);
-    let finalUrl = url;
-    if (is_downloaded && (!finalUrl || finalUrl === '')) {
-        finalUrl = `drive_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-    }
-    const payload = {
-        instructor_id: parseInt(instructor_id),
-        url: finalUrl,
-        role_type, partner_name: partner_name || null,
-        tags: tags || null, is_downloaded,
-        drive_url: is_downloaded ? drive_url : null,
-        cover_url, platform
-    };
-    try {
-        await dbSaveVideo(editingVideoId, payload);
-        await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
-        editingVideoId = null;
-        formTagsArray = [];
-        renderFormChips();
-        document.getElementById('add-video-form').reset();
-        document.getElementById('image-preview').classList.add('d-none');
-        document.getElementById('drop-area-text').innerText = lang.dropText;
-        document.getElementById('drive-url-container').classList.add('d-none');
-        resetUploadedCoverUrl();
-        callSwitchView('library');
-        await fetchVideos();
-    } catch (err) {
-        let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
-        await showCustomAlert(hata, okText);
-    }
-}
-
-// ----- TAG MANAGER UI RENDER (app.js içinde kalıyor) -----
 function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -362,10 +221,16 @@ function renderTagManagerUI() {
     updateTagManagerSelection();
 }
 
-// Tag Manager modülünü başlat
-initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+// Dil değişiminde modüllerin dilini güncelle
+function updateAllLanguages() {
+    setCurrentLangForUtils(currentLang);
+    initVideoHandlers(currentLang, globalVideos, globalFavorites, currentView, visibleCount, callbacks);
+    initInstructorHandlers(currentLang, editInstructorId, globalInstructors, callbacks);
+    initFormHandlers(currentLang, editingVideoId, getFormTagsArray(), globalVideos, callbacks);
+    initTagManager(currentLang, globalVideos, callbacks.fetchVideos, renderTagManagerUI);
+}
 
-// Olay dinleyicileri
+// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     fetchInstructors();
     fetchVideos();
@@ -373,8 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('lang-toggle-btn').onclick = () => {
         currentLang = currentLang === 'tr' ? 'en' : 'tr';
-        setCurrentLangForUtils(currentLang);
-        initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+        updateAllLanguages();
         callUpdateInterfaceLanguage();
         if (currentView === 'stats') renderStatsPanel();
         if (currentView === 'tagManager') renderTagManagerUI();
@@ -397,8 +261,10 @@ document.addEventListener('DOMContentLoaded', () => {
             input.value = '';
         }
     };
-    setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, renderFormChips, (newTag) => {
-        formTagsArray.push(newTag);
+    setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, () => renderFormChips(), (newTag) => {
+        const currentTags = getFormTagsArray();
+        currentTags.push(newTag);
+        setFormTagsArray(currentTags);
         renderFormChips();
         callUpdateSmartAssistant();
     }, callGetUniqueTagsPool);
@@ -424,14 +290,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-delete-instructor').onclick = deleteInstructor;
     document.getElementById('btn-save-instructor').onclick = handleInstructorSubmit;
     document.getElementById('add-video-form').onsubmit = handleFormSubmit;
-    const handleFilter = () => { visibleCount = 20; applyFiltersAndSearch(); };
+    const handleFilter = () => { setVisibleCount(20); applyFiltersAndSearch(); };
     document.getElementById('filter-role-select').onchange = handleFilter;
     document.getElementById('filter-instructor-select').onchange = handleFilter;
     document.getElementById('filter-tag-select').onchange = handleFilter;
     document.getElementById('filter-date-select').onchange = handleFilter;
     document.getElementById('filter-platform-select').onchange = handleFilter;
-    document.getElementById('filter-btn').onclick = () => { visibleCount = 20; fetchVideos(); };
-    document.getElementById('btn-load-more').onclick = () => { visibleCount += 20; applyFiltersAndSearch(); };
+    document.getElementById('filter-btn').onclick = () => { setVisibleCount(20); fetchVideos(); };
+    document.getElementById('btn-load-more').onclick = () => { incrementVisibleCount(20); applyFiltersAndSearch(); };
     document.getElementById('modal-close-btn').onclick = closeVideoModal;
     document.getElementById('video-modal').onclick = (e) => { if (e.target.id === 'video-modal') closeVideoModal(); };
     document.getElementById('tags-modal-close-btn').onclick = closeTagsEditModal;
@@ -442,7 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tag-manager-cleanup-btn').onclick = () => cleanupUnusedTags();
     document.getElementById('tag-merge-cancel-btn').onclick = () => {
         document.getElementById('tag-merge-panel').classList.add('d-none');
-        selectedTagsForMerge = [];
         updateTagManagerSelection();
     };
     document.getElementById('tag-merge-confirm-btn').onclick = () => mergeSelectedTags();
