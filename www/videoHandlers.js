@@ -6,7 +6,7 @@ import { translations } from './config.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
-let globalFavorites = [];
+let globalFavorites = [];     // Bu referans, app.js'deki ile aynı olacak (setVideoHandlersGlobalData ile)
 let currentView = 'library';
 let visibleCount = 20;
 
@@ -20,7 +20,7 @@ let deleteVideoFlowCallback = null;
 export function setVideoHandlersGlobalData(lang, videos, favorites, view, visible) {
     currentLang = lang;
     globalVideos = videos;
-    globalFavorites = favorites;
+    globalFavorites = favorites;   // Bu artık app.js'deki globalFavorites referansını tutuyor
     currentView = view;
     visibleCount = visible;
 }
@@ -38,7 +38,8 @@ export async function toggleFavorite(videoId) {
     try {
         if (globalFavorites.includes(videoId)) {
             await dbRemoveFavorite(videoId);
-            globalFavorites = globalFavorites.filter(id => id !== videoId);
+            const index = globalFavorites.indexOf(videoId);
+            if (index !== -1) globalFavorites.splice(index, 1);
         } else {
             await dbAddFavorite(videoId);
             globalFavorites.push(videoId);
@@ -95,7 +96,8 @@ export async function deleteVideoFlow(videoId) {
     try {
         await dbDeleteVideo(videoId);
         await showCustomAlert(lang.successDeleteVideo, okText);
-        globalFavorites = globalFavorites.filter(id => id !== videoId);
+        const index = globalFavorites.indexOf(videoId);
+        if (index !== -1) globalFavorites.splice(index, 1);
         if (fetchVideosCallback) await fetchVideosCallback();
     } catch (err) { 
         await showCustomAlert(currentLang === 'tr' ? 'Silme hatası!' : 'Deletion error!', okText);

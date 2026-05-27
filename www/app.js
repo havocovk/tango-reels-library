@@ -62,15 +62,16 @@ async function fetchVideos() {
             instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
         }));
         populateFilterDropdowns(globalVideos, currentLang);
+        
+        // Modüllerdeki global verileri güncelle (favoriler dahil)
+        setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+        setInstructorHandlersGlobalData(currentLang, editInstructorId);
+        setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
+        initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+        
         applyFiltersAndSearch();
         if (currentView === 'stats') renderStatsPanel();
         if (currentView === 'tagManager') renderTagManagerUI();
-
-        // Modüllerdeki global verileri güncelle
-        setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
-        setInstructorHandlersGlobalData(currentLang, editInstructorId, globalInstructors);
-        setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
-        initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
     } catch (err) {
         document.getElementById('video-grid').innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[currentLang].error}</div>`;
         console.error(err);
@@ -117,6 +118,7 @@ function clearAllFavorites() {
         if (confirmed) {
             await dbClearAllFavorites();
             globalFavorites = [];
+            setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
             applyFiltersAndSearch();
         }
     });
@@ -226,9 +228,9 @@ const getUIState = () => ({
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
-// Modülleri başlat
+// Modülleri başlat (ilk değerlerle)
 setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
-setInstructorHandlersGlobalData(currentLang, editInstructorId, globalInstructors);
+setInstructorHandlersGlobalData(currentLang, editInstructorId);
 setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
 initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
 
@@ -239,14 +241,15 @@ initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callS
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
-    setInstructorHandlersGlobalData(currentLang, editInstructorId, globalInstructors);
+    setInstructorHandlersGlobalData(currentLang, editInstructorId);
     setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
     initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetchInstructors();
-    fetchVideos();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Önce eğitmenleri ve videoları yükle
+    await fetchInstructors();
+    await fetchVideos();
     callUpdateInterfaceLanguage();
 
     document.getElementById('lang-toggle-btn').onclick = () => {
