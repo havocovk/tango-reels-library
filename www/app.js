@@ -302,11 +302,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
     setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, () => renderFormChips(), (newTag) => {
-        const currentTags = getFormTagsArray();
-        currentTags.push(newTag);
-        setFormTagsArray(currentTags);
+        if (!formTagsArray.includes(newTag)) {
+        formTagsArray.push(newTag);
         renderFormChips();
         callUpdateSmartAssistant();
+        }
     }, callGetUniqueTagsPool);
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
