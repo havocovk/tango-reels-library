@@ -17,8 +17,7 @@ import { showLoading, setCurrentLangForUtils, showModernPrompt } from './utils.j
 import { initTagManager, updateTagManagerSelection, promptRenameTagModern, deleteSingleTag, deleteSelectedTags, mergeSelectedTags, cleanupUnusedTags } from './tagManager.js';
 import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData } from './videoHandlers.js';
 import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor, setInstructorHandlersGlobalData } from './instructorHandlers.js';
-import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
-// Yeni importlar
+import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, formTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 
 let currentLang = 'tr';
@@ -29,10 +28,9 @@ let editingVideoId = null;
 let currentView = 'library';
 let visibleCount = 20;
 let globalInstructors = [];
-let formTagsArray = [];
 
 setCurrentLangForUtils(currentLang);
-setBackupLang(currentLang); // Yedekleme modülüne dil bilgisini ver
+setBackupLang(currentLang);
 
 // ----- ANA VERİ ÇEKME FONKSİYONLARI -----
 async function fetchInstructors() {
@@ -84,24 +82,17 @@ function renderStatsPanel() {
     if (currentView !== 'stats') return;
     const stats = computeStats(globalVideos, globalInstructors);
     renderStats(stats, currentLang);
-    // Her istatistik paneli render edildiğinde yedekleme butonlarını kontrol et/ekle
     setupBackupButtons();
 }
 
-// İstatistik sayfasındaki yedekleme butonlarına olay bağlayan fonksiyon
 function setupBackupButtons() {
     const exportBtn = document.getElementById('btn-export-backup');
     const importBtn = document.getElementById('btn-import-backup');
-
     if (!exportBtn || !importBtn) return;
     if (exportBtn.dataset.wired === 'true') return;
     exportBtn.dataset.wired = 'true';
     importBtn.dataset.wired = 'true';
-
-    exportBtn.onclick = () => {
-        exportToJSON(globalVideos, globalInstructors, globalFavorites);
-    };
-
+    exportBtn.onclick = () => { exportToJSON(globalVideos, globalInstructors, globalFavorites); };
     importBtn.onclick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -109,19 +100,9 @@ function setupBackupButtons() {
         fileInput.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            // showLoading(true) çağrısı KALDIRILDI - artık backup.js içinde yönetilecek
             try {
-                await importFromJSON(
-                    file,
-                    globalVideos,
-                    globalInstructors,
-                    globalFavorites,
-                    fetchVideos,
-                    fetchInstructors
-                );
-            } catch (err) {
-                console.error('Geri yükleme hatası:', err);
-            }
+                await importFromJSON(file, globalVideos, globalInstructors, globalFavorites, fetchVideos, fetchInstructors);
+            } catch (err) { console.error(err); }
         };
         fileInput.click();
     };
@@ -283,7 +264,7 @@ initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callS
 
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
-    setBackupLang(currentLang); // Dil değişince yedekleme modülüne bildir
+    setBackupLang(currentLang);
     setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
     setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);

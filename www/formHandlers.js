@@ -7,7 +7,7 @@ import { updateSmartFilenameAssistant } from './tangoUI.js';
 
 let currentLang = 'tr';
 let editingVideoId = null;
-let formTagsArray = [];
+export let formTagsArray = [];   // 🔁 ARTIK EXPORT EDİLDİ
 let globalVideos = [];
 let fetchVideosCallback = null;
 let callSwitchViewCallback = null;
@@ -15,7 +15,7 @@ let callSwitchViewCallback = null;
 export function setFormHandlersGlobalData(lang, editId, tagsArray, videos) {
     currentLang = lang;
     editingVideoId = editId;
-    formTagsArray = tagsArray;
+    formTagsArray = tagsArray;   // referans değil, kopyalama yapıyoruz
     globalVideos = videos;
 }
 
@@ -84,7 +84,7 @@ export async function handleFormSubmit(e) {
         await dbSaveVideo(editingVideoId, payload);
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         editingVideoId = null;
-        formTagsArray = [];
+        setFormTagsArray([]);
         renderFormChips();
         document.getElementById('add-video-form').reset();
         document.getElementById('image-preview').classList.add('d-none');
