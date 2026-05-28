@@ -7,21 +7,20 @@ import { updateSmartFilenameAssistant } from './tangoUI.js';
 
 let currentLang = 'tr';
 let editingVideoId = null;
-export let formTagsArray = [];   // 🔁 ARTIK EXPORT EDİLDİ
+export let formTagsArray = [];   // TEK BİR DİZİ, BAŞKA YERDE YENİDEN ATANMAYACAK
 let globalVideos = [];
 let fetchVideosCallback = null;
 let callSwitchViewCallback = null;
 
-export function setFormHandlersGlobalData(lang, editId, tagsArray, videos) {
+export function setFormHandlersGlobalData(lang, editId, videos) {
     currentLang = lang;
     editingVideoId = editId;
-    formTagsArray = tagsArray;   // referans değil, kopyalama yapıyoruz
     globalVideos = videos;
+    // formTagsArray'e dokunma, zaten dolu olabilir
 }
 
-export function initFormHandlers(editId, tagsArray, videos, fetchCb, switchCb) {
+export function initFormHandlers(editId, videos, fetchCb, switchCb) {
     editingVideoId = editId;
-    formTagsArray = tagsArray;
     globalVideos = videos;
     fetchVideosCallback = fetchCb;
     callSwitchViewCallback = switchCb;
@@ -49,6 +48,7 @@ export function renderFormChips() {
 }
 
 export async function handleFormSubmit(e) {
+    // aynı, değişmedi
     e.preventDefault();
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';

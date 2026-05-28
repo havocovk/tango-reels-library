@@ -66,7 +66,7 @@ async function fetchVideos() {
         
         setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
-        setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
+        setFormHandlersGlobalData(currentLang, editingVideoId, globalVideos);
         initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
         
         applyFiltersAndSearch();
@@ -255,19 +255,19 @@ const getUIState = () => ({
 
 setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
 setInstructorHandlersGlobalData(currentLang, editInstructorId);
-setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
+setFormHandlersGlobalData(currentLang, editingVideoId, globalVideos);
 initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
 
 initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
 initInstructorHandlers(editInstructorId, fetchInstructors, fetchVideos);
-initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callSwitchView);
+initFormHandlers(editingVideoId, globalVideos, fetchVideos, callSwitchView);
 
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setBackupLang(currentLang);
     setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
-    setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
+    setFormHandlersGlobalData(currentLang, editingVideoId, globalVideos);
     initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
 }
 
