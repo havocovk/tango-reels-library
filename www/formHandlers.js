@@ -7,20 +7,22 @@ import { updateSmartFilenameAssistant } from './tangoUI.js';
 
 let currentLang = 'tr';
 let editingVideoId = null;
-export let formTagsArray = [];   // TEK BİR DİZİ, BAŞKA YERDE YENİDEN ATANMAYACAK
+export let formTagsArray = [];
 let globalVideos = [];
 let fetchVideosCallback = null;
 let callSwitchViewCallback = null;
+let editingVideoUpdatedAt = null;   // YENİ: düzenlenen videonun updated_at değeri
 
-export function setFormHandlersGlobalData(lang, editId, videos) {
+export function setFormHandlersGlobalData(lang, editId, tagsArray, videos) {
     currentLang = lang;
     editingVideoId = editId;
+    formTagsArray = tagsArray;
     globalVideos = videos;
-    // formTagsArray'e dokunma, zaten dolu olabilir
 }
 
-export function initFormHandlers(editId, videos, fetchCb, switchCb) {
+export function initFormHandlers(editId, tagsArray, videos, fetchCb, switchCb) {
     editingVideoId = editId;
+    formTagsArray = tagsArray;
     globalVideos = videos;
     fetchVideosCallback = fetchCb;
     callSwitchViewCallback = switchCb;
@@ -28,6 +30,11 @@ export function initFormHandlers(editId, videos, fetchCb, switchCb) {
 
 export function setEditingVideoId(id) {
     editingVideoId = id;
+}
+
+// YENİ FONKSİYON: updated_at değerini set et
+export function setEditingVideoUpdatedAt(updatedAt) {
+    editingVideoUpdatedAt = updatedAt;
 }
 
 export function setFormTagsArray(tags) {
@@ -48,7 +55,6 @@ export function renderFormChips() {
 }
 
 export async function handleFormSubmit(e) {
-    // aynı, değişmedi
     e.preventDefault();
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
@@ -81,9 +87,11 @@ export async function handleFormSubmit(e) {
         cover_url, platform
     };
     try {
-        await dbSaveVideo(editingVideoId, payload);
+        // 🔁 GÜNCELLENDİ: old_updated_at gönderiliyor
+        await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         editingVideoId = null;
+        editingVideoUpdatedAt = null; // temizle
         setFormTagsArray([]);
         renderFormChips();
         document.getElementById('add-video-form').reset();
@@ -95,6 +103,11 @@ export async function handleFormSubmit(e) {
         if (fetchVideosCallback) await fetchVideosCallback();
     } catch (err) {
         let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
+        if (err.message.includes('ÇAKIŞMA')) {
+            hata = err.message;
+            // Çakışma durumunda sayfayı yenileme öner
+            setTimeout(() => location.reload(), 2000);
+        }
         await showCustomAlert(hata, okText);
     }
 }

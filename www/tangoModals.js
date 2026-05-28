@@ -5,11 +5,10 @@ import { renderChips } from './uiRenderer.js';
 // Modal durum değişkenleri
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
+export let activeEditTagsVideoUpdatedAt = null;   // YENİ
 
-// Drive linkini embed formata dönüştürür (Artık YouTube linklerini de dönüştürüyor!)
 export function convertDriveUrlToEmbed(url) {
     if (!url) return '';
-    
     if (url.includes('drive.google.com')) {
         const regExp = /\/file\/d\/([^/]+)/;
         const matches = url.match(regExp);
@@ -17,10 +16,8 @@ export function convertDriveUrlToEmbed(url) {
             return `https://drive.google.com/file/d/${matches[1]}/preview`;
         }
     }
-    
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         let videoId = '';
-        
         if (url.includes('shorts/')) {
             videoId = url.split('shorts/')[1]?.split(/[?#]/)[0];
         } else if (url.includes('youtu.be/')) {
@@ -30,16 +27,13 @@ export function convertDriveUrlToEmbed(url) {
         } else if (url.includes('embed/')) {
             videoId = url.split('embed/')[1]?.split(/[?#]/)[0];
         }
-        
         if (videoId) {
             return `https://www.youtube.com/embed/${videoId}`;
         }
     }
-    
     return url;
 }
 
-// 🎬 Video Önizleme Modalı Fonksiyonları
 export function openVideoModal(url) {
     const embedUrl = convertDriveUrlToEmbed(url);
     document.getElementById('modal-iframe').src = embedUrl;
@@ -51,22 +45,23 @@ export function closeVideoModal() {
     document.getElementById('modal-iframe').src = '';
 }
 
-// ✏️ Etiket Düzenleme Modalı Fonksiyonları
+// 🔁 GÜNCELLENEN: etiket modalında updated_at sakla
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
+    activeEditTagsVideoUpdatedAt = video.updated_at;   // YENİ
     document.getElementById('tags-edit-modal').classList.remove('d-none');
     
     modalTagsArray.length = 0;
     if (video.tags) {
         video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
     }
-    
     renderModalChips(globalVideos, applyFiltersAndSearch);
 }
 
 export function closeTagsEditModal() {
     document.getElementById('tags-edit-modal').classList.add('d-none');
     activeEditTagsVideoId = null;
+    activeEditTagsVideoUpdatedAt = null;
     modalTagsArray = [];
     document.getElementById('modal-tags-input').value = '';
 }
@@ -78,36 +73,36 @@ export function renderModalChips(globalVideos, applyFiltersAndSearch) {
     });
 }
 
+// 🔁 GÜNCELLENEN: etiket kaydederken updated_at gönder
 export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
-    
     try {
-        await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags);
-        
+        await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags, activeEditTagsVideoUpdatedAt);
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
-        
         renderModalChips(globalVideos, applyFiltersAndSearch);
         applyFiltersAndSearch();
     } catch (err) {
-        console.error("Etiket güncellenirken hata oluştu:", err);
+        if (err.message.includes('ÇAKIŞMA')) {
+            showCustomAlert('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'Tamam')
+                .then(() => location.reload());
+        } else {
+            console.error("Etiket güncellenirken hata:", err);
+        }
     }
 }
 
-// 🔔 Modern Özel Alert (Bilgilendirme) Pop-up'ı
 export function showCustomAlert(message, okText = 'Tamam') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
         const msgEl = document.getElementById('custom-dialog-message');
         const okBtn = document.getElementById('custom-dialog-ok-btn');
         const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
-
         msgEl.innerText = message;
         okBtn.innerText = okText;
         cancelBtn.classList.add('d-none');
         modal.classList.remove('d-none');
-
         const handleOk = () => {
             modal.classList.add('d-none');
             okBtn.removeEventListener('click', handleOk);
@@ -117,20 +112,17 @@ export function showCustomAlert(message, okText = 'Tamam') {
     });
 }
 
-// ❓ Modern Özel Confirm (Onay) Pop-up'ı
 export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İptal') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
         const msgEl = document.getElementById('custom-dialog-message');
         const okBtn = document.getElementById('custom-dialog-ok-btn');
         const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
-
         msgEl.innerText = message;
         okBtn.innerText = okText;
         cancelBtn.innerText = cancelText;
         cancelBtn.classList.remove('d-none');
         modal.classList.remove('d-none');
-
         const handleOk = () => {
             modal.classList.add('d-none');
             cleanup();
@@ -145,17 +137,18 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
             okBtn.removeEventListener('click', handleOk);
             cancelBtn.removeEventListener('click', handleCancel);
         };
-
         okBtn.addEventListener('click', handleOk);
         cancelBtn.addEventListener('click', handleCancel);
     });
 }
 
-// 📝 Not düzenleme modalı (GÜNCELLENDİ: callback'e yeni notu gönderir)
+// 🔁 GÜNCELLENEN: not düzenleme modalında updated_at sakla ve gönder
 let activeNoteVideoId = null;
+let activeNoteVideoUpdatedAt = null;
 
 export function openNoteEditModal(video, onNoteSavedCallback) {
     activeNoteVideoId = video.id;
+    activeNoteVideoUpdatedAt = video.updated_at;
     const currentNote = video.notes || '';
     
     const modal = document.getElementById('custom-dialog-modal');
@@ -164,7 +157,6 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
     
     msgEl.innerHTML = `<textarea id="note-textarea" rows="4" style="width:100%; background:#0b0813; color:#f1f5f9; border:1px solid #ff007f; border-radius:8px; padding:8px;">${escapeHtml(currentNote)}</textarea>`;
-    
     okBtn.innerText = 'Kaydet';
     cancelBtn.innerText = 'İptal';
     cancelBtn.classList.remove('d-none');
@@ -173,12 +165,16 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const handleOk = async () => {
         const newNote = document.getElementById('note-textarea').value;
         try {
-            await dbUpdateNote(activeNoteVideoId, newNote);
-            // Callback'e yeni notu gönder
+            await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
         } catch (err) {
-            console.error(err);
-            alert('Not kaydedilemedi');
+            if (err.message.includes('ÇAKIŞMA')) {
+                showCustomAlert('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'Tamam')
+                    .then(() => location.reload());
+            } else {
+                console.error('Not kaydedilemedi', err);
+                showCustomAlert('Not kaydedilemedi: ' + err.message, 'Tamam');
+            }
         }
         modal.classList.add('d-none');
         cleanup();

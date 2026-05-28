@@ -11,7 +11,6 @@ export function detectPlatform(url, isDownloaded) {
     return 'other';
 }
 
-// Mevcut fonksiyonlar
 export async function dbFetchInstructors() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
@@ -52,16 +51,11 @@ export async function dbSaveInstructor(id, name) {
     const url = id ? `${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/instructors`;
     const res = await fetch(url, {
         method,
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, // representation dönsün
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ name })
     });
-    if (!res.ok) {
-        let errorDetail = await res.text();
-        throw new Error(`Eğitmen kaydedilemedi (${res.status}): ${errorDetail}`);
-    }
-    // Dönen veriyi al (yeni eklenen veya güncellenen eğitmen)
-    const data = await res.json();
-    return { data, error: null };
+    if (!res.ok) throw new Error("Eğitmen kaydedilemedi");
+    return res;
 }
 
 export async function dbDeleteInstructor(id) {
@@ -73,78 +67,65 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
-// tangoVeritabani.js - dbSaveVideo fonksiyonu (UPSERT versiyonu)
-export async function dbSaveVideo(id, payload) {
+// 🔁 GÜNCELLENEN: dbSaveVideo (old_updated_at eklendi)
+export async function dbSaveVideo(id, payload, old_updated_at = null) {
     let fixedPayload = { ...payload };
     
-    // Eğer Drive videosuysa ve url yoksa geçici bir url oluştur
     if (fixedPayload.is_downloaded === true && (!fixedPayload.url || fixedPayload.url === '' || fixedPayload.url.startsWith('drive_temp'))) {
         const uniqueSuffix = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
         fixedPayload.url = `drive_video_${uniqueSuffix}`;
     }
 
-    // 📌 UPSERT mantığı:
-    // Eğer id verilmişse (düzenleme durumu) -> direkt güncelle
-    // Eğer id yoksa -> url'ye göre upsert yap
     if (id) {
-        // Mevcut video düzenleniyor
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
+        let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`;
+        if (old_updated_at) {
+            url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
+        }
+        const res = await fetch(url, {
             method: 'PATCH',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(fixedPayload)
         });
         if (!res.ok) {
             let errorText = await res.text();
+            if (res.status === 409 || (res.status === 200 && errorText.includes('0 rows'))) {
+                throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+            }
             throw new Error(`Veritabanı hatası (${res.status}): ${errorText}`);
         }
         return res;
     } else {
-        // Yeni video ekleniyor: URL varsa güncelle, yoksa ekle
-        // Önce aynı URL var mı kontrol et
-        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(fixedPayload)
         });
-        if (!checkRes.ok) {
-            let errorText = await checkRes.text();
-            throw new Error(`Kontrol hatası: ${errorText}`);
+        if (!res.ok) {
+            let errorText = await res.text();
+            throw new Error(`Ekleme hatası (${res.status}): ${errorText}`);
         }
-        const existing = await checkRes.json();
-        
-        if (existing && existing.length > 0) {
-            // Aynı URL var -> GÜNCELLE (UPSERT)
-            const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existing[0].id}`, {
-                method: 'PATCH',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(fixedPayload)
-            });
-            if (!updateRes.ok) {
-                let errorText = await updateRes.text();
-                throw new Error(`Güncelleme hatası (${updateRes.status}): ${errorText}`);
-            }
-            return updateRes;
-        } else {
-            // Aynı URL yok -> YENİ EKLE
-            const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
-                method: 'POST',
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(fixedPayload)
-            });
-            if (!insertRes.ok) {
-                let errorText = await insertRes.text();
-                throw new Error(`Ekleme hatası (${insertRes.status}): ${errorText}`);
-            }
-            return insertRes;
-        }
+        return res;
     }
 }
 
-export async function dbUpdateTagsDirectly(videoId, cleanTags) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
+// 🔁 GÜNCELLENEN: dbUpdateTagsDirectly (old_updated_at eklendi)
+export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = null) {
+    let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
+    if (old_updated_at) {
+        url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
+    }
+    const res = await fetch(url, {
         method: 'PATCH',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ tags: cleanTags || null })
     });
-    if (!res.ok) throw new Error("Etiket güncellenemedi");
+    if (!res.ok) {
+        let errorText = await res.text();
+        if (res.status === 409 || (res.status === 200 && errorText.includes('0 rows'))) {
+            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+        }
+        throw new Error(`Etiket güncellenemedi: ${errorText}`);
+    }
     return res;
 }
 
@@ -184,19 +165,28 @@ export async function dbClearAllFavorites() {
     return res;
 }
 
-export async function dbUpdateNote(videoId, note) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
+// 🔁 GÜNCELLENEN: dbUpdateNote (old_updated_at eklendi)
+export async function dbUpdateNote(videoId, note, old_updated_at = null) {
+    let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
+    if (old_updated_at) {
+        url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
+    }
+    const res = await fetch(url, {
         method: 'PATCH',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: note || null })
     });
-    if (!res.ok) throw new Error("Not kaydedilemedi");
+    if (!res.ok) {
+        let errorText = await res.text();
+        if (res.status === 409 || (res.status === 200 && errorText.includes('0 rows'))) {
+            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+        }
+        throw new Error(`Not kaydedilemedi: ${errorText}`);
+    }
     return res;
 }
 
-// ---------- TOPLU ETİKET FONKSİYONLARI (app.js'deki çağrılarla uyumlu) ----------
-
-// Yardımcı: videoların tags alanını toplu güncelle
+// ---------- TOPLU ETİKET FONKSİYONLARI ----------
 async function batchUpdateVideosTag(updates) {
     if (!updates.length) return;
     const promises = updates.map(({ id, newTags }) => {
@@ -211,7 +201,6 @@ async function batchUpdateVideosTag(updates) {
     if (failed.length) throw new Error(`${failed.length} video güncellenemedi`);
 }
 
-// Etiket birleştirme (app.js'de dbMergeTags çağrılıyor)
 export async function dbMergeTags(oldTagsArray, newTag) {
     const videos = await dbFetchVideos();
     const updates = [];
@@ -233,7 +222,6 @@ export async function dbMergeTags(oldTagsArray, newTag) {
     await batchUpdateVideosTag(updates);
 }
 
-// Etiket silme (app.js'de dbDeleteTagFromAllVideos çağrılıyor) - dizi alır
 export async function dbDeleteTagFromAllVideos(tagsArray) {
     const videos = await dbFetchVideos();
     const updates = [];
@@ -254,7 +242,6 @@ export async function dbDeleteTagFromAllVideos(tagsArray) {
     await batchUpdateVideosTag(updates);
 }
 
-// Etiket yeniden adlandırma (app.js'de dbRenameTag çağrılıyor)
 export async function dbRenameTag(oldTag, newTag) {
     const videos = await dbFetchVideos();
     const updates = [];
@@ -269,7 +256,6 @@ export async function dbRenameTag(oldTag, newTag) {
     await batchUpdateVideosTag(updates);
 }
 
-// Kullanılmayan etiketleri temizle (app.js'de dbCleanupUnusedTags çağrılıyor)
 export async function dbCleanupUnusedTags() {
     const videos = await dbFetchVideos();
     const usedTagsSet = new Set();
@@ -281,13 +267,11 @@ export async function dbCleanupUnusedTags() {
             });
         }
     });
-    // Kullanılmayan etiket yok, sadece boşluk temizliği yapılabilir
     let removedCount = 0;
     const updates = [];
     for (const video of videos) {
         if (!video.tags) continue;
         let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-        // Geçerli tüm etiketler zaten kullanılıyor, sadece tekrarları kaldır
         const uniqueTags = [...new Set(tags)];
         if (uniqueTags.length !== tags.length) {
             updates.push({ id: video.id, newTags: uniqueTags.join(', ') });

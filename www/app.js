@@ -17,7 +17,7 @@ import { showLoading, setCurrentLangForUtils, showModernPrompt } from './utils.j
 import { initTagManager, updateTagManagerSelection, promptRenameTagModern, deleteSingleTag, deleteSelectedTags, mergeSelectedTags, cleanupUnusedTags } from './tagManager.js';
 import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData } from './videoHandlers.js';
 import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor, setInstructorHandlersGlobalData } from './instructorHandlers.js';
-import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, formTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
+import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, formTagsArray, setFormHandlersGlobalData, setEditingVideoUpdatedAt } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 
 let currentLang = 'tr';
@@ -66,7 +66,7 @@ async function fetchVideos() {
         
         setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
-        setFormHandlersGlobalData(currentLang, editingVideoId, globalVideos);
+        setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
         initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
         
         applyFiltersAndSearch();
@@ -151,9 +151,11 @@ function clearAllFavorites() {
 
 function callGetUniqueTagsPool() { return getAllUniqueTagsPool(globalVideos); }
 
+// 🔁 GÜNCELLENEN: startVideoEditFlow (updated_at sakla)
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
     setEditingVideoId(video.id);
+    setEditingVideoUpdatedAt(video.updated_at);   // YENİ SATIR
     callSwitchView('add');
     const lang = translations[currentLang];
     document.getElementById('form-title').innerText = lang.formTitleEdit;
@@ -255,20 +257,21 @@ const getUIState = () => ({
 
 setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
 setInstructorHandlersGlobalData(currentLang, editInstructorId);
-setFormHandlersGlobalData(currentLang, editingVideoId, globalVideos);
+setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
 initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
 
 initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
 initInstructorHandlers(editInstructorId, fetchInstructors, fetchVideos);
-initFormHandlers(editingVideoId, globalVideos, fetchVideos, callSwitchView);
+initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callSwitchView);
 
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setBackupLang(currentLang);
     setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
-    setFormHandlersGlobalData(currentLang, editingVideoId, globalVideos);
+    setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
     initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+    setEditingVideoUpdatedAt(null); // YENİ: dil değişince updated_at sıfırlansın
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -303,9 +306,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, () => renderFormChips(), (newTag) => {
         if (!formTagsArray.includes(newTag)) {
-        formTagsArray.push(newTag);
-        renderFormChips();
-        callUpdateSmartAssistant();
+            formTagsArray.push(newTag);
+            renderFormChips();
+            callUpdateSmartAssistant();
         }
     }, callGetUniqueTagsPool);
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
