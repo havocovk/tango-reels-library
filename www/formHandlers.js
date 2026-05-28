@@ -8,10 +8,10 @@ import { updateSmartFilenameAssistant } from './tangoUI.js';
 let currentLang = 'tr';
 let editingVideoId = null;
 export let formTagsArray = [];
+let editingVideoUpdatedAt = null;   // ★ YENİ: updated_at saklamak için
 let globalVideos = [];
 let fetchVideosCallback = null;
 let callSwitchViewCallback = null;
-let editingVideoUpdatedAt = null;   // YENİ: düzenlenen videonun updated_at değeri
 
 export function setFormHandlersGlobalData(lang, editId, tagsArray, videos) {
     currentLang = lang;
@@ -32,7 +32,7 @@ export function setEditingVideoId(id) {
     editingVideoId = id;
 }
 
-// YENİ FONKSİYON: updated_at değerini set et
+// ★ YENİ: updated_at değerini dışarıdan almak için
 export function setEditingVideoUpdatedAt(updatedAt) {
     editingVideoUpdatedAt = updatedAt;
 }
@@ -87,11 +87,11 @@ export async function handleFormSubmit(e) {
         cover_url, platform
     };
     try {
-        // 🔁 GÜNCELLENDİ: old_updated_at gönderiliyor
+        // ★ updated_at değerini üçüncü parametre olarak gönder
         await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         editingVideoId = null;
-        editingVideoUpdatedAt = null; // temizle
+        editingVideoUpdatedAt = null;   // ★ temizle
         setFormTagsArray([]);
         renderFormChips();
         document.getElementById('add-video-form').reset();
@@ -102,12 +102,14 @@ export async function handleFormSubmit(e) {
         if (callSwitchViewCallback) callSwitchViewCallback('library');
         if (fetchVideosCallback) await fetchVideosCallback();
     } catch (err) {
-        let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
-        if (err.message.includes('ÇAKIŞMA')) {
-            hata = err.message;
-            // Çakışma durumunda sayfayı yenileme öner
-            setTimeout(() => location.reload(), 2000);
+        let hataMesaji = err.message;
+        if (hataMesaji.includes('ÇAKIŞMA')) {
+            await showCustomAlert(hataMesaji, okText);
+            if (callSwitchViewCallback) callSwitchViewCallback('library');
+            if (fetchVideosCallback) await fetchVideosCallback();
+        } else {
+            let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
+            await showCustomAlert(hata, okText);
         }
-        await showCustomAlert(hata, okText);
     }
 }

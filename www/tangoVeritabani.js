@@ -56,7 +56,7 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
-// ⭐⭐⭐ ÇÖZÜM: URL çakışmasında UPSERT (güncelle) yapan fonksiyon
+// ★ GÜNCELLENEN: UPSERT + updated_at kontrolü
 export async function dbSaveVideo(id, payload, old_updated_at = null) {
     let fixedPayload = { ...payload };
     
@@ -65,7 +65,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         fixedPayload.url = `drive_video_${uniqueSuffix}`;
     }
 
-    // Eğer ID verilmişse (düzenleme) -> direkt güncelle
+    // Düzenleme (id var)
     if (id) {
         let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`;
         if (old_updated_at) {
@@ -86,8 +86,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         return res;
     }
 
-    // YENİ EKLEME: URL kontrolü yap, varsa GÜNCELLE, yoksa EKLE
-    // 1) Aynı URL var mı kontrol et
+    // Yeni ekleme: URL çakışmasını kontrol et, varsa güncelle, yoksa ekle
     const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -98,7 +97,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
     const existing = await checkRes.json();
     
     if (existing && existing.length > 0) {
-        // Aynı URL var -> GÜNCELLE (UPSERT)
+        // Aynı URL var -> GÜNCELLE (updated_at kontrolü yapmadan, çünkü eski değer yok)
         const existingId = existing[0].id;
         const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existingId}`, {
             method: 'PATCH',
@@ -111,7 +110,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         }
         return updateRes;
     } else {
-        // Aynı URL yok -> YENİ EKLE
+        // Yeni ekle
         const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
             method: 'POST',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
@@ -125,6 +124,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
     }
 }
 
+// ★ GÜNCELLENEN: updated_at kontrollü etiket güncelleme
 export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = null) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
@@ -145,6 +145,7 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
     return res;
 }
 
+// ★ GÜNCELLENEN: updated_at kontrollü not güncelleme
 export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
@@ -201,7 +202,7 @@ export async function dbClearAllFavorites() {
     return res;
 }
 
-// Toplu etiket işlemleri (isteğe bağlı, daha önceki gibi kalabilir)
+// Toplu etiket işlemleri (değişmedi)
 async function batchUpdateVideosTag(updates) {
     if (!updates.length) return;
     const promises = updates.map(({ id, newTags }) => {

@@ -48,7 +48,7 @@ export function closeVideoModal() {
 // 🔁 GÜNCELLENEN: etiket modalında updated_at sakla
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
-    activeEditTagsVideoUpdatedAt = video.updated_at;   // YENİ
+    activeEditTagsVideoUpdatedAt = video.updated_at;   // ★ sakla
     document.getElementById('tags-edit-modal').classList.remove('d-none');
     
     modalTagsArray.length = 0;
@@ -85,10 +85,10 @@ export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSe
         applyFiltersAndSearch();
     } catch (err) {
         if (err.message.includes('ÇAKIŞMA')) {
-            showCustomAlert('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'Tamam')
-                .then(() => location.reload());
+            await showCustomAlert('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'Tamam');
+            location.reload();
         } else {
-            console.error("Etiket güncellenirken hata:", err);
+            console.error("Etiket güncellenirken hata oluştu:", err);
         }
     }
 }
@@ -148,7 +148,7 @@ let activeNoteVideoUpdatedAt = null;
 
 export function openNoteEditModal(video, onNoteSavedCallback) {
     activeNoteVideoId = video.id;
-    activeNoteVideoUpdatedAt = video.updated_at;
+    activeNoteVideoUpdatedAt = video.updated_at;   // ★ sakla
     const currentNote = video.notes || '';
     
     const modal = document.getElementById('custom-dialog-modal');
@@ -157,6 +157,7 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
     
     msgEl.innerHTML = `<textarea id="note-textarea" rows="4" style="width:100%; background:#0b0813; color:#f1f5f9; border:1px solid #ff007f; border-radius:8px; padding:8px;">${escapeHtml(currentNote)}</textarea>`;
+    
     okBtn.innerText = 'Kaydet';
     cancelBtn.innerText = 'İptal';
     cancelBtn.classList.remove('d-none');
@@ -169,11 +170,11 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
         } catch (err) {
             if (err.message.includes('ÇAKIŞMA')) {
-                showCustomAlert('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'Tamam')
-                    .then(() => location.reload());
+                await showCustomAlert('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'Tamam');
+                location.reload();
             } else {
-                console.error('Not kaydedilemedi', err);
-                showCustomAlert('Not kaydedilemedi: ' + err.message, 'Tamam');
+                console.error(err);
+                alert('Not kaydedilemedi');
             }
         }
         modal.classList.add('d-none');
