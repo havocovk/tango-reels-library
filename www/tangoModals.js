@@ -48,7 +48,7 @@ export function closeVideoModal() {
 // 🔁 GÜNCELLENEN: etiket modalında updated_at sakla
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
-    activeEditTagsVideoUpdatedAt = video.updated_at;   // ★ sakla
+    activeEditTagsVideoUpdatedAt = video.updated_at;   // YENİ
     document.getElementById('tags-edit-modal').classList.remove('d-none');
     
     modalTagsArray.length = 0;
@@ -61,7 +61,7 @@ export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
 export function closeTagsEditModal() {
     document.getElementById('tags-edit-modal').classList.add('d-none');
     activeEditTagsVideoId = null;
-    activeEditTagsVideoUpdatedAt = null;
+    activeEditTagsVideoUpdatedAt = null;   // YENİ
     modalTagsArray = [];
     document.getElementById('modal-tags-input').value = '';
 }
@@ -78,7 +78,7 @@ export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSe
     if (!activeEditTagsVideoId) return;
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
     try {
-        await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags, activeEditTagsVideoUpdatedAt);
+        await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags, activeEditTagsVideoUpdatedAt);   // updated_at eklendi
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
         renderModalChips(globalVideos, applyFiltersAndSearch);
@@ -148,7 +148,7 @@ let activeNoteVideoUpdatedAt = null;
 
 export function openNoteEditModal(video, onNoteSavedCallback) {
     activeNoteVideoId = video.id;
-    activeNoteVideoUpdatedAt = video.updated_at;   // ★ sakla
+    activeNoteVideoUpdatedAt = video.updated_at;   // YENİ
     const currentNote = video.notes || '';
     
     const modal = document.getElementById('custom-dialog-modal');
@@ -166,7 +166,7 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const handleOk = async () => {
         const newNote = document.getElementById('note-textarea').value;
         try {
-            await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);
+            await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);   // updated_at eklendi
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
         } catch (err) {
             if (err.message.includes('ÇAKIŞMA')) {

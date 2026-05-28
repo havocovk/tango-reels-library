@@ -8,7 +8,7 @@ import { updateSmartFilenameAssistant } from './tangoUI.js';
 let currentLang = 'tr';
 let editingVideoId = null;
 export let formTagsArray = [];
-let editingVideoUpdatedAt = null;   // ★ YENİ: updated_at saklamak için
+let editingVideoUpdatedAt = null;
 let globalVideos = [];
 let fetchVideosCallback = null;
 let callSwitchViewCallback = null;
@@ -32,7 +32,6 @@ export function setEditingVideoId(id) {
     editingVideoId = id;
 }
 
-// ★ YENİ: updated_at değerini dışarıdan almak için
 export function setEditingVideoUpdatedAt(updatedAt) {
     editingVideoUpdatedAt = updatedAt;
 }
@@ -87,11 +86,10 @@ export async function handleFormSubmit(e) {
         cover_url, platform
     };
     try {
-        // ★ updated_at değerini üçüncü parametre olarak gönder
         await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         editingVideoId = null;
-        editingVideoUpdatedAt = null;   // ★ temizle
+        editingVideoUpdatedAt = null;
         setFormTagsArray([]);
         renderFormChips();
         document.getElementById('add-video-form').reset();

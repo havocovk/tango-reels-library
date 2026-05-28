@@ -56,7 +56,7 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
-// ★ GÜNCELLENEN: UPSERT + updated_at kontrolü
+// ★★★ DÜZELTİLMİŞ: updated_at kontrolü kesin çalışıyor ★★★
 export async function dbSaveVideo(id, payload, old_updated_at = null) {
     let fixedPayload = { ...payload };
     
@@ -73,20 +73,39 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         }
         const res = await fetch(url, {
             method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'   // ← EKLENEN SATIR
+            },
             body: JSON.stringify(fixedPayload)
         });
-        if (!res.ok) {
-            let errorText = await res.text();
-            if (res.status === 409 || errorText.includes('0 rows')) {
-                throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+        
+        if (res.status === 409) {
+            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+        }
+        
+        const responseText = await res.text();
+        let affectedRows = 0;
+        try {
+            const json = JSON.parse(responseText);
+            if (Array.isArray(json)) {
+                affectedRows = json.length;
             }
-            throw new Error(`Veritabanı hatası (${res.status}): ${errorText}`);
+        } catch(e) {}
+        
+        if (affectedRows === 0) {
+            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+        }
+        
+        if (!res.ok) {
+            throw new Error(`Veritabanı hatası (${res.status}): ${responseText}`);
         }
         return res;
     }
 
-    // Yeni ekleme: URL çakışmasını kontrol et, varsa güncelle, yoksa ekle
+    // Yeni ekleme (id yok) - URL çakışması kontrolü yap
     const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -97,11 +116,15 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
     const existing = await checkRes.json();
     
     if (existing && existing.length > 0) {
-        // Aynı URL var -> GÜNCELLE (updated_at kontrolü yapmadan, çünkü eski değer yok)
         const existingId = existing[0].id;
         const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existingId}`, {
             method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'   // ← EKLENEN SATIR
+            },
             body: JSON.stringify(fixedPayload)
         });
         if (!updateRes.ok) {
@@ -110,10 +133,13 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         }
         return updateRes;
     } else {
-        // Yeni ekle
         const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
             method: 'POST',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(fixedPayload)
         });
         if (!insertRes.ok) {
@@ -124,7 +150,6 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
     }
 }
 
-// ★ GÜNCELLENEN: updated_at kontrollü etiket güncelleme
 export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = null) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
@@ -132,20 +157,32 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
     }
     const res = await fetch(url, {
         method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'   // ← EKLENEN SATIR
+        },
         body: JSON.stringify({ tags: cleanTags || null })
     });
+    if (res.status === 409) {
+        throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+    }
+    const responseText = await res.text();
+    let affectedRows = 0;
+    try {
+        const json = JSON.parse(responseText);
+        if (Array.isArray(json)) affectedRows = json.length;
+    } catch(e) {}
+    if (affectedRows === 0) {
+        throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+    }
     if (!res.ok) {
-        let errorText = await res.text();
-        if (res.status === 409 || errorText.includes('0 rows')) {
-            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
-        }
-        throw new Error(`Etiket güncellenemedi: ${errorText}`);
+        throw new Error(`Etiket güncellenemedi: ${responseText}`);
     }
     return res;
 }
 
-// ★ GÜNCELLENEN: updated_at kontrollü not güncelleme
 export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
@@ -153,15 +190,28 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     }
     const res = await fetch(url, {
         method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'   // ← EKLENEN SATIR
+        },
         body: JSON.stringify({ notes: note || null })
     });
+    if (res.status === 409) {
+        throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+    }
+    const responseText = await res.text();
+    let affectedRows = 0;
+    try {
+        const json = JSON.parse(responseText);
+        if (Array.isArray(json)) affectedRows = json.length;
+    } catch(e) {}
+    if (affectedRows === 0) {
+        throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+    }
     if (!res.ok) {
-        let errorText = await res.text();
-        if (res.status === 409 || errorText.includes('0 rows')) {
-            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
-        }
-        throw new Error(`Not kaydedilemedi: ${errorText}`);
+        throw new Error(`Not kaydedilemedi: ${responseText}`);
     }
     return res;
 }

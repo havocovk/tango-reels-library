@@ -155,7 +155,8 @@ function callGetUniqueTagsPool() { return getAllUniqueTagsPool(globalVideos); }
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
     setEditingVideoId(video.id);
-    setEditingVideoUpdatedAt(video.updated_at);   // ★ YENİ
+    setEditingVideoUpdatedAt(video.updated_at);   // ★ Çok önemli
+    console.log("Düzenlenen video updated_at:", video.updated_at); // DEBUG
     callSwitchView('add');
     const lang = translations[currentLang];
     document.getElementById('form-title').innerText = lang.formTitleEdit;
