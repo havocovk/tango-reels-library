@@ -1,6 +1,5 @@
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
-// Platform algılama
 export function detectPlatform(url, isDownloaded) {
     if (isDownloaded) return 'drive';
     if (!url) return 'other';
@@ -25,16 +24,6 @@ export async function dbFetchVideos() {
     });
     if (!res.ok) throw new Error("Videolar alınamadı");
     return await res.json();
-}
-
-export async function dbSaveTags(videoId, cleanTags) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tags: cleanTags || null })
-    });
-    if (!res.ok) throw new Error("Etiket güncellenemedi");
-    return res;
 }
 
 export async function dbDeleteVideo(videoId) {
@@ -67,7 +56,7 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
-// 🔁 GÜNCELLENEN: dbSaveVideo (old_updated_at eklendi)
+// ⭐⭐⭐ ÇÖZÜM: URL çakışmasında UPSERT (güncelle) yapan fonksiyon
 export async function dbSaveVideo(id, payload, old_updated_at = null) {
     let fixedPayload = { ...payload };
     
@@ -76,6 +65,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         fixedPayload.url = `drive_video_${uniqueSuffix}`;
     }
 
+    // Eğer ID verilmişse (düzenleme) -> direkt güncelle
     if (id) {
         let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`;
         if (old_updated_at) {
@@ -88,27 +78,53 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         });
         if (!res.ok) {
             let errorText = await res.text();
-            if (res.status === 409 || (res.status === 200 && errorText.includes('0 rows'))) {
+            if (res.status === 409 || errorText.includes('0 rows')) {
                 throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
             }
             throw new Error(`Veritabanı hatası (${res.status}): ${errorText}`);
         }
         return res;
+    }
+
+    // YENİ EKLEME: URL kontrolü yap, varsa GÜNCELLE, yoksa EKLE
+    // 1) Aynı URL var mı kontrol et
+    const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    if (!checkRes.ok) {
+        let errorText = await checkRes.text();
+        throw new Error(`Kontrol hatası: ${errorText}`);
+    }
+    const existing = await checkRes.json();
+    
+    if (existing && existing.length > 0) {
+        // Aynı URL var -> GÜNCELLE (UPSERT)
+        const existingId = existing[0].id;
+        const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existingId}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(fixedPayload)
+        });
+        if (!updateRes.ok) {
+            let errorText = await updateRes.text();
+            throw new Error(`Güncelleme hatası (${updateRes.status}): ${errorText}`);
+        }
+        return updateRes;
     } else {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
+        // Aynı URL yok -> YENİ EKLE
+        const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
             method: 'POST',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify(fixedPayload)
         });
-        if (!res.ok) {
-            let errorText = await res.text();
-            throw new Error(`Ekleme hatası (${res.status}): ${errorText}`);
+        if (!insertRes.ok) {
+            let errorText = await insertRes.text();
+            throw new Error(`Ekleme hatası (${insertRes.status}): ${errorText}`);
         }
-        return res;
+        return insertRes;
     }
 }
 
-// 🔁 GÜNCELLENEN: dbUpdateTagsDirectly (old_updated_at eklendi)
 export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = null) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
@@ -121,10 +137,30 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
     });
     if (!res.ok) {
         let errorText = await res.text();
-        if (res.status === 409 || (res.status === 200 && errorText.includes('0 rows'))) {
+        if (res.status === 409 || errorText.includes('0 rows')) {
             throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
         }
         throw new Error(`Etiket güncellenemedi: ${errorText}`);
+    }
+    return res;
+}
+
+export async function dbUpdateNote(videoId, note, old_updated_at = null) {
+    let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
+    if (old_updated_at) {
+        url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
+    }
+    const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: note || null })
+    });
+    if (!res.ok) {
+        let errorText = await res.text();
+        if (res.status === 409 || errorText.includes('0 rows')) {
+            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+        }
+        throw new Error(`Not kaydedilemedi: ${errorText}`);
     }
     return res;
 }
@@ -165,28 +201,7 @@ export async function dbClearAllFavorites() {
     return res;
 }
 
-// 🔁 GÜNCELLENEN: dbUpdateNote (old_updated_at eklendi)
-export async function dbUpdateNote(videoId, note, old_updated_at = null) {
-    let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
-    if (old_updated_at) {
-        url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
-    }
-    const res = await fetch(url, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: note || null })
-    });
-    if (!res.ok) {
-        let errorText = await res.text();
-        if (res.status === 409 || (res.status === 200 && errorText.includes('0 rows'))) {
-            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
-        }
-        throw new Error(`Not kaydedilemedi: ${errorText}`);
-    }
-    return res;
-}
-
-// ---------- TOPLU ETİKET FONKSİYONLARI ----------
+// Toplu etiket işlemleri (isteğe bağlı, daha önceki gibi kalabilir)
 async function batchUpdateVideosTag(updates) {
     if (!updates.length) return;
     const promises = updates.map(({ id, newTags }) => {
