@@ -1,4 +1,4 @@
-// backup.js - Yedekleme ve geri yükleme modülü (Gelişmiş Rollback ve ID Yönetimi)
+// backup.js - Yedekleme ve geri yükleme modülü (Gelişmiş Rollback + Loading Fix)
 import { dbSaveInstructor, dbSaveVideo, dbAddFavorite, dbFetchInstructors, dbFetchVideos, dbFetchFavorites, dbDeleteInstructor, dbDeleteVideo, dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading } from './utils.js';
@@ -60,12 +60,13 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
 
-    // --- Önce onay sor ---
+    // --- Önce onay sor (loading perdesi KAPALI) ---
     const confirmMsg = currentLang === 'tr' 
         ? 'Bu yedek dosyası mevcut koleksiyonunuzla birleştirilecektir. Aynı ID\'ler yeni ID olarak eklenir. Devam etmek istiyor musunuz?'
         : 'This backup will be merged with your current collection. Duplicate IDs will get new IDs. Continue?';
     if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
 
+    // --- Onay alındı, loading perdesini aç ---
     showLoading(true);
 
     let backup;
@@ -74,8 +75,9 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
         backup = JSON.parse(fileContent);
         if (!backup.data || !backup.data.videos || !backup.data.instructors) throw new Error('Invalid format');
     } catch (err) {
-        await showCustomAlert(currentLang === 'tr' ? 'Geçersiz yedek dosyası!' : 'Invalid backup file!', okText);
+        // Hata olursa perdeyi kapat, sonra uyarıyı göster
         showLoading(false);
+        await showCustomAlert(currentLang === 'tr' ? 'Geçersiz yedek dosyası!' : 'Invalid backup file!', okText);
         return;
     }
 
@@ -84,37 +86,22 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
     const oldVideos = [...currentVideos];
     const oldFavorites = [...currentFavorites];
 
-    // --- Yeni eklenenlerin ID'lerini tutacak listeler (rollback için) ---
-    const newInstructorIds = [];     // yeni eklenen eğitmenlerin ID'leri
-    const newVideoIds = [];          // yeni eklenen videoların ID'leri
-
-    // --- ID eşleme tabloları (eski ID -> yeni ID) ---
+    const newInstructorIds = [];
+    const newVideoIds = [];
     const instructorIdMap = new Map();
     const videoIdMap = new Map();
 
     try {
-        // ========== ADIM 1: Eğitmenleri ekle (ID çakışması varsa yeni ID ile) ==========
+        // ========== ADIM 1: Eğitmenleri ekle ==========
         for (const ins of backup.data.instructors) {
-            const existing = currentInstructors.find(i => i.id === ins.id);
-            if (existing) {
-                // ID çakıştı, yeni ID ile ekle (id göndermeden POST)
-                const { data, error } = await dbSaveInstructor(null, ins.name);
-                if (error) throw new Error(`Eğitmen eklenemedi: ${ins.name}`);
-                // Yeni eklenen eğitmenin ID'sini almak için tekrar fetch yapacağız, ama önce id'yi geçici olarak saklayalım
-                // dbSaveInstructor dönüş değerini düzenlemek yerine, fetch ile alacağız.
-            } else {
-                await dbSaveInstructor(null, ins.name);
-            }
+            await dbSaveInstructor(null, ins.name);
         }
-        // Tüm eğitmenler eklendi, şimdi gerçek ID'leri alalım
         await fetchInstructorsFn();
         const freshInstructors = await dbFetchInstructors();
-        // Eski ID -> yeni ID eşlemesi (isim bazlı)
         for (const oldIns of backup.data.instructors) {
             const matched = freshInstructors.find(i => i.name === oldIns.name);
             if (matched) {
                 instructorIdMap.set(oldIns.id, matched.id);
-                // Yeni eklenen eğitmenleri rollback listesine ekle (eskiden olmayanlar)
                 if (!oldInstructors.some(i => i.id === matched.id)) {
                     newInstructorIds.push(matched.id);
                 }
@@ -123,12 +110,10 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
             }
         }
 
-        // ========== ADIM 2: Videoları ekle (yeni eğitmen ID'leri ile) ==========
+        // ========== ADIM 2: Videoları ekle ==========
         for (const vid of backup.data.videos) {
             const newInstructorId = instructorIdMap.get(vid.instructor_id);
-            if (!newInstructorId) {
-                throw new Error(`Eğitmen ID ${vid.instructor_id} eşlenemedi`);
-            }
+            if (!newInstructorId) throw new Error(`Eğitmen ID ${vid.instructor_id} eşlenemedi`);
             const videoPayload = {
                 url: vid.url,
                 instructor_id: newInstructorId,
@@ -143,7 +128,6 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
             };
             await dbSaveVideo(null, videoPayload);
         }
-        // Yeni videoların ID'lerini alalım
         await fetchVideosFn();
         const freshVideos = await dbFetchVideos();
         for (const oldVid of backup.data.videos) {
@@ -154,7 +138,6 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
             );
             if (matched) {
                 videoIdMap.set(oldVid.id, matched.id);
-                // Yeni eklenen videoları rollback listesine ekle
                 if (!oldVideos.some(v => v.id === matched.id)) {
                     newVideoIds.push(matched.id);
                 }
@@ -163,7 +146,7 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
             }
         }
 
-        // ========== ADIM 3: Favorileri ekle (yeni video ID'leri ile) ==========
+        // ========== ADIM 3: Favorileri ekle ==========
         for (const oldFavId of backup.data.favorites) {
             const newVideoId = videoIdMap.get(oldFavId);
             if (newVideoId) {
@@ -175,17 +158,18 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
             }
         }
 
-        await showCustomAlert(currentLang === 'tr' ? 'Yedek başarıyla içe aktarıldı (birleştirildi).' : 'Backup successfully imported (merged).', okText);
+        // --- Başarılı: perdeyi kapat, sonra başarı mesajını göster ---
         showLoading(false);
+        await showCustomAlert(currentLang === 'tr' ? 'Yedek başarıyla içe aktarıldı (birleştirildi).' : 'Backup successfully imported (merged).', okText);
 
     } catch (err) {
         console.error('İçe aktarma hatası:', err);
-        // ========== ROLLBACK: Eklenen tüm yeni verileri sil ==========
+        // Hata durumunda önce perdeyi kapat, sonra rollback yap (rollback içinde perdeyi açıp kapatabilir)
+        showLoading(false);
         await performRollback(newInstructorIds, newVideoIds, oldFavorites, fetchInstructorsFn, fetchVideosFn);
         await showCustomAlert(currentLang === 'tr' 
             ? `İçe aktarma başarısız oldu. Hata: ${err.message}. Yapılan tüm değişiklikler geri alındı.` 
             : `Import failed: ${err.message}. All changes have been rolled back.`, okText);
-        showLoading(false);
     }
 }
 
@@ -194,27 +178,23 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
 // --------------------------------------------------------------
 async function performRollback(newInstructorIds, newVideoIds, oldFavorites, fetchInstructorsFn, fetchVideosFn) {
     console.log('Rollback başlıyor...', { newInstructorIds, newVideoIds });
+    // Rollback sırasında loading göstermeye gerek yok, zaten perde kapatıldı
     try {
-        // Önce yeni eklenen videoları sil
         for (const vidId of newVideoIds) {
             await dbDeleteVideo(vidId).catch(e => console.warn(`Video ${vidId} silinemedi:`, e));
         }
-        // Sonra yeni eklenen eğitmenleri sil
         for (const insId of newInstructorIds) {
             await dbDeleteInstructor(insId).catch(e => console.warn(`Eğitmen ${insId} silinemedi:`, e));
         }
-        // Favorileri eski haline getir (tüm favorileri temizleyip eskilerini ekle)
         await dbClearAllFavorites();
         for (const favId of oldFavorites) {
             await dbAddFavorite(favId).catch(e => console.warn(`Favori ${favId} eklenemedi:`, e));
         }
-        // Verileri yenile
         await fetchInstructorsFn();
         await fetchVideosFn();
         console.log('Rollback tamamlandı.');
     } catch (rollbackErr) {
         console.error('Rollback sırasında hata:', rollbackErr);
-        // Son çare: sayfayı yenile
         location.reload();
     }
 }
