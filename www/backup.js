@@ -1,4 +1,4 @@
-// backup.js - Yedekleme ve geri yükleme modülü (Gelişmiş Rollback + Loading Fix)
+// backup.js - Yedekleme ve geri yükleme modülü (Eğitmen çakışması düzeltildi)
 import { dbSaveInstructor, dbSaveVideo, dbAddFavorite, dbFetchInstructors, dbFetchVideos, dbFetchFavorites, dbDeleteInstructor, dbDeleteVideo, dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading } from './utils.js';
@@ -53,20 +53,18 @@ export function exportToJSON(videos, instructors, favorites) {
 }
 
 // --------------------------------------------------------------
-// 2. İÇE AKTARMA (Import) - Sıralı, Rollback, ID Eşleme
+// 2. İÇE AKTARMA (Import) - Eğitmen çakışması düzeltildi
 // --------------------------------------------------------------
 export async function importFromJSON(file, currentVideos, currentInstructors, currentFavorites, fetchVideosFn, fetchInstructorsFn) {
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
 
-    // --- Önce onay sor (loading perdesi KAPALI) ---
     const confirmMsg = currentLang === 'tr' 
         ? 'Bu yedek dosyası mevcut koleksiyonunuzla birleştirilecektir. Aynı ID\'ler yeni ID olarak eklenir. Devam etmek istiyor musunuz?'
         : 'This backup will be merged with your current collection. Duplicate IDs will get new IDs. Continue?';
     if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
 
-    // --- Onay alındı, loading perdesini aç ---
     showLoading(true);
 
     let backup;
@@ -75,33 +73,38 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
         backup = JSON.parse(fileContent);
         if (!backup.data || !backup.data.videos || !backup.data.instructors) throw new Error('Invalid format');
     } catch (err) {
-        // Hata olursa perdeyi kapat, sonra uyarıyı göster
         showLoading(false);
         await showCustomAlert(currentLang === 'tr' ? 'Geçersiz yedek dosyası!' : 'Invalid backup file!', okText);
         return;
     }
 
-    // --- Eski verilerin yedeği (rollback için) ---
     const oldInstructors = [...currentInstructors];
     const oldVideos = [...currentVideos];
     const oldFavorites = [...currentFavorites];
-
     const newInstructorIds = [];
     const newVideoIds = [];
     const instructorIdMap = new Map();
     const videoIdMap = new Map();
 
     try {
-        // ========== ADIM 1: Eğitmenleri ekle ==========
+        // ========== ADIM 1: Eğitmenleri ekle (aynı isim varsa onu kullan) ==========
         for (const ins of backup.data.instructors) {
-            await dbSaveInstructor(null, ins.name);
+            // Önce mevcut eğitmenlerde aynı isim var mı?
+            let existingInstructor = currentInstructors.find(i => i.name === ins.name);
+            if (!existingInstructor) {
+                // Aynı isimde yoksa yeni ekle
+                await dbSaveInstructor(null, ins.name);
+            }
         }
+        // Tüm eğitmenleri yeniden çek
         await fetchInstructorsFn();
         const freshInstructors = await dbFetchInstructors();
+        // Eski ID -> yeni ID eşlemesi (isim bazlı)
         for (const oldIns of backup.data.instructors) {
             const matched = freshInstructors.find(i => i.name === oldIns.name);
             if (matched) {
                 instructorIdMap.set(oldIns.id, matched.id);
+                // Yeni eklenenleri rollback listesine ekle (eski listede yoksa)
                 if (!oldInstructors.some(i => i.id === matched.id)) {
                     newInstructorIds.push(matched.id);
                 }
@@ -158,13 +161,11 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
             }
         }
 
-        // --- Başarılı: perdeyi kapat, sonra başarı mesajını göster ---
         showLoading(false);
         await showCustomAlert(currentLang === 'tr' ? 'Yedek başarıyla içe aktarıldı (birleştirildi).' : 'Backup successfully imported (merged).', okText);
 
     } catch (err) {
         console.error('İçe aktarma hatası:', err);
-        // Hata durumunda önce perdeyi kapat, sonra rollback yap (rollback içinde perdeyi açıp kapatabilir)
         showLoading(false);
         await performRollback(newInstructorIds, newVideoIds, oldFavorites, fetchInstructorsFn, fetchVideosFn);
         await showCustomAlert(currentLang === 'tr' 
@@ -174,11 +175,10 @@ export async function importFromJSON(file, currentVideos, currentInstructors, cu
 }
 
 // --------------------------------------------------------------
-// 3. ROLLBACK FONKSİYONU (eklenenleri sil)
+// 3. ROLLBACK FONKSİYONU
 // --------------------------------------------------------------
 async function performRollback(newInstructorIds, newVideoIds, oldFavorites, fetchInstructorsFn, fetchVideosFn) {
     console.log('Rollback başlıyor...', { newInstructorIds, newVideoIds });
-    // Rollback sırasında loading göstermeye gerek yok, zaten perde kapatıldı
     try {
         for (const vidId of newVideoIds) {
             await dbDeleteVideo(vidId).catch(e => console.warn(`Video ${vidId} silinemedi:`, e));

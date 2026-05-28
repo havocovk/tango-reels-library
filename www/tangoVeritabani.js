@@ -52,11 +52,16 @@ export async function dbSaveInstructor(id, name) {
     const url = id ? `${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/instructors`;
     const res = await fetch(url, {
         method,
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, // representation dönsün
         body: JSON.stringify({ name })
     });
-    if (!res.ok) throw new Error("Eğitmen kaydedilemedi");
-    return res;
+    if (!res.ok) {
+        let errorDetail = await res.text();
+        throw new Error(`Eğitmen kaydedilemedi (${res.status}): ${errorDetail}`);
+    }
+    // Dönen veriyi al (yeni eklenen veya güncellenen eğitmen)
+    const data = await res.json();
+    return { data, error: null };
 }
 
 export async function dbDeleteInstructor(id) {
