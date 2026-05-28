@@ -73,24 +73,69 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
+// tangoVeritabani.js - dbSaveVideo fonksiyonu (UPSERT versiyonu)
 export async function dbSaveVideo(id, payload) {
     let fixedPayload = { ...payload };
+    
+    // Eğer Drive videosuysa ve url yoksa geçici bir url oluştur
     if (fixedPayload.is_downloaded === true && (!fixedPayload.url || fixedPayload.url === '' || fixedPayload.url.startsWith('drive_temp'))) {
         const uniqueSuffix = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
         fixedPayload.url = `drive_video_${uniqueSuffix}`;
     }
-    const method = id ? 'PATCH' : 'POST';
-    const url = id ? `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/videos`;
-    const res = await fetch(url, {
-        method,
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(fixedPayload)
-    });
-    if (!res.ok) {
-        let errorText = await res.text();
-        throw new Error(`Veritabanı hatası (${res.status}): ${errorText}`);
+
+    // 📌 UPSERT mantığı:
+    // Eğer id verilmişse (düzenleme durumu) -> direkt güncelle
+    // Eğer id yoksa -> url'ye göre upsert yap
+    if (id) {
+        // Mevcut video düzenleniyor
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(fixedPayload)
+        });
+        if (!res.ok) {
+            let errorText = await res.text();
+            throw new Error(`Veritabanı hatası (${res.status}): ${errorText}`);
+        }
+        return res;
+    } else {
+        // Yeni video ekleniyor: URL varsa güncelle, yoksa ekle
+        // Önce aynı URL var mı kontrol et
+        const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        if (!checkRes.ok) {
+            let errorText = await checkRes.text();
+            throw new Error(`Kontrol hatası: ${errorText}`);
+        }
+        const existing = await checkRes.json();
+        
+        if (existing && existing.length > 0) {
+            // Aynı URL var -> GÜNCELLE (UPSERT)
+            const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existing[0].id}`, {
+                method: 'PATCH',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(fixedPayload)
+            });
+            if (!updateRes.ok) {
+                let errorText = await updateRes.text();
+                throw new Error(`Güncelleme hatası (${updateRes.status}): ${errorText}`);
+            }
+            return updateRes;
+        } else {
+            // Aynı URL yok -> YENİ EKLE
+            const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
+                method: 'POST',
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(fixedPayload)
+            });
+            if (!insertRes.ok) {
+                let errorText = await insertRes.text();
+                throw new Error(`Ekleme hatası (${insertRes.status}): ${errorText}`);
+            }
+            return insertRes;
+        }
     }
-    return res;
 }
 
 export async function dbUpdateTagsDirectly(videoId, cleanTags) {
