@@ -84,19 +84,25 @@ export function renderModalChips(globalVideos, applyFiltersAndSearch) {
 
 export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
+    // Eğer globalVideos undefined ise store'dan al
+    let videos = globalVideos;
+    if (!videos || !videos.length) {
+        const { store } = await import('./store.js');
+        videos = store.get('globalVideos');
+    }
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
     try {
         await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags, activeEditTagsVideoUpdatedAt);
-        // ✅ globalVideos array'ini güncelle (parametre olarak gelen diziyi kullan)
-        const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
+        const vid = videos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
-        renderModalChips(globalVideos, applyFiltersAndSearch);
-        if (applyFiltersAndSearch) applyFiltersAndSearch();
+        renderModalChips(videos, applyFiltersAndSearch);
+        applyFiltersAndSearch();
         showToast('Etiketler güncellendi', 'success');
     } catch (err) {
-        if (err.message && err.message.includes('ÇAKIŞMA')) {
+        if (err.message.includes('ÇAKIŞMA')) {
             showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
-            setTimeout(() => location.reload(), 1500);
+            // Otomatik yenileme
+            setTimeout(() => location.reload(), 2000);
         } else {
             console.error("Etiket güncellenirken hata oluştu:", err);
             showToast('Etiketler güncellenemedi: ' + err.message, 'error');

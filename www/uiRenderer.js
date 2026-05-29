@@ -1,5 +1,6 @@
 import { translations } from './config.js';
 import { openNoteEditModal } from './tangoModals.js';
+import { store } from './store.js';
 
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
     const container = document.getElementById(containerId);
@@ -215,7 +216,7 @@ export function renderVideoCards(videos, config) {
         });
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            openTagsEditModal(video);
+            openTagsEditModal(video, store.get('globalVideos'), applyFiltersAndSearch);
         });
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
