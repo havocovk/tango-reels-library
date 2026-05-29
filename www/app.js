@@ -1,4 +1,4 @@
-// app.js - 9. adım (globalInstructors store'da)
+// app.js - 10. adım (currentLang tamamen store'da, artık yerel değişken yok)
 import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { 
@@ -22,10 +22,9 @@ import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId,
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 
-let currentLang = store.get('currentLang');
-
-setCurrentLangForUtils(currentLang);
-setBackupLang(currentLang);
+// currentLang artık doğrudan store'dan alınacak, yerel değişken yok.
+setCurrentLangForUtils(store.get('currentLang'));
+setBackupLang(store.get('currentLang'));
 
 async function fetchInstructors() {
     try {
@@ -41,7 +40,7 @@ async function fetchInstructors() {
                 select.appendChild(opt);
             });
         }
-        updateSmartFilenameAssistant(currentLang, formTagsArray);
+        updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
     } catch (err) { console.error(err); }
 }
 
@@ -59,18 +58,18 @@ async function fetchVideos() {
         }));
         store.set('globalVideos', videos);
         
-        populateFilterDropdowns(videos, currentLang);
+        populateFilterDropdowns(videos, store.get('currentLang'));
         
-        setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
-        setInstructorHandlersGlobalData(currentLang);
-        setFormHandlersGlobalData(currentLang, formTagsArray, videos);
-        initTagManager(currentLang, videos, fetchVideos, renderTagManagerUI);
+        setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
+        setInstructorHandlersGlobalData(store.get('currentLang'));
+        setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, videos);
+        initTagManager(store.get('currentLang'), videos, fetchVideos, renderTagManagerUI);
         
         applyFiltersAndSearch();
         if (store.get('currentView') === 'stats') renderStatsPanel();
         if (store.get('currentView') === 'tagManager') renderTagManagerUI();
     } catch (err) {
-        document.getElementById('video-grid').innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[currentLang].error}</div>`;
+        document.getElementById('video-grid').innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[store.get('currentLang')].error}</div>`;
         console.error(err);
     }
 }
@@ -78,7 +77,7 @@ async function fetchVideos() {
 function renderStatsPanel() {
     if (store.get('currentView') !== 'stats') return;
     const stats = computeStats(store.get('globalVideos'), store.get('globalInstructors'));
-    renderStats(stats, currentLang);
+    renderStats(stats, store.get('currentLang'));
     setupBackupButtons();
 }
 
@@ -106,16 +105,23 @@ function setupBackupButtons() {
 }
 
 function callUpdateSmartAssistant() {
-    updateSmartFilenameAssistant(currentLang, formTagsArray);
+    updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
 }
 
 function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(currentLang, store.get('editingVideoId'), store.get('editInstructorId'), formTagsArray, applyFiltersAndSearch, () => {
-        const videos = store.get('globalVideos');
-        if (videos.length) populateFilterDropdowns(videos, currentLang);
-    });
+    updateInterfaceLanguage(
+        store.get('currentLang'), 
+        store.get('editingVideoId'), 
+        store.get('editInstructorId'), 
+        formTagsArray, 
+        applyFiltersAndSearch, 
+        () => {
+            const videos = store.get('globalVideos');
+            if (videos.length) populateFilterDropdowns(videos, store.get('currentLang'));
+        }
+    );
     const videos = store.get('globalVideos');
-    if (videos.length) populateFilterDropdowns(videos, currentLang);
+    if (videos.length) populateFilterDropdowns(videos, store.get('currentLang'));
     applyFiltersAndSearch();
     if (store.get('currentView') === 'stats') renderStatsPanel();
 }
@@ -124,9 +130,11 @@ function callSwitchView(viewName) {
     store.set('currentView', viewName);
     store.set('visibleCount', 20);
     setVisibleCount(store.get('visibleCount'));
-    setVideoHandlersGlobalData(currentLang, viewName, store.get('visibleCount'));
+    setVideoHandlersGlobalData(store.get('currentLang'), viewName, store.get('visibleCount'));
     switchView(viewName, getUIState(), {
-        applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
+        applyFiltersAndSearch, 
+        renderFormChips: () => renderFormChips(), 
+        resetUploadedCoverUrl: () => {},
         renderTagManager: renderTagManagerUI
     });
     if (viewName === 'stats') renderStatsPanel();
@@ -135,14 +143,14 @@ function callSwitchView(viewName) {
 }
 
 function clearAllFavorites() {
-    const lang = translations[currentLang];
-    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-    const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
+    const lang = translations[store.get('currentLang')];
+    const okText = store.get('currentLang') === 'tr' ? 'Tamam' : 'OK';
+    const cancelText = store.get('currentLang') === 'tr' ? 'İptal' : 'Cancel';
     showCustomConfirm(lang.confirmClearFavs, okText, cancelText).then(async confirmed => {
         if (confirmed) {
             await dbClearAllFavorites();
             store.set('globalFavorites', []);
-            setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
+            setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
             applyFiltersAndSearch();
         }
     });
@@ -156,7 +164,7 @@ function startVideoEditFlow(video) {
     setEditingVideoUpdatedAt(video.updated_at);
     console.log("Düzenlenen video updated_at:", video.updated_at);
     callSwitchView('add');
-    const lang = translations[currentLang];
+    const lang = translations[store.get('currentLang')];
     document.getElementById('form-title').innerText = lang.formTitleEdit;
     document.getElementById('btn-submit-video').innerText = lang.btnUpdateVideo;
     document.getElementById('form-instructor-select').value = video.instructor_id;
@@ -228,12 +236,12 @@ function renderTagManagerUI() {
         const renameBtn = document.createElement('button');
         renameBtn.innerText = '✏️';
         renameBtn.className = 'tag-action-btn';
-        renameBtn.title = currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename';
+        renameBtn.title = store.get('currentLang') === 'tr' ? 'Yeniden Adlandır' : 'Rename';
         renameBtn.onclick = () => promptRenameTagModern(tag);
         const deleteBtn = document.createElement('button');
         deleteBtn.innerText = '🗑️';
         deleteBtn.className = 'tag-action-btn tag-danger-btn';
-        deleteBtn.title = currentLang === 'tr' ? 'Tüm Videolardan Sil' : 'Delete from all videos';
+        deleteBtn.title = store.get('currentLang') === 'tr' ? 'Tüm Videolardan Sil' : 'Delete from all videos';
         deleteBtn.onclick = () => deleteSingleTag(tag);
         actionCell.appendChild(renameBtn);
         actionCell.appendChild(deleteBtn);
@@ -250,7 +258,7 @@ function renderTagManagerUI() {
 }
 
 const getUIState = () => ({
-    currentLang, 
+    currentLang: store.get('currentLang'),
     editingVideoId: store.get('editingVideoId'),
     editInstructorId: store.get('editInstructorId'),
     currentView: store.get('currentView'),
@@ -258,22 +266,22 @@ const getUIState = () => ({
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
-setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
-setInstructorHandlersGlobalData(currentLang);
-setFormHandlersGlobalData(currentLang, formTagsArray, store.get('globalVideos'));
-initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
+setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
+setInstructorHandlersGlobalData(store.get('currentLang'));
+setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, store.get('globalVideos'));
+initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
 
 initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
 initInstructorHandlers(fetchInstructors, fetchVideos);
 initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
 
 function updateAllLanguages() {
-    setCurrentLangForUtils(currentLang);
-    setBackupLang(currentLang);
-    setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
-    setInstructorHandlersGlobalData(currentLang);
-    setFormHandlersGlobalData(currentLang, formTagsArray, store.get('globalVideos'));
-    initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
+    setCurrentLangForUtils(store.get('currentLang'));
+    setBackupLang(store.get('currentLang'));
+    setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
+    setInstructorHandlersGlobalData(store.get('currentLang'));
+    setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, store.get('globalVideos'));
+    initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
     setEditingVideoUpdatedAt(null);
 }
 
@@ -283,8 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     callUpdateInterfaceLanguage();
 
     document.getElementById('lang-toggle-btn').onclick = () => {
-        const newLang = currentLang === 'tr' ? 'en' : 'tr';
-        currentLang = newLang;
+        const newLang = store.get('currentLang') === 'tr' ? 'en' : 'tr';
         store.set('currentLang', newLang);
         updateAllLanguages();
         callUpdateInterfaceLanguage();
@@ -324,7 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-toggle-new-instructor').onclick = () => {
         store.set('editInstructorId', null);
         document.getElementById('form-new-instructor-input').value = '';
-        document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnAddIns;
+        document.getElementById('btn-save-instructor').innerText = translations[store.get('currentLang')].btnAddIns;
         document.getElementById('new-instructor-container').classList.toggle('d-none');
     };
     document.getElementById('btn-edit-instructor').onclick = () => {
@@ -332,7 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!select.value) return;
         store.set('editInstructorId', select.value);
         document.getElementById('form-new-instructor-input').value = select.options[select.selectedIndex].text;
-        document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnUpdateIns;
+        document.getElementById('btn-save-instructor').innerText = translations[store.get('currentLang')].btnUpdateIns;
         document.getElementById('new-instructor-container').classList.remove('d-none');
     };
     document.getElementById('btn-delete-instructor').onclick = deleteInstructor;
@@ -350,7 +357,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('video-modal').onclick = (e) => { if (e.target.id === 'video-modal') closeVideoModal(); };
     document.getElementById('tags-modal-close-btn').onclick = closeTagsEditModal;
     document.getElementById('tags-edit-modal').onclick = (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); };
-    document.getElementById('drop-area')?.addEventListener('paste', (e) => handlePasteEvent(e, currentLang));
+    document.getElementById('drop-area')?.addEventListener('paste', (e) => handlePasteEvent(e, store.get('currentLang')));
     document.getElementById('tag-manager-merge-btn').onclick = () => mergeSelectedTags();
     document.getElementById('tag-manager-delete-btn').onclick = () => deleteSelectedTags();
     document.getElementById('tag-manager-cleanup-btn').onclick = () => cleanupUnusedTags();
