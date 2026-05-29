@@ -1,3 +1,4 @@
+// app.js - 3. adım (globalFavorites store'da)
 import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { 
@@ -19,15 +20,17 @@ import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCou
 import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor, setInstructorHandlersGlobalData } from './instructorHandlers.js';
 import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, formTagsArray, setFormHandlersGlobalData, setEditingVideoUpdatedAt } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
+import { store } from './store.js';
 
-let currentLang = 'tr';
-let globalVideos = [];
-let globalFavorites = [];
+// ⚠️ global değişkenler artık store'da tutuluyor
+// currentLang store.get('currentLang') ile alınacak
+let currentLang = store.get('currentLang');   // köprü: değişken hala var ama store'dan
+let globalVideos = [];        // henüz store'a almadık, sonraki adımda
+let globalInstructors = [];   // henüz store'a almadık
 let editInstructorId = null;
 let editingVideoId = null;
 let currentView = 'library';
 let visibleCount = 20;
-let globalInstructors = [];
 
 setCurrentLangForUtils(currentLang);
 setBackupLang(currentLang);
@@ -57,14 +60,16 @@ async function fetchVideos() {
         globalInstructors = instructors;
         const rawVideos = await dbFetchVideos();
         const favRows = await dbFetchFavorites().catch(() => []);
-        globalFavorites = favRows.map(f => f.video_id);
+        // 🔁 Favorileri store'a yaz
+        store.set('globalFavorites', favRows.map(f => f.video_id));
+        
         globalVideos = rawVideos.map(video => ({
             ...video,
             instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
         }));
         populateFilterDropdowns(globalVideos, currentLang);
         
-        setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+        setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
         setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
         initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
@@ -92,7 +97,7 @@ function setupBackupButtons() {
     if (exportBtn.dataset.wired === 'true') return;
     exportBtn.dataset.wired = 'true';
     importBtn.dataset.wired = 'true';
-    exportBtn.onclick = () => { exportToJSON(globalVideos, globalInstructors, globalFavorites); };
+    exportBtn.onclick = () => { exportToJSON(globalVideos, globalInstructors, store.get('globalFavorites')); };
     importBtn.onclick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -101,7 +106,7 @@ function setupBackupButtons() {
             const file = e.target.files[0];
             if (!file) return;
             try {
-                await importFromJSON(file, globalVideos, globalInstructors, globalFavorites, fetchVideos, fetchInstructors);
+                await importFromJSON(file, globalVideos, globalInstructors, store.get('globalFavorites'), fetchVideos, fetchInstructors);
             } catch (err) { console.error(err); }
         };
         fileInput.click();
@@ -125,7 +130,7 @@ function callSwitchView(viewName) {
     currentView = viewName;
     visibleCount = 20;
     setVisibleCount(visibleCount);
-    setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+    setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
         renderTagManager: renderTagManagerUI
@@ -142,8 +147,8 @@ function clearAllFavorites() {
     showCustomConfirm(lang.confirmClearFavs, okText, cancelText).then(async confirmed => {
         if (confirmed) {
             await dbClearAllFavorites();
-            globalFavorites = [];
-            setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+            store.set('globalFavorites', []);   // 🔁 store'u temizle
+            setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
             applyFiltersAndSearch();
         }
     });
@@ -151,12 +156,11 @@ function clearAllFavorites() {
 
 function callGetUniqueTagsPool() { return getAllUniqueTagsPool(globalVideos); }
 
-// 🔁 GÜNCELLENEN: startVideoEditFlow (updated_at sakla)
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
     setEditingVideoId(video.id);
-    setEditingVideoUpdatedAt(video.updated_at);   // ★ Çok önemli
-    console.log("Düzenlenen video updated_at:", video.updated_at); // DEBUG
+    setEditingVideoUpdatedAt(video.updated_at);
+    console.log("Düzenlenen video updated_at:", video.updated_at);
     callSwitchView('add');
     const lang = translations[currentLang];
     document.getElementById('form-title').innerText = lang.formTitleEdit;
@@ -256,7 +260,7 @@ const getUIState = () => ({
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
-setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
 setInstructorHandlersGlobalData(currentLang, editInstructorId);
 setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
 initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
@@ -268,11 +272,11 @@ initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callS
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setBackupLang(currentLang);
-    setVideoHandlersGlobalData(currentLang, globalVideos, globalFavorites, currentView, visibleCount);
+    setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
     setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
     initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
-    setEditingVideoUpdatedAt(null); // YENİ: dil değişince updated_at sıfırlansın
+    setEditingVideoUpdatedAt(null);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -281,7 +285,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     callUpdateInterfaceLanguage();
 
     document.getElementById('lang-toggle-btn').onclick = () => {
-        currentLang = currentLang === 'tr' ? 'en' : 'tr';
+        const newLang = currentLang === 'tr' ? 'en' : 'tr';
+        currentLang = newLang;
+        store.set('currentLang', newLang);   // store'u güncelle
         updateAllLanguages();
         callUpdateInterfaceLanguage();
         if (currentView === 'stats') renderStatsPanel();
