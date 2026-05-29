@@ -1,4 +1,4 @@
-// videoHandlers.js - 4. adım (globalVideos store'dan)
+// videoHandlers.js - 5. adım (currentView, visibleCount store'dan)
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -7,8 +7,6 @@ import { translations } from './config.js';
 import { store } from './store.js';
 
 let currentLang = 'tr';
-let currentView = 'library';
-let visibleCount = 20;
 
 let applyFiltersAndSearchCallback = null;
 let fetchVideosCallback = null;
@@ -17,11 +15,9 @@ let openTagsEditModalCallback = null;
 let startVideoEditFlowCallback = null;
 let deleteVideoFlowCallback = null;
 
-// videos parametresi artık yok, store'dan alınacak
-export function setVideoHandlersGlobalData(lang, view, visible) {
+// Artık currentView ve visibleCount parametreleri kalktı, sadece lang
+export function setVideoHandlersGlobalData(lang) {
     currentLang = lang;
-    currentView = view;
-    visibleCount = visible;
 }
 
 export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, startEditCb, deleteCb) {
@@ -50,8 +46,11 @@ export async function toggleFavorite(videoId) {
 
 export function applyFiltersAndSearch() {
     const globalVideos = store.get('globalVideos');
-    let source = globalVideos;
+    const currentView = store.get('currentView');
+    const visibleCount = store.get('visibleCount');
     const favorites = store.get('globalFavorites');
+    
+    let source = globalVideos;
     if (currentView === 'favorites') {
         source = globalVideos.filter(v => favorites.includes(v.id));
     }
@@ -85,11 +84,12 @@ export function applyFiltersAndSearch() {
 }
 
 export function setVisibleCount(count) {
-    visibleCount = count;
+    store.set('visibleCount', count);
 }
 
 export function incrementVisibleCount(inc) {
-    visibleCount += inc;
+    const current = store.get('visibleCount');
+    store.set('visibleCount', current + inc);
 }
 
 export async function deleteVideoFlow(videoId) {
