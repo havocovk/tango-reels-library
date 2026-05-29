@@ -1,4 +1,3 @@
-// www/app.js
 import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { 
@@ -20,7 +19,7 @@ import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCou
 import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor, setInstructorHandlersGlobalData } from './instructorHandlers.js';
 import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId, setFormTagsArray, getFormTagsArray, formTagsArray, setFormHandlersGlobalData, setEditingVideoUpdatedAt } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
-import { store } from './store.js';   // YENİ: Store import edildi
+import { store } from './store.js';
 
 // ----- ESKİ GLOBAL DEĞİŞKENLER KALDIRILDI, ŞİMDİ STORE KULLANIYORUZ -----
 
@@ -59,19 +58,19 @@ async function fetchVideos() {
             instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
         }));
         
-        // Toplu güncelleme
         store.setMultiple({
             globalVideos: videos,
             globalFavorites: favorites
         });
         
-        populateFilterDropdowns(videos, store.get('currentLang'));
+        const currentLang = store.get('currentLang');
+        populateFilterDropdowns(videos, currentLang);
         
-        // Handler'lara güncel verileri set et (geçici uyum için)
-        setVideoHandlersGlobalData(store.get('currentLang'), videos, favorites, store.get('currentView'), store.get('visibleCount'));
-        setInstructorHandlersGlobalData(store.get('currentLang'), store.get('editInstructorId'));
-        setFormHandlersGlobalData(store.get('currentLang'), store.get('editingVideoId'), store.get('formTagsArray'), videos);
-        initTagManager(store.get('currentLang'), videos, fetchVideos, renderTagManagerUI);
+        // Global verileri diğer modüllere bildir (eski sistemle uyum için)
+        setVideoHandlersGlobalData(currentLang, videos, favorites, store.get('currentView'), store.get('visibleCount'));
+        setInstructorHandlersGlobalData(currentLang, store.get('editInstructorId'));
+        setFormHandlersGlobalData(currentLang, store.get('editingVideoId'), formTagsArray, videos);
+        initTagManager(currentLang, videos, fetchVideos, renderTagManagerUI);
         
         applyFiltersAndSearch();
         if (store.get('currentView') === 'stats') renderStatsPanel();

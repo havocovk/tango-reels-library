@@ -1,4 +1,4 @@
-// www/formHandlers.js
+// formHandlers.js
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -7,16 +7,24 @@ import { translations } from './config.js';
 import { updateSmartFilenameAssistant } from './tangoUI.js';
 import { store } from './store.js';
 
-let fetchVideosCallback = null;
-let callSwitchViewCallback = null;
+// 🔁 Bu değişken export edilmeli (app.js içinde kullanılıyor)
+export let formTagsArray = [];
+
+let editingVideoUpdatedAt = null;
 
 export function setFormHandlersGlobalData(lang, editId, tagsArray, videos) {
-    // Artık store kullanıldığı için bu fonksiyon boş olabilir
+    store.set('currentLang', lang);
+    store.set('editingVideoId', editId);
+    formTagsArray = tagsArray;
+    store.set('globalVideos', videos);
 }
 
 export function initFormHandlers(editId, tagsArray, videos, fetchCb, switchCb) {
-    fetchVideosCallback = fetchCb;
-    callSwitchViewCallback = switchCb;
+    store.set('editingVideoId', editId);
+    formTagsArray = tagsArray;
+    store.set('globalVideos', videos);
+    window.fetchVideosCallback = fetchCb;
+    window.callSwitchViewCallback = switchCb;
 }
 
 export function setEditingVideoId(id) {
@@ -24,54 +32,59 @@ export function setEditingVideoId(id) {
 }
 
 export function setEditingVideoUpdatedAt(updatedAt) {
-    // Store'da bu değişken yok, geçici olarak ayrı bir değişken tutabiliriz.
-    // Şimdilik boş bırak, sonra store'a eklenebilir.
+    editingVideoUpdatedAt = updatedAt;
 }
 
 export function setFormTagsArray(tags) {
-    store.set('formTagsArray', [...tags]);
+    formTagsArray.length = 0;
+    tags.forEach(t => formTagsArray.push(t));
 }
 
 export function getFormTagsArray() {
-    return store.get('formTagsArray');
+    return formTagsArray;
 }
 
 export function renderFormChips() {
-    const tags = store.get('formTagsArray');
-    renderChips('chips-area', tags, (index) => {
-        const newTags = [...tags];
-        newTags.splice(index, 1);
-        store.set('formTagsArray', newTags);
+    const lang = store.get('currentLang');
+    renderChips('chips-area', formTagsArray, (index) => {
+        formTagsArray.splice(index, 1);
         renderFormChips();
-        updateSmartFilenameAssistant(store.get('currentLang'), newTags);
+        updateSmartFilenameAssistant(lang, formTagsArray);
     });
 }
 
 export async function handleFormSubmit(e) {
     e.preventDefault();
-    const lang = translations[store.get('currentLang')];
-    const okText = store.get('currentLang') === 'tr' ? 'Tamam' : 'OK';
+    const currentLang = store.get('currentLang');
+    const lang = translations[currentLang];
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+    
     const instructor_id = document.getElementById('form-instructor-select').value;
     let url = document.getElementById('form-video-url').value.trim();
     const role_type = document.getElementById('form-role-select').value;
     const partner_name = document.getElementById('form-partner-name').value.trim();
-    const tags = store.get('formTagsArray').join(', ');
+    const tags = formTagsArray.join(', ');
     const is_downloaded = document.getElementById('form-is-downloaded').checked;
     const drive_url = document.getElementById('form-drive-url').value.trim();
     let cover_url = getUploadedCoverUrl();
     const editingVideoId = store.get('editingVideoId');
+    const globalVideos = store.get('globalVideos');
+    
     if (!cover_url && editingVideoId) {
-        const curr = store.get('globalVideos').find(v => v.id === editingVideoId);
+        const curr = globalVideos.find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
     }
-    if (!instructor_id) return showCustomAlert(store.get('currentLang') === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText);
-    if (is_downloaded && !drive_url) return showCustomAlert(store.get('currentLang') === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText);
-    if (!is_downloaded && !url) return showCustomAlert(store.get('currentLang') === 'tr' ? 'Video URL zorunludur!' : 'Video URL is required!', okText);
+    
+    if (!instructor_id) return showCustomAlert(currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText);
+    if (is_downloaded && !drive_url) return showCustomAlert(currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText);
+    if (!is_downloaded && !url) return showCustomAlert(currentLang === 'tr' ? 'Video URL zorunludur!' : 'Video URL is required!', okText);
+    
     let platform = is_downloaded ? 'drive' : detectPlatform(url, false);
     let finalUrl = url;
     if (is_downloaded && (!finalUrl || finalUrl === '')) {
         finalUrl = `drive_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
     }
+    
     const payload = {
         instructor_id: parseInt(instructor_id),
         url: finalUrl,
@@ -80,27 +93,29 @@ export async function handleFormSubmit(e) {
         drive_url: is_downloaded ? drive_url : null,
         cover_url, platform
     };
+    
     try {
-        await dbSaveVideo(editingVideoId, payload, null); // updated_at geçici olarak null
+        await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         store.set('editingVideoId', null);
-        store.set('formTagsArray', []);
+        editingVideoUpdatedAt = null;
+        setFormTagsArray([]);
         renderFormChips();
         document.getElementById('add-video-form').reset();
         document.getElementById('image-preview').classList.add('d-none');
         document.getElementById('drop-area-text').innerText = lang.dropText;
         document.getElementById('drive-url-container').classList.add('d-none');
         resetUploadedCoverUrl();
-        if (callSwitchViewCallback) callSwitchViewCallback('library');
-        if (fetchVideosCallback) await fetchVideosCallback();
+        if (window.callSwitchViewCallback) window.callSwitchViewCallback('library');
+        if (window.fetchVideosCallback) await window.fetchVideosCallback();
     } catch (err) {
         let hataMesaji = err.message;
         if (hataMesaji.includes('ÇAKIŞMA')) {
             await showCustomAlert(hataMesaji, okText);
-            if (callSwitchViewCallback) callSwitchViewCallback('library');
-            if (fetchVideosCallback) await fetchVideosCallback();
+            if (window.callSwitchViewCallback) window.callSwitchViewCallback('library');
+            if (window.fetchVideosCallback) await window.fetchVideosCallback();
         } else {
-            let hata = `${store.get('currentLang') === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
+            let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
             await showCustomAlert(hata, okText);
         }
     }
