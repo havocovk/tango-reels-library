@@ -23,7 +23,6 @@ import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 
 let currentLang = store.get('currentLang');
-let globalInstructors = [];
 let editInstructorId = null;
 let editingVideoId = null;
 let currentView = 'library';
@@ -36,7 +35,7 @@ setBackupLang(currentLang);
 async function fetchInstructors() {
     try {
         const instructors = await dbFetchInstructors();
-        globalInstructors = instructors;
+        store.set('globalInstructors', instructors);
         const select = document.getElementById('form-instructor-select');
         if (select) {
             select.innerHTML = '';
@@ -54,7 +53,7 @@ async function fetchInstructors() {
 async function fetchVideos() {
     try {
         const instructors = await dbFetchInstructors();
-        globalInstructors = instructors;
+        store.set('globalInstructors', instructors);
         const rawVideos = await dbFetchVideos();
         const favRows = await dbFetchFavorites().catch(() => []);
         store.set('globalFavorites', favRows.map(f => f.video_id));
@@ -83,7 +82,7 @@ async function fetchVideos() {
 
 function renderStatsPanel() {
     if (currentView !== 'stats') return;
-    const stats = computeStats(store.get('globalVideos'), globalInstructors);
+    const stats = computeStats(store.get('globalVideos'), store.get('globalInstructors'));
     renderStats(stats, currentLang);
     setupBackupButtons();
 }
@@ -95,7 +94,7 @@ function setupBackupButtons() {
     if (exportBtn.dataset.wired === 'true') return;
     exportBtn.dataset.wired = 'true';
     importBtn.dataset.wired = 'true';
-    exportBtn.onclick = () => { exportToJSON(store.get('globalVideos'), globalInstructors, store.get('globalFavorites')); };
+    exportBtn.onclick = () => { exportToJSON(store.get('globalVideos'), store.get('globalInstructors'), store.get('globalFavorites')); };
     importBtn.onclick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -104,7 +103,7 @@ function setupBackupButtons() {
             const file = e.target.files[0];
             if (!file) return;
             try {
-                await importFromJSON(file, store.get('globalVideos'), globalInstructors, store.get('globalFavorites'), fetchVideos, fetchInstructors);
+                await importFromJSON(file, store.get('globalVideos'), store.get('globalInstructors'), store.get('globalFavorites'), fetchVideos, fetchInstructors);
             } catch (err) { console.error(err); }
         };
         fileInput.click();
