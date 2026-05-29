@@ -1,6 +1,6 @@
-// Ortak yardımcı fonksiyonlar
+// utils.js - Ortak yardımcı fonksiyonlar (MEVCUT + YENİ)
 
-let currentLangForUtils = 'tr'; // app.js'den set edilecek
+let currentLangForUtils = 'tr';
 
 export function setCurrentLangForUtils(lang) {
     currentLangForUtils = lang;
@@ -68,4 +68,35 @@ export function showModernPrompt(title, defaultValue = '', placeholder = '') {
         okBtn.addEventListener('click', handleOk);
         cancelBtn.addEventListener('click', handleCancel);
     });
+}
+
+// ================= YENİ: FETCH RETRY =================
+export async function fetchWithRetry(url, options = {}, retries = 3, baseDelay = 1000) {
+    let lastError;
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await fetch(url, options);
+            // 409 Conflict - çakışma durumunda retry yapma
+            if (response.status === 409) {
+                throw new Error('ÇAKIŞMA: Kaynak başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+            }
+            // Başarılı yanıt
+            if (response.ok) return response;
+            // 5xx veya ağ hatası (status 0) durumunda retry dene
+            if (response.status >= 500 || response.status === 0) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            // Diğer hatalar (4xx) retry yapma, olduğu gibi döndür
+            return response;
+        } catch (err) {
+            lastError = err;
+            // Çakışma hatasını direkt fırlat
+            if (err.message.includes('ÇAKIŞMA')) throw err;
+            if (attempt === retries) break;
+            const delay = baseDelay * Math.pow(2, attempt - 1);
+            console.warn(`Fetch attempt ${attempt} failed. Retrying in ${delay}ms...`, err);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    throw lastError;
 }

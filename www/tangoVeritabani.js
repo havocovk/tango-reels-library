@@ -1,4 +1,6 @@
+// tangoVeritabani.js - GÜNCELLENMİŞ: fetchWithRetry kullanır
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { fetchWithRetry } from './utils.js';
 
 export function detectPlatform(url, isDownloaded) {
     if (isDownloaded) return 'drive';
@@ -11,7 +13,7 @@ export function detectPlatform(url, isDownloaded) {
 }
 
 export async function dbFetchInstructors() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?select=*&order=name.asc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     if (!res.ok) throw new Error("Eğitmenler alınamadı");
@@ -19,7 +21,7 @@ export async function dbFetchInstructors() {
 }
 
 export async function dbFetchVideos() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     if (!res.ok) throw new Error("Videolar alınamadı");
@@ -27,7 +29,7 @@ export async function dbFetchVideos() {
 }
 
 export async function dbDeleteVideo(videoId) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -38,7 +40,7 @@ export async function dbDeleteVideo(videoId) {
 export async function dbSaveInstructor(id, name) {
     const method = id ? 'PATCH' : 'POST';
     const url = id ? `${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}` : `${SUPABASE_URL}/rest/v1/instructors`;
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
         method,
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ name })
@@ -48,7 +50,7 @@ export async function dbSaveInstructor(id, name) {
 }
 
 export async function dbDeleteInstructor(id) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -56,7 +58,6 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
-// ★★★ DÜZELTİLMİŞ: updated_at kontrolü kesin çalışıyor ★★★
 export async function dbSaveVideo(id, payload, old_updated_at = null) {
     let fixedPayload = { ...payload };
     
@@ -65,34 +66,27 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         fixedPayload.url = `drive_video_${uniqueSuffix}`;
     }
 
-    // Düzenleme (id var)
     if (id) {
         let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`;
         if (old_updated_at) {
             url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
         }
-        const res = await fetch(url, {
+        const res = await fetchWithRetry(url, {
             method: 'PATCH',
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
                 'Content-Type': 'application/json',
-                'Prefer': 'return=representation'   // ← EKLENEN SATIR
+                'Prefer': 'return=representation'
             },
             body: JSON.stringify(fixedPayload)
         });
-        
-        if (res.status === 409) {
-            throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
-        }
         
         const responseText = await res.text();
         let affectedRows = 0;
         try {
             const json = JSON.parse(responseText);
-            if (Array.isArray(json)) {
-                affectedRows = json.length;
-            }
+            if (Array.isArray(json)) affectedRows = json.length;
         } catch(e) {}
         
         if (affectedRows === 0) {
@@ -105,8 +99,8 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         return res;
     }
 
-    // Yeni ekleme (id yok) - URL çakışması kontrolü yap
-    const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
+    // Yeni ekleme
+    const checkRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     if (!checkRes.ok) {
@@ -117,13 +111,13 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
     
     if (existing && existing.length > 0) {
         const existingId = existing[0].id;
-        const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existingId}`, {
+        const updateRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existingId}`, {
             method: 'PATCH',
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
                 'Content-Type': 'application/json',
-                'Prefer': 'return=representation'   // ← EKLENEN SATIR
+                'Prefer': 'return=representation'
             },
             body: JSON.stringify(fixedPayload)
         });
@@ -133,7 +127,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         }
         return updateRes;
     } else {
-        const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/videos`, {
+        const insertRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos`, {
             method: 'POST',
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -155,19 +149,16 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
     if (old_updated_at) {
         url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
     }
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
         method: 'PATCH',
         headers: {
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
             'Content-Type': 'application/json',
-            'Prefer': 'return=representation'   // ← EKLENEN SATIR
+            'Prefer': 'return=representation'
         },
         body: JSON.stringify({ tags: cleanTags || null })
     });
-    if (res.status === 409) {
-        throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
-    }
     const responseText = await res.text();
     let affectedRows = 0;
     try {
@@ -188,19 +179,16 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     if (old_updated_at) {
         url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
     }
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
         method: 'PATCH',
         headers: {
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
             'Content-Type': 'application/json',
-            'Prefer': 'return=representation'   // ← EKLENEN SATIR
+            'Prefer': 'return=representation'
         },
         body: JSON.stringify({ notes: note || null })
     });
-    if (res.status === 409) {
-        throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
-    }
     const responseText = await res.text();
     let affectedRows = 0;
     try {
@@ -217,7 +205,7 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
 }
 
 export async function dbFetchFavorites() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/favorites?select=video_id`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/favorites?select=video_id`, {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     if (!res.ok) throw new Error("Favoriler alınamadı");
@@ -225,7 +213,7 @@ export async function dbFetchFavorites() {
 }
 
 export async function dbAddFavorite(videoId) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/favorites`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/favorites`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ video_id: videoId })
@@ -235,7 +223,7 @@ export async function dbAddFavorite(videoId) {
 }
 
 export async function dbRemoveFavorite(videoId) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/favorites?video_id=eq.${videoId}`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/favorites?video_id=eq.${videoId}`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -244,7 +232,7 @@ export async function dbRemoveFavorite(videoId) {
 }
 
 export async function dbClearAllFavorites() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/favorites?video_id=gt.0`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/favorites?video_id=gt.0`, {
         method: 'DELETE',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
@@ -252,11 +240,11 @@ export async function dbClearAllFavorites() {
     return res;
 }
 
-// Toplu etiket işlemleri (değişmedi)
+// Toplu etiket işlemleri (batchUpdateVideosTag artık fetchWithRetry kullanıyor)
 async function batchUpdateVideosTag(updates) {
     if (!updates.length) return;
     const promises = updates.map(({ id, newTags }) => {
-        return fetch(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
+        return fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
             method: 'PATCH',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ tags: newTags })

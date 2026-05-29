@@ -1,5 +1,7 @@
+// storage.js - GÜNCELLENMİŞ
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { translations } from './i18n.js';
+import { fetchWithRetry } from './utils.js';
 
 let uploadedCoverUrl = null;
 
@@ -25,7 +27,7 @@ export async function handlePasteEvent(e, currentLang) {
             const fileName = `tango_cover_${Date.now()}.png`;
 
             try {
-                const uploadResponse = await fetch(`${SUPABASE_URL}/storage/v1/object/covers/${fileName}`, {
+                const uploadResponse = await fetchWithRetry(`${SUPABASE_URL}/storage/v1/object/covers/${fileName}`, {
                     method: 'POST',
                     headers: {
                         'apikey': SUPABASE_KEY,
@@ -33,7 +35,7 @@ export async function handlePasteEvent(e, currentLang) {
                         'Content-Type': blob.type
                     },
                     body: blob
-                });
+                }, 3, 1000); // 3 deneme, 1 sn başlangıç bekleme
 
                 if (!uploadResponse.ok) {
                     throw new Error("Storage upload failed");
