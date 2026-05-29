@@ -5,7 +5,8 @@ import {
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly
 } from './tangoModals.js';
-import { setupAutocomplete, renderFormChips } from './uiRenderer.js';
+import { setupAutocomplete } from './uiRenderer.js';
+import { renderFormChips } from './formHandlers.js';
 import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow } from './videoHandlers.js';
 import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor } from './instructorHandlers.js';
 import { initFormHandlers, handleFormSubmit, formTagsArray, setFormTagsArray, getFormTagsArray } from './formHandlers.js';
