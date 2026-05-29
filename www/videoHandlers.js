@@ -1,4 +1,4 @@
-// videoHandlers.js - 3. adım (globalFavorites store'dan alınıyor)
+// videoHandlers.js - 4. adım (globalVideos store'dan)
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -7,7 +7,6 @@ import { translations } from './config.js';
 import { store } from './store.js';
 
 let currentLang = 'tr';
-let globalVideos = [];
 let currentView = 'library';
 let visibleCount = 20;
 
@@ -18,9 +17,9 @@ let openTagsEditModalCallback = null;
 let startVideoEditFlowCallback = null;
 let deleteVideoFlowCallback = null;
 
-export function setVideoHandlersGlobalData(lang, videos, view, visible) {
+// videos parametresi artık yok, store'dan alınacak
+export function setVideoHandlersGlobalData(lang, view, visible) {
     currentLang = lang;
-    globalVideos = videos;
     currentView = view;
     visibleCount = visible;
 }
@@ -50,6 +49,7 @@ export async function toggleFavorite(videoId) {
 }
 
 export function applyFiltersAndSearch() {
+    const globalVideos = store.get('globalVideos');
     let source = globalVideos;
     const favorites = store.get('globalFavorites');
     if (currentView === 'favorites') {
@@ -100,7 +100,6 @@ export async function deleteVideoFlow(videoId) {
     try {
         await dbDeleteVideo(videoId);
         await showCustomAlert(lang.successDeleteVideo, okText);
-        // Favorilerden de kaldır
         let currentFavorites = store.get('globalFavorites');
         if (currentFavorites.includes(videoId)) {
             currentFavorites = currentFavorites.filter(id => id !== videoId);

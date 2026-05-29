@@ -1,4 +1,4 @@
-// app.js - 3. adım (globalFavorites store'da)
+// app.js - 4. adım (globalVideos store'da)
 import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { 
@@ -22,11 +22,8 @@ import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId,
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 
-// ⚠️ global değişkenler artık store'da tutuluyor
-// currentLang store.get('currentLang') ile alınacak
-let currentLang = store.get('currentLang');   // köprü: değişken hala var ama store'dan
-let globalVideos = [];        // henüz store'a almadık, sonraki adımda
-let globalInstructors = [];   // henüz store'a almadık
+let currentLang = store.get('currentLang');
+let globalInstructors = [];
 let editInstructorId = null;
 let editingVideoId = null;
 let currentView = 'library';
@@ -60,19 +57,20 @@ async function fetchVideos() {
         globalInstructors = instructors;
         const rawVideos = await dbFetchVideos();
         const favRows = await dbFetchFavorites().catch(() => []);
-        // 🔁 Favorileri store'a yaz
         store.set('globalFavorites', favRows.map(f => f.video_id));
         
-        globalVideos = rawVideos.map(video => ({
+        const videos = rawVideos.map(video => ({
             ...video,
             instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
         }));
-        populateFilterDropdowns(globalVideos, currentLang);
+        store.set('globalVideos', videos);   // 🔁 store'a yaz
         
-        setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
+        populateFilterDropdowns(videos, currentLang);
+        
+        setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
-        setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
-        initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+        setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, videos);
+        initTagManager(currentLang, videos, fetchVideos, renderTagManagerUI);
         
         applyFiltersAndSearch();
         if (currentView === 'stats') renderStatsPanel();
@@ -85,7 +83,7 @@ async function fetchVideos() {
 
 function renderStatsPanel() {
     if (currentView !== 'stats') return;
-    const stats = computeStats(globalVideos, globalInstructors);
+    const stats = computeStats(store.get('globalVideos'), globalInstructors);
     renderStats(stats, currentLang);
     setupBackupButtons();
 }
@@ -97,7 +95,7 @@ function setupBackupButtons() {
     if (exportBtn.dataset.wired === 'true') return;
     exportBtn.dataset.wired = 'true';
     importBtn.dataset.wired = 'true';
-    exportBtn.onclick = () => { exportToJSON(globalVideos, globalInstructors, store.get('globalFavorites')); };
+    exportBtn.onclick = () => { exportToJSON(store.get('globalVideos'), globalInstructors, store.get('globalFavorites')); };
     importBtn.onclick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -106,7 +104,7 @@ function setupBackupButtons() {
             const file = e.target.files[0];
             if (!file) return;
             try {
-                await importFromJSON(file, globalVideos, globalInstructors, store.get('globalFavorites'), fetchVideos, fetchInstructors);
+                await importFromJSON(file, store.get('globalVideos'), globalInstructors, store.get('globalFavorites'), fetchVideos, fetchInstructors);
             } catch (err) { console.error(err); }
         };
         fileInput.click();
@@ -119,9 +117,11 @@ function callUpdateSmartAssistant() {
 
 function callUpdateInterfaceLanguage() {
     updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, () => {
-        if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
+        const videos = store.get('globalVideos');
+        if (videos.length) populateFilterDropdowns(videos, currentLang);
     });
-    if (globalVideos.length) populateFilterDropdowns(globalVideos, currentLang);
+    const videos = store.get('globalVideos');
+    if (videos.length) populateFilterDropdowns(videos, currentLang);
     applyFiltersAndSearch();
     if (currentView === 'stats') renderStatsPanel();
 }
@@ -130,7 +130,7 @@ function callSwitchView(viewName) {
     currentView = viewName;
     visibleCount = 20;
     setVisibleCount(visibleCount);
-    setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
+    setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
         renderTagManager: renderTagManagerUI
@@ -147,14 +147,14 @@ function clearAllFavorites() {
     showCustomConfirm(lang.confirmClearFavs, okText, cancelText).then(async confirmed => {
         if (confirmed) {
             await dbClearAllFavorites();
-            store.set('globalFavorites', []);   // 🔁 store'u temizle
-            setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
+            store.set('globalFavorites', []);
+            setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
             applyFiltersAndSearch();
         }
     });
 }
 
-function callGetUniqueTagsPool() { return getAllUniqueTagsPool(globalVideos); }
+function callGetUniqueTagsPool() { return getAllUniqueTagsPool(store.get('globalVideos')); }
 
 function startVideoEditFlow(video) {
     editingVideoId = video.id;
@@ -204,7 +204,8 @@ function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
     const tagMap = new Map();
-    globalVideos.forEach(v => {
+    const videos = store.get('globalVideos');
+    videos.forEach(v => {
         if (v.tags) {
             v.tags.split(',').forEach(t => {
                 const tag = t.trim();
@@ -260,22 +261,22 @@ const getUIState = () => ({
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
-setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
+setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
 setInstructorHandlersGlobalData(currentLang, editInstructorId);
-setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
-initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, store.get('globalVideos'));
+initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
 
 initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
 initInstructorHandlers(editInstructorId, fetchInstructors, fetchVideos);
-initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callSwitchView);
+initFormHandlers(editingVideoId, formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
 
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setBackupLang(currentLang);
-    setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
+    setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
-    setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
-    initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
+    setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, store.get('globalVideos'));
+    initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
     setEditingVideoUpdatedAt(null);
 }
 
@@ -287,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('lang-toggle-btn').onclick = () => {
         const newLang = currentLang === 'tr' ? 'en' : 'tr';
         currentLang = newLang;
-        store.set('currentLang', newLang);   // store'u güncelle
+        store.set('currentLang', newLang);
         updateAllLanguages();
         callUpdateInterfaceLanguage();
         if (currentView === 'stats') renderStatsPanel();
@@ -320,7 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, callGetUniqueTagsPool);
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch);
+        saveTagsToSupabaseDirectly(store.get('globalVideos'), applyFiltersAndSearch);
     }, callGetUniqueTagsPool);
     document.getElementById('form-instructor-select').onchange = callUpdateSmartAssistant;
     document.getElementById('btn-toggle-new-instructor').onclick = () => {
