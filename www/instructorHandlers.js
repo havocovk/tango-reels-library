@@ -1,4 +1,4 @@
-// instructorHandlers.js - 6. adım (editInstructorId store'da)
+// instructorHandlers.js - 8. adım (editInstructorId store'da)
 import { dbSaveInstructor, dbDeleteInstructor } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { translations } from './config.js';
@@ -8,19 +8,11 @@ let currentLang = 'tr';
 let fetchInstructorsCallback = null;
 let fetchVideosCallback = null;
 
-export function setInstructorHandlersGlobalData(lang, editId) {
+export function setInstructorHandlersGlobalData(lang) {
     currentLang = lang;
-    // editId parametresi artık kullanılmıyor, store'dan alınacak
-    // Ama eski kodlarla uyum için burada store'a yazalım
-    if (editId !== null && editId !== undefined) {
-        store.set('editInstructorId', editId);
-    }
 }
 
-export function initInstructorHandlers(editId, fetchInstructorsFn, fetchVideosFn) {
-    if (editId !== null && editId !== undefined) {
-        store.set('editInstructorId', editId);
-    }
+export function initInstructorHandlers(fetchInstructorsFn, fetchVideosFn) {
     fetchInstructorsCallback = fetchInstructorsFn;
     fetchVideosCallback = fetchVideosFn;
 }

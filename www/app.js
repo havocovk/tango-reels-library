@@ -1,4 +1,4 @@
-// app.js - 7. adım (editingVideoId store'da)
+// app.js - 8. adım (editInstructorId store'da)
 import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { 
@@ -24,7 +24,6 @@ import { store } from './store.js';
 
 let currentLang = store.get('currentLang');
 let globalInstructors = [];
-let editInstructorId = null;
 
 setCurrentLangForUtils(currentLang);
 setBackupLang(currentLang);
@@ -64,7 +63,7 @@ async function fetchVideos() {
         populateFilterDropdowns(videos, currentLang);
         
         setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
-        setInstructorHandlersGlobalData(currentLang, editInstructorId);
+        setInstructorHandlersGlobalData(currentLang);
         setFormHandlersGlobalData(currentLang, formTagsArray, videos);
         initTagManager(currentLang, videos, fetchVideos, renderTagManagerUI);
         
@@ -112,7 +111,7 @@ function callUpdateSmartAssistant() {
 }
 
 function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(currentLang, store.get('editingVideoId'), editInstructorId, formTagsArray, applyFiltersAndSearch, () => {
+    updateInterfaceLanguage(currentLang, store.get('editingVideoId'), store.get('editInstructorId'), formTagsArray, applyFiltersAndSearch, () => {
         const videos = store.get('globalVideos');
         if (videos.length) populateFilterDropdowns(videos, currentLang);
     });
@@ -254,26 +253,26 @@ function renderTagManagerUI() {
 const getUIState = () => ({
     currentLang, 
     editingVideoId: store.get('editingVideoId'),
-    editInstructorId,
+    editInstructorId: store.get('editInstructorId'),
     currentView: store.get('currentView'),
     getFormTags: () => getFormTagsArray(),
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
 setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
-setInstructorHandlersGlobalData(currentLang, editInstructorId);
+setInstructorHandlersGlobalData(currentLang);
 setFormHandlersGlobalData(currentLang, formTagsArray, store.get('globalVideos'));
 initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
 
 initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
-initInstructorHandlers(editInstructorId, fetchInstructors, fetchVideos);
+initInstructorHandlers(fetchInstructors, fetchVideos);
 initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
 
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setBackupLang(currentLang);
     setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
-    setInstructorHandlersGlobalData(currentLang, editInstructorId);
+    setInstructorHandlersGlobalData(currentLang);
     setFormHandlersGlobalData(currentLang, formTagsArray, store.get('globalVideos'));
     initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
     setEditingVideoUpdatedAt(null);
@@ -324,7 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, callGetUniqueTagsPool);
     document.getElementById('form-instructor-select').onchange = callUpdateSmartAssistant;
     document.getElementById('btn-toggle-new-instructor').onclick = () => {
-        editInstructorId = null;
+        store.set('editInstructorId', null);
         document.getElementById('form-new-instructor-input').value = '';
         document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnAddIns;
         document.getElementById('new-instructor-container').classList.toggle('d-none');
@@ -332,7 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-edit-instructor').onclick = () => {
         const select = document.getElementById('form-instructor-select');
         if (!select.value) return;
-        editInstructorId = select.value;
+        store.set('editInstructorId', select.value);
         document.getElementById('form-new-instructor-input').value = select.options[select.selectedIndex].text;
         document.getElementById('btn-save-instructor').innerText = translations[currentLang].btnUpdateIns;
         document.getElementById('new-instructor-container').classList.remove('d-none');
