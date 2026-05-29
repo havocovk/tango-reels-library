@@ -1,3 +1,4 @@
+// formHandlers.js - 7. adım (editingVideoId store'da)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -6,7 +7,6 @@ import { translations } from './config.js';
 import { updateSmartFilenameAssistant } from './tangoUI.js';
 import { store } from './store.js';
 
-let currentLang = 'tr';
 export let formTagsArray = [];
 let editingVideoUpdatedAt = null;
 let globalVideos = [];
@@ -14,7 +14,7 @@ let fetchVideosCallback = null;
 let callSwitchViewCallback = null;
 
 export function setFormHandlersGlobalData(lang, tagsArray, videos) {
-    currentLang = lang;
+    store.set('currentLang', lang);
     formTagsArray = tagsArray;
     globalVideos = videos;
 }
@@ -44,6 +44,7 @@ export function getFormTagsArray() {
 }
 
 export function renderFormChips() {
+    const currentLang = store.get('currentLang');
     renderChips('chips-area', formTagsArray, (index) => {
         formTagsArray.splice(index, 1);
         renderFormChips();
@@ -53,8 +54,10 @@ export function renderFormChips() {
 
 export async function handleFormSubmit(e) {
     e.preventDefault();
+    const currentLang = store.get('currentLang');
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+    
     const instructor_id = document.getElementById('form-instructor-select').value;
     let url = document.getElementById('form-video-url').value.trim();
     const role_type = document.getElementById('form-role-select').value;
@@ -63,8 +66,8 @@ export async function handleFormSubmit(e) {
     const is_downloaded = document.getElementById('form-is-downloaded').checked;
     const drive_url = document.getElementById('form-drive-url').value.trim();
     let cover_url = getUploadedCoverUrl();
-    const editingVideoId = store.get('editingVideoId');
     
+    const editingVideoId = store.get('editingVideoId');
     if (!cover_url && editingVideoId) {
         const curr = globalVideos.find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;

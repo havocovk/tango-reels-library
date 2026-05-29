@@ -25,8 +25,6 @@ import { store } from './store.js';
 let currentLang = store.get('currentLang');
 let globalInstructors = [];
 let editInstructorId = null;
-// editingVideoId artık store'da
-// let editingVideoId = null;  // kaldır
 
 setCurrentLangForUtils(currentLang);
 setBackupLang(currentLang);
@@ -255,8 +253,8 @@ function renderTagManagerUI() {
 
 const getUIState = () => ({
     currentLang, 
-    editingVideoId: store.get('editingVideoId'), 
-    editInstructorId, 
+    editingVideoId: store.get('editingVideoId'),
+    editInstructorId,
     currentView: store.get('currentView'),
     getFormTags: () => getFormTagsArray(),
     resetFormTags: () => { setFormTagsArray([]); }
@@ -298,8 +296,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('menu-library').onclick = () => { callSwitchView('library'); };
     document.getElementById('menu-favorites').onclick = () => { callSwitchView('favorites'); };
     document.getElementById('menu-stats').onclick = () => { callSwitchView('stats'); };
-    document.getElementById('menu-add-video').onclick = () => { callSwitchView('add'); };
-    document.getElementById('menu-tag-manager').onclick = () => { callSwitchView('tagManager'); };
+    document.getElementById('menu-add-video').onclick = () => callSwitchView('add');
+    document.getElementById('menu-tag-manager').onclick = () => callSwitchView('tagManager');
     document.getElementById('btn-clear-favorites').onclick = clearAllFavorites;
     document.getElementById('form-is-downloaded').onchange = (e) => {
         const container = document.getElementById('drive-url-container');
