@@ -1,14 +1,14 @@
-// tangoModals.js - Düzeltilmiş (toast + eksik exportlar)
+// tangoModals.js
 import { translations } from './config.js';
 import { dbUpdateTagsDirectly, dbUpdateNote } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 import { showToast } from './toast.js';
+import { store } from './store.js';
 
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
 export let activeEditTagsVideoUpdatedAt = null;
 
-// Video Modal İşlevleri (✅ geri eklendi)
 export function convertDriveUrlToEmbed(url) {
     if (!url) return '';
     if (url.includes('drive.google.com')) {
@@ -38,26 +38,19 @@ export function convertDriveUrlToEmbed(url) {
 
 export function openVideoModal(url) {
     const embedUrl = convertDriveUrlToEmbed(url);
-    const iframe = document.getElementById('modal-iframe');
-    if (iframe) iframe.src = embedUrl;
-    const modal = document.getElementById('video-modal');
-    if (modal) modal.classList.remove('d-none');
+    document.getElementById('modal-iframe').src = embedUrl;
+    document.getElementById('video-modal').classList.remove('d-none');
 }
 
 export function closeVideoModal() {
-    const modal = document.getElementById('video-modal');
-    if (modal) modal.classList.add('d-none');
-    const iframe = document.getElementById('modal-iframe');
-    if (iframe) iframe.src = '';
+    document.getElementById('video-modal').classList.add('d-none');
+    document.getElementById('modal-iframe').src = '';
 }
 
-// Etiket Modal İşlevleri
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
     activeEditTagsVideoUpdatedAt = video.updated_at;
-    const modal = document.getElementById('tags-edit-modal');
-    if (modal) modal.classList.remove('d-none');
-    
+    document.getElementById('tags-edit-modal').classList.remove('d-none');
     modalTagsArray.length = 0;
     if (video.tags) {
         video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
@@ -66,13 +59,11 @@ export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
 }
 
 export function closeTagsEditModal() {
-    const modal = document.getElementById('tags-edit-modal');
-    if (modal) modal.classList.add('d-none');
+    document.getElementById('tags-edit-modal').classList.add('d-none');
     activeEditTagsVideoId = null;
     activeEditTagsVideoUpdatedAt = null;
     modalTagsArray = [];
-    const input = document.getElementById('modal-tags-input');
-    if (input) input.value = '';
+    document.getElementById('modal-tags-input').value = '';
 }
 
 export function renderModalChips(globalVideos, applyFiltersAndSearch) {
@@ -84,15 +75,16 @@ export function renderModalChips(globalVideos, applyFiltersAndSearch) {
 
 export async function saveTagsToSupabaseDirectly(_, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
-    // Store'dan güncel videoları al
-    const { store } = await import('./store.js');
+    // Her seferinde güncel videoları store'dan al
     const globalVideos = store.get('globalVideos');
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
     try {
         await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags, activeEditTagsVideoUpdatedAt);
+        // Yerel videoları güncelle
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
-        // Modal içindeki chip'leri güncelle
+        // Store'u da güncelle (referans aynı olduğu için store.set gerekmez, ama emin olmak için)
+        store.set('globalVideos', [...globalVideos]); // referansı yenile
         renderModalChips(globalVideos, applyFiltersAndSearch);
         applyFiltersAndSearch();
         showToast('Etiketler güncellendi', 'success');
@@ -107,7 +99,6 @@ export async function saveTagsToSupabaseDirectly(_, applyFiltersAndSearch) {
     }
 }
 
-// Alert ve Confirm (toast ve modal)
 export function showCustomAlert(message, okText = 'Tamam') {
     showToast(message, 'info', 3000);
     return Promise.resolve();
@@ -119,10 +110,6 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
         const msgEl = document.getElementById('custom-dialog-message');
         const okBtn = document.getElementById('custom-dialog-ok-btn');
         const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
-        if (!modal || !msgEl || !okBtn || !cancelBtn) {
-            resolve(false);
-            return;
-        }
         msgEl.innerText = message;
         okBtn.innerText = okText;
         cancelBtn.innerText = cancelText;
@@ -147,7 +134,6 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
     });
 }
 
-// Not Düzenleme (toast ile)
 let activeNoteVideoId = null;
 let activeNoteVideoUpdatedAt = null;
 
@@ -175,9 +161,9 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
             showToast('Not kaydedildi', 'success');
         } catch (err) {
-            if (err.message && err.message.includes('ÇAKIŞMA')) {
+            if (err.message.includes('ÇAKIŞMA')) {
                 showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => location.reload(), 2000);
             } else {
                 console.error(err);
                 showToast('Not kaydedilemedi', 'error');
