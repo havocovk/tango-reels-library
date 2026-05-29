@@ -1,14 +1,15 @@
-// tangoModals.js
+// tangoModals.js - Son ve Çalışan Versiyon (Toast + Video Modal Export Eklendi)
 import { translations } from './config.js';
 import { dbUpdateTagsDirectly, dbUpdateNote } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 import { showToast } from './toast.js';
-import { store } from './store.js';
 
+// ===================== MODAL STATE'LER =====================
 export let modalTagsArray = [];
 export let activeEditTagsVideoId = null;
 export let activeEditTagsVideoUpdatedAt = null;
 
+// ===================== VİDEO MODAL FONKSİYONLARI (EXPORT EDİLDİ) =====================
 export function convertDriveUrlToEmbed(url) {
     if (!url) return '';
     if (url.includes('drive.google.com')) {
@@ -38,19 +39,26 @@ export function convertDriveUrlToEmbed(url) {
 
 export function openVideoModal(url) {
     const embedUrl = convertDriveUrlToEmbed(url);
-    document.getElementById('modal-iframe').src = embedUrl;
-    document.getElementById('video-modal').classList.remove('d-none');
+    const iframe = document.getElementById('modal-iframe');
+    if (iframe) iframe.src = embedUrl;
+    const modal = document.getElementById('video-modal');
+    if (modal) modal.classList.remove('d-none');
 }
 
 export function closeVideoModal() {
-    document.getElementById('video-modal').classList.add('d-none');
-    document.getElementById('modal-iframe').src = '';
+    const modal = document.getElementById('video-modal');
+    if (modal) modal.classList.add('d-none');
+    const iframe = document.getElementById('modal-iframe');
+    if (iframe) iframe.src = '';
 }
 
+// ===================== ETİKET DÜZENLEME MODALI =====================
 export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
     activeEditTagsVideoId = video.id;
     activeEditTagsVideoUpdatedAt = video.updated_at;
-    document.getElementById('tags-edit-modal').classList.remove('d-none');
+    const modal = document.getElementById('tags-edit-modal');
+    if (modal) modal.classList.remove('d-none');
+    
     modalTagsArray.length = 0;
     if (video.tags) {
         video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
@@ -59,11 +67,13 @@ export function openTagsEditModal(video, globalVideos, applyFiltersAndSearch) {
 }
 
 export function closeTagsEditModal() {
-    document.getElementById('tags-edit-modal').classList.add('d-none');
+    const modal = document.getElementById('tags-edit-modal');
+    if (modal) modal.classList.add('d-none');
     activeEditTagsVideoId = null;
     activeEditTagsVideoUpdatedAt = null;
     modalTagsArray = [];
-    document.getElementById('modal-tags-input').value = '';
+    const input = document.getElementById('modal-tags-input');
+    if (input) input.value = '';
 }
 
 export function renderModalChips(globalVideos, applyFiltersAndSearch) {
@@ -73,25 +83,20 @@ export function renderModalChips(globalVideos, applyFiltersAndSearch) {
     });
 }
 
-export async function saveTagsToSupabaseDirectly(_, applyFiltersAndSearch) {
+export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
-    // Her seferinde güncel videoları store'dan al
-    const globalVideos = store.get('globalVideos');
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
     try {
         await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags, activeEditTagsVideoUpdatedAt);
-        // Yerel videoları güncelle
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
-        // Store'u da güncelle (referans aynı olduğu için store.set gerekmez, ama emin olmak için)
-        store.set('globalVideos', [...globalVideos]); // referansı yenile
         renderModalChips(globalVideos, applyFiltersAndSearch);
         applyFiltersAndSearch();
         showToast('Etiketler güncellendi', 'success');
     } catch (err) {
         if (err.message.includes('ÇAKIŞMA')) {
             showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
-            setTimeout(() => location.reload(), 2000);
+            location.reload();
         } else {
             console.error("Etiket güncellenirken hata oluştu:", err);
             showToast('Etiketler güncellenemedi: ' + err.message, 'error');
@@ -99,22 +104,33 @@ export async function saveTagsToSupabaseDirectly(_, applyFiltersAndSearch) {
     }
 }
 
+// ===================== TOAST ALERT (ESKİ MODAL YERİNE) =====================
 export function showCustomAlert(message, okText = 'Tamam') {
+    // okText parametresi artık kullanılmıyor, toast'lar tıklama gerektirmez
     showToast(message, 'info', 3000);
     return Promise.resolve();
 }
 
+// ===================== ONAY MODALI (SİLME vb. İÇİN) =====================
 export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İptal') {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-dialog-modal');
         const msgEl = document.getElementById('custom-dialog-message');
         const okBtn = document.getElementById('custom-dialog-ok-btn');
         const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+        
+        if (!modal || !msgEl || !okBtn || !cancelBtn) {
+            console.error("Modal öğeleri bulunamadı!");
+            resolve(false);
+            return;
+        }
+        
         msgEl.innerText = message;
         okBtn.innerText = okText;
         cancelBtn.innerText = cancelText;
         cancelBtn.classList.remove('d-none');
         modal.classList.remove('d-none');
+        
         const handleOk = () => {
             modal.classList.add('d-none');
             cleanup();
@@ -129,11 +145,13 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
             okBtn.removeEventListener('click', handleOk);
             cancelBtn.removeEventListener('click', handleCancel);
         };
+        
         okBtn.addEventListener('click', handleOk);
         cancelBtn.addEventListener('click', handleCancel);
     });
 }
 
+// ===================== NOT DÜZENLEME MODALI =====================
 let activeNoteVideoId = null;
 let activeNoteVideoUpdatedAt = null;
 
@@ -146,6 +164,11 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const msgEl = document.getElementById('custom-dialog-message');
     const okBtn = document.getElementById('custom-dialog-ok-btn');
     const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+    
+    if (!modal || !msgEl || !okBtn || !cancelBtn) {
+        console.error("Modal öğeleri bulunamadı!");
+        return;
+    }
     
     msgEl.innerHTML = `<textarea id="note-textarea" rows="4" style="width:100%; background:#0b0813; color:#f1f5f9; border:1px solid #ff007f; border-radius:8px; padding:8px;">${escapeHtml(currentNote)}</textarea>`;
     
@@ -163,7 +186,7 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
         } catch (err) {
             if (err.message.includes('ÇAKIŞMA')) {
                 showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
-                setTimeout(() => location.reload(), 2000);
+                location.reload();
             } else {
                 console.error(err);
                 showToast('Not kaydedilemedi', 'error');

@@ -1,7 +1,5 @@
-// uiRenderer.js
 import { translations } from './config.js';
-import { openNoteEditModal, openTagsEditModal } from './tangoModals.js';
-import { store } from './store.js';
+import { openNoteEditModal } from './tangoModals.js';
 
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
     const container = document.getElementById(containerId);
@@ -180,6 +178,7 @@ export function renderVideoCards(videos, config) {
                 <span class="note-preview">${escapeHtml(noteText)}</span>
             </div>
         `;
+        // Platform badge - ikon düzeltildi
         const platformBadgeHtml = `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px;"><img src="${iconUrl}" style="width: 14px; height: 14px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none'; this.nextSibling.style.display='inline';"> <span style="display: inline;">${platformLabel}</span></span>`;
         card.innerHTML = `
             <div class="video-cover-link">
@@ -216,8 +215,7 @@ export function renderVideoCards(videos, config) {
         });
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            // ✅ Doğru parametrelerle çağır
-            openTagsEditModal(video, store.get('globalVideos'), refreshList);
+            openTagsEditModal(video);
         });
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
