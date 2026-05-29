@@ -1,4 +1,4 @@
-// app.js - Yeni modüler yapı
+// app.js - Yeni modüler yapı (DÜZELTİLMİŞ: eksik importlar eklendi)
 import { translations } from './config.js';
 import { handlePasteEvent } from './storage.js';
 import { 
@@ -7,13 +7,31 @@ import {
 } from './tangoModals.js';
 import { setupAutocomplete } from './uiRenderer.js';
 import { renderFormChips } from './formHandlers.js';
-import { initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, incrementVisibleCount, deleteVideoFlow } from './videoHandlers.js';
-import { initInstructorHandlers, handleInstructorSubmit, deleteInstructor } from './instructorHandlers.js';
-import { initFormHandlers, handleFormSubmit, formTagsArray, setFormTagsArray, getFormTagsArray } from './formHandlers.js';
-import { initTagManager, updateTagManagerSelection, mergeSelectedTags, deleteSelectedTags, cleanupUnusedTags } from './tagManager.js';
+import { 
+    initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, 
+    incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData 
+} from './videoHandlers.js';
+import { 
+    initInstructorHandlers, handleInstructorSubmit, deleteInstructor, 
+    setInstructorHandlersGlobalData 
+} from './instructorHandlers.js';
+import { 
+    initFormHandlers, handleFormSubmit, formTagsArray, setFormTagsArray, 
+    getFormTagsArray, setFormHandlersGlobalData 
+} from './formHandlers.js';
+import { 
+    initTagManager, updateTagManagerSelection, mergeSelectedTags, 
+    deleteSelectedTags, cleanupUnusedTags 
+} from './tagManager.js';
 import { store } from './store.js';
-import { fetchInstructors, fetchVideos, renderStatsPanel, renderTagManagerUI, updateAllLanguages } from './dataManager.js';
-import { callSwitchView, clearAllFavorites, callGetUniqueTagsPool, startVideoEditFlow, callUpdateSmartAssistant, callUpdateInterfaceLanguage } from './navigation.js';
+import { 
+    fetchInstructors, fetchVideos, renderStatsPanel, renderTagManagerUI, 
+    updateAllLanguages 
+} from './dataManager.js';
+import { 
+    callSwitchView, clearAllFavorites, callGetUniqueTagsPool, 
+    startVideoEditFlow, callUpdateSmartAssistant, callUpdateInterfaceLanguage 
+} from './navigation.js';
 
 // İlk çağrılar
 setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
