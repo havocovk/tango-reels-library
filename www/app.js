@@ -69,7 +69,7 @@ async function fetchVideos() {
         }));
         populateFilterDropdowns(globalVideos, currentLang);
         
-        setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
+        setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
         setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
         initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
@@ -130,7 +130,7 @@ function callSwitchView(viewName) {
     currentView = viewName;
     visibleCount = 20;
     setVisibleCount(visibleCount);
-    setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
+    setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
         renderTagManager: renderTagManagerUI
@@ -148,7 +148,7 @@ function clearAllFavorites() {
         if (confirmed) {
             await dbClearAllFavorites();
             store.set('globalFavorites', []);   // 🔁 store'u temizle
-            setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
+            setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
             applyFiltersAndSearch();
         }
     });
@@ -260,7 +260,7 @@ const getUIState = () => ({
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
-setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
+setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
 setInstructorHandlersGlobalData(currentLang, editInstructorId);
 setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
 initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
@@ -272,7 +272,7 @@ initFormHandlers(editingVideoId, formTagsArray, globalVideos, fetchVideos, callS
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setBackupLang(currentLang);
-    setVideoHandlersGlobalData(currentLang, globalVideos, store.get('globalFavorites'), currentView, visibleCount);
+    setVideoHandlersGlobalData(currentLang, globalVideos, currentView, visibleCount);
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
     setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, globalVideos);
     initTagManager(currentLang, globalVideos, fetchVideos, renderTagManagerUI);
