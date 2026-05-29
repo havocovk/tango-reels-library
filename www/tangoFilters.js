@@ -1,4 +1,4 @@
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 
 function formatAyYil(tarihString, lang) {
     if (!tarihString) return lang === 'tr' ? 'Bilinmeyen Tarih' : 'Unknown Date';

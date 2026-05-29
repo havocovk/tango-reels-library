@@ -1,4 +1,4 @@
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, showModernPrompt } from './utils.js';

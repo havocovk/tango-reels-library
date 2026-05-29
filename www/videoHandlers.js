@@ -3,7 +3,7 @@ import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo } from './tangoVeritaban
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
 import { getFilteredVideos } from './tangoFilters.js';
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { store } from './store.js';
 
 let currentLang = 'tr';

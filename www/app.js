@@ -1,5 +1,5 @@
 // app.js - Yeni modüler yapı (DÜZELTİLMİŞ: eksik importlar eklendi)
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { handlePasteEvent } from './storage.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,

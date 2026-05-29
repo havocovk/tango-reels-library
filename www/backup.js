@@ -2,7 +2,7 @@
 import { dbSaveInstructor, dbSaveVideo, dbAddFavorite, dbFetchInstructors, dbFetchVideos, dbFetchFavorites, dbDeleteInstructor, dbDeleteVideo, dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading } from './utils.js';
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 
 let currentLang = 'tr';
 

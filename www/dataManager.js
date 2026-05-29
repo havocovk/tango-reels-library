@@ -1,5 +1,5 @@
 // dataManager.js - Veri çekme, istatistik ve tag manager UI
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { dbFetchInstructors, dbFetchVideos, dbFetchFavorites } from './tangoVeritabani.js';
 import { populateFilterDropdowns } from './tangoFilters.js';
 import { computeStats, renderStats } from './tangoStats.js';

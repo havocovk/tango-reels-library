@@ -1,7 +1,7 @@
 // instructorHandlers.js - 8. adım (editInstructorId store'da)
 import { dbSaveInstructor, dbDeleteInstructor } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { store } from './store.js';
 
 let currentLang = 'tr';

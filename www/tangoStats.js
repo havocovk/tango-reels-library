@@ -1,4 +1,4 @@
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 
 let platformChart = null;
 let monthlyChart = null;

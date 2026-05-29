@@ -1,5 +1,5 @@
 // tangoModals.js - Son ve Çalışan Versiyon (Toast + Video Modal Export Eklendi)
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { dbUpdateTagsDirectly, dbUpdateNote } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 import { showToast } from './toast.js';

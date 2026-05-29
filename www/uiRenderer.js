@@ -1,4 +1,4 @@
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { openNoteEditModal } from './tangoModals.js';
 
 export function renderChips(containerId, chipsArray, onRemoveCallback) {

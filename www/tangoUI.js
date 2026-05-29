@@ -1,5 +1,5 @@
 // tangoUI.js - İstatistik butonları dil desteği eklendi
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     const lang = translations[currentLang];

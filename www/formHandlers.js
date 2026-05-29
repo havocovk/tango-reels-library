@@ -3,7 +3,7 @@ import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
 import { renderChips } from './uiRenderer.js';
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { updateSmartFilenameAssistant } from './tangoUI.js';
 import { store } from './store.js';
 

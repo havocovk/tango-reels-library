@@ -1,4 +1,5 @@
-import { SUPABASE_URL, SUPABASE_KEY, translations } from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { translations } from './i18n.js';
 
 let uploadedCoverUrl = null;
 

@@ -1,5 +1,5 @@
 // navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme
-import { translations } from './config.js';
+import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomConfirm } from './tangoModals.js';
 import { setVisibleCount, setVideoHandlersGlobalData, applyFiltersAndSearch } from './videoHandlers.js';
