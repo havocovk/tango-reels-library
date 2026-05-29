@@ -1,6 +1,6 @@
+import { store } from './store.js';
 import { translations } from './config.js';
 import { openNoteEditModal } from './tangoModals.js';
-import { store } from './store.js';
 
 export function renderChips(containerId, chipsArray, onRemoveCallback) {
     const container = document.getElementById(containerId);

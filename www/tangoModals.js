@@ -82,26 +82,23 @@ export function renderModalChips(globalVideos, applyFiltersAndSearch) {
     });
 }
 
-export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSearch) {
+export async function saveTagsToSupabaseDirectly(_, applyFiltersAndSearch) {
     if (!activeEditTagsVideoId) return;
-    // Eğer globalVideos undefined ise store'dan al
-    let videos = globalVideos;
-    if (!videos || !videos.length) {
-        const { store } = await import('./store.js');
-        videos = store.get('globalVideos');
-    }
+    // Store'dan güncel videoları al
+    const { store } = await import('./store.js');
+    const globalVideos = store.get('globalVideos');
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
     try {
         await dbUpdateTagsDirectly(activeEditTagsVideoId, cleanTags, activeEditTagsVideoUpdatedAt);
-        const vid = videos.find(v => v.id === activeEditTagsVideoId);
+        const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
-        renderModalChips(videos, applyFiltersAndSearch);
+        // Modal içindeki chip'leri güncelle
+        renderModalChips(globalVideos, applyFiltersAndSearch);
         applyFiltersAndSearch();
         showToast('Etiketler güncellendi', 'success');
     } catch (err) {
         if (err.message.includes('ÇAKIŞMA')) {
             showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
-            // Otomatik yenileme
             setTimeout(() => location.reload(), 2000);
         } else {
             console.error("Etiket güncellenirken hata oluştu:", err);
