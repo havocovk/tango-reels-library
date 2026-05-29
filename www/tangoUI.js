@@ -1,3 +1,4 @@
+// tangoUI.js - İstatistik butonları dil desteği eklendi
 import { translations } from './config.js';
 
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
@@ -179,6 +180,12 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     if (mergeInput) {
         mergeInput.placeholder = currentLang === 'tr' ? 'Örn: sacada' : 'Ex: sacada';
     }
+
+    // ✅ YENİ: Yedekleme butonları metinlerini güncelle
+    const exportBackupBtn = document.getElementById('btn-export-backup');
+    const importBackupBtn = document.getElementById('btn-import-backup');
+    if (exportBackupBtn) exportBackupBtn.innerText = currentLang === 'tr' ? '💾 Yedekle (Dışa Aktar)' : '💾 Backup (Export)';
+    if (importBackupBtn) importBackupBtn.innerText = currentLang === 'tr' ? '📂 Yedekten Geri Yükle' : '📂 Restore from Backup';
     
     updateSmartFilenameAssistant(currentLang, formTagsArray);
     
