@@ -1,4 +1,4 @@
-// app.js - 4. adım son çalışan versiyon (currentView ve visibleCount henüz store'da değil)
+// app.js - 5. adım (currentView ve visibleCount store'da, düzeltilmiş)
 import { translations } from './config.js';
 import { handlePasteEvent, getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { 
@@ -22,12 +22,14 @@ import { initFormHandlers, renderFormChips, handleFormSubmit, setEditingVideoId,
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 
+// Store'dan ilk değerleri al
 let currentLang = store.get('currentLang');
 let globalInstructors = [];
 let editInstructorId = null;
 let editingVideoId = null;
-let currentView = 'library';
-let visibleCount = 20;
+
+// currentView ve visibleCount artık store'da, ama geçiş için değişkenleri burada tanımlamıyoruz,
+// doğrudan store.get/set kullanacağız.
 
 setCurrentLangForUtils(currentLang);
 setBackupLang(currentLang);
@@ -67,14 +69,15 @@ async function fetchVideos() {
         
         populateFilterDropdowns(videos, currentLang);
         
-        setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
+        // videoHandlers'a artık sadece dil, view ve visibleCount gidiyor
+        setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
         setInstructorHandlersGlobalData(currentLang, editInstructorId);
         setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, videos);
         initTagManager(currentLang, videos, fetchVideos, renderTagManagerUI);
         
         applyFiltersAndSearch();
-        if (currentView === 'stats') renderStatsPanel();
-        if (currentView === 'tagManager') renderTagManagerUI();
+        if (store.get('currentView') === 'stats') renderStatsPanel();
+        if (store.get('currentView') === 'tagManager') renderTagManagerUI();
     } catch (err) {
         document.getElementById('video-grid').innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[currentLang].error}</div>`;
         console.error(err);
@@ -82,7 +85,7 @@ async function fetchVideos() {
 }
 
 function renderStatsPanel() {
-    if (currentView !== 'stats') return;
+    if (store.get('currentView') !== 'stats') return;
     const stats = computeStats(store.get('globalVideos'), globalInstructors);
     renderStats(stats, currentLang);
     setupBackupButtons();
@@ -123,14 +126,14 @@ function callUpdateInterfaceLanguage() {
     const videos = store.get('globalVideos');
     if (videos.length) populateFilterDropdowns(videos, currentLang);
     applyFiltersAndSearch();
-    if (currentView === 'stats') renderStatsPanel();
+    if (store.get('currentView') === 'stats') renderStatsPanel();
 }
 
 function callSwitchView(viewName) {
-    currentView = viewName;
-    visibleCount = 20;
-    setVisibleCount(visibleCount);
-    setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
+    store.set('currentView', viewName);
+    store.set('visibleCount', 20);
+    setVisibleCount(store.get('visibleCount'));
+    setVideoHandlersGlobalData(currentLang, viewName, store.get('visibleCount'));
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch, renderFormChips: () => renderFormChips(), resetUploadedCoverUrl: () => {},
         renderTagManager: renderTagManagerUI
@@ -148,7 +151,7 @@ function clearAllFavorites() {
         if (confirmed) {
             await dbClearAllFavorites();
             store.set('globalFavorites', []);
-            setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
+            setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
             applyFiltersAndSearch();
         }
     });
@@ -256,12 +259,14 @@ function renderTagManagerUI() {
 }
 
 const getUIState = () => ({
-    currentLang, editingVideoId, editInstructorId, currentView,
+    currentLang, editingVideoId, editInstructorId,
+    currentView: store.get('currentView'),
     getFormTags: () => getFormTagsArray(),
     resetFormTags: () => { setFormTagsArray([]); }
 });
 
-setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
+// İlk ayarlar
+setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
 setInstructorHandlersGlobalData(currentLang, editInstructorId);
 setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, store.get('globalVideos'));
 initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
@@ -273,7 +278,7 @@ initFormHandlers(editingVideoId, formTagsArray, store.get('globalVideos'), fetch
 function updateAllLanguages() {
     setCurrentLangForUtils(currentLang);
     setBackupLang(currentLang);
-    setVideoHandlersGlobalData(currentLang, currentView, visibleCount);
+    setVideoHandlersGlobalData(currentLang, store.get('currentView'), store.get('visibleCount'));
     setInstructorHandlersGlobalData(currentLang, editInstructorId);
     setFormHandlersGlobalData(currentLang, editingVideoId, formTagsArray, store.get('globalVideos'));
     initTagManager(currentLang, store.get('globalVideos'), fetchVideos, renderTagManagerUI);
@@ -291,8 +296,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         store.set('currentLang', newLang);
         updateAllLanguages();
         callUpdateInterfaceLanguage();
-        if (currentView === 'stats') renderStatsPanel();
-        if (currentView === 'tagManager') renderTagManagerUI();
+        if (store.get('currentView') === 'stats') renderStatsPanel();
+        if (store.get('currentView') === 'tagManager') renderTagManagerUI();
     };
     document.getElementById('menu-library').onclick = () => { editingVideoId = null; callSwitchView('library'); };
     document.getElementById('menu-favorites').onclick = () => { editingVideoId = null; callSwitchView('favorites'); };
