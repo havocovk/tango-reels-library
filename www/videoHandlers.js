@@ -1,4 +1,4 @@
-// videoHandlers.js - 5. adım (currentView, visibleCount store'dan)
+// videoHandlers.js - DÜZELTİLMİŞ
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -8,6 +8,7 @@ import { store } from './store.js';
 
 let currentLang = 'tr';
 
+// Bu değişkenler initVideoHandlers ile atanacak
 let applyFiltersAndSearchCallback = null;
 let fetchVideosCallback = null;
 let openVideoModalCallback = null;
@@ -15,11 +16,12 @@ let openTagsEditModalCallback = null;
 let startVideoEditFlowCallback = null;
 let deleteVideoFlowCallback = null;
 
-// Artık currentView ve visibleCount parametreleri kalktı, sadece lang
+// SADECE DİL BİLGİSİNİ AYARLAR
 export function setVideoHandlersGlobalData(lang) {
     currentLang = lang;
 }
 
+// 📌 ÖNEMLİ: Bu fonksiyon app.js içinde çağrılmalı
 export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, startEditCb, deleteCb) {
     applyFiltersAndSearchCallback = applyCb;
     fetchVideosCallback = fetchCb;
@@ -29,6 +31,7 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
     deleteVideoFlowCallback = deleteCb;
 }
 
+// Favori ekleme/çıkarma (çalışıyor)
 export async function toggleFavorite(videoId) {
     try {
         let currentFavorites = store.get('globalFavorites');
@@ -40,10 +43,10 @@ export async function toggleFavorite(videoId) {
             currentFavorites = [...currentFavorites, videoId];
         }
         store.set('globalFavorites', currentFavorites);
-        
     } catch (err) { console.error(err); }
 }
 
+// Listeyi filtrele ve kartları göster
 export function applyFiltersAndSearch() {
     const globalVideos = store.get('globalVideos');
     const currentView = store.get('currentView');
@@ -73,8 +76,13 @@ export function applyFiltersAndSearch() {
         if (filtered.length > visibleCount) loadMoreDiv.classList.remove('d-none');
         else loadMoreDiv.classList.add('d-none');
     }
+    // 📌 Kartları render ederken callback'leri doğrudan aktar
     renderVideoCards(filtered.slice(0, visibleCount), {
-        currentLang, currentView, translations, favs: favorites, toggleFavorite,
+        currentLang,
+        currentView,
+        translations,
+        favs: favorites,
+        toggleFavorite,
         openTagsEditModal: (video) => openTagsEditModalCallback(video),
         startVideoEditFlow: startVideoEditFlowCallback,
         deleteVideoFlow: deleteVideoFlowCallback,

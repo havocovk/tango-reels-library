@@ -99,6 +99,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         });
         if (!insertRes.ok) {
             let errorText = await insertRes.text();
+            // 📌 Hata mesajını detaylı göster
             throw new Error(`Ekleme hatası (${insertRes.status}): ${errorText}`);
         }
         return insertRes;

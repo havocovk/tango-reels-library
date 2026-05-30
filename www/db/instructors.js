@@ -18,7 +18,10 @@ export async function dbSaveInstructor(id, name) {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify({ name })
     });
-    if (!res.ok) throw new Error("Eğitmen kaydedilemedi");
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Eğitmen kaydedilemedi: ${errorText}`);
+    }
     return res;
 }
 
