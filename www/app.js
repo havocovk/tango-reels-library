@@ -3,7 +3,8 @@ import { translations } from './i18n.js';
 import { handlePasteEvent } from './storage.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
-    modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly
+    modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly,
+    initModalCallbacks  // ✅ YENİ
 } from './tangoModals.js';
 import { setupAutocomplete } from './uiRenderer.js';
 import { renderFormChips } from './formHandlers.js';
@@ -48,6 +49,7 @@ initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwit
 document.addEventListener('DOMContentLoaded', async () => {
     await fetchInstructors();
     await fetchVideos();
+    initModalCallbacks(applyFiltersAndSearch); // ✅ YENİ: modal applyFiltersAndSearch callback'ini kaydet
     callUpdateInterfaceLanguage();
 
     // Dil değiştirme
@@ -95,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        saveTagsToSupabaseDirectly(store.get('globalVideos'), applyFiltersAndSearch);
+        saveTagsToSupabaseDirectly(); // ✅ DÜZELTME: parametresiz — store ve _applyFiltersAndSearch kullanır
     }, callGetUniqueTagsPool);
     
     // Eğitmen form işlemleri

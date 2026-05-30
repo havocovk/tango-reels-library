@@ -161,9 +161,13 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
     });
     const responseText = await res.text();
     let affectedRows = 0;
+    let updatedVideo = null; // ✅ YENİ: güncellenmiş satırı tut
     try {
         const json = JSON.parse(responseText);
-        if (Array.isArray(json)) affectedRows = json.length;
+        if (Array.isArray(json)) {
+            affectedRows = json.length;
+            if (json.length > 0) updatedVideo = json[0]; // ✅ ilk (ve tek) satırı al
+        }
     } catch(e) {}
     if (affectedRows === 0) {
         throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
@@ -171,7 +175,9 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
     if (!res.ok) {
         throw new Error(`Etiket güncellenemedi: ${responseText}`);
     }
-    return res;
+    // ✅ DÜZELTME: res yerine updatedVideo döndür.
+    // Çağıran (saveTagsToSupabaseDirectly) yeni updated_at değerini buradan okur.
+    return updatedVideo;
 }
 
 export async function dbUpdateNote(videoId, note, old_updated_at = null) {
