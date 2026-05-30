@@ -1,10 +1,10 @@
-// app.js - Yeni modüler yapı (DÜZELTİLMİŞ: eksik importlar eklendi)
+// app.js - Yeni modüler yapı (HTML şablonları ile)
 import { translations } from './i18n.js';
 import { handlePasteEvent } from './storage.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly,
-    initModalCallbacks  // ✅ YENİ
+    initModalCallbacks
 } from './tangoModals.js';
 import { setupAutocomplete } from './uiRenderer.js';
 import { renderFormChips } from './formHandlers.js';
@@ -35,21 +35,40 @@ import {
 } from './navigation.js';
 import { setupStoreSubscriptions } from './uiSubscriptions.js';
 
-// İlk çağrılar
-setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
-setInstructorHandlersGlobalData(store.get('currentLang'));
-setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, store.get('globalVideos'));
-initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
+// ========== YENİ: Şablon yükleme fonksiyonu ==========
+async function loadTemplates() {
+    const container = document.getElementById('dynamic-views');
+    if (!container) return;
 
-initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
-initInstructorHandlers(fetchInstructors, fetchVideos);
-initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
+    // Tüm view'ları ve modalları fetch et
+    const templates = {
+        library: await fetch('views/library.html').then(r => r.text()),
+        stats: await fetch('views/stats.html').then(r => r.text()),
+        addVideo: await fetch('views/add-video.html').then(r => r.text()),
+        tagManager: await fetch('views/tag-manager.html').then(r => r.text()),
+        videoModal: await fetch('modals/video-modal.html').then(r => r.text()),
+        tagsEditModal: await fetch('modals/tags-edit-modal.html').then(r => r.text()),
+        customDialogModal: await fetch('modals/custom-dialog-modal.html').then(r => r.text())
+    };
 
-// DOM yüklendiğinde
-document.addEventListener('DOMContentLoaded', async () => {
+    // Önce modalları (sayfanın en altına ekleyelim)
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'modals-container';
+    modalContainer.innerHTML = templates.videoModal + templates.tagsEditModal + templates.customDialogModal;
+    document.body.appendChild(modalContainer);
+
+    // View'ları dynamic-views içine yerleştir
+    container.innerHTML = templates.library + templates.stats + templates.addVideo + templates.tagManager;
+
+    // Şimdi tüm başlatma kodlarını çalıştır (eski DOMContentLoaded içindekiler)
+    await initializeApp();
+}
+
+async function initializeApp() {
+    // İlk veri çekme
     await fetchInstructors();
     await fetchVideos();
-    initModalCallbacks(applyFiltersAndSearch); // ✅ YENİ: modal applyFiltersAndSearch callback'ini kaydet
+    initModalCallbacks(applyFiltersAndSearch);
     callUpdateInterfaceLanguage();
 
     // Dil değiştirme
@@ -86,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
     
-    // Otomatik tamamlama
+    // Otomatik tamamlama (form ve modal)
     setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, () => renderFormChips(), (newTag) => {
         if (!formTagsArray.includes(newTag)) {
             formTagsArray.push(newTag);
@@ -97,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
-        saveTagsToSupabaseDirectly(); // ✅ DÜZELTME: parametresiz — store ve _applyFiltersAndSearch kullanır
+        saveTagsToSupabaseDirectly();
     }, callGetUniqueTagsPool);
     
     // Eğitmen form işlemleri
@@ -132,11 +151,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('filter-btn').onclick = () => { setVisibleCount(20); fetchVideos(); };
     document.getElementById('btn-load-more').onclick = () => { incrementVisibleCount(20); applyFiltersAndSearch(); };
     
-    // Modallar
+    // Modallar (artık dinamik olarak oluşturuldu, onları seç)
     document.getElementById('modal-close-btn').onclick = closeVideoModal;
-    document.getElementById('video-modal').onclick = (e) => { if (e.target.id === 'video-modal') closeVideoModal(); };
+    const videoModal = document.getElementById('video-modal');
+    if (videoModal) videoModal.onclick = (e) => { if (e.target.id === 'video-modal') closeVideoModal(); };
     document.getElementById('tags-modal-close-btn').onclick = closeTagsEditModal;
-    document.getElementById('tags-edit-modal').onclick = (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); };
+    const tagsModal = document.getElementById('tags-edit-modal');
+    if (tagsModal) tagsModal.onclick = (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); };
     
     // Kapak resmi yapıştırma
     document.getElementById('drop-area')?.addEventListener('paste', (e) => handlePasteEvent(e, store.get('currentLang')));
@@ -151,8 +172,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     document.getElementById('tag-merge-confirm-btn').onclick = () => mergeSelectedTags();
     
-    // Store aboneliklerini başlat (UI otomatik güncellenmesi için)
+    // Store aboneliklerini başlat
     setupStoreSubscriptions();
     // Global referans
     window.applyFiltersAndSearch = applyFiltersAndSearch;
+}
+
+// DOM yüklendiğinde şablonları yükle
+document.addEventListener('DOMContentLoaded', () => {
+    loadTemplates().catch(err => {
+        console.error('Şablon yükleme hatası:', err);
+        document.getElementById('dynamic-views').innerHTML = '<div class="info-msg" style="color:#ef4444;">Sayfa yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>';
+    });
 });

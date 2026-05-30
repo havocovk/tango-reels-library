@@ -1,0 +1,16 @@
+<!-- modals/tags-edit-modal.html -->
+<div id="tags-edit-modal" class="modal-overlay d-none">
+    <div class="modal-content" style="max-width:500px; padding:25px;">
+        <span id="tags-modal-close-btn" class="modal-close">&times;</span>
+        <h3 id="edit-tags-title">✏️ Etiketleri Düzenle</h3>
+        <div class="form-group">
+            <div class="tags-input-container" id="modal-tags-wrapper">
+                <div id="modal-chips-area" style="display:inline-flex; flex-wrap:wrap; gap:6px;"></div>
+                <div class="autocomplete-wrapper" style="flex:1; position:relative;">
+                    <input type="text" id="modal-tags-input" placeholder="Yeni etiket yazıp virgül koyun..." style="border:none; padding:4px; background:transparent; width:100%; outline:none;">
+                    <div id="modal-autocomplete-list" class="autocomplete-suggestions d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

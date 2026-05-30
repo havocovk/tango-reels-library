@@ -1,0 +1,32 @@
+<!-- views/tag-manager.html - Etiket Yönetimi görünümü -->
+<div id="view-tag-manager-container" class="view-panel d-none">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <h2 id="tag-manager-title" style="color:#f1f5f9; text-shadow:0 0 4px #ff007f;">🏷️ Etiket Yönetimi</h2>
+        <div>
+            <button id="tag-manager-merge-btn" class="tag-action-btn">🔗 Birleştir</button>
+            <button id="tag-manager-delete-btn" class="tag-action-btn tag-danger-btn">🗑️ Seçilenleri Sil</button>
+            <button id="tag-manager-cleanup-btn" class="tag-action-btn">🧹 Kullanılmayanları Temizle</button>
+        </div>
+    </div>
+    <div style="background: rgba(11,8,19,0.4); border-radius: 20px; padding: 15px;">
+        <div style="max-height: 65vh; overflow-y: auto;">
+            <table class="tag-manager-table" id="tag-manager-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px"><input type="checkbox" id="tag-select-all" class="tag-checkbox"></th>
+                        <th>Etiket</th>
+                        <th style="text-align:center">Kullanım Sayısı</th>
+                        <th style="width:100px; text-align:center">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="tag-manager-tbody"></tbody>
+            </table>
+        </div>
+        <div id="tag-merge-panel" class="d-none" style="margin-top: 20px; padding: 15px; background: rgba(0,240,255,0.1); border-radius: 12px;">
+            <label>Yeni Etiket Adı:</label>
+            <input type="text" id="tag-merge-new-name" class="tag-merge-input" placeholder="Örn: sacada">
+            <button id="tag-merge-confirm-btn" class="tag-action-btn">✅ Birleştir</button>
+            <button id="tag-merge-cancel-btn" class="tag-action-btn">❌ İptal</button>
+        </div>
+    </div>
+</div>
