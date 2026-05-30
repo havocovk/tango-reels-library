@@ -1,9 +1,5 @@
 // ui/language.js - Dil ve arayüz metinlerini güncelleme
 import { translations } from '../i18n.js';
-import { updateSmartFilenameAssistant as updateAssistant } from './assistant.js'; // Henüz yok, aşağıda oluşturacağız
-// Aslında updateSmartFilenameAssistant doğrudan bu dosyaya taşınabilir, ancak formTagsArray bağımlılığı var.
-// Kısa vadede, mevcut updateSmartFilenameAssistant'ı buraya kopyalayalım.
-// Daha sonra assistant.js olarak ayırabiliriz.
 
 // ---------- Yardımcı: Akıllı dosya adı asistanı ----------
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
