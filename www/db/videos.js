@@ -150,15 +150,19 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
             'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
+            'Prefer': 'return=representation'   // önemli
         },
         body: JSON.stringify({ notes: note || null })
     });
     const responseText = await res.text();
     let affectedRows = 0;
+    let updatedVideo = null;
     try {
         const json = JSON.parse(responseText);
-        if (Array.isArray(json)) affectedRows = json.length;
+        if (Array.isArray(json)) {
+            affectedRows = json.length;
+            if (json.length > 0) updatedVideo = json[0];   // güncellenmiş video
+        }
     } catch(e) {}
     if (affectedRows === 0) {
         throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
@@ -166,5 +170,5 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     if (!res.ok) {
         throw new Error(`Not kaydedilemedi: ${responseText}`);
     }
-    return res;
+    return updatedVideo;   // ✅ güncellenmiş videoyu döndür
 }

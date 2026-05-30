@@ -190,9 +190,13 @@ let activeNoteVideoId = null;
 let activeNoteVideoUpdatedAt = null;
 
 export function openNoteEditModal(video, onNoteSavedCallback) {
-    activeNoteVideoId = video.id;
-    activeNoteVideoUpdatedAt = video.updated_at;
-    const currentNote = video.notes || '';
+    // ✅ ÖNEMLİ: Store'dan en güncel video nesnesini al, updated_at taze olsun
+    const globalVideos = store.get('globalVideos');
+    const currentVideo = globalVideos.find(v => v.id === video.id) || video;
+    
+    activeNoteVideoId = currentVideo.id;
+    activeNoteVideoUpdatedAt = currentVideo.updated_at;  // güncel timestamp
+    const currentNote = currentVideo.notes || '';
 
     const modal = document.getElementById('custom-dialog-modal');
     const msgEl = document.getElementById('custom-dialog-message');
@@ -214,20 +218,25 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const handleOk = async () => {
         const newNote = document.getElementById('note-textarea').value;
         try {
-            await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);
+            // ✅ dbUpdateNote artık güncellenmiş video nesnesini döndürüyor olmalı
+            const updatedVideo = await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);
             
-            // ✅ Store'daki globalVideos içinde ilgili videonun notes alanını güncelle
-            const globalVideos = store.get('globalVideos');
-            const videoIndex = globalVideos.findIndex(v => v.id === activeNoteVideoId);
+            // Store'daki videoyu güncelle: notes ve updated_at
+            const globalVideosNow = store.get('globalVideos');
+            const videoIndex = globalVideosNow.findIndex(v => v.id === activeNoteVideoId);
             if (videoIndex !== -1) {
-                globalVideos[videoIndex].notes = newNote || null;
-                store.set('globalVideos', [...globalVideos]); // yeni referans oluştur (reaktiflik için)
+                // updatedVideo'dan yeni updated_at al (eğer döndüyse)
+                if (updatedVideo && updatedVideo.updated_at) {
+                    globalVideosNow[videoIndex].updated_at = updatedVideo.updated_at;
+                }
+                globalVideosNow[videoIndex].notes = newNote || null;
+                store.set('globalVideos', [...globalVideosNow]);
             }
             
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
             
-            // ✅ Listeyi yenile (kartları hemen güncelle)
-            if (_applyFiltersAndSearch) _applyFiltersAndSearch();
+            // Listeyi yenile (kartları güncelle)
+            if (window.applyFiltersAndSearch) window.applyFiltersAndSearch();
             
             showToast('Not kaydedildi', 'success');
         } catch (err) {
@@ -236,7 +245,7 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
                 location.reload();
             } else {
                 console.error(err);
-                showToast('Not kaydedilemedi', 'error');
+                showToast('Not kaydedilemedi: ' + err.message, 'error');
             }
         }
         modal.classList.add('d-none');
