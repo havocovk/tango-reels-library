@@ -1,0 +1,98 @@
+/* ============================================
+   modals.css - Modal overlay, video container, etiket modalı
+   ============================================ */
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(11, 8, 19, 0.85);
+    backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 960px;
+    background: #0b0813;
+    border: 1px solid rgba(255, 0, 127, 0.5);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(255,0,127,0.3);
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px; right: 20px;
+    color: #94a3b8;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10001;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: #ff007f;
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    height: 0;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    border: none;
+}
+
+/* Etiket düzenleme modalı içi */
+.modal-tags-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.modal-tag-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(0, 240, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 0, 127, 0.3);
+}
+
+.modal-tag-edit-input {
+    flex: 1;
+    background: transparent !important;
+    border: none !important;
+    padding: 6px 0 !important;
+    color: #f1f5f9;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.modal-tag-row-delete-btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.modal-tag-row-delete-btn:hover {
+    color: #ef4444;
+}
