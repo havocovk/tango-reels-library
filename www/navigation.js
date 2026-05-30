@@ -31,7 +31,7 @@ export function callUpdateInterfaceLanguage() {
     if (videos.length) {
         import('./tangoFilters.js').then(tf => tf.populateFilterDropdowns(videos, store.get('currentLang')));
     }
-    applyFiltersAndSearch();
+    
     if (store.get('currentView') === 'stats') renderStatsPanel();
 }
 
@@ -50,7 +50,7 @@ export function callSwitchView(viewName) {
     });
     if (viewName === 'stats') renderStatsPanel();
     if (viewName === 'tagManager') renderTagManagerUI();
-    applyFiltersAndSearch();
+    
 }
 
 export function clearAllFavorites() {
@@ -63,7 +63,7 @@ export function clearAllFavorites() {
             await dbClearAllFavorites();
             store.set('globalFavorites', []);
             setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
-            applyFiltersAndSearch();
+            
         }
     });
 }

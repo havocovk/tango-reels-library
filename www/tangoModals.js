@@ -91,7 +91,7 @@ export async function saveTagsToSupabaseDirectly(globalVideos, applyFiltersAndSe
         const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
         if (vid) vid.tags = cleanTags || null;
         renderModalChips(globalVideos, applyFiltersAndSearch);
-        applyFiltersAndSearch();
+        
         showToast('Etiketler güncellendi', 'success');
     } catch (err) {
         if (err.message.includes('ÇAKIŞMA')) {

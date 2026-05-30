@@ -40,7 +40,7 @@ export async function toggleFavorite(videoId) {
             currentFavorites = [...currentFavorites, videoId];
         }
         store.set('globalFavorites', currentFavorites);
-        if (applyFiltersAndSearchCallback) applyFiltersAndSearchCallback();
+        
     } catch (err) { console.error(err); }
 }
 

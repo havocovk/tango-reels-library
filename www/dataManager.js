@@ -50,7 +50,6 @@ export async function fetchVideos() {
         setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, videos);
         initTagManager(store.get('currentLang'), videos, fetchVideos, renderTagManagerUI);
         
-        applyFiltersAndSearch();
         if (store.get('currentView') === 'stats') renderStatsPanel();
         if (store.get('currentView') === 'tagManager') renderTagManagerUI();
     } catch (err) {

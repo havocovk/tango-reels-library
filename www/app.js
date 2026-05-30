@@ -32,6 +32,7 @@ import {
     callSwitchView, clearAllFavorites, callGetUniqueTagsPool, 
     startVideoEditFlow, callUpdateSmartAssistant, callUpdateInterfaceLanguage 
 } from './navigation.js';
+import { setupStoreSubscriptions } from './uiSubscriptions.js';
 
 // İlk çağrılar
 setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
@@ -148,6 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     document.getElementById('tag-merge-confirm-btn').onclick = () => mergeSelectedTags();
     
+    // Store aboneliklerini başlat (UI otomatik güncellenmesi için)
+    setupStoreSubscriptions();
     // Global referans
     window.applyFiltersAndSearch = applyFiltersAndSearch;
 });
