@@ -1,72 +1,78 @@
-// ui/navigation.js - Görünüm geçişi (view switch)
+// ui/navigation.js - Görünüm geçişi (view switch) - 7. adım güncellemesi
 import { translations } from '../i18n.js';
 import { updateSmartFilenameAssistant } from './language.js';
 
-export function switchView(viewName, state, functions) {
+// Dışarıdan alınacak fonksiyonlar (app.js'den)
+let globalLoadView = null;
+let globalRenderTagManager = null;
+let globalApplyFiltersAndSearch = null;
+let globalRenderStats = null;
+let globalResetCover = null;
+let globalRenderFormChips = null;
+
+export function setNavigationCallbacks(loadViewFn, renderTagManagerFn, applyFiltersAndSearchFn, renderStatsFn, resetCoverFn, renderFormChipsFn) {
+    globalLoadView = loadViewFn;
+    globalRenderTagManager = renderTagManagerFn;
+    globalApplyFiltersAndSearch = applyFiltersAndSearchFn;
+    globalRenderStats = renderStatsFn;
+    globalResetCover = resetCoverFn;
+    globalRenderFormChips = renderFormChipsFn;
+}
+
+export async function switchView(viewName, state, functions) {
     state.currentView = viewName;
+    
+    // Menü aktiflik sınıflarını güncelle
     document.getElementById('menu-library').classList.remove('active');
     document.getElementById('menu-favorites').classList.remove('active');
     document.getElementById('menu-stats').classList.remove('active');
     document.getElementById('menu-add-video').classList.remove('active');
     const tagManagerBtn = document.getElementById('menu-tag-manager');
     if (tagManagerBtn) tagManagerBtn.classList.remove('active');
-
-    const clearFavBtnContainer = document.getElementById('clear-favorites-container');
-    const libraryView = document.getElementById('view-library-container');
-    const statsView = document.getElementById('view-stats-container');
-    const addView = document.getElementById('view-add-container');
-    const tagView = document.getElementById('view-tag-manager-container');
-
+    
+    // View'ı yükle (eğer library veya favorites ise aynı view'ı kullan, fakat içerik aynı)
+    // Favori görünümü için aslında aynı library.html kullanılır, sadece filtre favori olur.
+    // Bu durumu app.js'deki callSwitchView zaten handle ediyor. Burada sadece HTML yüklenir.
+    let viewFile = viewName;
+    if (viewName === 'favorites') viewFile = 'library'; // favorites için de library.html kullan
+    if (globalLoadView) await globalLoadView(viewFile);
+    
+    // Görünüm tipine göre ekstra işlemler
     if (viewName === 'library' || viewName === 'favorites') {
-        libraryView.classList.remove('d-none');
-        statsView.classList.add('d-none');
-        addView.classList.add('d-none');
-        if (tagView) tagView.classList.add('d-none');
         document.getElementById(`menu-${viewName}`).classList.add('active');
-        
-        if (viewName === 'favorites') {
-            clearFavBtnContainer.classList.remove('d-none');
-        } else {
-            clearFavBtnContainer.classList.add('d-none');
+        const clearFavBtnContainer = document.getElementById('clear-favorites-container');
+        if (clearFavBtnContainer) {
+            if (viewName === 'favorites') clearFavBtnContainer.classList.remove('d-none');
+            else clearFavBtnContainer.classList.add('d-none');
         }
-        
-        functions.applyFiltersAndSearch();
+        if (globalApplyFiltersAndSearch) globalApplyFiltersAndSearch();
     } else if (viewName === 'stats') {
-        libraryView.classList.add('d-none');
-        statsView.classList.remove('d-none');
-        addView.classList.add('d-none');
-        if (tagView) tagView.classList.add('d-none');
         document.getElementById('menu-stats').classList.add('active');
-        if (functions.updateStats) functions.updateStats();
+        if (globalRenderStats) globalRenderStats();
     } else if (viewName === 'add') {
-        libraryView.classList.add('d-none');
-        statsView.classList.add('d-none');
-        addView.classList.remove('d-none');
-        if (tagView) tagView.classList.add('d-none');
         document.getElementById('menu-add-video').classList.add('active');
-        
         if (!state.editingVideoId) {
             const lang = translations[state.currentLang];
-            document.getElementById('form-title').innerText = lang.formTitle;
-            document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
-            document.getElementById('add-video-form').reset();
-            state.resetFormTags();
-            functions.renderFormChips();
-            if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
+            const formTitle = document.getElementById('form-title');
+            if (formTitle) formTitle.innerText = lang.formTitle;
+            const btnSubmit = document.getElementById('btn-submit-video');
+            if (btnSubmit) btnSubmit.innerText = lang.btnSubmitVideo;
+            const form = document.getElementById('add-video-form');
+            if (form) form.reset();
+            if (state.resetFormTags) state.resetFormTags();
+            if (globalRenderFormChips) globalRenderFormChips();
+            const imgPreview = document.getElementById('image-preview');
+            if (imgPreview) imgPreview.classList.add('d-none');
             const dropAreaText = document.getElementById('drop-area-text');
             if (dropAreaText) {
                 dropAreaText.innerText = lang.dropText;
                 dropAreaText.classList.remove('d-none');
             }
-            functions.resetUploadedCoverUrl();
+            if (globalResetCover) globalResetCover();
         }
         updateSmartFilenameAssistant(state.currentLang, state.getFormTags());
-    } else if (viewName === 'tagManager' && tagView) {
-        libraryView.classList.add('d-none');
-        statsView.classList.add('d-none');
-        addView.classList.add('d-none');
-        tagView.classList.remove('d-none');
+    } else if (viewName === 'tagManager') {
         if (tagManagerBtn) tagManagerBtn.classList.add('active');
-        if (functions.renderTagManager) functions.renderTagManager();
+        if (globalRenderTagManager) globalRenderTagManager();
     }
 }

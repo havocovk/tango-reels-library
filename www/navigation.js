@@ -3,18 +3,31 @@ import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomConfirm } from './tangoModals.js';
 import { setVisibleCount, setVideoHandlersGlobalData, applyFiltersAndSearch } from './videoHandlers.js';
-import { switchView, updateInterfaceLanguage, updateSmartFilenameAssistant } from './tangoUI.js';
 import { setEditingVideoId, setEditingVideoUpdatedAt, setFormTagsArray, renderFormChips, getFormTagsArray, formTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
 import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { store } from './store.js';
+import { switchView, setNavigationCallbacks } from './ui/navigation.js';
+import { resetUploadedCoverUrl } from './storage.js';
+
+// Callback'leri ayarla (app.js'den çağrılacak)
+export function initNavigation(loadViewFn) {
+    setNavigationCallbacks(
+        loadViewFn,
+        renderTagManagerUI,
+        applyFiltersAndSearch,
+        renderStatsPanel,
+        resetUploadedCoverUrl,
+        renderFormChips
+    );
+}
 
 export function callUpdateSmartAssistant() {
-    updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
+    import('./ui/language.js').then(ui => ui.updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray));
 }
 
 export function callUpdateInterfaceLanguage() {
-    updateInterfaceLanguage(
+    import('./ui/language.js').then(ui => ui.updateInterfaceLanguage(
         store.get('currentLang'), 
         store.get('editingVideoId'), 
         store.get('editInstructorId'), 
@@ -26,31 +39,33 @@ export function callUpdateInterfaceLanguage() {
                 import('./tangoFilters.js').then(tf => tf.populateFilterDropdowns(videos, store.get('currentLang')));
             }
         }
-    );
+    ));
     const videos = store.get('globalVideos');
     if (videos.length) {
         import('./tangoFilters.js').then(tf => tf.populateFilterDropdowns(videos, store.get('currentLang')));
     }
-    
     if (store.get('currentView') === 'stats') renderStatsPanel();
 }
 
-export function callSwitchView(viewName) {
+export async function callSwitchView(viewName) {
     store.set('currentView', viewName);
     store.set('visibleCount', 20);
     setVisibleCount(store.get('visibleCount'));
-    setVideoHandlersGlobalData(store.get('currentLang'), viewName, store.get('visibleCount'));
-    switchView(viewName, getUIState(), {
-        applyFiltersAndSearch, 
-        renderFormChips: () => renderFormChips(), 
-        resetUploadedCoverUrl: () => {
-            import('./storage.js').then(s => s.resetUploadedCoverUrl());
-        },
-        renderTagManager: renderTagManagerUI
-    });
+    setVideoHandlersGlobalData(store.get('currentLang'));
+    
+    // Görünüm değişikliği için gerekli state
+    const state = {
+        currentLang: store.get('currentLang'),
+        editingVideoId: store.get('editingVideoId'),
+        getFormTags: () => getFormTagsArray(),
+        resetFormTags: () => setFormTagsArray([])
+    };
+    const functions = {}; // artık callback'ler setNavigationCallbacks ile verildi
+    
+    await switchView(viewName, state, functions);
+    
     if (viewName === 'stats') renderStatsPanel();
     if (viewName === 'tagManager') renderTagManagerUI();
-    
 }
 
 export function clearAllFavorites() {
@@ -62,8 +77,7 @@ export function clearAllFavorites() {
         if (confirmed) {
             await dbClearAllFavorites();
             store.set('globalFavorites', []);
-            setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
-            
+            setVideoHandlersGlobalData(store.get('currentLang'));
         }
     });
 }
@@ -79,50 +93,53 @@ export function startVideoEditFlow(video) {
     console.log("Düzenlenen video updated_at:", video.updated_at);
     callSwitchView('add');
     const lang = translations[store.get('currentLang')];
-    document.getElementById('form-title').innerText = lang.formTitleEdit;
-    document.getElementById('btn-submit-video').innerText = lang.btnUpdateVideo;
-    document.getElementById('form-instructor-select').value = video.instructor_id;
-    document.getElementById('form-video-url').value = video.url || '';
-    document.getElementById('form-role-select').value = video.role_type || 'Both';
-    document.getElementById('form-partner-name').value = video.partner_name || '';
+    const formTitle = document.getElementById('form-title');
+    if (formTitle) formTitle.innerText = lang.formTitleEdit;
+    const btnSubmit = document.getElementById('btn-submit-video');
+    if (btnSubmit) btnSubmit.innerText = lang.btnUpdateVideo;
+    const instructorSelect = document.getElementById('form-instructor-select');
+    if (instructorSelect) instructorSelect.value = video.instructor_id;
+    const videoUrl = document.getElementById('form-video-url');
+    if (videoUrl) videoUrl.value = video.url || '';
+    const roleSelect = document.getElementById('form-role-select');
+    if (roleSelect) roleSelect.value = video.role_type || 'Both';
+    const partnerInput = document.getElementById('form-partner-name');
+    if (partnerInput) partnerInput.value = video.partner_name || '';
     const tagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t) : [];
     setFormTagsArray(tagsArray);
     renderFormChips();
-    const isDownloaded = document.getElementById('form-is-downloaded');
+    const isDownloadedCheck = document.getElementById('form-is-downloaded');
     const driveUrlContainer = document.getElementById('drive-url-container');
     const driveUrlInput = document.getElementById('form-drive-url');
     if (video.is_downloaded) {
-        isDownloaded.checked = true;
-        driveUrlContainer.classList.remove('d-none');
-        driveUrlInput.value = video.drive_url || '';
-        driveUrlInput.required = true;
+        if (isDownloadedCheck) isDownloadedCheck.checked = true;
+        if (driveUrlContainer) driveUrlContainer.classList.remove('d-none');
+        if (driveUrlInput) {
+            driveUrlInput.value = video.drive_url || '';
+            driveUrlInput.required = true;
+        }
     } else {
-        isDownloaded.checked = false;
-        driveUrlContainer.classList.add('d-none');
-        driveUrlInput.value = '';
-        driveUrlInput.required = false;
+        if (isDownloadedCheck) isDownloadedCheck.checked = false;
+        if (driveUrlContainer) driveUrlContainer.classList.add('d-none');
+        if (driveUrlInput) {
+            driveUrlInput.value = '';
+            driveUrlInput.required = false;
+        }
     }
     const imgPreview = document.getElementById('image-preview');
     const dropAreaText = document.getElementById('drop-area-text');
     if (video.cover_url) {
-        imgPreview.src = video.cover_url;
-        imgPreview.classList.remove('d-none');
-        dropAreaText.classList.add('d-none');
+        if (imgPreview) {
+            imgPreview.src = video.cover_url;
+            imgPreview.classList.remove('d-none');
+        }
+        if (dropAreaText) dropAreaText.classList.add('d-none');
     } else {
-        imgPreview.classList.add('d-none');
-        dropAreaText.innerText = lang.dropText;
-        dropAreaText.classList.remove('d-none');
+        if (imgPreview) imgPreview.classList.add('d-none');
+        if (dropAreaText) {
+            dropAreaText.innerText = lang.dropText;
+            dropAreaText.classList.remove('d-none');
+        }
     }
     callUpdateSmartAssistant();
-}
-
-function getUIState() {
-    return {
-        currentLang: store.get('currentLang'),
-        editingVideoId: store.get('editingVideoId'),
-        editInstructorId: store.get('editInstructorId'),
-        currentView: store.get('currentView'),
-        getFormTags: () => getFormTagsArray(),
-        resetFormTags: () => { setFormTagsArray([]); }
-    };
 }
