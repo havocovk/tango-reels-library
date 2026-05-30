@@ -215,7 +215,20 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
         const newNote = document.getElementById('note-textarea').value;
         try {
             await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);
+            
+            // ✅ Store'daki globalVideos içinde ilgili videonun notes alanını güncelle
+            const globalVideos = store.get('globalVideos');
+            const videoIndex = globalVideos.findIndex(v => v.id === activeNoteVideoId);
+            if (videoIndex !== -1) {
+                globalVideos[videoIndex].notes = newNote || null;
+                store.set('globalVideos', [...globalVideos]); // yeni referans oluştur (reaktiflik için)
+            }
+            
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
+            
+            // ✅ Listeyi yenile (kartları hemen güncelle)
+            if (_applyFiltersAndSearch) _applyFiltersAndSearch();
+            
             showToast('Not kaydedildi', 'success');
         } catch (err) {
             if (err.message.includes('ÇAKIŞMA')) {
