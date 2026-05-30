@@ -1,78 +1,60 @@
-// ui/navigation.js - Görünüm geçişi (view switch) - 7. adım güncellemesi
-import { translations } from '../i18n.js';
-import { updateSmartFilenameAssistant } from './language.js';
-
-// Dışarıdan alınacak fonksiyonlar (app.js'den)
-let globalLoadView = null;
-let globalRenderTagManager = null;
-let globalApplyFiltersAndSearch = null;
-let globalRenderStats = null;
-let globalResetCover = null;
-let globalRenderFormChips = null;
-
-export function setNavigationCallbacks(loadViewFn, renderTagManagerFn, applyFiltersAndSearchFn, renderStatsFn, resetCoverFn, renderFormChipsFn) {
-    globalLoadView = loadViewFn;
-    globalRenderTagManager = renderTagManagerFn;
-    globalApplyFiltersAndSearch = applyFiltersAndSearchFn;
-    globalRenderStats = renderStatsFn;
-    globalResetCover = resetCoverFn;
-    globalRenderFormChips = renderFormChipsFn;
-}
-
-export async function switchView(viewName, state, functions) {
-    state.currentView = viewName;
-    
-    // Menü aktiflik sınıflarını güncelle
+// ui/navigationUI.js - SAYFA GEÇİŞLERİ
+export function switchView(viewName, state, functions) {
+    // Aktif menü butonlarını sıfırla
     document.getElementById('menu-library').classList.remove('active');
     document.getElementById('menu-favorites').classList.remove('active');
     document.getElementById('menu-stats').classList.remove('active');
     document.getElementById('menu-add-video').classList.remove('active');
     const tagManagerBtn = document.getElementById('menu-tag-manager');
     if (tagManagerBtn) tagManagerBtn.classList.remove('active');
-    
-    // View'ı yükle (eğer library veya favorites ise aynı view'ı kullan, fakat içerik aynı)
-    // Favori görünümü için aslında aynı library.html kullanılır, sadece filtre favori olur.
-    // Bu durumu app.js'deki callSwitchView zaten handle ediyor. Burada sadece HTML yüklenir.
-    let viewFile = viewName;
-    if (viewName === 'favorites') viewFile = 'library'; // favorites için de library.html kullan
-    if (globalLoadView) await globalLoadView(viewFile);
-    
-    // Görünüm tipine göre ekstra işlemler
+
+    // Tüm görünümleri gizle
+    const libraryView = document.getElementById('view-library-container');
+    const statsView = document.getElementById('view-stats-container');
+    const addView = document.getElementById('view-add-container');
+    const tagView = document.getElementById('view-tag-manager-container');
+    const clearFavContainer = document.getElementById('clear-favorites-container');
+
+    if (libraryView) libraryView.classList.add('d-none');
+    if (statsView) statsView.classList.add('d-none');
+    if (addView) addView.classList.add('d-none');
+    if (tagView) tagView.classList.add('d-none');
+    if (clearFavContainer) clearFavContainer.classList.add('d-none');
+
+    // Seçilen görünümü göster
     if (viewName === 'library' || viewName === 'favorites') {
+        if (libraryView) libraryView.classList.remove('d-none');
         document.getElementById(`menu-${viewName}`).classList.add('active');
-        const clearFavBtnContainer = document.getElementById('clear-favorites-container');
-        if (clearFavBtnContainer) {
-            if (viewName === 'favorites') clearFavBtnContainer.classList.remove('d-none');
-            else clearFavBtnContainer.classList.add('d-none');
-        }
-        if (globalApplyFiltersAndSearch) globalApplyFiltersAndSearch();
-    } else if (viewName === 'stats') {
+        if (viewName === 'favorites' && clearFavContainer) clearFavContainer.classList.remove('d-none');
+        if (functions.applyFiltersAndSearch) functions.applyFiltersAndSearch();
+    } 
+    else if (viewName === 'stats') {
+        if (statsView) statsView.classList.remove('d-none');
         document.getElementById('menu-stats').classList.add('active');
-        if (globalRenderStats) globalRenderStats();
-    } else if (viewName === 'add') {
+        if (functions.updateStats) functions.updateStats();
+    } 
+    else if (viewName === 'add') {
+        if (addView) addView.classList.remove('d-none');
         document.getElementById('menu-add-video').classList.add('active');
         if (!state.editingVideoId) {
-            const lang = translations[state.currentLang];
-            const formTitle = document.getElementById('form-title');
-            if (formTitle) formTitle.innerText = lang.formTitle;
-            const btnSubmit = document.getElementById('btn-submit-video');
-            if (btnSubmit) btnSubmit.innerText = lang.btnSubmitVideo;
-            const form = document.getElementById('add-video-form');
-            if (form) form.reset();
-            if (state.resetFormTags) state.resetFormTags();
-            if (globalRenderFormChips) globalRenderFormChips();
-            const imgPreview = document.getElementById('image-preview');
-            if (imgPreview) imgPreview.classList.add('d-none');
-            const dropAreaText = document.getElementById('drop-area-text');
-            if (dropAreaText) {
-                dropAreaText.innerText = lang.dropText;
-                dropAreaText.classList.remove('d-none');
+            const lang = functions.translations[state.currentLang];
+            if (document.getElementById('form-title')) document.getElementById('form-title').innerText = lang.formTitle;
+            if (document.getElementById('btn-submit-video')) document.getElementById('btn-submit-video').innerText = lang.btnSubmitVideo;
+            if (document.getElementById('add-video-form')) document.getElementById('add-video-form').reset();
+            if (functions.renderFormChips) functions.renderFormChips();
+            if (document.getElementById('image-preview')) document.getElementById('image-preview').classList.add('d-none');
+            const dropText = document.getElementById('drop-area-text');
+            if (dropText) {
+                dropText.innerText = lang.dropText;
+                dropText.classList.remove('d-none');
             }
-            if (globalResetCover) globalResetCover();
+            if (functions.resetUploadedCoverUrl) functions.resetUploadedCoverUrl();
         }
-        updateSmartFilenameAssistant(state.currentLang, state.getFormTags());
-    } else if (viewName === 'tagManager') {
+        if (functions.updateSmartAssistant) functions.updateSmartAssistant(state.currentLang, state.getFormTags());
+    } 
+    else if (viewName === 'tagManager' && tagView) {
+        if (tagView) tagView.classList.remove('d-none');
         if (tagManagerBtn) tagManagerBtn.classList.add('active');
-        if (globalRenderTagManager) globalRenderTagManager();
+        if (functions.renderTagManager) functions.renderTagManager();
     }
 }

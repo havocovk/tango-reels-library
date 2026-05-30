@@ -1,6 +1,7 @@
-// tangoUI.js - YENİ: Sadece re-export (modüler hale getirildi)
-import { updateInterfaceLanguage, updateSmartFilenameAssistant } from './ui/language.js';
-import { switchView } from './ui/navigation.js';
+// tangoUI.js - YENİ (DÜZELTİLMİŞ IMPORTLAR)
+import { switchView } from './ui/navigationUI.js';      // ✅ Yeni adı kullan
+import { updateInterfaceLanguage } from './ui/language.js'; // Eğer adını değiştirmediyseniz aynı
 
-// Aynı isimlerle dışa aktar
-export { updateInterfaceLanguage, updateSmartFilenameAssistant, switchView };
+// updateSmartFilenameAssistant fonksiyonu artık app.js içinde olacak
+// Dış dünyaya sadece bu iki fonksiyonu gönderiyoruz
+export { switchView, updateInterfaceLanguage };
