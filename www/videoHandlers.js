@@ -1,10 +1,11 @@
-// videoHandlers.js - YENİ HALİ (aramaMetni inputtan alınır)
+// videoHandlers.js - Optimize edilmiş (yerel güncelleme)
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
 import { getFilteredVideos } from './tangoFilters.js';
 import { translations } from './i18n.js';
 import { store } from './store.js';
+import { showToast } from './toast.js';
 
 let currentLang = 'tr';
 
@@ -31,15 +32,21 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
 export async function toggleFavorite(videoId) {
     try {
         let currentFavorites = store.get('globalFavorites');
-        if (currentFavorites.includes(videoId)) {
+        const isFav = currentFavorites.includes(videoId);
+        if (isFav) {
             await dbRemoveFavorite(videoId);
-            currentFavorites = currentFavorites.filter(id => id !== videoId);
+            store.updateFavoriteLocally(videoId, false);
         } else {
             await dbAddFavorite(videoId);
-            currentFavorites = [...currentFavorites, videoId];
+            store.updateFavoriteLocally(videoId, true);
         }
-        store.set('globalFavorites', currentFavorites);
-    } catch (err) { console.error(err); }
+        // Sadece UI'ı yenile (fetchVideos yok)
+        applyFiltersAndSearch();
+    } catch (err) {
+        console.error(err);
+        const lang = translations[store.get('currentLang')];
+        showToast(lang.error || 'Favori güncellenemedi', 'error');
+    }
 }
 
 export function applyFiltersAndSearch() {
@@ -53,7 +60,6 @@ export function applyFiltersAndSearch() {
         source = globalVideos.filter(v => favorites.includes(v.id));
     }
     
-    // 🔥 DÜZELTME: Arama kutusundaki metni al
     const searchInput = document.getElementById('search-input');
     const aramaMetni = searchInput ? searchInput.value : '';
     
@@ -108,13 +114,14 @@ export async function deleteVideoFlow(videoId) {
     if (!await showCustomConfirm(lang.confirmDeleteVideo, okText, cancelText)) return;
     try {
         await dbDeleteVideo(videoId);
-        await showCustomAlert(lang.successDeleteVideo, okText);
-        let currentFavorites = store.get('globalFavorites');
-        if (currentFavorites.includes(videoId)) {
-            currentFavorites = currentFavorites.filter(id => id !== videoId);
-            store.set('globalFavorites', currentFavorites);
+        // Yerel state'den kaldır
+        store.removeVideoLocally(videoId);
+        // Favorilerden de kaldır
+        if (store.get('globalFavorites').includes(videoId)) {
+            store.updateFavoriteLocally(videoId, false);
         }
-        if (fetchVideosCallback) await fetchVideosCallback();
+        await showCustomAlert(lang.successDeleteVideo, okText);
+        applyFiltersAndSearch();
     } catch (err) { 
         await showCustomAlert(currentLang === 'tr' ? 'Silme hatası!' : 'Deletion error!', okText);
     }

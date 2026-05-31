@@ -1,21 +1,18 @@
-// store.js - Merkezi state yönetimi (Observer pattern)
+// store.js - Merkezi state yönetimi (Observer pattern) + yerel güncelleme metodları
 class Store {
   constructor(initialState = {}) {
     this.state = { ...initialState };
-    this.listeners = new Map(); // key -> callback[]
+    this.listeners = new Map();
   }
 
-  // State okuma
   get(key) {
     return this.state[key];
   }
 
-  // Tüm state'i okuma (isteğe bağlı)
   getAll() {
     return { ...this.state };
   }
 
-  // State güncelleme
   set(key, value, silent = false) {
     const oldValue = this.state[key];
     if (oldValue === value) return;
@@ -25,19 +22,15 @@ class Store {
     }
   }
 
-  // Belirli bir key'e abone ol
   subscribe(key, callback) {
     if (!this.listeners.has(key)) {
       this.listeners.set(key, []);
     }
     this.listeners.get(key).push(callback);
-    // İlk çağrıda mevcut değeri gönder
     callback(this.state[key], undefined, key);
-    // Unsubscribe fonksiyonu döndür
     return () => this.unsubscribe(key, callback);
   }
 
-  // Aboneliği kaldır
   unsubscribe(key, callback) {
     if (this.listeners.has(key)) {
       const callbacks = this.listeners.get(key);
@@ -45,17 +38,6 @@ class Store {
       if (index !== -1) callbacks.splice(index, 1);
       if (callbacks.length === 0) this.listeners.delete(key);
     }
-  }
-
-  // Tüm key'leri dinlemek için (isteğe bağlı)
-  subscribeAll(callback) {
-    // callback(state, changeInfo) şeklinde
-    const handler = (newVal, oldVal, key) => {
-      callback(this.state, { key, newVal, oldVal });
-    };
-    // Her key için ayrı ayrı eklemek yerine özel bir mekanizma kurabiliriz
-    // Basitlik için şimdilik kullanmayacağız, ama ileride gerekebilir.
-    // Şimdilik sadece key bazlı abonelik yeterli.
   }
 
   _notify(key, newVal, oldVal) {
@@ -69,9 +51,45 @@ class Store {
       });
     }
   }
+
+  // Yerel güncelleme metodları
+  updateVideoLocally(videoId, updates) {
+    const videos = this.get('globalVideos');
+    const index = videos.findIndex(v => v.id === videoId);
+    if (index !== -1) {
+      const updatedVideo = { ...videos[index], ...updates };
+      videos[index] = updatedVideo;
+      this.set('globalVideos', [...videos]); // yeni referans
+      return updatedVideo;
+    }
+    return null;
+  }
+
+  removeVideoLocally(videoId) {
+    const videos = this.get('globalVideos');
+    const newVideos = videos.filter(v => v.id !== videoId);
+    this.set('globalVideos', newVideos);
+  }
+
+  addVideoLocally(video) {
+    const videos = this.get('globalVideos');
+    this.set('globalVideos', [video, ...videos]);
+  }
+
+  updateFavoriteLocally(videoId, isFavorite) {
+    let favs = this.get('globalFavorites');
+    if (isFavorite && !favs.includes(videoId)) {
+      this.set('globalFavorites', [...favs, videoId]);
+    } else if (!isFavorite && favs.includes(videoId)) {
+      this.set('globalFavorites', favs.filter(id => id !== videoId));
+    }
+  }
+
+  clearFavoritesLocally() {
+    this.set('globalFavorites', []);
+  }
 }
 
-// Başlangıç state'i
 const initialState = {
   currentLang: 'tr',
   globalVideos: [],
@@ -86,7 +104,6 @@ const initialState = {
 
 export const store = new Store(initialState);
 
-// Geliştirme yardımı (opsiyonel)
 if (typeof window !== 'undefined') {
   window.__store = store;
 }

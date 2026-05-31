@@ -1,7 +1,7 @@
-// navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme
+// navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme (optimize edilmiş)
 import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
-import { showCustomConfirm } from './tangoModals.js';
+import { showCustomConfirm, showToast } from './tangoModals.js';
 import { setVisibleCount, setVideoHandlersGlobalData, applyFiltersAndSearch } from './videoHandlers.js';
 import { switchView, updateInterfaceLanguage, updateSmartFilenameAssistant } from './tangoUI.js';
 import { setEditingVideoId, setEditingVideoUpdatedAt, setFormTagsArray, renderFormChips, getFormTagsArray, formTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
@@ -53,19 +53,21 @@ export function callSwitchView(viewName) {
     
 }
 
-export function clearAllFavorites() {
+// 🔥 DÜZELTİLMİŞ: favori temizleme (yerel güncelleme, fetchVideos yok)
+export async function clearAllFavorites() {
     const currentLang = store.get('currentLang');
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
-    showCustomConfirm(lang.confirmClearFavs, okText, cancelText).then(async confirmed => {
-        if (confirmed) {
-            await dbClearAllFavorites();
-            store.set('globalFavorites', []);
-            setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
-            
-        }
-    });
+    if (!await showCustomConfirm(lang.confirmClearFavs, okText, cancelText)) return;
+    try {
+        await dbClearAllFavorites();
+        store.clearFavoritesLocally();   // store.js'deki yeni metod
+        if (window.applyFiltersAndSearch) window.applyFiltersAndSearch();
+        showToast('Pratik listesi temizlendi', 'success');
+    } catch (err) {
+        showToast('Temizleme hatası: ' + err.message, 'error');
+    }
 }
 
 export function callGetUniqueTagsPool() { 

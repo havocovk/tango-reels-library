@@ -102,40 +102,27 @@ export function renderModalChips() {
 // - globalVideos: store.get('globalVideos') ile taze alınır → "undefined" hatası çözüldü.
 // - activeEditTagsVideoUpdatedAt: DB'den dönen yeni updated_at ile güncellenir
 //   → ikinci işlemde ÇAKIŞMA hatası çözüldü.
+// tangoModals.js - saveTagsToSupabaseDirectly güncellenmiş hali (yerel güncelleme)
 export async function saveTagsToSupabaseDirectly() {
     if (!activeEditTagsVideoId) return;
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
-    const globalVideos = store.get('globalVideos'); // her çağrıda taze
-
     try {
-        // dbUpdateTagsDirectly artık güncellenmiş video nesnesini döndürüyor
         const updatedVideo = await dbUpdateTagsDirectly(
             activeEditTagsVideoId,
             cleanTags,
             activeEditTagsVideoUpdatedAt
         );
-
-        // ✅ Kritik düzeltme: timestamp'ı DB'den gelen yeni değerle güncelle.
-        // Bu olmadan ikinci chip işleminde eski timestamp ile PATCH atılır → 0 satır → ÇAKIŞMA.
         if (updatedVideo && updatedVideo.updated_at) {
             activeEditTagsVideoUpdatedAt = updatedVideo.updated_at;
         }
-
-        // Lokal store array'ini de güncelle (sayfa yenileme gerektirmeden)
-        if (Array.isArray(globalVideos)) {
-            const vid = globalVideos.find(v => v.id === activeEditTagsVideoId);
-            if (vid) {
-                vid.tags = cleanTags || null;
-                if (updatedVideo && updatedVideo.updated_at) {
-                    vid.updated_at = updatedVideo.updated_at;
-                }
-            }
-        }
-
+        // Yerel güncelleme
+        const updated = store.updateVideoLocally(activeEditTagsVideoId, {
+            tags: cleanTags || null,
+            updated_at: updatedVideo?.updated_at || activeEditTagsVideoUpdatedAt
+        });
         renderModalChips();
         showToast('Etiketler güncellendi', 'success');
         if (_applyFiltersAndSearch) _applyFiltersAndSearch();
-
     } catch (err) {
         if (err.message.includes('ÇAKIŞMA')) {
             showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
