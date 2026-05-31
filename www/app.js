@@ -1,6 +1,6 @@
-// app.js - TAM KOD (dosya seçici eklendi)
+// app.js - TAM KOD (Resmi Sıfırla butonu çalışıyor)
 import { translations } from './i18n.js';
-import { handlePasteEvent, handleFileSelect } from './storage.js';
+import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly,
@@ -173,7 +173,7 @@ async function initializeApp() {
         });
     }
 
-    // 🔥 DOSYA SEÇİCİ EVENT'LERİ
+    // Dosya seçici
     const selectFileBtn = document.getElementById('select-file-btn');
     const fileInput = document.getElementById('cover-file-input');
     if (selectFileBtn && fileInput) {
@@ -184,6 +184,24 @@ async function initializeApp() {
                 await handleFileSelect(file, store.get('currentLang'));
             }
             fileInput.value = '';
+        };
+    }
+
+    // 🔥 RESMİ SIFIRLA BUTONU (DÜZELTİLDİ)
+    const resetCoverBtn = document.getElementById('btn-reset-cover');
+    if (resetCoverBtn) {
+        resetCoverBtn.onclick = () => {
+            resetUploadedCoverUrl();
+            const imgPreview = document.getElementById('image-preview');
+            const dropAreaText = document.getElementById('drop-area-text');
+            if (imgPreview) {
+                imgPreview.src = '';
+                imgPreview.classList.add('d-none');
+            }
+            if (dropAreaText) {
+                dropAreaText.classList.remove('d-none');
+                dropAreaText.innerText = translations[store.get('currentLang')].dropText;
+            }
         };
     }
 
