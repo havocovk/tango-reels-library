@@ -1,7 +1,8 @@
 // navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme (optimize edilmiş)
 import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
-import { showCustomConfirm, showToast } from './tangoModals.js';
+import { showCustomConfirm } from './tangoModals.js';
+import { showToast } from './toast.js';  // ✅ DOĞRU IMPORT
 import { setVisibleCount, setVideoHandlersGlobalData, applyFiltersAndSearch } from './videoHandlers.js';
 import { switchView, updateInterfaceLanguage, updateSmartFilenameAssistant } from './tangoUI.js';
 import { setEditingVideoId, setEditingVideoUpdatedAt, setFormTagsArray, renderFormChips, getFormTagsArray, formTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
@@ -50,10 +51,9 @@ export function callSwitchView(viewName) {
     });
     if (viewName === 'stats') renderStatsPanel();
     if (viewName === 'tagManager') renderTagManagerUI();
-    
 }
 
-// 🔥 DÜZELTİLMİŞ: favori temizleme (yerel güncelleme, fetchVideos yok)
+// ✅ DÜZELTİLMİŞ: clearAllFavorites (yerel güncelleme, fetchVideos yok, showToast kullanıyor)
 export async function clearAllFavorites() {
     const currentLang = store.get('currentLang');
     const lang = translations[currentLang];
@@ -62,10 +62,11 @@ export async function clearAllFavorites() {
     if (!await showCustomConfirm(lang.confirmClearFavs, okText, cancelText)) return;
     try {
         await dbClearAllFavorites();
-        store.clearFavoritesLocally();   // store.js'deki yeni metod
+        store.clearFavoritesLocally();   // store.js'deki metod
         if (window.applyFiltersAndSearch) window.applyFiltersAndSearch();
         showToast('Pratik listesi temizlendi', 'success');
     } catch (err) {
+        console.error(err);
         showToast('Temizleme hatası: ' + err.message, 'error');
     }
 }
