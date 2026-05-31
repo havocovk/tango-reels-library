@@ -99,5 +99,6 @@ export const en = {
     roleFollower: "Follower",
     roleBoth: "Couple",
     resetCoverBtn: "🗑️ Reset Image",
-    searchBtn: "🔍 Search"
+    searchBtn: "🔍 Search",
+    selectFile: "📁 Select File"
 };

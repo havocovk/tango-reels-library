@@ -99,5 +99,6 @@ export const tr = {
     roleFollower: "Takipçi",
     roleBoth: "Çift",
     resetCoverBtn: "🗑️ Resmi Sıfırla",
-    searchBtn: "🔍 Ara"
+    searchBtn: "🔍 Ara",
+    selectFile: "📁 Dosya Seç"
 };

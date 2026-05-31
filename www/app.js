@@ -1,6 +1,6 @@
-// app.js - DÜZELTİLMİŞ (thumbnail otomatik, instructor hatası giderildi)
+// app.js - TAM KOD (dosya seçici eklendi)
 import { translations } from './i18n.js';
-import { handlePasteEvent } from './storage.js';
+import { handlePasteEvent, handleFileSelect } from './storage.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly,
@@ -164,7 +164,7 @@ async function initializeApp() {
     const videoForm = document.getElementById('add-video-form');
     if (videoForm) videoForm.onsubmit = handleFormSubmit;
 
-    // 🔥 YOUTUBE THUMBNAIL OTOMATİK (DÜZELTİLMİŞ)
+    // YouTube thumbnail
     const videoUrlInput = document.getElementById('form-video-url');
     if (videoUrlInput) {
         videoUrlInput.addEventListener('input', async (e) => {
@@ -173,13 +173,27 @@ async function initializeApp() {
         });
     }
 
-    // Arama butonu ve canlı arama
+    // 🔥 DOSYA SEÇİCİ EVENT'LERİ
+    const selectFileBtn = document.getElementById('select-file-btn');
+    const fileInput = document.getElementById('cover-file-input');
+    if (selectFileBtn && fileInput) {
+        selectFileBtn.onclick = () => fileInput.click();
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await handleFileSelect(file, store.get('currentLang'));
+            }
+            fileInput.value = '';
+        };
+    }
+
+    // Arama
     const searchBtn = document.getElementById('search-btn');
     if (searchBtn) searchBtn.onclick = () => applyFiltersAndSearch();
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.addEventListener('input', () => applyFiltersAndSearch());
 
-    // Filtre dropdown'ları
+    // Filtreler
     const roleFilter = document.getElementById('filter-role-select');
     if (roleFilter) roleFilter.onchange = () => applyFiltersAndSearch();
     const instructorFilter = document.getElementById('filter-instructor-select');
