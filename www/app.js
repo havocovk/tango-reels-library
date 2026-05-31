@@ -1,6 +1,6 @@
-// app.js - TAM KOD (Resmi Sıfırla butonu çalışıyor)
+// app.js - TAM KOD (arama, performans, thumbnail, file picker, sonsuz kaydırma)
 import { translations } from './i18n.js';
-import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
+import { handlePasteEvent, handleFileSelect } from './storage.js';
 import { 
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly,
@@ -10,7 +10,7 @@ import { setupAutocomplete } from './uiRenderer.js';
 import { renderFormChips } from './formHandlers.js';
 import { 
     initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount, 
-    incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData 
+    incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData, setupInfiniteScroll
 } from './videoHandlers.js';
 import { 
     initInstructorHandlers, handleInstructorSubmit, deleteInstructor, 
@@ -187,24 +187,6 @@ async function initializeApp() {
         };
     }
 
-    // 🔥 RESMİ SIFIRLA BUTONU (DÜZELTİLDİ)
-    const resetCoverBtn = document.getElementById('btn-reset-cover');
-    if (resetCoverBtn) {
-        resetCoverBtn.onclick = () => {
-            resetUploadedCoverUrl();
-            const imgPreview = document.getElementById('image-preview');
-            const dropAreaText = document.getElementById('drop-area-text');
-            if (imgPreview) {
-                imgPreview.src = '';
-                imgPreview.classList.add('d-none');
-            }
-            if (dropAreaText) {
-                dropAreaText.classList.remove('d-none');
-                dropAreaText.innerText = translations[store.get('currentLang')].dropText;
-            }
-        };
-    }
-
     // Arama
     const searchBtn = document.getElementById('search-btn');
     if (searchBtn) searchBtn.onclick = () => applyFiltersAndSearch();
@@ -223,7 +205,7 @@ async function initializeApp() {
     const platformFilter = document.getElementById('filter-platform-select');
     if (platformFilter) platformFilter.onchange = () => applyFiltersAndSearch();
 
-    // Load more
+    // Load more butonu (yedek)
     const loadMoreBtn = document.getElementById('btn-load-more');
     if (loadMoreBtn) loadMoreBtn.onclick = () => { incrementVisibleCount(20); applyFiltersAndSearch(); };
 
@@ -258,6 +240,9 @@ async function initializeApp() {
 
     setupStoreSubscriptions();
     window.applyFiltersAndSearch = applyFiltersAndSearch;
+
+    // Sonsuz kaydırma başlat
+    setupInfiniteScroll();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
