@@ -1,4 +1,4 @@
-// app.js - DÜZELTİLMİŞ (arama butonu, güvenli element erişimi, hata yönetimi)
+// app.js - DÜZELTİLMİŞ (thumbnail otomatik, instructor hatası giderildi)
 import { translations } from './i18n.js';
 import { handlePasteEvent } from './storage.js';
 import { 
@@ -18,7 +18,7 @@ import {
 } from './instructorHandlers.js';
 import { 
     initFormHandlers, handleFormSubmit, formTagsArray, setFormTagsArray, 
-    getFormTagsArray, setFormHandlersGlobalData 
+    getFormTagsArray, setFormHandlersGlobalData, autoFetchThumbnail
 } from './formHandlers.js';
 import { 
     initTagManager, updateTagManagerSelection, mergeSelectedTags, 
@@ -35,14 +35,9 @@ import {
 } from './navigation.js';
 import { setupStoreSubscriptions } from './uiSubscriptions.js';
 
-// YouTube thumbnail için input dinleyicisini bağla
-import { bindYouTubeThumbnailListener } from './formHandlers.js';
-
-// ========== Şablon yükleme (HTML dosyalarını çek) ==========
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
     if (!container) return;
-
     try {
         const templates = {
             library: await fetch('views/library.html').then(r => r.text()),
@@ -53,49 +48,30 @@ async function loadTemplates() {
             tagsEditModal: await fetch('modals/tags-edit-modal.html').then(r => r.text()),
             customDialogModal: await fetch('modals/custom-dialog-modal.html').then(r => r.text())
         };
-
         const modalContainer = document.createElement('div');
         modalContainer.id = 'modals-container';
         modalContainer.innerHTML = templates.videoModal + templates.tagsEditModal + templates.customDialogModal;
         document.body.appendChild(modalContainer);
-
         container.innerHTML = templates.library + templates.stats + templates.addVideo + templates.tagManager;
-
-        // Tüm başlatma işlemlerini yap
         await initializeApp();
     } catch (err) {
         console.error('Şablon yükleme hatası:', err);
         const dynamicViews = document.getElementById('dynamic-views');
-        if (dynamicViews) {
-            dynamicViews.innerHTML = '<div class="info-msg" style="color:#ef4444;">Sayfa yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>';
-        }
+        if (dynamicViews) dynamicViews.innerHTML = '<div class="info-msg" style="color:#ef4444;">Sayfa yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>';
     }
 }
 
 async function initializeApp() {
-    // ========== 1. VERİLERİ ÇEK ==========
     await fetchInstructors();
     await fetchVideos();
 
-    // ========== 2. CALLBACK'LERİ BAĞLA ==========
-    initVideoHandlers(
-        applyFiltersAndSearch,
-        fetchVideos,
-        openVideoModal,
-        openTagsEditModal,
-        startVideoEditFlow,
-        deleteVideoFlow
-    );
-
+    initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
     initInstructorHandlers(fetchInstructors, fetchVideos);
     initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
     initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
     initModalCallbacks(applyFiltersAndSearch);
-
-    // ========== 3. DİL ARABİLİMİNİ GÜNCELLE ==========
     callUpdateInterfaceLanguage();
 
-    // ========== 4. BUTON OLAYLARI (GÜVENLİ) ==========
     // Dil değiştirme
     const langToggleBtn = document.getElementById('lang-toggle-btn');
     if (langToggleBtn) {
@@ -110,21 +86,16 @@ async function initializeApp() {
     }
 
     // Menü butonları
-    const menuLibrary = document.getElementById('menu-library');
-    if (menuLibrary) menuLibrary.onclick = () => { callSwitchView('library'); };
-    const menuFavorites = document.getElementById('menu-favorites');
-    if (menuFavorites) menuFavorites.onclick = () => { callSwitchView('favorites'); };
-    const menuStats = document.getElementById('menu-stats');
-    if (menuStats) menuStats.onclick = () => { callSwitchView('stats'); };
-    const menuAddVideo = document.getElementById('menu-add-video');
-    if (menuAddVideo) menuAddVideo.onclick = () => callSwitchView('add');
-    const menuTagManager = document.getElementById('menu-tag-manager');
-    if (menuTagManager) menuTagManager.onclick = () => callSwitchView('tagManager');
-    
+    document.getElementById('menu-library')?.addEventListener('click', () => callSwitchView('library'));
+    document.getElementById('menu-favorites')?.addEventListener('click', () => callSwitchView('favorites'));
+    document.getElementById('menu-stats')?.addEventListener('click', () => callSwitchView('stats'));
+    document.getElementById('menu-add-video')?.addEventListener('click', () => callSwitchView('add'));
+    document.getElementById('menu-tag-manager')?.addEventListener('click', () => callSwitchView('tagManager'));
+
     // Favori temizleme
     const clearFavBtn = document.getElementById('btn-clear-favorites');
     if (clearFavBtn) clearFavBtn.onclick = clearAllFavorites;
-    
+
     // Drive checkbox
     const driveCheckbox = document.getElementById('form-is-downloaded');
     if (driveCheckbox) {
@@ -143,8 +114,8 @@ async function initializeApp() {
             }
         };
     }
-    
-    // Otomatik tamamlama (form ve modal)
+
+    // Otomatik tamamlama
     setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, () => renderFormChips(), (newTag) => {
         if (!formTagsArray.includes(newTag)) {
             formTagsArray.push(newTag);
@@ -152,117 +123,93 @@ async function initializeApp() {
             callUpdateSmartAssistant();
         }
     }, callGetUniqueTagsPool);
-    
     setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
         modalTagsArray.push(newTag);
         saveTagsToSupabaseDirectly();
     }, callGetUniqueTagsPool);
-    
-    // Eğitmen form işlemleri
+
+    // Eğitmen işlemleri
     const instructorSelect = document.getElementById('form-instructor-select');
     if (instructorSelect) instructorSelect.onchange = callUpdateSmartAssistant;
-    
     const toggleInsBtn = document.getElementById('btn-toggle-new-instructor');
     if (toggleInsBtn) {
         toggleInsBtn.onclick = () => {
             store.set('editInstructorId', null);
-            const newInstructorInput = document.getElementById('form-new-instructor-input');
-            if (newInstructorInput) newInstructorInput.value = '';
-            const saveInsBtn = document.getElementById('btn-save-instructor');
-            if (saveInsBtn) saveInsBtn.innerText = translations[store.get('currentLang')].btnAddIns;
-            const container = document.getElementById('new-instructor-container');
-            if (container) container.classList.toggle('d-none');
+            const input = document.getElementById('form-new-instructor-input');
+            if (input) input.value = '';
+            const saveBtn = document.getElementById('btn-save-instructor');
+            if (saveBtn) saveBtn.innerText = translations[store.get('currentLang')].btnAddIns;
+            document.getElementById('new-instructor-container')?.classList.toggle('d-none');
         };
     }
-    
     const editInsBtn = document.getElementById('btn-edit-instructor');
     if (editInsBtn) {
         editInsBtn.onclick = () => {
             const select = document.getElementById('form-instructor-select');
             if (!select || !select.value) return;
             store.set('editInstructorId', select.value);
-            const newInstructorInput = document.getElementById('form-new-instructor-input');
-            if (newInstructorInput) newInstructorInput.value = select.options[select.selectedIndex].text;
-            const saveInsBtn = document.getElementById('btn-save-instructor');
-            if (saveInsBtn) saveInsBtn.innerText = translations[store.get('currentLang')].btnUpdateIns;
-            const container = document.getElementById('new-instructor-container');
-            if (container) container.classList.remove('d-none');
+            const input = document.getElementById('form-new-instructor-input');
+            if (input) input.value = select.options[select.selectedIndex].text;
+            const saveBtn = document.getElementById('btn-save-instructor');
+            if (saveBtn) saveBtn.innerText = translations[store.get('currentLang')].btnUpdateIns;
+            document.getElementById('new-instructor-container')?.classList.remove('d-none');
         };
     }
-    
     const delInsBtn = document.getElementById('btn-delete-instructor');
     if (delInsBtn) delInsBtn.onclick = deleteInstructor;
-    
     const saveInsBtn = document.getElementById('btn-save-instructor');
     if (saveInsBtn) saveInsBtn.onclick = handleInstructorSubmit;
-    
+
     // Video form submit
     const videoForm = document.getElementById('add-video-form');
     if (videoForm) videoForm.onsubmit = handleFormSubmit;
-    
-    // 🔥 ARAMA BUTONU VE CANLI ARAMA (güvenli)
-    const searchBtn = document.getElementById('search-btn');
-    if (searchBtn) {
-        searchBtn.onclick = () => {
-            applyFiltersAndSearch();
-        };
-    }
-    
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            applyFiltersAndSearch();
+
+    // 🔥 YOUTUBE THUMBNAIL OTOMATİK (DÜZELTİLMİŞ)
+    const videoUrlInput = document.getElementById('form-video-url');
+    if (videoUrlInput) {
+        videoUrlInput.addEventListener('input', async (e) => {
+            const url = e.target.value.trim();
+            if (url) await autoFetchThumbnail(url);
         });
     }
-    
-    // Dropdown filtreler için change event'leri
+
+    // Arama butonu ve canlı arama
+    const searchBtn = document.getElementById('search-btn');
+    if (searchBtn) searchBtn.onclick = () => applyFiltersAndSearch();
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.addEventListener('input', () => applyFiltersAndSearch());
+
+    // Filtre dropdown'ları
     const roleFilter = document.getElementById('filter-role-select');
-    if (roleFilter) roleFilter.onchange = () => { applyFiltersAndSearch(); };
+    if (roleFilter) roleFilter.onchange = () => applyFiltersAndSearch();
     const instructorFilter = document.getElementById('filter-instructor-select');
-    if (instructorFilter) instructorFilter.onchange = () => { applyFiltersAndSearch(); };
+    if (instructorFilter) instructorFilter.onchange = () => applyFiltersAndSearch();
     const tagFilter = document.getElementById('filter-tag-select');
-    if (tagFilter) tagFilter.onchange = () => { applyFiltersAndSearch(); };
+    if (tagFilter) tagFilter.onchange = () => applyFiltersAndSearch();
     const dateFilter = document.getElementById('filter-date-select');
-    if (dateFilter) dateFilter.onchange = () => { applyFiltersAndSearch(); };
+    if (dateFilter) dateFilter.onchange = () => applyFiltersAndSearch();
     const platformFilter = document.getElementById('filter-platform-select');
-    if (platformFilter) platformFilter.onchange = () => { applyFiltersAndSearch(); };
-    
+    if (platformFilter) platformFilter.onchange = () => applyFiltersAndSearch();
+
+    // Load more
     const loadMoreBtn = document.getElementById('btn-load-more');
     if (loadMoreBtn) loadMoreBtn.onclick = () => { incrementVisibleCount(20); applyFiltersAndSearch(); };
-    
+
     // Modallar
     const modalCloseBtn = document.getElementById('modal-close-btn');
     if (modalCloseBtn) modalCloseBtn.onclick = closeVideoModal;
     const videoModal = document.getElementById('video-modal');
     if (videoModal) videoModal.onclick = (e) => { if (e.target.id === 'video-modal') closeVideoModal(); };
-    
     const tagsModalClose = document.getElementById('tags-modal-close-btn');
     if (tagsModalClose) tagsModalClose.onclick = closeTagsEditModal;
     const tagsModal = document.getElementById('tags-edit-modal');
     if (tagsModal) tagsModal.onclick = (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); };
-    
+
     // Kapak resmi yapıştırma
     const dropArea = document.getElementById('drop-area');
     if (dropArea) dropArea.addEventListener('paste', (e) => handlePasteEvent(e, store.get('currentLang')));
 
-    // YouTube thumbnail için canlı önizleme (Adım 1.2)
-    const videoUrlInput = document.getElementById('form-video-url');
-    if (videoUrlInput) {
-        videoUrlInput.addEventListener('input', (e) => {
-            const url = e.target.value.trim();
-            if (url) {
-                // autoFetchThumbnail fonksiyonu formHandlers.js'den import edilmeli
-                import('./formHandlers.js').then(module => {
-                    module.autoFetchThumbnail(url);
-                });
-            }
-        });
-    }
-
-    // ... daha sonra initializeApp içinde:
-    bindYouTubeThumbnailListener();
-    
-    // Etiket yönetimi butonları
+    // Etiket yönetimi
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
     if (mergeBtn) mergeBtn.onclick = () => mergeSelectedTags();
     const deleteTagsBtn = document.getElementById('tag-manager-delete-btn');
@@ -271,27 +218,20 @@ async function initializeApp() {
     if (cleanupBtn) cleanupBtn.onclick = () => cleanupUnusedTags();
     const cancelMergeBtn = document.getElementById('tag-merge-cancel-btn');
     if (cancelMergeBtn) cancelMergeBtn.onclick = () => {
-        const mergePanel = document.getElementById('tag-merge-panel');
-        if (mergePanel) mergePanel.classList.add('d-none');
+        document.getElementById('tag-merge-panel')?.classList.add('d-none');
         updateTagManagerSelection();
     };
     const confirmMergeBtn = document.getElementById('tag-merge-confirm-btn');
     if (confirmMergeBtn) confirmMergeBtn.onclick = () => mergeSelectedTags();
-    
-    // Store aboneliklerini başlat
+
     setupStoreSubscriptions();
-    
-    // Global referans
     window.applyFiltersAndSearch = applyFiltersAndSearch;
 }
 
-// DOM yüklendiğinde şablonları yükle
 document.addEventListener('DOMContentLoaded', () => {
     loadTemplates().catch(err => {
         console.error('Şablon yükleme hatası:', err);
         const dynamicViews = document.getElementById('dynamic-views');
-        if (dynamicViews) {
-            dynamicViews.innerHTML = '<div class="info-msg" style="color:#ef4444;">Sayfa yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>';
-        }
+        if (dynamicViews) dynamicViews.innerHTML = '<div class="info-msg" style="color:#ef4444;">Sayfa yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>';
     });
 });

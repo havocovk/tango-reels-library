@@ -1,4 +1,4 @@
-// formHandlers.js - Video ekleme ve güncelleme (YouTube thumbnail + eğitmen adı fix)
+// formHandlers.js - Video ekleme ve güncelleme (thumbnail otomatik, instructor hatası düzeltildi)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -52,35 +52,35 @@ export function renderFormChips() {
     });
 }
 
-// ========= YOUTUBE THUMBNAIL YARDIMCISI =========
-function extractYoutubeVideoId(url) {
+// ========= YOUTUBE THUMBNAIL OTOMATİK =========
+export function extractYoutubeVideoId(url) {
     if (!url) return null;
     const patterns = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
-        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&?#]+)/,
+        /youtube\.com\/embed\/([^&?#]+)/
     ];
-    for (const pattern of patterns) {
+    for (let pattern of patterns) {
         const match = url.match(pattern);
-        if (match) return match[1];
+        if (match && match[1]) return match[1];
     }
     return null;
 }
 
-function autoFetchThumbnail(url) {
+export async function autoFetchThumbnail(url) {
     const videoId = extractYoutubeVideoId(url);
+    if (!videoId) return null;
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     const imgPreview = document.getElementById('image-preview');
     const dropAreaText = document.getElementById('drop-area-text');
-    if (videoId && imgPreview) {
-        const thumbUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-        imgPreview.src = thumbUrl;
+    if (imgPreview) {
+        imgPreview.src = thumbnailUrl;
         imgPreview.classList.remove('d-none');
         if (dropAreaText) dropAreaText.classList.add('d-none');
-        return thumbUrl;
     }
-    return null;
+    return thumbnailUrl;
 }
 
-// ========= FORM SUBMIT (EĞİTMEN ADI DÜZELTİLDİ) =========
+// ========= FORM KAYIT (düzeltilmiş instructor bilgisi) =========
 export async function handleFormSubmit(e) {
     e.preventDefault();
     const currentLang = store.get('currentLang');
@@ -97,16 +97,13 @@ export async function handleFormSubmit(e) {
     let cover_url = getUploadedCoverUrl();
     
     const editingVideoId = store.get('editingVideoId');
-    
-    // Eğer kapak yoksa ve YouTube linki varsa otomatik al
-    if (!cover_url && url && !is_downloaded) {
-        const autoThumb = autoFetchThumbnail(url);
-        if (autoThumb) cover_url = autoThumb;
-    }
-    
     if (!cover_url && editingVideoId) {
         const curr = store.get('globalVideos').find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
+    }
+    // Eğer kapak yoksa ve URL YouTube ise otomatik çek
+    if (!cover_url && url && extractYoutubeVideoId(url)) {
+        cover_url = await autoFetchThumbnail(url);
     }
     
     if (!instructor_id) return showCustomAlert(currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText);
@@ -130,30 +127,31 @@ export async function handleFormSubmit(e) {
     
     try {
         const updatedVideo = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
-        
-        // Eğitmen adını al
         const instructors = store.get('globalInstructors');
-        const instructorName = instructors.find(i => i.id === (updatedVideo?.instructor_id || instructor_id))?.name || 'Bilinmeyen Eğitmen';
+        const instructor = instructors.find(i => i.id === parseInt(instructor_id));
         
         if (editingVideoId) {
+            // Güncelleme
             if (updatedVideo) {
-                updatedVideo.instructor_name = instructorName;
+                // instructors objesini ekle (render için)
+                updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.updateVideoLocally(editingVideoId, updatedVideo);
                 if (updatedVideo.updated_at) editingVideoUpdatedAt = updatedVideo.updated_at;
             } else {
-                const newData = { ...payload, instructor_name: instructorName, updated_at: new Date().toISOString() };
+                const newData = { ...payload, instructors: { name: instructor?.name || 'Bilinmeyen' }, updated_at: new Date().toISOString() };
                 store.updateVideoLocally(editingVideoId, newData);
                 editingVideoUpdatedAt = newData.updated_at;
             }
         } else {
+            // Yeni video
             if (updatedVideo) {
-                updatedVideo.instructor_name = instructorName;
+                updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.addVideoLocally(updatedVideo);
             } else {
                 const newVideo = {
                     id: Date.now(),
                     ...payload,
-                    instructor_name: instructorName,
+                    instructors: { name: instructor?.name || 'Bilinmeyen' },
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 };
@@ -186,16 +184,5 @@ export async function handleFormSubmit(e) {
             let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
             await showCustomAlert(hata, okText);
         }
-    }
-}
-
-// ========= EVENT LISTENER'LAR (app.js'de çağrılacak) =========
-export function bindYouTubeThumbnailListener() {
-    const urlInput = document.getElementById('form-video-url');
-    if (urlInput && !urlInput.dataset.thumbListener) {
-        urlInput.addEventListener('input', (e) => {
-            autoFetchThumbnail(e.target.value);
-        });
-        urlInput.dataset.thumbListener = 'true';
     }
 }
