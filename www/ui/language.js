@@ -48,6 +48,12 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
+
+    // 🔥 YENİ: "Ara" butonunun metnini güncelle
+    const searchBtn = document.getElementById('search-btn');
+    if (searchBtn) {
+        searchBtn.innerText = lang.searchBtn;
+    }
     
     document.getElementById('filter-btn').innerText = lang.filterBtn;
     

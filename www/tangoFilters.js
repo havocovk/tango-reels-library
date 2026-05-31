@@ -1,3 +1,4 @@
+// tangoFilters.js - YENİ HALİ (platform ve not araması eklendi)
 import { translations } from './i18n.js';
 
 function formatAyYil(tarihString, lang) {
@@ -100,13 +101,29 @@ export function populateFilterDropdowns(videolar, currentLang) {
 export function getFilteredVideos(videolar, filtreler, currentLang) {
     const { aramaMetni, rol, egitmen, etiket, tarih, platform } = filtreler;
     return videolar.filter(video => {
+        // 1. Arama metni kontrolü (genişletilmiş)
         if (aramaMetni) {
             const aranacakKelime = aramaMetni.toLowerCase().trim();
-            const egitmenUyuyor = video.instructor_name?.toLowerCase().includes(aranacakKelime);
-            const etiketUyuyor = video.tags?.toLowerCase().includes(aranacakKelime);
-            const partnerUyuyor = video.partner_name?.toLowerCase().includes(aranacakKelime);
-            if (!egitmenUyuyor && !etiketUyuyor && !partnerUyuyor) return false;
+            const egitmenUyuyor = video.instructor_name?.toLowerCase().includes(aranacakKelime) || false;
+            const partnerUyuyor = video.partner_name?.toLowerCase().includes(aranacakKelime) || false;
+            const etiketUyuyor = video.tags?.toLowerCase().includes(aranacakKelime) || false;
+            
+            // Platform araması (örnek: "youtube" yazınca youtube videoları)
+            let platformUyuyor = false;
+            if (video.platform) {
+                const platformLabel = (currentLang === 'tr' 
+                    ? { drive: 'drive', youtube: 'youtube', instagram: 'instagram', facebook: 'facebook', other: 'diğer' }[video.platform]
+                    : video.platform);
+                platformUyuyor = platformLabel?.toLowerCase().includes(aranacakKelime) || false;
+            }
+            
+            // Notlar (notes) içinde arama
+            const notlarUyuyor = video.notes?.toLowerCase().includes(aranacakKelime) || false;
+            
+            if (!egitmenUyuyor && !partnerUyuyor && !etiketUyuyor && !platformUyuyor && !notlarUyuyor) return false;
         }
+        
+        // 2. Diğer filtreler (rol, eğitmen, etiket, tarih, platform)
         if (rol !== 'all' && video.role_type !== rol) return false;
         if (egitmen !== 'all' && video.instructor_name !== egitmen) return false;
         if (etiket !== 'all') {
@@ -114,8 +131,12 @@ export function getFilteredVideos(videolar, filtreler, currentLang) {
             const videoEtiketleri = video.tags.split(',').map(t => t.trim());
             if (!videoEtiketleri.includes(etiket)) return false;
         }
-        if (tarih !== 'all' && formatAyYil(video.created_at, currentLang) !== tarih) return false;
+        if (tarih !== 'all') {
+            const formatliTarih = formatAyYil(video.created_at, currentLang);
+            if (formatliTarih !== tarih) return false;
+        }
         if (platform !== 'all' && video.platform !== platform) return false;
+        
         return true;
     });
 }

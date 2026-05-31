@@ -1,4 +1,4 @@
-// videoHandlers.js - DÜZELTİLMİŞ
+// videoHandlers.js - YENİ HALİ (aramaMetni inputtan alınır)
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -8,7 +8,6 @@ import { store } from './store.js';
 
 let currentLang = 'tr';
 
-// Bu değişkenler initVideoHandlers ile atanacak
 let applyFiltersAndSearchCallback = null;
 let fetchVideosCallback = null;
 let openVideoModalCallback = null;
@@ -16,12 +15,10 @@ let openTagsEditModalCallback = null;
 let startVideoEditFlowCallback = null;
 let deleteVideoFlowCallback = null;
 
-// SADECE DİL BİLGİSİNİ AYARLAR
 export function setVideoHandlersGlobalData(lang) {
     currentLang = lang;
 }
 
-// 📌 ÖNEMLİ: Bu fonksiyon app.js içinde çağrılmalı
 export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, startEditCb, deleteCb) {
     applyFiltersAndSearchCallback = applyCb;
     fetchVideosCallback = fetchCb;
@@ -31,7 +28,6 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
     deleteVideoFlowCallback = deleteCb;
 }
 
-// Favori ekleme/çıkarma (çalışıyor)
 export async function toggleFavorite(videoId) {
     try {
         let currentFavorites = store.get('globalFavorites');
@@ -46,7 +42,6 @@ export async function toggleFavorite(videoId) {
     } catch (err) { console.error(err); }
 }
 
-// Listeyi filtrele ve kartları göster
 export function applyFiltersAndSearch() {
     const globalVideos = store.get('globalVideos');
     const currentView = store.get('currentView');
@@ -57,14 +52,20 @@ export function applyFiltersAndSearch() {
     if (currentView === 'favorites') {
         source = globalVideos.filter(v => favorites.includes(v.id));
     }
+    
+    // 🔥 DÜZELTME: Arama kutusundaki metni al
+    const searchInput = document.getElementById('search-input');
+    const aramaMetni = searchInput ? searchInput.value : '';
+    
     const filters = {
-        aramaMetni: '',
+        aramaMetni: aramaMetni,
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
         tarih: document.getElementById('filter-date-select')?.value || 'all',
         platform: document.getElementById('filter-platform-select')?.value || 'all'
     };
+    
     const filtered = getFilteredVideos(source, filters, currentLang);
     const totalElem = document.getElementById('total-video-count');
     if (totalElem) {
@@ -76,7 +77,7 @@ export function applyFiltersAndSearch() {
         if (filtered.length > visibleCount) loadMoreDiv.classList.remove('d-none');
         else loadMoreDiv.classList.add('d-none');
     }
-    // 📌 Kartları render ederken callback'leri doğrudan aktar
+    
     renderVideoCards(filtered.slice(0, visibleCount), {
         currentLang,
         currentView,

@@ -98,5 +98,6 @@ export const tr = {
     roleLeader: "Lider",
     roleFollower: "Takipçi",
     roleBoth: "Çift",
-    resetCoverBtn: "🗑️ Resmi Sıfırla"
+    resetCoverBtn: "🗑️ Resmi Sıfırla",
+    searchBtn: "🔍 Ara"
 };

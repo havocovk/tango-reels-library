@@ -1,8 +1,12 @@
-<!-- views/library.html - Koleksiyon ve favori listesi görünümü -->
+<!-- views/library.html - YENİ HALİ (arama kutusu ve Ara butonu eklendi) -->
 <div id="view-library-container" class="view-panel">
-    <div class="search-header" style="display: flex; justify-content: flex-end;">
-        <button id="filter-btn" class="btn-primary">🔄 Listeyi Yenile</button>
+    <!-- Arama satırı: input + Ara butonu -->
+    <div class="search-header" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;">
+        <input type="text" id="search-input" class="form-control" placeholder="Eğitmen, etiket, platform veya not ara..." style="flex: 3; background: rgba(11,8,19,0.8); border: 1px solid rgba(255,0,127,0.5); padding: 10px 16px; border-radius: 12px; color: #f1f5f9; outline: none;">
+        <button id="search-btn" class="btn-primary">🔍 Ara</button>
     </div>
+
+    <!-- Filtre dropdown'ları (aynı, değişmedi) -->
     <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; margin-bottom: 12px;">
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             <select id="filter-role-select" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
@@ -31,6 +35,7 @@
             </select>
         </div>
     </div>
+
     <div id="total-video-count" style="text-align:right; margin:10px 0 5px 0; color:#00f0ff; font-size:1.1rem;"></div>
     <div id="clear-favorites-container" class="d-none" style="margin:10px 0;">
         <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>

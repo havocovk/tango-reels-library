@@ -184,18 +184,31 @@ async function initializeApp() {
     // Filtreleme
     const handleFilter = () => { setVisibleCount(20); applyFiltersAndSearch(); };
     const roleFilter = document.getElementById('filter-role-select');
-    if (roleFilter) roleFilter.onchange = handleFilter;
+    if (roleFilter) roleFilter.onchange = () => { applyFiltersAndSearch(); };
     const instructorFilter = document.getElementById('filter-instructor-select');
-    if (instructorFilter) instructorFilter.onchange = handleFilter;
-    const tagFilter = document.getElementById('filter-tag-select');
-    if (tagFilter) tagFilter.onchange = handleFilter;
-    const dateFilter = document.getElementById('filter-date-select');
-    if (dateFilter) dateFilter.onchange = handleFilter;
+    if (instructorFilter) instructorFilter.onchange = () => { applyFiltersAndSearch(); };
+        const tagFilter = document.getElementById('filter-tag-select');
+    if (tagFilter) tagFilter.onchange = () => { applyFiltersAndSearch(); };
+        const dateFilter = document.getElementById('filter-date-select');
+    if (dateFilter) dateFilter.onchange = () => { applyFiltersAndSearch(); };
     const platformFilter = document.getElementById('filter-platform-select');
-    if (platformFilter) platformFilter.onchange = handleFilter;
+    if (platformFilter) platformFilter.onchange = () => { applyFiltersAndSearch(); };
     
-    const filterBtn = document.getElementById('filter-btn');
-    if (filterBtn) filterBtn.onclick = () => { setVisibleCount(20); fetchVideos(); };
+    // "Ara" butonu
+    const searchBtn = document.getElementById('search-btn');
+    if (searchBtn) {
+        searchBtn.onclick = () => {
+            applyFiltersAndSearch();
+        };
+    }
+    
+    // Arama kutusuna yazarken canlı arama
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            applyFiltersAndSearch();
+        });
+    }
     
     const loadMoreBtn = document.getElementById('btn-load-more');
     if (loadMoreBtn) loadMoreBtn.onclick = () => { incrementVisibleCount(20); applyFiltersAndSearch(); };

@@ -98,5 +98,6 @@ export const en = {
     roleLeader: "Leader",
     roleFollower: "Follower",
     roleBoth: "Couple",
-    resetCoverBtn: "🗑️ Reset Image"
+    resetCoverBtn: "🗑️ Reset Image",
+    searchBtn: "🔍 Search"
 };
