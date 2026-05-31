@@ -1,4 +1,4 @@
-// tagManager.js - Toplu etiket işlemleri (optimize: fetchVideos yok)
+// tagManager.js - Toplu etiket işlemleri (RPC ile, hata yönetimi düzeltildi)
 import { translations } from './i18n.js';
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
@@ -32,7 +32,7 @@ export function updateTagManagerSelection() {
     }
 }
 
-// 🔥 Yerel olarak tüm videolardaki etiketleri güncelle (yardımcı fonksiyon)
+// Yerel güncelleme fonksiyonları (RPC'den sonra state'i güncellemek için)
 function updateAllVideosTagsLocally(updateFunction) {
     let videos = store.get('globalVideos');
     let changed = false;
@@ -47,7 +47,6 @@ function updateAllVideosTagsLocally(updateFunction) {
     return changed;
 }
 
-// Belirli bir etiketi yeniden adlandır (yerel)
 function renameTagLocally(oldTag, newTag) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
@@ -60,7 +59,6 @@ function renameTagLocally(oldTag, newTag) {
     });
 }
 
-// Belirli etiketleri tüm videolardan sil (yerel)
 function deleteTagsLocally(tagsArray) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
@@ -79,7 +77,6 @@ function deleteTagsLocally(tagsArray) {
     });
 }
 
-// Etiketleri birleştir (yerel)
 function mergeTagsLocally(oldTagsArray, newTag) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
@@ -99,7 +96,6 @@ function mergeTagsLocally(oldTagsArray, newTag) {
     });
 }
 
-// Kullanılmayan etiketleri temizle (yerel) - sadece videolardaki etiketlerin benzersizliğini kontrol et
 function cleanupUnusedTagsLocally() {
     let videos = store.get('globalVideos');
     let removedCount = 0;
@@ -119,6 +115,8 @@ function cleanupUnusedTagsLocally() {
     return { removedCount };
 }
 
+// ============= DÜZELTİLMİŞ FONKSİYONLAR (alertOk tanımlı) =============
+
 export async function promptRenameTagModern(oldTag) {
     const title = currentLang === 'tr' ? `"${oldTag}" etiketini yeni adıyla değiştir:` : `Rename "${oldTag}" to:`;
     const placeholder = currentLang === 'tr' ? 'Yeni etiket adı' : 'New tag name';
@@ -128,25 +126,25 @@ export async function promptRenameTagModern(oldTag) {
     showLoading(true);
     try {
         await dbRenameTag(oldTag, newTag);
-        renameTagLocally(oldTag, newTag);  // Yerel güncelleme
+        renameTagLocally(oldTag, newTag);
         showLoading(false);
-        const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, okText);
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, alertOk);
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-    showLoading(false);
-    if (err.message.includes('CONFLICT')) {
+        showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(
-            currentLang === 'tr' 
-                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
-                : 'Conflict: Some videos were modified by another user. Please refresh.',
-            alertOk
-        );
-        location.reload();
-            } else {
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-            }
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                currentLang === 'tr' 
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
+        } else {
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
+        }
     }
 }
 
@@ -157,25 +155,25 @@ export async function deleteSingleTag(tag) {
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos([tag]);
-        deleteTagsLocally([tag]);  // Yerel güncelleme
+        deleteTagsLocally([tag]);
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, alertOk);
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-    showLoading(false);
-    if (err.message.includes('CONFLICT')) {
+        showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(
-            currentLang === 'tr' 
-                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
-                : 'Conflict: Some videos were modified by another user. Please refresh.',
-            alertOk
-        );
-        location.reload();
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                currentLang === 'tr' 
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
         } else {
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-            }
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
+        }
     }
 }
 
@@ -189,32 +187,33 @@ export async function deleteSelectedTags() {
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos(selectedTagsForMerge);
-        deleteTagsLocally(selectedTagsForMerge);  // Yerel güncelleme
+        deleteTagsLocally(selectedTagsForMerge);
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`, alertOk);
+        if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-    showLoading(false);
-    if (err.message.includes('CONFLICT')) {
+        showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(
-            currentLang === 'tr' 
-                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
-                : 'Conflict: Some videos were modified by another user. Please refresh.',
-            alertOk
-        );
-        location.reload();
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                currentLang === 'tr' 
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
         } else {
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-            }
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
+        }
     }
 }
 
 export async function mergeSelectedTags() {
     if (selectedTagsForMerge.length < 2) return;
     const newTagName = document.getElementById('tag-merge-new-name').value.trim();
+    const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
     if (!newTagName) {
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.', alertOk);
         return;
     }
@@ -227,26 +226,24 @@ export async function mergeSelectedTags() {
     showLoading(true);
     try {
         await dbMergeTags(selectedTagsForMerge, newTagName);
-        mergeTagsLocally(selectedTagsForMerge, newTagName);  // Yerel güncelleme
+        mergeTagsLocally(selectedTagsForMerge, newTagName);
         showLoading(false);
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `${mergeCount} etiket birleştirildi → ${newTagName}` : `${mergeCount} tags merged → ${newTagName}`, alertOk);
         document.getElementById('tag-merge-new-name').value = '';
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-    showLoading(false);
-    if (err.message.includes('CONFLICT')) {
-        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(
-            currentLang === 'tr' 
-                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
-                : 'Conflict: Some videos were modified by another user. Please refresh.',
-            alertOk
-        );
-        location.reload();
+        showLoading(false);
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                currentLang === 'tr' 
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
         } else {
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-            }
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
+        }
     }
 }
 
@@ -258,24 +255,24 @@ export async function cleanupUnusedTags() {
     showLoading(true);
     try {
         const result = await dbCleanupUnusedTags();
-        const localResult = cleanupUnusedTagsLocally();  // Yerel güncelleme
+        const localResult = cleanupUnusedTagsLocally();
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `${localResult.removedCount} kullanılmayan etiket temizlendi.` : `${localResult.removedCount} unused tag(s) removed.`, alertOk);
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-    showLoading(false);
-    if (err.message.includes('CONFLICT')) {
+        showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(
-            currentLang === 'tr' 
-                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
-                : 'Conflict: Some videos were modified by another user. Please refresh.',
-            alertOk
-        );
-        location.reload();
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                currentLang === 'tr' 
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
         } else {
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-            }
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
+        }
     }
 }

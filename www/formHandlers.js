@@ -1,4 +1,4 @@
-// formHandlers.js - Video ekleme ve güncelleme (optimize: fetchVideos yok, hata düzeltildi)
+// formHandlers.js - Video ekleme ve güncelleme (YouTube thumbnail desteği eklendi)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -52,6 +52,43 @@ export function renderFormChips() {
     });
 }
 
+// ========== YENİ FONKSİYONLAR (YouTube Thumbnail) ==========
+export function extractYoutubeVideoId(url) {
+    if (!url) return null;
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=)([^&?#]+)/,
+        /(?:youtu\.be\/)([^?&#]+)/,
+        /(?:youtube\.com\/shorts\/)([^?&#]+)/,
+        /(?:youtube\.com\/embed\/)([^?&#]+)/
+    ];
+    for (let pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) return match[1];
+    }
+    return null;
+}
+
+export function autoFetchThumbnail(url) {
+    const videoId = extractYoutubeVideoId(url);
+    if (!videoId) return null;
+    
+    // YouTube'ın en yüksek kaliteli thumbnail'i
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    
+    const imgPreview = document.getElementById('image-preview');
+    const dropAreaText = document.getElementById('drop-area-text');
+    
+    if (imgPreview) {
+        imgPreview.src = thumbnailUrl;
+        imgPreview.classList.remove('d-none');
+    }
+    if (dropAreaText) {
+        dropAreaText.classList.add('d-none');
+    }
+    
+    return thumbnailUrl;
+}
+
 export async function handleFormSubmit(e) {
     e.preventDefault();
     const currentLang = store.get('currentLang');
@@ -68,6 +105,13 @@ export async function handleFormSubmit(e) {
     let cover_url = getUploadedCoverUrl();
     
     const editingVideoId = store.get('editingVideoId');
+    
+    // Eğer manuel yüklenmiş bir kapak yoksa ve URL YouTube ise thumbnail al
+    if (!cover_url && !editingVideoId) {
+        const youtubeThumb = autoFetchThumbnail(url);
+        if (youtubeThumb) cover_url = youtubeThumb;
+    }
+    
     if (!cover_url && editingVideoId) {
         const curr = store.get('globalVideos').find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
@@ -93,37 +137,28 @@ export async function handleFormSubmit(e) {
     };
     
     try {
-        // dbSaveVideo artık doğrudan güncellenmiş video nesnesini döndürüyor
         const updatedVideo = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         
         if (editingVideoId) {
-            // Video güncellendi: mevcut videoyu güncelle
             if (updatedVideo) {
-                // instructor_name'i de ekleyelim (store'daki videolarda instructor_name var)
                 const instructor = store.get('globalInstructors').find(i => i.id === updatedVideo.instructor_id);
                 updatedVideo.instructor_name = instructor?.name || 'Bilinmeyen';
                 store.updateVideoLocally(editingVideoId, updatedVideo);
-                // editingVideoUpdatedAt'ı yeni değerle güncelle (çakışma önleme)
                 if (updatedVideo.updated_at) {
                     editingVideoUpdatedAt = updatedVideo.updated_at;
                 }
             } else {
-                // Fallback: payload ile güncelle
                 const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
-                store.updateVideoLocally(editingVideoId, {
-                    ...payload,
-                    instructor_name: instructor?.name || 'Bilinmeyen',
-                    updated_at: new Date().toISOString()
-                });
+                const newData = { ...payload, instructor_name: instructor?.name || 'Bilinmeyen', updated_at: new Date().toISOString() };
+                store.updateVideoLocally(editingVideoId, newData);
+                editingVideoUpdatedAt = newData.updated_at;
             }
         } else {
-            // Yeni video eklendi
             if (updatedVideo) {
                 const instructor = store.get('globalInstructors').find(i => i.id === updatedVideo.instructor_id);
                 updatedVideo.instructor_name = instructor?.name || 'Bilinmeyen';
                 store.addVideoLocally(updatedVideo);
             } else {
-                // Fallback
                 const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
                 const newVideo = {
                     id: Date.now(),
@@ -150,15 +185,13 @@ export async function handleFormSubmit(e) {
         if (driveUrlContainer) driveUrlContainer.classList.add('d-none');
         resetUploadedCoverUrl();
         if (callSwitchViewCallback) callSwitchViewCallback('library');
-        // 🔥 fetchVideosCallback çağrılmıyor!
     } catch (err) {
         let hataMesaji = err.message;
         if (hataMesaji.includes('ÇAKIŞMA')) {
             await showCustomAlert(hataMesaji, okText);
-            // Çakışma durumunda verileri yenilemek güvenli olur (kullanıcıya sayfa yenileme önerisi)
             if (callSwitchViewCallback) callSwitchViewCallback('library');
             if (fetchVideosCallback) await fetchVideosCallback();
-            location.reload(); // En temizi
+            location.reload();
         } else {
             let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
             await showCustomAlert(hata, okText);

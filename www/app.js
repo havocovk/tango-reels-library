@@ -241,6 +241,20 @@ async function initializeApp() {
     // Kapak resmi yapıştırma
     const dropArea = document.getElementById('drop-area');
     if (dropArea) dropArea.addEventListener('paste', (e) => handlePasteEvent(e, store.get('currentLang')));
+
+    // YouTube thumbnail için canlı önizleme (Adım 1.2)
+    const videoUrlInput = document.getElementById('form-video-url');
+    if (videoUrlInput) {
+        videoUrlInput.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            if (url) {
+                // autoFetchThumbnail fonksiyonu formHandlers.js'den import edilmeli
+                import('./formHandlers.js').then(module => {
+                    module.autoFetchThumbnail(url);
+                });
+            }
+        });
+    }
     
     // Etiket yönetimi butonları
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
