@@ -1,4 +1,4 @@
-// formHandlers.js - Video ekleme ve güncelleme (optimize: fetchVideos yok)
+// formHandlers.js - Video ekleme ve güncelleme (optimize: fetchVideos yok, hata düzeltildi)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -95,14 +95,32 @@ export async function handleFormSubmit(e) {
     try {
         const response = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         
-        // 🔥 YEREL GÜNCELLEME: fetchVideos yerine store'u güncelle
+        // 🔥 DÜZELTME: Response'u güvenli bir şekilde işle
+        let updatedData = null;
+        if (response && typeof response.json === 'function') {
+            try {
+                updatedData = await response.json();
+            } catch (jsonErr) {
+                console.warn('JSON parse hatası:', jsonErr);
+            }
+        } else if (response && typeof response === 'object') {
+            // Eğer response zaten bir nesne ise (örneğin direkt video objesi)
+            updatedData = response;
+        }
+        
         if (editingVideoId) {
-            // Video güncellendi: mevcut videoyu bul ve güncelle
-            const updatedVideo = await response.json(); // dbSaveVideo return representation veriyor
-            if (updatedVideo && Array.isArray(updatedVideo) && updatedVideo[0]) {
-                store.updateVideoLocally(editingVideoId, updatedVideo[0]);
+            // Video güncellendi
+            let videoUpdate = null;
+            if (updatedData && Array.isArray(updatedData) && updatedData[0]) {
+                videoUpdate = updatedData[0];
+            } else if (updatedData && typeof updatedData === 'object' && updatedData.id) {
+                videoUpdate = updatedData;
+            }
+            
+            if (videoUpdate) {
+                store.updateVideoLocally(editingVideoId, videoUpdate);
             } else {
-                // Eğer updatedVideo gelmezse, manuel güncelle
+                // Fallback: manuel güncelleme
                 const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
                 store.updateVideoLocally(editingVideoId, {
                     ...payload,
@@ -111,13 +129,22 @@ export async function handleFormSubmit(e) {
                 });
             }
         } else {
-            // Yeni video eklendi: videoyu listeye ekle
-            const newVideo = await response.json();
-            let videoToAdd = newVideo;
-            if (Array.isArray(newVideo) && newVideo[0]) videoToAdd = newVideo[0];
-            const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
-            videoToAdd.instructor_name = instructor?.name || 'Bilinmeyen';
-            store.addVideoLocally(videoToAdd);
+            // Yeni video eklendi
+            let newVideo = null;
+            if (updatedData && Array.isArray(updatedData) && updatedData[0]) {
+                newVideo = updatedData[0];
+            } else if (updatedData && typeof updatedData === 'object' && updatedData.id) {
+                newVideo = updatedData;
+            }
+            
+            if (newVideo) {
+                const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
+                newVideo.instructor_name = instructor?.name || 'Bilinmeyen';
+                store.addVideoLocally(newVideo);
+            } else {
+                // Fallback: eğer veri gelmezse, sayfayı yenilemek daha güvenli
+                if (fetchVideosCallback) await fetchVideosCallback();
+            }
         }
         
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
@@ -132,13 +159,12 @@ export async function handleFormSubmit(e) {
         document.getElementById('drive-url-container')?.classList.add('d-none');
         resetUploadedCoverUrl();
         if (callSwitchViewCallback) callSwitchViewCallback('library');
-        // 🔥 fetchVideosCallback çağrılmıyor!
+        // fetchVideosCallback çağrılmıyor (optimizasyon)
     } catch (err) {
         let hataMesaji = err.message;
         if (hataMesaji.includes('ÇAKIŞMA')) {
             await showCustomAlert(hataMesaji, okText);
             if (callSwitchViewCallback) callSwitchViewCallback('library');
-            // Çakışma durumunda verileri yenilemek güvenli olur
             if (fetchVideosCallback) await fetchVideosCallback();
         } else {
             let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
