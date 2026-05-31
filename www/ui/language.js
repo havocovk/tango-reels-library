@@ -1,7 +1,6 @@
-// ui/language.js - Dil ve arayüz metinlerini güncelleme
+// ui/language.js - Güvenli element kontrolleriyle
 import { translations } from '../i18n.js';
 
-// ---------- Yardımcı: Akıllı dosya adı asistanı ----------
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     const lang = translations[currentLang];
     const select = document.getElementById('form-instructor-select');
@@ -29,34 +28,33 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
-// ---------- Ana dil güncelleme fonksiyonu ----------
 export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, populateFilterDropdowns) {
     const lang = translations[currentLang];
     
-    document.title = lang.title;
-    document.getElementById('sidebar-title').innerText = lang.brandTitle;
-    document.getElementById('lang-toggle-btn').innerText = lang.langBtn;
-    document.getElementById('menu-library').innerText = lang.menuLibrary;
-    document.getElementById('menu-favorites').innerText = lang.menuFavorites;
-    document.getElementById('menu-stats').innerText = '📊 ' + (currentLang === 'tr' ? 'İstatistikler' : 'Statistics');
-    document.getElementById('menu-add-video').innerText = lang.menuAddVideo;
+    // Güvenli metin güncelleme yardımcısı
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+    };
+    
+    setText('sidebar-title', lang.brandTitle);
+    setText('lang-toggle-btn', lang.langBtn);
+    setText('menu-library', lang.menuLibrary);
+    setText('menu-favorites', lang.menuFavorites);
+    setText('menu-stats', '📊 ' + (currentLang === 'tr' ? 'İstatistikler' : 'Statistics'));
+    setText('menu-add-video', lang.menuAddVideo);
     
     const tagManagerBtn = document.getElementById('menu-tag-manager');
-    if (tagManagerBtn) {
-        tagManagerBtn.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
-    }
+    if (tagManagerBtn) tagManagerBtn.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
     
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
-
-    // 🔥 YENİ: "Ara" butonunun metnini güncelle
+    
+    // 🔥 ARA BUTONU (güvenli)
     const searchBtn = document.getElementById('search-btn');
-    if (searchBtn) {
-        searchBtn.innerText = lang.searchBtn;
-    }
+    if (searchBtn) searchBtn.innerText = lang.searchBtn;
     
-    document.getElementById('filter-btn').innerText = lang.filterBtn;
-    
+    // Diğer elementler (dropdown'lar vs.)
     const allRolesOpt = document.getElementById('opt-all-roles');
     if (allRolesOpt) allRolesOpt.innerText = lang.allRoles;
     const optLeader = document.getElementById('opt-leader');
@@ -159,7 +157,6 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         tagManagerTitle.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
     }
     
-    // Etiket yönetimi tablo başlıklarını güncelle
     const tableHeaders = document.querySelectorAll('#tag-manager-table th');
     if (tableHeaders.length >= 4) {
         tableHeaders[1].innerText = currentLang === 'tr' ? 'Etiket' : 'Tag';
@@ -167,7 +164,6 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         tableHeaders[3].innerText = currentLang === 'tr' ? 'İşlemler' : 'Actions';
     }
     
-    // Buton metinleri
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
     if (mergeBtn) mergeBtn.innerText = currentLang === 'tr' ? '🔗 Birleştir' : '🔗 Merge';
     const deleteBtn = document.getElementById('tag-manager-delete-btn');
@@ -179,7 +175,6 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const mergeCancelBtn = document.getElementById('tag-merge-cancel-btn');
     if (mergeCancelBtn) mergeCancelBtn.innerText = currentLang === 'tr' ? '❌ İptal' : '❌ Cancel';
     
-    // Merge panelindeki label ve placeholder
     const mergePanelLabel = document.querySelector('#tag-merge-panel label');
     if (mergePanelLabel) {
         mergePanelLabel.innerText = currentLang === 'tr' ? 'Yeni Etiket Adı:' : 'New Tag Name:';
@@ -188,8 +183,7 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     if (mergeInput) {
         mergeInput.placeholder = currentLang === 'tr' ? 'Örn: sacada' : 'Ex: sacada';
     }
-
-    // Yedekleme butonları metinlerini güncelle
+    
     const exportBackupBtn = document.getElementById('btn-export-backup');
     const importBackupBtn = document.getElementById('btn-import-backup');
     if (exportBackupBtn) exportBackupBtn.innerText = currentLang === 'tr' ? '💾 Yedekle (Dışa Aktar)' : '💾 Backup (Export)';
@@ -201,5 +195,5 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         // dışarıdan çağrılacak
     }
     
-    applyFiltersAndSearch();
+    if (applyFiltersAndSearch) applyFiltersAndSearch();
 }
