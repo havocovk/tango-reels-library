@@ -35,6 +35,9 @@ import {
 } from './navigation.js';
 import { setupStoreSubscriptions } from './uiSubscriptions.js';
 
+// YouTube thumbnail için input dinleyicisini bağla
+import { bindYouTubeThumbnailListener } from './formHandlers.js';
+
 // ========== Şablon yükleme (HTML dosyalarını çek) ==========
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -255,6 +258,9 @@ async function initializeApp() {
             }
         });
     }
+
+    // ... daha sonra initializeApp içinde:
+    bindYouTubeThumbnailListener();
     
     // Etiket yönetimi butonları
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
