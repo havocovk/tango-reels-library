@@ -1,100 +1,44 @@
-// db/tags.js - Etiket toplu işlemleri (birleştirme, yeniden adlandırma, silme, temizleme)
-import { dbFetchVideos } from './videos.js';
+// db/tags.js - Etiket toplu işlemleri (RPC ile, atomik)
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 import { fetchWithRetry } from '../utils.js';
 
-// Yardımcı: birden fazla videoyu toplu güncelle
-async function batchUpdateVideosTag(updates) {
-    if (!updates.length) return;
-    const promises = updates.map(({ id, newTags }) => {
-        return fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tags: newTags })
-        });
+// Yardımcı: RPC çağrısı yapan fonksiyon
+async function callRPC(functionName, params) {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(params)
     });
-    const results = await Promise.all(promises);
-    const failed = results.filter(r => !r.ok);
-    if (failed.length) throw new Error(`${failed.length} video güncellenemedi`);
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`RPC hatası (${functionName}): ${errorText}`);
+    }
+    return await res.json();
 }
 
+// 1. Eski etiketleri yeni bir etiket altında birleştir
 export async function dbMergeTags(oldTagsArray, newTag) {
-    const videos = await dbFetchVideos();
-    const updates = [];
-    for (const video of videos) {
-        if (!video.tags) continue;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-        let changed = false;
-        for (const old of oldTagsArray) {
-            if (tags.includes(old)) {
-                tags = tags.filter(t => t !== old);
-                if (!tags.includes(newTag)) tags.push(newTag);
-                changed = true;
-            }
-        }
-        if (changed) {
-            updates.push({ id: video.id, newTags: tags.join(', ') || null });
-        }
-    }
-    await batchUpdateVideosTag(updates);
+    if (!oldTagsArray.length) return;
+    return await callRPC('merge_tags', { old_tags: oldTagsArray, new_tag: newTag });
 }
 
+// 2. Belirtilen etiketleri tüm videolardan sil
 export async function dbDeleteTagFromAllVideos(tagsArray) {
-    const videos = await dbFetchVideos();
-    const updates = [];
-    for (const video of videos) {
-        if (!video.tags) continue;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-        let changed = false;
-        tagsArray.forEach(tag => {
-            if (tags.includes(tag)) {
-                tags = tags.filter(t => t !== tag);
-                changed = true;
-            }
-        });
-        if (changed) {
-            updates.push({ id: video.id, newTags: tags.join(', ') || null });
-        }
-    }
-    await batchUpdateVideosTag(updates);
+    if (!tagsArray.length) return;
+    return await callRPC('delete_tags', { tags_to_delete: tagsArray });
 }
 
+// 3. Bir etiketin adını değiştir
 export async function dbRenameTag(oldTag, newTag) {
-    const videos = await dbFetchVideos();
-    const updates = [];
-    for (const video of videos) {
-        if (!video.tags) continue;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-        if (tags.includes(oldTag)) {
-            tags = tags.map(t => t === oldTag ? newTag : t);
-            updates.push({ id: video.id, newTags: tags.join(', ') });
-        }
-    }
-    await batchUpdateVideosTag(updates);
+    return await callRPC('rename_tag', { old_tag: oldTag, new_tag: newTag });
 }
 
+// 4. Videolardaki tekrar eden etiketleri temizle (benzersiz yap)
 export async function dbCleanupUnusedTags() {
-    const videos = await dbFetchVideos();
-    const usedTagsSet = new Set();
-    videos.forEach(v => {
-        if (v.tags) {
-            v.tags.split(',').forEach(t => {
-                const tag = t.trim();
-                if (tag) usedTagsSet.add(tag);
-            });
-        }
-    });
-    let removedCount = 0;
-    const updates = [];
-    for (const video of videos) {
-        if (!video.tags) continue;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-        const uniqueTags = [...new Set(tags)];
-        if (uniqueTags.length !== tags.length) {
-            updates.push({ id: video.id, newTags: uniqueTags.join(', ') });
-            removedCount += (tags.length - uniqueTags.length);
-        }
-    }
-    await batchUpdateVideosTag(updates);
-    return { removedCount };
+    const updatedCount = await callRPC('cleanup_unused_tags', {});
+    return { removedCount: updatedCount };
 }

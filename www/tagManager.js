@@ -134,9 +134,19 @@ export async function promptRenameTagModern(oldTag) {
         await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, okText);
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-        showLoading(false);
-        const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(`Hata: ${err.message}`, okText);
+    showLoading(false);
+    if (err.message.includes('CONFLICT')) {
+        const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(
+            currentLang === 'tr' 
+                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                : 'Conflict: Some videos were modified by another user. Please refresh.',
+            alertOk
+        );
+        location.reload();
+            } else {
+        await showCustomAlert(`Hata: ${err.message}`, alertOk);
+            }
     }
 }
 
@@ -153,9 +163,19 @@ export async function deleteSingleTag(tag) {
         await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, alertOk);
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-        showLoading(false);
+    showLoading(false);
+    if (err.message.includes('CONFLICT')) {
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(
+            currentLang === 'tr' 
+                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                : 'Conflict: Some videos were modified by another user. Please refresh.',
+            alertOk
+        );
+        location.reload();
+        } else {
         await showCustomAlert(`Hata: ${err.message}`, alertOk);
+            }
     }
 }
 
@@ -174,9 +194,19 @@ export async function deleteSelectedTags() {
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`, alertOk);
     } catch (err) {
-        showLoading(false);
+    showLoading(false);
+    if (err.message.includes('CONFLICT')) {
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(
+            currentLang === 'tr' 
+                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                : 'Conflict: Some videos were modified by another user. Please refresh.',
+            alertOk
+        );
+        location.reload();
+        } else {
         await showCustomAlert(`Hata: ${err.message}`, alertOk);
+            }
     }
 }
 
@@ -204,9 +234,19 @@ export async function mergeSelectedTags() {
         document.getElementById('tag-merge-new-name').value = '';
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-        showLoading(false);
+    showLoading(false);
+    if (err.message.includes('CONFLICT')) {
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(
+            currentLang === 'tr' 
+                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                : 'Conflict: Some videos were modified by another user. Please refresh.',
+            alertOk
+        );
+        location.reload();
+        } else {
         await showCustomAlert(`Hata: ${err.message}`, alertOk);
+            }
     }
 }
 
@@ -224,8 +264,18 @@ export async function cleanupUnusedTags() {
         await showCustomAlert(currentLang === 'tr' ? `${localResult.removedCount} kullanılmayan etiket temizlendi.` : `${localResult.removedCount} unused tag(s) removed.`, alertOk);
         if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
-        showLoading(false);
+    showLoading(false);
+    if (err.message.includes('CONFLICT')) {
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
+        await showCustomAlert(
+            currentLang === 'tr' 
+                ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                : 'Conflict: Some videos were modified by another user. Please refresh.',
+            alertOk
+        );
+        location.reload();
+        } else {
         await showCustomAlert(`Hata: ${err.message}`, alertOk);
+            }
     }
 }
