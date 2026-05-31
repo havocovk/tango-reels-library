@@ -1,4 +1,4 @@
-// formHandlers.js - Video ekleme/düzenleme (yerel güncellemeli)
+// formHandlers.js - Video ekleme ve güncelleme (optimize: fetchVideos yok)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -69,7 +69,7 @@ export async function handleFormSubmit(e) {
     
     const editingVideoId = store.get('editingVideoId');
     if (!cover_url && editingVideoId) {
-        const curr = globalVideos.find(v => v.id === editingVideoId);
+        const curr = store.get('globalVideos').find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
     }
     
@@ -95,43 +95,29 @@ export async function handleFormSubmit(e) {
     try {
         const response = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         
-        // 🔥 YENİ KAYIT VEYA GÜNCELLEME SONRASI YEREL STATE GÜNCELLEME
+        // 🔥 YEREL GÜNCELLEME: fetchVideos yerine store'u güncelle
         if (editingVideoId) {
-            // Güncelleme: response'dan güncellenmiş videoyu al (return=representation ile)
-            let updatedVideo = null;
-            try {
-                const responseText = await response.text();
-                const json = JSON.parse(responseText);
-                if (Array.isArray(json) && json.length > 0) updatedVideo = json[0];
-            } catch(e) { console.warn("JSON parse hatası", e); }
-            
-            if (updatedVideo) {
-                // Eğitmen adını da ekle (store'dan al)
-                const instructors = store.get('globalInstructors');
-                const instructor = instructors.find(i => i.id === updatedVideo.instructor_id);
-                updatedVideo.instructor_name = instructor ? instructor.name : 'Bilinmeyen Eğitmen';
-                store.updateVideoLocally(editingVideoId, updatedVideo);
+            // Video güncellendi: mevcut videoyu bul ve güncelle
+            const updatedVideo = await response.json(); // dbSaveVideo return representation veriyor
+            if (updatedVideo && Array.isArray(updatedVideo) && updatedVideo[0]) {
+                store.updateVideoLocally(editingVideoId, updatedVideo[0]);
             } else {
-                // Fallback: yeniden çekme (nadir durum)
-                if (fetchVideosCallback) await fetchVideosCallback();
+                // Eğer updatedVideo gelmezse, manuel güncelle
+                const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
+                store.updateVideoLocally(editingVideoId, {
+                    ...payload,
+                    instructor_name: instructor?.name || 'Bilinmeyen',
+                    updated_at: new Date().toISOString()
+                });
             }
         } else {
-            // Yeni video: response'dan eklenen videoyu al
-            let newVideo = null;
-            try {
-                const responseText = await response.text();
-                const json = JSON.parse(responseText);
-                if (Array.isArray(json) && json.length > 0) newVideo = json[0];
-            } catch(e) { console.warn("JSON parse hatası", e); }
-            
-            if (newVideo) {
-                const instructors = store.get('globalInstructors');
-                const instructor = instructors.find(i => i.id === newVideo.instructor_id);
-                newVideo.instructor_name = instructor ? instructor.name : 'Bilinmeyen Eğitmen';
-                store.addVideoLocally(newVideo);
-            } else {
-                if (fetchVideosCallback) await fetchVideosCallback();
-            }
+            // Yeni video eklendi: videoyu listeye ekle
+            const newVideo = await response.json();
+            let videoToAdd = newVideo;
+            if (Array.isArray(newVideo) && newVideo[0]) videoToAdd = newVideo[0];
+            const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
+            videoToAdd.instructor_name = instructor?.name || 'Bilinmeyen';
+            store.addVideoLocally(videoToAdd);
         }
         
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
@@ -141,16 +127,18 @@ export async function handleFormSubmit(e) {
         renderFormChips();
         document.getElementById('add-video-form').reset();
         document.getElementById('image-preview').classList.add('d-none');
-        document.getElementById('drop-area-text').innerText = lang.dropText;
-        document.getElementById('drive-url-container').classList.add('d-none');
+        const dropAreaText = document.getElementById('drop-area-text');
+        if (dropAreaText) dropAreaText.innerText = lang.dropText;
+        document.getElementById('drive-url-container')?.classList.add('d-none');
         resetUploadedCoverUrl();
         if (callSwitchViewCallback) callSwitchViewCallback('library');
-        // fetchVideosCallback çağrılmıyor, UI zaten güncel
+        // 🔥 fetchVideosCallback çağrılmıyor!
     } catch (err) {
         let hataMesaji = err.message;
         if (hataMesaji.includes('ÇAKIŞMA')) {
             await showCustomAlert(hataMesaji, okText);
             if (callSwitchViewCallback) callSwitchViewCallback('library');
+            // Çakışma durumunda verileri yenilemek güvenli olur
             if (fetchVideosCallback) await fetchVideosCallback();
         } else {
             let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
