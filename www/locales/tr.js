@@ -100,5 +100,10 @@ export const tr = {
     roleBoth: "Çift",
     resetCoverBtn: "🗑️ Resmi Sıfırla",
     searchBtn: "🔍 Ara",
-    selectFile: "📁 Dosya Seç"
+    selectFile: "📁 Dosya Seç",
+    // Öğrenme durumu
+    allLearningStatuses: "Tüm Öğrenme Durumları",
+    learningNew: "🆕 Yeni",
+    learningActive: "📚 Çalışıyorum",
+    learningMastered: "✅ Ustalaştım"
 };

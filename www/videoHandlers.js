@@ -1,5 +1,5 @@
-// videoHandlers.js - Optimize edilmiş + Sonsuz Kaydırma (Infinite Scroll)
-import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo } from './tangoVeritabani.js';
+// videoHandlers.js - Optimize edilmiş + Sonsuz Kaydırma + Öğrenme Durumu
+import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
 import { getFilteredVideos } from './tangoFilters.js';
@@ -16,7 +16,6 @@ let openTagsEditModalCallback = null;
 let startVideoEditFlowCallback = null;
 let deleteVideoFlowCallback = null;
 
-// Infinite Scroll değişkenleri
 let scrollObserver = null;
 let isLoadingMore = false;
 
@@ -33,7 +32,7 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
     deleteVideoFlowCallback = deleteCb;
 }
 
-// Favori ekleme/çıkarma (yerel güncelleme)
+// Favori ekleme/çıkarma
 export async function toggleFavorite(videoId) {
     try {
         let currentFavorites = store.get('globalFavorites');
@@ -51,6 +50,47 @@ export async function toggleFavorite(videoId) {
         const lang = translations[store.get('currentLang')];
         showToast(lang.error || 'Favori güncellenemedi', 'error');
     }
+}
+
+// 🔥 YENİ: Öğrenme durumu güncelleme (yerel + supabase)
+export async function updateLearningStatus(videoId, newStatus) {
+    const video = store.get('globalVideos').find(v => v.id === videoId);
+    if (!video) return;
+    const oldUpdatedAt = video.updated_at;
+    try {
+        const updatedVideo = await dbUpdateLearningStatus(videoId, newStatus, oldUpdatedAt);
+        if (updatedVideo) {
+            store.updateVideoLocally(videoId, {
+                learning_status: updatedVideo.learning_status,
+                last_reviewed_at: updatedVideo.last_reviewed_at,
+                review_count: updatedVideo.review_count,
+                updated_at: updatedVideo.updated_at
+            });
+            showToast(`Öğrenme durumu: ${getStatusText(newStatus)}`, 'success');
+            applyFiltersAndSearch();
+        }
+    } catch (err) {
+        if (err.message.includes('ÇAKIŞMA')) {
+            showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
+            location.reload();
+        } else {
+            showToast('Durum güncellenemedi: ' + err.message, 'error');
+        }
+    }
+}
+
+function getStatusText(status) {
+    const lang = currentLang;
+    if (lang === 'tr') {
+        if (status === 'new') return 'Yeni';
+        if (status === 'learning') return 'Çalışıyorum';
+        if (status === 'mastered') return 'Ustalaştım';
+    } else {
+        if (status === 'new') return 'New';
+        if (status === 'learning') return 'Learning';
+        if (status === 'mastered') return 'Mastered';
+    }
+    return status;
 }
 
 // Filtreleme ve listeleme
@@ -74,7 +114,8 @@ export function applyFiltersAndSearch() {
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
         tarih: document.getElementById('filter-date-select')?.value || 'all',
-        platform: document.getElementById('filter-platform-select')?.value || 'all'
+        platform: document.getElementById('filter-platform-select')?.value || 'all',
+        learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'  // 🔥 YENİ
     };
     
     const filtered = getFilteredVideos(source, filters, currentLang);
@@ -84,7 +125,6 @@ export function applyFiltersAndSearch() {
         totalElem.innerText = `${label} ${filtered.length}`;
     }
     
-    // Load more butonunu göster/gizle (yedek olarak, sonsuz kaydırma ile birlikte çalışır)
     const loadMoreDiv = document.getElementById('load-more-container');
     if (loadMoreDiv) {
         if (filtered.length > visibleCount) loadMoreDiv.classList.remove('d-none');
@@ -101,10 +141,10 @@ export function applyFiltersAndSearch() {
         startVideoEditFlow: startVideoEditFlowCallback,
         deleteVideoFlow: deleteVideoFlowCallback,
         openVideoModal: openVideoModalCallback,
-        refreshList: applyFiltersAndSearchCallback
+        refreshList: applyFiltersAndSearchCallback,
+        updateLearningStatus   // 🔥 YENİ: Kart içinden çağırmak için
     });
     
-    // Sonsuz kaydırma gözlemcisini yeniden bağla (sentinel yeniden oluştu)
     reconnectSentinel();
 }
 
@@ -135,7 +175,7 @@ export async function deleteVideoFlow(videoId) {
     }
 }
 
-// ========= INFINITE SCROLL =========
+// Infinite Scroll
 function reconnectSentinel() {
     if (scrollObserver) {
         scrollObserver.disconnect();
@@ -161,7 +201,8 @@ function reconnectSentinel() {
                     egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
                     etiket: document.getElementById('filter-tag-select')?.value || 'all',
                     tarih: document.getElementById('filter-date-select')?.value || 'all',
-                    platform: document.getElementById('filter-platform-select')?.value || 'all'
+                    platform: document.getElementById('filter-platform-select')?.value || 'all',
+                    learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'
                 };
                 const filtered = getFilteredVideos(source, filters, currentLang);
                 if (visibleCount < filtered.length) {
@@ -177,11 +218,9 @@ function reconnectSentinel() {
 }
 
 export function setupInfiniteScroll() {
-    // DOM hazır olduğunda sentinel'i bağla
     if (document.getElementById('scroll-sentinel')) {
         reconnectSentinel();
     } else {
-        // sentinel henüz yoksa, biraz bekle (DOM yüklendiğinde çalışacak)
         setTimeout(() => setupInfiniteScroll(), 500);
     }
 }

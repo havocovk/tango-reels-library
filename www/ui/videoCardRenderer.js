@@ -1,4 +1,4 @@
-// ui/videoCardRenderer.js - Video kartlarını oluşturma
+// ui/videoCardRenderer.js - Video kartları (öğrenme durumu badge'i eklendi)
 import { openNoteEditModal } from '../tangoModals.js';
 
 export function renderVideoCards(videos, config) {
@@ -12,7 +12,8 @@ export function renderVideoCards(videos, config) {
         startVideoEditFlow, 
         deleteVideoFlow, 
         openVideoModal,
-        refreshList
+        refreshList,
+        updateLearningStatus   // 🔥 YENİ
     } = config;
     const videoGrid = document.getElementById('video-grid');
     const lang = langPack[currentLang];
@@ -22,6 +23,7 @@ export function renderVideoCards(videos, config) {
         videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
         return;
     }
+    
     videos.forEach(video => {
         const platform = video.platform || 'other';
         const platformLabel = lang.platformLabels[platform] || 'Diğer';
@@ -41,8 +43,10 @@ export function renderVideoCards(videos, config) {
         const shouldOpenInModal = isEmbeddable;
         const actionClickAttr = shouldOpenInModal ? `data-modal-url="true" class="play-trigger-btn"` : `href="${video.url}" target="_blank"`;
         const actionLinkClickAttr = shouldOpenInModal ? `data-modal-url="true" class="card-action-link drive-trigger"` : `href="${video.url}" target="_blank" class="card-action-link"`;
+        
         const card = document.createElement('div');
         card.className = 'video-card';
+        
         let roleDisplay = video.role_type || 'Both';
         let roleBadgeClass = '';
         if (roleDisplay === 'Leader') {
@@ -55,7 +59,23 @@ export function renderVideoCards(videos, config) {
             roleDisplay = lang.both;
             roleBadgeClass = 'badge-both';
         }
+        
+        // 🔥 ÖĞRENME DURUMU BADGE
+        let learningStatus = video.learning_status || 'new';
+        let learningBadgeClass = '';
+        let learningText = '';
+        if (currentLang === 'tr') {
+            if (learningStatus === 'new') { learningText = '🆕 Yeni'; learningBadgeClass = 'badge-learning-new'; }
+            else if (learningStatus === 'learning') { learningText = '📚 Çalışıyorum'; learningBadgeClass = 'badge-learning-active'; }
+            else { learningText = '✅ Ustalaştım'; learningBadgeClass = 'badge-learning-mastered'; }
+        } else {
+            if (learningStatus === 'new') { learningText = '🆕 New'; learningBadgeClass = 'badge-learning-new'; }
+            else if (learningStatus === 'learning') { learningText = '📚 Learning'; learningBadgeClass = 'badge-learning-active'; }
+            else { learningText = '✅ Mastered'; learningBadgeClass = 'badge-learning-mastered'; }
+        }
+        
         const partnerDisplay = video.partner_name ? `<span class="card-partner">👥 ${video.partner_name}</span>` : '';
+        
         let tagsHtml = '';
         if (video.tags && video.tags.trim() !== '') {
             const tagsArray = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
@@ -66,6 +86,7 @@ export function renderVideoCards(videos, config) {
         } else {
             tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
         }
+        
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
         const coverImg = video.cover_url || defaultCover;
         const isFav = favs.includes(video.id);
@@ -77,6 +98,7 @@ export function renderVideoCards(videos, config) {
             </div>
         `;
         const platformBadgeHtml = `<span class="badge" style="background: rgba(0,240,255,0.15); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px;"><img src="${iconUrl}" style="width: 14px; height: 14px; object-fit: contain;" onerror="this.onerror=null; this.style.display='none'; this.nextSibling.style.display='inline';"> <span style="display: inline;">${platformLabel}</span></span>`;
+        
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image: url('${coverImg}');">
@@ -94,6 +116,8 @@ export function renderVideoCards(videos, config) {
                 <div class="card-badges">
                     <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
                     ${platformBadgeHtml}
+                    <!-- 🔥 ÖĞRENME DURUMU BADGE (tıklanabilir) -->
+                    <span class="badge learning-badge ${learningBadgeClass}" data-video-id="${video.id}" data-status="${learningStatus}" style="cursor: pointer;">${learningText}</span>
                 </div>
                 <div class="card-badges card-tags-wrapper-row" style="margin-top: 2px; gap: 4px; align-items:center;">${tagsHtml}</div>
                 ${noteHtml}
@@ -106,14 +130,20 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>
         `;
+        
+        // Favori yıldızı
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
+        
+        // Etiket düzenleme
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             openTagsEditModal(video);
         });
+        
+        // Düzenle ve sil
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             startVideoEditFlow(video);
@@ -122,6 +152,8 @@ export function renderVideoCards(videos, config) {
             e.stopPropagation();
             deleteVideoFlow(video.id);
         });
+        
+        // Not düzenleme
         const noteEditBtn = card.querySelector('.note-edit-btn');
         if (noteEditBtn) {
             noteEditBtn.addEventListener('click', (e) => {
@@ -131,6 +163,22 @@ export function renderVideoCards(videos, config) {
                 });
             });
         }
+        
+        // 🔥 ÖĞRENME DURUMU TIKLAMA (sırayla değiştir)
+        const learningBadge = card.querySelector('.learning-badge');
+        if (learningBadge) {
+            learningBadge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const currentStatus = learningBadge.dataset.status;
+                let nextStatus = '';
+                if (currentStatus === 'new') nextStatus = 'learning';
+                else if (currentStatus === 'learning') nextStatus = 'mastered';
+                else nextStatus = 'new';
+                updateLearningStatus(video.id, nextStatus);
+            });
+        }
+        
+        // Modal video açma
         if (shouldOpenInModal) {
             const triggers = card.querySelectorAll('[data-modal-url]');
             triggers.forEach(el => {
@@ -144,6 +192,7 @@ export function renderVideoCards(videos, config) {
                 });
             });
         }
+        
         videoGrid.appendChild(card);
     });
 }

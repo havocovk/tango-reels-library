@@ -1,4 +1,4 @@
-// db/videos.js - Video ile ilgili tüm veritabanı işlemleri (instructor_name dönüşü eklendi)
+// db/videos.js - Video ile ilgili tüm veritabanı işlemleri (öğrenme durumu eklendi)
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 import { fetchWithRetry } from '../utils.js';
 
@@ -57,22 +57,8 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         if (affectedRows === 0) {
             throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
         }
-        
         if (!res.ok) {
             throw new Error(`Veritabanı hatası (${res.status}): ${responseText}`);
-        }
-        
-        // Güncellenmiş videoyu instructor_name ile zenginleştir
-        if (updatedVideo && updatedVideo.instructor_id) {
-            const instructorRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${updatedVideo.instructor_id}&select=name`, {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
-            if (instructorRes.ok) {
-                const instructors = await instructorRes.json();
-                if (instructors && instructors[0]) {
-                    updatedVideo.instructor_name = instructors[0].name;
-                }
-            }
         }
         return updatedVideo;
     }
@@ -109,17 +95,6 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
             const json = JSON.parse(responseText);
             if (Array.isArray(json) && json.length > 0) updatedVideo = json[0];
         } catch(e) {}
-        if (updatedVideo && updatedVideo.instructor_id) {
-            const instructorRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${updatedVideo.instructor_id}&select=name`, {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
-            if (instructorRes.ok) {
-                const instructors = await instructorRes.json();
-                if (instructors && instructors[0]) {
-                    updatedVideo.instructor_name = instructors[0].name;
-                }
-            }
-        }
         return updatedVideo;
     } else {
         const insertRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos`, {
@@ -142,17 +117,6 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
             const json = JSON.parse(responseText);
             if (Array.isArray(json) && json.length > 0) newVideo = json[0];
         } catch(e) {}
-        if (newVideo && newVideo.instructor_id) {
-            const instructorRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${newVideo.instructor_id}&select=name`, {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
-            if (instructorRes.ok) {
-                const instructors = await instructorRes.json();
-                if (instructors && instructors[0]) {
-                    newVideo.instructor_name = instructors[0].name;
-                }
-            }
-        }
         return newVideo;
     }
 }
@@ -188,17 +152,6 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
     if (!res.ok) {
         throw new Error(`Etiket güncellenemedi: ${responseText}`);
     }
-    if (updatedVideo && updatedVideo.instructor_id) {
-        const instructorRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${updatedVideo.instructor_id}&select=name`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        if (instructorRes.ok) {
-            const instructors = await instructorRes.json();
-            if (instructors && instructors[0]) {
-                updatedVideo.instructor_name = instructors[0].name;
-            }
-        }
-    }
     return updatedVideo;
 }
 
@@ -233,16 +186,46 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     if (!res.ok) {
         throw new Error(`Not kaydedilemedi: ${responseText}`);
     }
-    if (updatedVideo && updatedVideo.instructor_id) {
-        const instructorRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${updatedVideo.instructor_id}&select=name`, {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-        if (instructorRes.ok) {
-            const instructors = await instructorRes.json();
-            if (instructors && instructors[0]) {
-                updatedVideo.instructor_name = instructors[0].name;
-            }
+    return updatedVideo;
+}
+
+// 🔥 YENİ: Öğrenme durumu güncelleme
+export async function dbUpdateLearningStatus(videoId, status, old_updated_at = null) {
+    let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
+    if (old_updated_at) {
+        url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
+    }
+    const now = new Date().toISOString();
+    // review_count'u artır sadece 'learning' ve 'mastered' durumlarında (isteğe bağlı)
+    const res = await fetchWithRetry(url, {
+        method: 'PATCH',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+            learning_status: status,
+            last_reviewed_at: now,
+            review_count: status === 'mastered' ? 0 : 1 // basit mantık, isterseniz review_count artırma
+        })
+    });
+    const responseText = await res.text();
+    let affectedRows = 0;
+    let updatedVideo = null;
+    try {
+        const json = JSON.parse(responseText);
+        if (Array.isArray(json)) {
+            affectedRows = json.length;
+            if (json.length > 0) updatedVideo = json[0];
         }
+    } catch(e) {}
+    if (affectedRows === 0) {
+        throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
+    }
+    if (!res.ok) {
+        throw new Error(`Öğrenme durumu güncellenemedi: ${responseText}`);
     }
     return updatedVideo;
 }

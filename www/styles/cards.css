@@ -224,3 +224,29 @@
         max-width: 100% !important;
     }
 }
+
+/* Öğrenme durumu badge stilleri */
+.badge-learning-new {
+    background: rgba(0, 240, 255, 0.15);
+    color: #00f0ff;
+    border: 1px solid rgba(0, 240, 255, 0.3);
+}
+.badge-learning-active {
+    background: rgba(255, 0, 127, 0.15);
+    color: #ff007f;
+    border: 1px solid rgba(255, 0, 127, 0.3);
+}
+.badge-learning-mastered {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.learning-badge {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.learning-badge:hover {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+}
+

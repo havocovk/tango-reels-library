@@ -1,4 +1,4 @@
-// tangoFilters.js - YENİ HALİ (platform ve not araması eklendi)
+// tangoFilters.js - Filtreleme (öğrenme durumu eklendi)
 import { translations } from './i18n.js';
 
 function formatAyYil(tarihString, lang) {
@@ -14,6 +14,7 @@ export function populateFilterDropdowns(videolar, currentLang) {
     const tagSelect = document.getElementById('filter-tag-select');
     const dateSelect = document.getElementById('filter-date-select');
     const platformSelect = document.getElementById('filter-platform-select');
+    const learningStatusSelect = document.getElementById('filter-learning-status-select');
 
     if (!instructorSelect || !tagSelect || !dateSelect) return;
 
@@ -21,10 +22,17 @@ export function populateFilterDropdowns(videolar, currentLang) {
     const oldTag = tagSelect.value;
     const oldDate = dateSelect.value;
     const oldPlatform = platformSelect ? platformSelect.value : 'all';
+    const oldLearningStatus = learningStatusSelect ? learningStatusSelect.value : 'all';
 
     instructorSelect.innerHTML = `<option value="all">${lang.allInstructors}</option>`;
     tagSelect.innerHTML = `<option value="all">${lang.allTags}</option>`;
     dateSelect.innerHTML = `<option value="all">${lang.allDates}</option>`;
+    if (learningStatusSelect) {
+        learningStatusSelect.innerHTML = `<option value="all">${lang.allLearningStatuses || 'Tümü'}</option>`;
+        learningStatusSelect.innerHTML += `<option value="new">🆕 ${lang.learningNew || 'Yeni'}</option>`;
+        learningStatusSelect.innerHTML += `<option value="learning">📚 ${lang.learningActive || 'Çalışıyorum'}</option>`;
+        learningStatusSelect.innerHTML += `<option value="mastered">✅ ${lang.learningMastered || 'Ustalaştım'}</option>`;
+    }
 
     const instructorCountMap = new Map();
     videolar.forEach(video => {
@@ -96,19 +104,18 @@ export function populateFilterDropdowns(videolar, currentLang) {
         dateSelect.value = oldDate;
     if (platformSelect && Array.from(platformSelect.options).some(opt => opt.value === oldPlatform))
         platformSelect.value = oldPlatform;
+    if (learningStatusSelect && Array.from(learningStatusSelect.options).some(opt => opt.value === oldLearningStatus))
+        learningStatusSelect.value = oldLearningStatus;
 }
 
 export function getFilteredVideos(videolar, filtreler, currentLang) {
-    const { aramaMetni, rol, egitmen, etiket, tarih, platform } = filtreler;
+    const { aramaMetni, rol, egitmen, etiket, tarih, platform, learningStatus } = filtreler;
     return videolar.filter(video => {
-        // 1. Arama metni kontrolü (genişletilmiş)
         if (aramaMetni) {
             const aranacakKelime = aramaMetni.toLowerCase().trim();
             const egitmenUyuyor = video.instructor_name?.toLowerCase().includes(aranacakKelime) || false;
             const partnerUyuyor = video.partner_name?.toLowerCase().includes(aranacakKelime) || false;
             const etiketUyuyor = video.tags?.toLowerCase().includes(aranacakKelime) || false;
-            
-            // Platform araması (örnek: "youtube" yazınca youtube videoları)
             let platformUyuyor = false;
             if (video.platform) {
                 const platformLabel = (currentLang === 'tr' 
@@ -116,14 +123,9 @@ export function getFilteredVideos(videolar, filtreler, currentLang) {
                     : video.platform);
                 platformUyuyor = platformLabel?.toLowerCase().includes(aranacakKelime) || false;
             }
-            
-            // Notlar (notes) içinde arama
             const notlarUyuyor = video.notes?.toLowerCase().includes(aranacakKelime) || false;
-            
             if (!egitmenUyuyor && !partnerUyuyor && !etiketUyuyor && !platformUyuyor && !notlarUyuyor) return false;
         }
-        
-        // 2. Diğer filtreler (rol, eğitmen, etiket, tarih, platform)
         if (rol !== 'all' && video.role_type !== rol) return false;
         if (egitmen !== 'all' && video.instructor_name !== egitmen) return false;
         if (etiket !== 'all') {
@@ -136,7 +138,7 @@ export function getFilteredVideos(videolar, filtreler, currentLang) {
             if (formatliTarih !== tarih) return false;
         }
         if (platform !== 'all' && video.platform !== platform) return false;
-        
+        if (learningStatus && learningStatus !== 'all' && video.learning_status !== learningStatus) return false;
         return true;
     });
 }

@@ -100,5 +100,10 @@ export const en = {
     roleBoth: "Couple",
     resetCoverBtn: "🗑️ Reset Image",
     searchBtn: "🔍 Search",
-    selectFile: "📁 Select File"
+    selectFile: "📁 Select File",
+    // Learning status
+    allLearningStatuses: "All Learning Statuses",
+    learningNew: "🆕 New",
+    learningActive: "📚 Learning",
+    learningMastered: "✅ Mastered"
 };
