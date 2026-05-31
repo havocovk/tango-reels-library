@@ -1,4 +1,4 @@
-// store.js - Merkezi state yönetimi (Observer pattern) + yerel güncelleme metodları
+// store.js - Merkezi state yönetimi + yerel güncelleme metodları (tam kod)
 class Store {
   constructor(initialState = {}) {
     this.state = { ...initialState };
@@ -52,14 +52,14 @@ class Store {
     }
   }
 
-  // Yerel güncelleme metodları
+  // ========= YEREL GÜNCELLEME METODLARI =========
   updateVideoLocally(videoId, updates) {
     const videos = this.get('globalVideos');
     const index = videos.findIndex(v => v.id === videoId);
     if (index !== -1) {
       const updatedVideo = { ...videos[index], ...updates };
       videos[index] = updatedVideo;
-      this.set('globalVideos', [...videos]); // yeni referans
+      this.set('globalVideos', [...videos]);
       return updatedVideo;
     }
     return null;
@@ -74,6 +74,22 @@ class Store {
   addVideoLocally(video) {
     const videos = this.get('globalVideos');
     this.set('globalVideos', [video, ...videos]);
+  }
+
+  // Toplu video güncelleme (örneğin etiket toplu silme/birleştirme sonrası)
+  bulkUpdateVideos(updatesArray) {
+    let videos = this.get('globalVideos');
+    let changed = false;
+    for (const { id, updates } of updatesArray) {
+      const index = videos.findIndex(v => v.id === id);
+      if (index !== -1) {
+        videos[index] = { ...videos[index], ...updates };
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.set('globalVideos', [...videos]);
+    }
   }
 
   updateFavoriteLocally(videoId, isFavorite) {
@@ -103,7 +119,4 @@ const initialState = {
 };
 
 export const store = new Store(initialState);
-
-if (typeof window !== 'undefined') {
-  window.__store = store;
-}
+if (typeof window !== 'undefined') window.__store = store;

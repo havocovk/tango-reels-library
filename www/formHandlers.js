@@ -1,4 +1,4 @@
-// formHandlers.js - 7. adım (editingVideoId store'da)
+// formHandlers.js - Video ekleme/düzenleme (yerel güncellemeli)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -93,7 +93,47 @@ export async function handleFormSubmit(e) {
     };
     
     try {
-        await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
+        const response = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
+        
+        // 🔥 YENİ KAYIT VEYA GÜNCELLEME SONRASI YEREL STATE GÜNCELLEME
+        if (editingVideoId) {
+            // Güncelleme: response'dan güncellenmiş videoyu al (return=representation ile)
+            let updatedVideo = null;
+            try {
+                const responseText = await response.text();
+                const json = JSON.parse(responseText);
+                if (Array.isArray(json) && json.length > 0) updatedVideo = json[0];
+            } catch(e) { console.warn("JSON parse hatası", e); }
+            
+            if (updatedVideo) {
+                // Eğitmen adını da ekle (store'dan al)
+                const instructors = store.get('globalInstructors');
+                const instructor = instructors.find(i => i.id === updatedVideo.instructor_id);
+                updatedVideo.instructor_name = instructor ? instructor.name : 'Bilinmeyen Eğitmen';
+                store.updateVideoLocally(editingVideoId, updatedVideo);
+            } else {
+                // Fallback: yeniden çekme (nadir durum)
+                if (fetchVideosCallback) await fetchVideosCallback();
+            }
+        } else {
+            // Yeni video: response'dan eklenen videoyu al
+            let newVideo = null;
+            try {
+                const responseText = await response.text();
+                const json = JSON.parse(responseText);
+                if (Array.isArray(json) && json.length > 0) newVideo = json[0];
+            } catch(e) { console.warn("JSON parse hatası", e); }
+            
+            if (newVideo) {
+                const instructors = store.get('globalInstructors');
+                const instructor = instructors.find(i => i.id === newVideo.instructor_id);
+                newVideo.instructor_name = instructor ? instructor.name : 'Bilinmeyen Eğitmen';
+                store.addVideoLocally(newVideo);
+            } else {
+                if (fetchVideosCallback) await fetchVideosCallback();
+            }
+        }
+        
         await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
         store.set('editingVideoId', null);
         editingVideoUpdatedAt = null;
@@ -105,7 +145,7 @@ export async function handleFormSubmit(e) {
         document.getElementById('drive-url-container').classList.add('d-none');
         resetUploadedCoverUrl();
         if (callSwitchViewCallback) callSwitchViewCallback('library');
-        if (fetchVideosCallback) await fetchVideosCallback();
+        // fetchVideosCallback çağrılmıyor, UI zaten güncel
     } catch (err) {
         let hataMesaji = err.message;
         if (hataMesaji.includes('ÇAKIŞMA')) {

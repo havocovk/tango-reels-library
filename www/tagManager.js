@@ -1,7 +1,9 @@
+// tagManager.js - Toplu etiket işlemleri (yerel güncellemeli)
 import { translations } from './i18n.js';
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, showModernPrompt } from './utils.js';
+import { store } from './store.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -30,6 +32,102 @@ export function updateTagManagerSelection() {
     }
 }
 
+// Yardımcı: Tüm videolardan belirli etiketleri kaldır (yerel)
+function removeTagsFromAllVideosLocally(tagsArray) {
+    let videos = store.get('globalVideos');
+    let changed = false;
+    const updatedVideos = videos.map(video => {
+        if (!video.tags) return video;
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        let originalLength = tags.length;
+        tags = tags.filter(t => !tagsArray.includes(t));
+        if (tags.length !== originalLength) {
+            changed = true;
+            return { ...video, tags: tags.join(', ') || null };
+        }
+        return video;
+    });
+    if (changed) {
+        store.set('globalVideos', updatedVideos);
+    }
+    return changed;
+}
+
+// Yardımcı: Tüm videolarda bir etiketi yeniden adlandır (yerel)
+function renameTagInAllVideosLocally(oldTag, newTag) {
+    let videos = store.get('globalVideos');
+    let changed = false;
+    const updatedVideos = videos.map(video => {
+        if (!video.tags) return video;
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        if (tags.includes(oldTag)) {
+            changed = true;
+            tags = tags.map(t => t === oldTag ? newTag : t);
+            return { ...video, tags: tags.join(', ') };
+        }
+        return video;
+    });
+    if (changed) {
+        store.set('globalVideos', updatedVideos);
+    }
+    return changed;
+}
+
+// Yardımcı: Birden fazla etiketi yeni bir etikette birleştir (yerel)
+function mergeTagsInAllVideosLocally(oldTagsArray, newTag) {
+    let videos = store.get('globalVideos');
+    let changed = false;
+    const updatedVideos = videos.map(video => {
+        if (!video.tags) return video;
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        let originalLength = tags.length;
+        let hadAny = false;
+        for (const old of oldTagsArray) {
+            if (tags.includes(old)) {
+                tags = tags.filter(t => t !== old);
+                hadAny = true;
+            }
+        }
+        if (hadAny && !tags.includes(newTag)) {
+            tags.push(newTag);
+            changed = true;
+        } else if (hadAny) {
+            changed = true;
+        }
+        if (changed && originalLength !== tags.length) {
+            return { ...video, tags: tags.join(', ') || null };
+        }
+        return video;
+    });
+    if (changed) {
+        store.set('globalVideos', updatedVideos);
+    }
+    return changed;
+}
+
+// Yardımcı: Kullanılmayan etiketleri temizle (yerel) - bu işlem aslında videolardan kullanılmayan etiketleri kaldırmaz, sadece tekrar edenleri temizler. dbCleanupUnusedTags aslında tekrar eden etiketleri temizliyor. Onu da yerel yapalım.
+function cleanupUnusedTagsLocally() {
+    let videos = store.get('globalVideos');
+    let changed = false;
+    let removedCount = 0;
+    const updatedVideos = videos.map(video => {
+        if (!video.tags) return video;
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        const uniqueTags = [...new Set(tags)];
+        if (uniqueTags.length !== tags.length) {
+            changed = true;
+            removedCount += (tags.length - uniqueTags.length);
+            return { ...video, tags: uniqueTags.join(', ') };
+        }
+        return video;
+    });
+    if (changed) {
+        store.set('globalVideos', updatedVideos);
+    }
+    return { removedCount };
+}
+
+// Yeniden adlandırma (modern prompt ile)
 export async function promptRenameTagModern(oldTag) {
     const title = currentLang === 'tr' ? `"${oldTag}" etiketini yeni adıyla değiştir:` : `Rename "${oldTag}" to:`;
     const placeholder = currentLang === 'tr' ? 'Yeni etiket adı' : 'New tag name';
@@ -39,11 +137,12 @@ export async function promptRenameTagModern(oldTag) {
     showLoading(true);
     try {
         await dbRenameTag(oldTag, newTag);
-        if (fetchVideosCallback) await fetchVideosCallback();
+        // Yerel güncelleme
+        renameTagInAllVideosLocally(oldTag, newTag);
+        if (renderTagManagerUICallback) renderTagManagerUICallback();
         showLoading(false);
         const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `"${oldTag}" → "${newTag}" olarak değiştirildi.` : `"${oldTag}" → "${newTag}" renamed.`, okText);
-        if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
         showLoading(false);
         const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
@@ -51,6 +150,7 @@ export async function promptRenameTagModern(oldTag) {
     }
 }
 
+// Tek bir etiketi sil
 export async function deleteSingleTag(tag) {
     const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
     const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
@@ -58,11 +158,11 @@ export async function deleteSingleTag(tag) {
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos([tag]);
-        if (fetchVideosCallback) await fetchVideosCallback();
+        removeTagsFromAllVideosLocally([tag]);
+        if (renderTagManagerUICallback) renderTagManagerUICallback();
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`, alertOk);
-        if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
@@ -70,6 +170,7 @@ export async function deleteSingleTag(tag) {
     }
 }
 
+// Seçili etiketleri sil
 export async function deleteSelectedTags() {
     if (selectedTagsForMerge.length === 0) return;
     const deleteCount = selectedTagsForMerge.length;
@@ -80,7 +181,8 @@ export async function deleteSelectedTags() {
     showLoading(true);
     try {
         await dbDeleteTagFromAllVideos(selectedTagsForMerge);
-        if (fetchVideosCallback) await fetchVideosCallback();
+        removeTagsFromAllVideosLocally(selectedTagsForMerge);
+        if (renderTagManagerUICallback) renderTagManagerUICallback();
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`, alertOk);
@@ -91,6 +193,7 @@ export async function deleteSelectedTags() {
     }
 }
 
+// Seçili etiketleri birleştir
 export async function mergeSelectedTags() {
     if (selectedTagsForMerge.length < 2) return;
     const newTagName = document.getElementById('tag-merge-new-name').value.trim();
@@ -108,12 +211,12 @@ export async function mergeSelectedTags() {
     showLoading(true);
     try {
         await dbMergeTags(selectedTagsForMerge, newTagName);
-        if (fetchVideosCallback) await fetchVideosCallback();
+        mergeTagsInAllVideosLocally(selectedTagsForMerge, newTagName);
+        if (renderTagManagerUICallback) renderTagManagerUICallback();
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(currentLang === 'tr' ? `${mergeCount} etiket birleştirildi → ${newTagName}` : `${mergeCount} tags merged → ${newTagName}`, alertOk);
         document.getElementById('tag-merge-new-name').value = '';
-        if (renderTagManagerUICallback) renderTagManagerUICallback();
     } catch (err) {
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
@@ -121,6 +224,7 @@ export async function mergeSelectedTags() {
     }
 }
 
+// Kullanılmayan etiketleri temizle (tekrarları gider)
 export async function cleanupUnusedTags() {
     const okText = currentLang === 'tr' ? 'Evet' : 'Yes';
     const cancelText = currentLang === 'tr' ? 'Hayır' : 'No';
@@ -129,17 +233,14 @@ export async function cleanupUnusedTags() {
     showLoading(true);
     try {
         const result = await dbCleanupUnusedTags();
-        if (fetchVideosCallback) await fetchVideosCallback();
+        const localResult = cleanupUnusedTagsLocally();
+        if (renderTagManagerUICallback) renderTagManagerUICallback();
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
-        await showCustomAlert(currentLang === 'tr' ? `${result.removedCount} kullanılmayan etiket temizlendi.` : `${result.removedCount} unused tag(s) removed.`, alertOk);
-        if (renderTagManagerUICallback) renderTagManagerUICallback();
+        await showCustomAlert(currentLang === 'tr' ? `${localResult.removedCount} kullanılmayan etiket temizlendi.` : `${localResult.removedCount} unused tag(s) removed.`, alertOk);
     } catch (err) {
         showLoading(false);
         const alertOk = currentLang === 'tr' ? 'Tamam' : 'OK';
         await showCustomAlert(`Hata: ${err.message}`, alertOk);
     }
 }
-
-// renderTagManagerUI artık burada değil, app.js içinde kalacak çünkü globalVideos'a doğrudan erişiyor ve UI oluşturuyor.
-// Ama yine de app.js'den çağrılacağı için bir referans yeterli. O yüzden ayrıca export etmiyoruz.
