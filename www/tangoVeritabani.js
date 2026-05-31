@@ -9,7 +9,7 @@ import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags
 
 // Aynı isimlerle dışa aktar (eski kodlar hiç değişmeden çalışmaya devam eder)
 export { 
-    dbFetchVideos, dbDeleteVideo, dbSaveVideo, dbUpdateTagsDirectly, dbUpdateNote,
+    dbFetchVideos, dbDeleteVideo, dbSaveVideo, dbUpdateTagsDirectly, dbUpdateNote, dbUpdateLearningStatus,
     dbFetchInstructors, dbSaveInstructor, dbDeleteInstructor,
     dbFetchFavorites, dbAddFavorite, dbRemoveFavorite, dbClearAllFavorites,
     dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags
