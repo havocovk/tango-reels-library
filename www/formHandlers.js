@@ -93,34 +93,22 @@ export async function handleFormSubmit(e) {
     };
     
     try {
-        const response = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
-        
-        // 🔥 DÜZELTME: Response'u güvenli bir şekilde işle
-        let updatedData = null;
-        if (response && typeof response.json === 'function') {
-            try {
-                updatedData = await response.json();
-            } catch (jsonErr) {
-                console.warn('JSON parse hatası:', jsonErr);
-            }
-        } else if (response && typeof response === 'object') {
-            // Eğer response zaten bir nesne ise (örneğin direkt video objesi)
-            updatedData = response;
-        }
+        // dbSaveVideo artık doğrudan güncellenmiş video nesnesini döndürüyor
+        const updatedVideo = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         
         if (editingVideoId) {
-            // Video güncellendi
-            let videoUpdate = null;
-            if (updatedData && Array.isArray(updatedData) && updatedData[0]) {
-                videoUpdate = updatedData[0];
-            } else if (updatedData && typeof updatedData === 'object' && updatedData.id) {
-                videoUpdate = updatedData;
-            }
-            
-            if (videoUpdate) {
-                store.updateVideoLocally(editingVideoId, videoUpdate);
+            // Video güncellendi: mevcut videoyu güncelle
+            if (updatedVideo) {
+                // instructor_name'i de ekleyelim (store'daki videolarda instructor_name var)
+                const instructor = store.get('globalInstructors').find(i => i.id === updatedVideo.instructor_id);
+                updatedVideo.instructor_name = instructor?.name || 'Bilinmeyen';
+                store.updateVideoLocally(editingVideoId, updatedVideo);
+                // editingVideoUpdatedAt'ı yeni değerle güncelle (çakışma önleme)
+                if (updatedVideo.updated_at) {
+                    editingVideoUpdatedAt = updatedVideo.updated_at;
+                }
             } else {
-                // Fallback: manuel güncelleme
+                // Fallback: payload ile güncelle
                 const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
                 store.updateVideoLocally(editingVideoId, {
                     ...payload,
@@ -130,20 +118,21 @@ export async function handleFormSubmit(e) {
             }
         } else {
             // Yeni video eklendi
-            let newVideo = null;
-            if (updatedData && Array.isArray(updatedData) && updatedData[0]) {
-                newVideo = updatedData[0];
-            } else if (updatedData && typeof updatedData === 'object' && updatedData.id) {
-                newVideo = updatedData;
-            }
-            
-            if (newVideo) {
-                const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
-                newVideo.instructor_name = instructor?.name || 'Bilinmeyen';
-                store.addVideoLocally(newVideo);
+            if (updatedVideo) {
+                const instructor = store.get('globalInstructors').find(i => i.id === updatedVideo.instructor_id);
+                updatedVideo.instructor_name = instructor?.name || 'Bilinmeyen';
+                store.addVideoLocally(updatedVideo);
             } else {
-                // Fallback: eğer veri gelmezse, sayfayı yenilemek daha güvenli
-                if (fetchVideosCallback) await fetchVideosCallback();
+                // Fallback
+                const instructor = store.get('globalInstructors').find(i => i.id === instructor_id);
+                const newVideo = {
+                    id: Date.now(),
+                    ...payload,
+                    instructor_name: instructor?.name || 'Bilinmeyen',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                store.addVideoLocally(newVideo);
             }
         }
         
@@ -153,19 +142,23 @@ export async function handleFormSubmit(e) {
         setFormTagsArray([]);
         renderFormChips();
         document.getElementById('add-video-form').reset();
-        document.getElementById('image-preview').classList.add('d-none');
+        const imgPreview = document.getElementById('image-preview');
+        if (imgPreview) imgPreview.classList.add('d-none');
         const dropAreaText = document.getElementById('drop-area-text');
         if (dropAreaText) dropAreaText.innerText = lang.dropText;
-        document.getElementById('drive-url-container')?.classList.add('d-none');
+        const driveUrlContainer = document.getElementById('drive-url-container');
+        if (driveUrlContainer) driveUrlContainer.classList.add('d-none');
         resetUploadedCoverUrl();
         if (callSwitchViewCallback) callSwitchViewCallback('library');
-        // fetchVideosCallback çağrılmıyor (optimizasyon)
+        // 🔥 fetchVideosCallback çağrılmıyor!
     } catch (err) {
         let hataMesaji = err.message;
         if (hataMesaji.includes('ÇAKIŞMA')) {
             await showCustomAlert(hataMesaji, okText);
+            // Çakışma durumunda verileri yenilemek güvenli olur (kullanıcıya sayfa yenileme önerisi)
             if (callSwitchViewCallback) callSwitchViewCallback('library');
             if (fetchVideosCallback) await fetchVideosCallback();
+            location.reload(); // En temizi
         } else {
             let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
             await showCustomAlert(hata, okText);

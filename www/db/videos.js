@@ -1,4 +1,4 @@
-// db/videos.js - Video ile ilgili tüm veritabanı işlemleri
+// db/videos.js - Video ile ilgili tüm veritabanı işlemleri (düzeltilmiş)
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 import { fetchWithRetry } from '../utils.js';
 
@@ -45,9 +45,13 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         
         const responseText = await res.text();
         let affectedRows = 0;
+        let updatedVideo = null;
         try {
             const json = JSON.parse(responseText);
-            if (Array.isArray(json)) affectedRows = json.length;
+            if (Array.isArray(json)) {
+                affectedRows = json.length;
+                if (json.length > 0) updatedVideo = json[0];
+            }
         } catch(e) {}
         
         if (affectedRows === 0) {
@@ -57,7 +61,9 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         if (!res.ok) {
             throw new Error(`Veritabanı hatası (${res.status}): ${responseText}`);
         }
-        return res;
+        
+        // ✅ Düzeltme: Güncellenmiş video nesnesini döndür
+        return updatedVideo;
     }
 
     // Yeni ekleme
@@ -86,23 +92,35 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
             let errorText = await updateRes.text();
             throw new Error(`Güncelleme hatası (${updateRes.status}): ${errorText}`);
         }
-        return updateRes;
+        const responseText = await updateRes.text();
+        let updatedVideo = null;
+        try {
+            const json = JSON.parse(responseText);
+            if (Array.isArray(json) && json.length > 0) updatedVideo = json[0];
+        } catch(e) {}
+        return updatedVideo;
     } else {
         const insertRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos`, {
             method: 'POST',
             headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
             },
             body: JSON.stringify(fixedPayload)
         });
         if (!insertRes.ok) {
             let errorText = await insertRes.text();
-            // 📌 Hata mesajını detaylı göster
             throw new Error(`Ekleme hatası (${insertRes.status}): ${errorText}`);
         }
-        return insertRes;
+        const responseText = await insertRes.text();
+        let newVideo = null;
+        try {
+            const json = JSON.parse(responseText);
+            if (Array.isArray(json) && json.length > 0) newVideo = json[0];
+        } catch(e) {}
+        return newVideo;
     }
 }
 
@@ -151,7 +169,7 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
             'Content-Type': 'application/json',
-            'Prefer': 'return=representation'   // önemli
+            'Prefer': 'return=representation'
         },
         body: JSON.stringify({ notes: note || null })
     });
@@ -162,7 +180,7 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
         const json = JSON.parse(responseText);
         if (Array.isArray(json)) {
             affectedRows = json.length;
-            if (json.length > 0) updatedVideo = json[0];   // güncellenmiş video
+            if (json.length > 0) updatedVideo = json[0];
         }
     } catch(e) {}
     if (affectedRows === 0) {
@@ -171,5 +189,5 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     if (!res.ok) {
         throw new Error(`Not kaydedilemedi: ${responseText}`);
     }
-    return updatedVideo;   // ✅ güncellenmiş videoyu döndür
+    return updatedVideo;
 }
