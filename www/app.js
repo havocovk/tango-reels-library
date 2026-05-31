@@ -204,6 +204,9 @@ async function initializeApp() {
     if (dateFilter) dateFilter.onchange = () => applyFiltersAndSearch();
     const platformFilter = document.getElementById('filter-platform-select');
     if (platformFilter) platformFilter.onchange = () => applyFiltersAndSearch();
+    // 🔥 YENİ ÖĞRENME DURUMU FİLTRESİ
+    const learningStatusFilter = document.getElementById('filter-learning-status-select');
+    if (learningStatusFilter) learningStatusFilter.onchange = () => applyFiltersAndSearch();
 
     // Load more butonu (yedek)
     const loadMoreBtn = document.getElementById('btn-load-more');

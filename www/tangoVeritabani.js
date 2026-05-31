@@ -1,18 +1,44 @@
-// tangoVeritabani.js - YENİ: Sadece re-export (modüler hale getirildi)
+// tangoVeritabani.js - Tüm veritabanı fonksiyonlarının merkezi export noktası
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
-// Veritabanı modüllerinden fonksiyonları içe aktar
-import { dbFetchVideos, dbDeleteVideo, dbSaveVideo, dbUpdateTagsDirectly, dbUpdateNote } from './db/videos.js';
+// videos
+import { 
+    dbFetchVideos, 
+    dbDeleteVideo, 
+    dbSaveVideo, 
+    dbUpdateTagsDirectly, 
+    dbUpdateNote,
+    dbUpdateLearningStatus   // 🔥 YENİ: eklendi
+} from './db/videos.js';
+
+// instructors
 import { dbFetchInstructors, dbSaveInstructor, dbDeleteInstructor } from './db/instructors.js';
+
+// favorites
 import { dbFetchFavorites, dbAddFavorite, dbRemoveFavorite, dbClearAllFavorites } from './db/favorites.js';
+
+// tags (toplu işlemler)
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './db/tags.js';
 
-// Aynı isimlerle dışa aktar (eski kodlar hiç değişmeden çalışmaya devam eder)
+// Tüm fonksiyonları dışa aktar
 export { 
-    dbFetchVideos, dbDeleteVideo, dbSaveVideo, dbUpdateTagsDirectly, dbUpdateNote, dbUpdateLearningStatus,
-    dbFetchInstructors, dbSaveInstructor, dbDeleteInstructor,
-    dbFetchFavorites, dbAddFavorite, dbRemoveFavorite, dbClearAllFavorites,
-    dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags
+    dbFetchVideos, 
+    dbDeleteVideo, 
+    dbSaveVideo, 
+    dbUpdateTagsDirectly, 
+    dbUpdateNote,
+    dbUpdateLearningStatus,   // 🔥 YENİ
+    dbFetchInstructors, 
+    dbSaveInstructor, 
+    dbDeleteInstructor,
+    dbFetchFavorites, 
+    dbAddFavorite, 
+    dbRemoveFavorite, 
+    dbClearAllFavorites,
+    dbMergeTags, 
+    dbDeleteTagFromAllVideos, 
+    dbRenameTag, 
+    dbCleanupUnusedTags
 };
 
 // Yardımcı fonksiyon (bağımlılığı yok, burada kalsın)
