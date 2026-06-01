@@ -335,3 +335,153 @@
     margin-top: 2px;
     line-height: 1.2;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 7.2 — Liste Görünümü
+   ═══════════════════════════════════════════════════════════ */
+
+/* Toggle butonu */
+.btn-view-toggle {
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: #00f0ff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-view-toggle:hover {
+    background: rgba(0, 240, 255, 0.18);
+    border-color: rgba(0, 240, 255, 0.6);
+    transform: translateY(-1px);
+}
+
+/* Video grid liste modunda flex sütununa dönüşür */
+.video-grid.video-list-mode {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    grid-template-columns: unset !important;
+}
+
+/* Tek bir liste satırı */
+.video-list-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(11, 8, 19, 0.5);
+    border: 1px solid rgba(255, 0, 127, 0.12);
+    border-radius: 12px;
+    padding: 8px 12px;
+    transition: all 0.2s ease;
+}
+
+.video-list-row:hover {
+    background: rgba(11, 8, 19, 0.8);
+    border-color: rgba(255, 0, 127, 0.3);
+    transform: translateX(3px);
+}
+
+/* Küçük thumbnail */
+.vl-thumb {
+    width: 68px;
+    height: 46px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Eğitmen + etiket bilgisi */
+.vl-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vl-instructor {
+    font-size: 0.85rem;
+    color: #ff007f;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vl-partner {
+    color: #94a3b8;
+    font-weight: 400;
+    font-size: 0.75rem;
+}
+
+.vl-tags {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 3px;
+    overflow: hidden;
+}
+
+.vl-tag {
+    font-size: 0.6rem;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    padding: 1px 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Badge alanı */
+.vl-badges {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Aksiyon butonları */
+.vl-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.vl-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.vl-fav-btn.active { color: #fbbf24; border-color: rgba(251, 191, 36, 0.3); }
+.vl-fav-btn:hover  { color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); background: rgba(251,191,36,0.07); }
+.vl-watch-btn:hover  { color: #00f0ff; border-color: rgba(0,240,255,0.4); background: rgba(0,240,255,0.07); }
+.vl-edit-btn:hover   { color: #ff007f; border-color: rgba(255,0,127,0.4); background: rgba(255,0,127,0.07); }
+.vl-delete-btn:hover { color: #ef4444; border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.07); }
+
+/* Mobilde badge alanı gizlenir — yer yok */
+@media screen and (max-width: 768px) {
+    .vl-badges { display: none; }
+    .vl-thumb { width: 54px; height: 38px; }
+    .vl-instructor { font-size: 0.78rem; }
+}

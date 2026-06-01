@@ -214,3 +214,23 @@ export function setupInfiniteScroll() {
         setTimeout(() => setupInfiniteScroll(), 500);
     }
 }
+
+// ✅ YENİ (Adım 7.2): Grid/Liste görünüm geçişi
+// Toggle butonuna basılınca çağrılır. Modu değiştirir ve yeniden render eder.
+export function toggleViewMode() {
+    const current = store.get('viewMode');
+    const next = current === 'grid' ? 'list' : 'grid';
+    store.set('viewMode', next);
+
+    // Toggle butonunun metnini güncelle
+    const btn = document.getElementById('btn-view-toggle');
+    if (btn) {
+        const lang = store.get('currentLang');
+        // "Şu an listede → butona basınca grid'e dön" mantığı
+        btn.textContent = next === 'list'
+            ? (lang === 'tr' ? '⊞ Grid' : '⊞ Grid')
+            : (lang === 'tr' ? '☰ Liste' : '☰ List');
+    }
+
+    applyFiltersAndSearch();
+}

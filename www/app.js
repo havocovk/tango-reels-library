@@ -12,7 +12,8 @@ import { setupAutocomplete } from './uiRenderer.js';
 import { renderFormChips } from './formHandlers.js';
 import {
     initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount,
-    incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData, setupInfiniteScroll
+    incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData, setupInfiniteScroll,
+    toggleViewMode
 } from './videoHandlers.js';
 import {
     initInstructorHandlers, handleInstructorSubmit, deleteInstructor,
@@ -209,6 +210,8 @@ async function initializeApp() {
     document.getElementById('bn-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
     document.getElementById('bn-add')?.addEventListener('click', () => { callSwitchView('add'); syncBottomNavActiveState('add'); });
     document.getElementById('bn-tags')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
+    // ✅ YENİ (Adım 7.2): Grid/Liste toggle butonu
+    document.getElementById('btn-view-toggle')?.addEventListener('click', toggleViewMode);
 }
 
 // ── Adım 7.1: Bottom nav aktif durumunu senkronize et ────────

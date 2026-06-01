@@ -1,6 +1,7 @@
 // store.js - Merkezi state yönetimi
 // ✅ GÜNCELLEME (Adım 2.2): dueTodayCount eklendi
 // ✅ GÜNCELLEME (Adım 2.4): globalPlaylists, activePlaylistId, activePlaylistVideoIds eklendi
+// ✅ GÜNCELLEME (Adım 7.2): viewMode eklendi
 class Store {
   constructor(initialState = {}) {
     this.state = { ...initialState };
@@ -99,7 +100,8 @@ const initialState = {
   dueTodayCount: 0,
   globalPlaylists: [],
   activePlaylistId: null,
-  activePlaylistVideoIds: []
+  activePlaylistVideoIds: [],
+  viewMode: 'grid'   // ✅ YENİ (Adım 7.2): 'grid' veya 'list'
 };
 
 export const store = new Store(initialState);

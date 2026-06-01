@@ -1,12 +1,12 @@
 // ui/videoCardRenderer.js
 // ✅ GÜNCELLEME (Adım 2.4): Her karta 📋 playlist butonu eklendi.
 // ✅ GÜNCELLEME (Adım 3.2): Benzer kombinasyonlar bölümü eklendi.
+// ✅ GÜNCELLEME (Adım 7.2): Liste görünümü (renderVideoList) eklendi.
 import { openNoteEditModal } from '../tangoModals.js';
-import { store } from '../store.js'; // ✅ YENİ (Adım 3.2): Tüm video listesine erişim
+import { store } from '../store.js';
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
-// Her kartın öğrenme durumu badge'ini oluşturur.
 // ─────────────────────────────────────────────────────────────
 export function getLearningStatusBadgeHtml(video, currentLang) {
     const learningStatus = video.learning_status || 'new';
@@ -25,45 +25,154 @@ export function getLearningStatusBadgeHtml(video, currentLang) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// findSimilarVideos  ✅ YENİ (Adım 3.2)
-// Bir videoyla aynı etiketleri paylaşan diğer videoları bulur.
-// Ortak etiket sayısına göre sıralar, en yüksek puanlı 'limit'
-// kadarını döner. Hiç ortak etiket yoksa boş dizi döner.
+// findSimilarVideos  (Adım 3.2)
 // ─────────────────────────────────────────────────────────────
 function findSimilarVideos(video, allVideos, limit = 3) {
     if (!video.tags || !video.tags.trim()) return [];
-
-    // Mevcut videonun etiketlerini küçük harfle bir Set'e al
     const myTags = new Set(
         video.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)
     );
     if (myTags.size === 0) return [];
-
     const scored = [];
     for (const other of allVideos) {
-        if (other.id === video.id) continue; // Kendini dahil etme
+        if (other.id === video.id) continue;
         if (!other.tags) continue;
-
         const otherTags = other.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
         let overlap = 0;
         for (const tag of otherTags) {
             if (myTags.has(tag)) overlap++;
         }
-        if (overlap > 0) {
-            scored.push({ video: other, score: overlap });
-        }
+        if (overlap > 0) scored.push({ video: other, score: overlap });
     }
-
-    // Çok ortak etiketli videolar önce gelsin
     scored.sort((a, b) => b.score - a.score);
     return scored.slice(0, limit).map(s => s.video);
 }
 
 // ─────────────────────────────────────────────────────────────
-// renderVideoCards
-// Ana kart render fonksiyonu.
+// renderVideoList  ✅ YENİ (Adım 7.2)
+// Kompakt liste görünümü: her video bir satır.
+// ─────────────────────────────────────────────────────────────
+export function renderVideoList(videos, config) {
+    const {
+        currentLang, currentView, translations: langPack, favs,
+        toggleFavorite, openTagsEditModal, startVideoEditFlow,
+        deleteVideoFlow, openVideoModal, updateLearningStatus
+    } = config;
+
+    const videoGrid = document.getElementById('video-grid');
+    const lang = langPack[currentLang];
+
+    // Liste modunda container'ı flex sütununa çevir
+    videoGrid.classList.add('video-list-mode');
+    videoGrid.innerHTML = '';
+
+    if (videos.length === 0) {
+        const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
+        videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
+        return;
+    }
+
+    const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=200';
+
+    videos.forEach(video => {
+        const platform = video.platform || 'other';
+        const isEmbeddable = (platform === 'drive' || platform === 'youtube');
+        const coverImg = video.cover_url || defaultCover;
+        const isFav = favs.includes(video.id);
+        const instructorName = video.instructors ? video.instructors.name : (video.instructor_name || 'Bilinmeyen');
+
+        // Etiketler: ilk 3'ü göster
+        const tagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+        const tagsHtml = tagsArray.slice(0, 3).map(t =>
+            `<span class="vl-tag">#${escapeHtml(t)}</span>`
+        ).join('') + (tagsArray.length > 3 ? `<span class="vl-tag">+${tagsArray.length - 3}</span>` : '');
+
+        // Rol badge
+        let roleDisplay = video.role_type || 'Both';
+        let roleBadgeClass = '';
+        if (roleDisplay === 'Leader')        { roleDisplay = lang.leader;   roleBadgeClass = 'badge-leader'; }
+        else if (roleDisplay === 'Follower') { roleDisplay = lang.follower; roleBadgeClass = 'badge-follower'; }
+        else                                 { roleDisplay = lang.both;     roleBadgeClass = 'badge-both'; }
+
+        const learningBadgeHtml = getLearningStatusBadgeHtml(video, currentLang);
+
+        const row = document.createElement('div');
+        row.className = 'video-list-row';
+
+        row.innerHTML = `
+            <div class="vl-thumb" style="background-image:url('${coverImg}');" title="${escapeHtml(instructorName)}"></div>
+            <div class="vl-info">
+                <div class="vl-instructor">${escapeHtml(instructorName)}${video.partner_name ? ` <span class="vl-partner">/ ${escapeHtml(video.partner_name)}</span>` : ''}</div>
+                <div class="vl-tags">${tagsHtml || `<span style="color:#475569;font-size:0.65rem;">${currentLang === 'tr' ? 'etiket yok' : 'no tags'}</span>`}</div>
+            </div>
+            <div class="vl-badges">
+                <span class="badge ${roleBadgeClass}" style="font-size:0.65rem;padding:2px 7px;">${roleDisplay}</span>
+                ${learningBadgeHtml}
+            </div>
+            <div class="vl-actions">
+                <button class="vl-btn vl-fav-btn ${isFav ? 'active' : ''}" title="${currentLang === 'tr' ? 'Pratik listesi' : 'Favorites'}">★</button>
+                <button class="vl-btn vl-watch-btn" title="${currentLang === 'tr' ? 'İzle' : 'Watch'}">▶</button>
+                <button class="vl-btn vl-edit-btn" title="${lang.btnCardEdit}">✏️</button>
+                <button class="vl-btn vl-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
+            </div>`;
+
+        // Favori
+        row.querySelector('.vl-fav-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFavorite(video.id);
+        });
+
+        // İzle
+        row.querySelector('.vl-watch-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isEmbeddable && openVideoModal) {
+                let targetUrl = platform === 'drive' ? video.drive_url : video.url;
+                if (platform === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+                openVideoModal(targetUrl);
+            } else if (video.url) {
+                window.open(video.url, '_blank');
+            }
+        });
+
+        // Düzenle
+        row.querySelector('.vl-edit-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            startVideoEditFlow(video);
+        });
+
+        // Sil
+        row.querySelector('.vl-delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteVideoFlow(video.id);
+        });
+
+        // Öğrenme durumu
+        const lBadge = row.querySelector('.learning-badge');
+        if (lBadge) {
+            lBadge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const currentStatus = lBadge.dataset.status;
+                const currentReviewCount = parseInt(lBadge.dataset.reviewCount || '0', 10);
+                const nextStatus = currentStatus === 'new' ? 'learning'
+                                 : currentStatus === 'learning' ? 'mastered' : 'new';
+                updateLearningStatus(video.id, nextStatus, currentReviewCount);
+            });
+        }
+
+        videoGrid.appendChild(row);
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// renderVideoCards  (Grid görünümü — ana fonksiyon)
 // ─────────────────────────────────────────────────────────────
 export function renderVideoCards(videos, config) {
+    // ✅ (Adım 7.2): viewMode kontrolü
+    if (store.get('viewMode') === 'list') {
+        renderVideoList(videos, config);
+        return;
+    }
+
     const {
         currentLang, currentView, translations: langPack, favs,
         toggleFavorite, openTagsEditModal, startVideoEditFlow,
@@ -73,6 +182,9 @@ export function renderVideoCards(videos, config) {
 
     const videoGrid = document.getElementById('video-grid');
     const lang = langPack[currentLang];
+
+    // Grid moduna geçişte liste class'ını kaldır
+    videoGrid.classList.remove('video-list-mode');
     videoGrid.innerHTML = '';
 
     if (videos.length === 0) {
@@ -81,7 +193,6 @@ export function renderVideoCards(videos, config) {
         return;
     }
 
-    // ✅ (Adım 3.2): Tüm video listesini bir kez al — benzer video hesaplamada kullanılır
     const allVideos = store.get('globalVideos');
 
     videos.forEach(video => {
@@ -145,16 +256,14 @@ export function renderVideoCards(videos, config) {
 
         const platformBadgeHtml = `<span class="badge" style="background:rgba(0,240,255,0.15);color:#00f0ff;display:inline-flex;align-items:center;gap:4px;"><img src="${iconUrl}" style="width:14px;height:14px;object-fit:contain;" onerror="this.onerror=null;this.style.display='none';this.nextSibling.style.display='inline';"><span style="display:inline;">${platformLabel}</span></span>`;
 
-        // ── Benzer Kombinasyonlar Bölümü ✅ YENİ (Adım 3.2) ──────
+        // Benzer kombinasyonlar (Adım 3.2)
         const similarVideos = findSimilarVideos(video, allVideos, 3);
         let similarHtml = '';
         if (similarVideos.length > 0) {
             const titleText = currentLang === 'tr' ? 'Benzer Kombinasyonlar' : 'Similar Combinations';
             const miniCards = similarVideos.map(sv => {
                 const svCover = sv.cover_url || defaultCover;
-                // Eğitmen adını hem flat hem nested yapıdan al
                 const svName = sv.instructors ? sv.instructors.name : (sv.instructor_name || '?');
-                // İlk 2 etiketi göster
                 const svTagText = sv.tags
                     ? sv.tags.split(',').slice(0, 2).map(t => '#' + t.trim()).join(' ')
                     : '';
@@ -170,14 +279,12 @@ export function renderVideoCards(videos, config) {
                             </div>
                         </div>`;
             }).join('');
-
             similarHtml = `
                 <div class="similar-videos-section">
                     <div class="similar-videos-title">${titleText}</div>
                     <div class="similar-videos-list">${miniCards}</div>
                 </div>`;
         }
-        // ──────────────────────────────────────────────────────────
 
         card.innerHTML = `
             <div class="video-cover-link">
@@ -209,15 +316,13 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>`;
 
-        // ── Event Listener'lar ─────────────────────────────────────
-
         // Favori
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
 
-        // Playlist butonu
+        // Playlist
         const playlistBtn = card.querySelector('.playlist-add-btn');
         if (playlistBtn && showPlaylistDropdown) {
             playlistBtn.addEventListener('click', (e) => {
@@ -245,7 +350,7 @@ export function renderVideoCards(videos, config) {
             });
         }
 
-        // Öğrenme durumu badge
+        // Öğrenme durumu
         const learningBadge = card.querySelector('.learning-badge');
         if (learningBadge) {
             learningBadge.addEventListener('click', (e) => {
@@ -253,20 +358,19 @@ export function renderVideoCards(videos, config) {
                 const currentStatus = learningBadge.dataset.status;
                 const currentReviewCount = parseInt(learningBadge.dataset.reviewCount || '0', 10);
                 const nextStatus = currentStatus === 'new' ? 'learning'
-                                 : currentStatus === 'learning' ? 'mastered'
-                                 : 'new';
+                                 : currentStatus === 'learning' ? 'mastered' : 'new';
                 updateLearningStatus(video.id, nextStatus, currentReviewCount);
             });
         }
 
-        // ✅ (Adım 3.2): Benzer video mini kartlarına tıklama
+        // Benzer video tıklamaları
         card.querySelectorAll('.similar-video-mini').forEach(miniCard => {
             miniCard.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const svPlatform = miniCard.dataset.similarPlatform;
                 const svUrl      = miniCard.dataset.similarUrl;
                 const svDrive    = miniCard.dataset.similarDrive;
-                const isEmb      = (svPlatform === 'drive' || svPlatform === 'youtube');
+                const isEmb = (svPlatform === 'drive' || svPlatform === 'youtube');
                 if (isEmb && openVideoModal) {
                     let targetUrl = svPlatform === 'drive' ? svDrive : svUrl;
                     if (svPlatform === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
@@ -277,7 +381,7 @@ export function renderVideoCards(videos, config) {
             });
         });
 
-        // Modal açma (kapak ve izle butonu)
+        // Modal açma
         if (shouldOpenInModal) {
             card.querySelectorAll('[data-modal-url]').forEach(el => {
                 el.addEventListener('click', (e) => {
@@ -294,7 +398,7 @@ export function renderVideoCards(videos, config) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Yardımcı: YouTube URL'ini embed URL'ine çevirir
+// Yardımcı fonksiyonlar
 // ─────────────────────────────────────────────────────────────
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return '';
@@ -313,9 +417,6 @@ function convertYoutubeUrlToEmbed(url) {
     return url;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Yardımcı: HTML özel karakterlerini güvenli hale getirir
-// ─────────────────────────────────────────────────────────────
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
