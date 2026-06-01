@@ -1,8 +1,5 @@
-// videoHandlers.js - Video işlemleri, filtreleme, sonsuz kaydırma, öğrenme durumu
-// ✅ DÜZELTİLDİ: updateLearningStatus artık 3 parametre alıyor:
-//    (videoId, newStatus, currentReviewCount)
-//    currentReviewCount videoCardRenderer'dan badge'in data-review-count özelliğinden geliyor.
-//    Bu değer db/videos.js'de +1 yapılarak Supabase'e yazılıyor.
+// videoHandlers.js
+// ✅ GÜNCELLEME (Adım 2.4): playlist filtre ve dropdown desteği eklendi
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -10,22 +7,19 @@ import { getFilteredVideos } from './tangoFilters.js';
 import { translations } from './i18n.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
+import { showPlaylistDropdown } from './playlistManager.js';
 
 let currentLang = 'tr';
-
 let applyFiltersAndSearchCallback = null;
 let fetchVideosCallback = null;
 let openVideoModalCallback = null;
 let openTagsEditModalCallback = null;
 let startVideoEditFlowCallback = null;
 let deleteVideoFlowCallback = null;
-
 let scrollObserver = null;
 let isLoadingMore = false;
 
-export function setVideoHandlersGlobalData(lang) {
-    currentLang = lang;
-}
+export function setVideoHandlersGlobalData(lang) { currentLang = lang; }
 
 export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, startEditCb, deleteCb) {
     applyFiltersAndSearchCallback = applyCb;
@@ -36,13 +30,9 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
     deleteVideoFlowCallback = deleteCb;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Favori ekleme / çıkarma
-// ─────────────────────────────────────────────────────────────
 export async function toggleFavorite(videoId) {
     try {
-        let currentFavorites = store.get('globalFavorites');
-        const isFav = currentFavorites.includes(videoId);
+        const isFav = store.get('globalFavorites').includes(videoId);
         if (isFav) {
             await dbRemoveFavorite(videoId);
             store.updateFavoriteLocally(videoId, false);
@@ -52,46 +42,27 @@ export async function toggleFavorite(videoId) {
         }
         applyFiltersAndSearch();
     } catch (err) {
-        console.error(err);
-        const lang = translations[store.get('currentLang')];
-        showToast(lang.error || 'Favori güncellenemedi', 'error');
+        showToast(translations[store.get('currentLang')].error || 'Favori güncellenemedi', 'error');
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// ✅ DÜZELTİLDİ: Öğrenme durumu güncelleme
-// Eski hali: updateLearningStatus(videoId, newStatus)
-//            → db'ye sabit 0 veya 1 gönderiyordu (HATALI)
-// Yeni hali: updateLearningStatus(videoId, newStatus, currentReviewCount)
-//            → mevcut sayıyı iletir, db/videos.js bunu +1 yaparak yazar (DOĞRU)
-// ─────────────────────────────────────────────────────────────
 export async function updateLearningStatus(videoId, newStatus, currentReviewCount = 0) {
     const video = store.get('globalVideos').find(v => v.id === videoId);
     if (!video) return;
-    const oldUpdatedAt = video.updated_at;
-
     try {
-        // dbUpdateLearningStatus artık 4 parametre alıyor:
-        // (videoId, status, currentReviewCount, old_updated_at)
-        const updatedVideo = await dbUpdateLearningStatus(videoId, newStatus, currentReviewCount, oldUpdatedAt);
-
+        const updatedVideo = await dbUpdateLearningStatus(videoId, newStatus, currentReviewCount, video.updated_at);
         if (updatedVideo) {
-            // Store'daki video nesnesini dönen güncel verilerle güncelle
             store.updateVideoLocally(videoId, {
                 learning_status: updatedVideo.learning_status,
                 last_reviewed_at: updatedVideo.last_reviewed_at,
                 review_count: updatedVideo.review_count,
                 updated_at: updatedVideo.updated_at
             });
-
-            // Kullanıcıya bildirim göster
-            showToast(`${getStatusText(newStatus)}`, 'success');
-
-            // Kartları yeniden render et
+            showToast(getStatusText(newStatus), 'success');
             applyFiltersAndSearch();
         }
     } catch (err) {
-        if (err.message.includes('ÇAKIŞMA')) {
+        if (err.message.includes('CAKISMA') || err.message.includes('ÇAKIŞMA')) {
             showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
             location.reload();
         } else {
@@ -100,7 +71,6 @@ export async function updateLearningStatus(videoId, newStatus, currentReviewCoun
     }
 }
 
-// Öğrenme durumunu okunabilir metne çevirir (toast mesajı için)
 function getStatusText(status) {
     if (currentLang === 'tr') {
         if (status === 'new') return '🆕 Yeni olarak işaretlendi';
@@ -114,25 +84,26 @@ function getStatusText(status) {
     return status;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Filtreleme ve listeleme
-// ─────────────────────────────────────────────────────────────
 export function applyFiltersAndSearch() {
     const globalVideos = store.get('globalVideos');
     const currentView = store.get('currentView');
     const visibleCount = store.get('visibleCount');
     const favorites = store.get('globalFavorites');
+    const activePlaylistId = store.get('activePlaylistId');
+    const activePlaylistVideoIds = store.get('activePlaylistVideoIds') || [];
 
     let source = globalVideos;
-    if (currentView === 'favorites') {
+
+    if (activePlaylistId !== null && activePlaylistId !== undefined) {
+        source = globalVideos.filter(v => activePlaylistVideoIds.includes(v.id));
+    } else if (currentView === 'favorites') {
         source = globalVideos.filter(v => favorites.includes(v.id));
     }
 
     const searchInput = document.getElementById('search-input');
     const aramaMetni = searchInput ? searchInput.value : '';
-
     const filters = {
-        aramaMetni: aramaMetni,
+        aramaMetni,
         rol: document.getElementById('filter-role-select')?.value || 'all',
         egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -142,10 +113,9 @@ export function applyFiltersAndSearch() {
     };
 
     const filtered = getFilteredVideos(source, filters, currentLang);
-
     const totalElem = document.getElementById('total-video-count');
     if (totalElem) {
-        let label = currentView === 'favorites'
+        const label = currentView === 'favorites'
             ? translations[currentLang].favoritesCountLabel
             : (currentLang === 'tr' ? 'Toplam Video Sayısı:' : 'Total Videos:');
         totalElem.innerText = `${label} ${filtered.length}`;
@@ -168,24 +138,16 @@ export function applyFiltersAndSearch() {
         deleteVideoFlow: deleteVideoFlowCallback,
         openVideoModal: openVideoModalCallback,
         refreshList: applyFiltersAndSearchCallback,
-        updateLearningStatus   // ✅ Kart içinden çağrılıyor
+        updateLearningStatus,
+        showPlaylistDropdown
     });
 
     reconnectSentinel();
 }
 
-export function setVisibleCount(count) {
-    store.set('visibleCount', count);
-}
+export function setVisibleCount(count) { store.set('visibleCount', count); }
+export function incrementVisibleCount(inc) { store.set('visibleCount', store.get('visibleCount') + inc); }
 
-export function incrementVisibleCount(inc) {
-    const current = store.get('visibleCount');
-    store.set('visibleCount', current + inc);
-}
-
-// ─────────────────────────────────────────────────────────────
-// Video silme akışı
-// ─────────────────────────────────────────────────────────────
 export async function deleteVideoFlow(videoId) {
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
@@ -194,9 +156,7 @@ export async function deleteVideoFlow(videoId) {
     try {
         await dbDeleteVideo(videoId);
         store.removeVideoLocally(videoId);
-        if (store.get('globalFavorites').includes(videoId)) {
-            store.updateFavoriteLocally(videoId, false);
-        }
+        if (store.get('globalFavorites').includes(videoId)) store.updateFavoriteLocally(videoId, false);
         await showCustomAlert(lang.successDeleteVideo, okText);
         applyFiltersAndSearch();
     } catch (err) {
@@ -204,16 +164,10 @@ export async function deleteVideoFlow(videoId) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Sonsuz kaydırma (Infinite Scroll)
-// ─────────────────────────────────────────────────────────────
 function reconnectSentinel() {
-    if (scrollObserver) {
-        scrollObserver.disconnect();
-    }
+    if (scrollObserver) scrollObserver.disconnect();
     const sentinel = document.getElementById('scroll-sentinel');
     if (!sentinel) return;
-
     scrollObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && !isLoadingMore) {
@@ -221,16 +175,18 @@ function reconnectSentinel() {
                 const globalVideos = store.get('globalVideos');
                 const currentView = store.get('currentView');
                 const favorites = store.get('globalFavorites');
-
+                const activePlaylistId = store.get('activePlaylistId');
+                const activePlaylistVideoIds = store.get('activePlaylistVideoIds') || [];
                 let source = globalVideos;
-                if (currentView === 'favorites') {
+                if (activePlaylistId !== null && activePlaylistId !== undefined) {
+                    source = globalVideos.filter(v => activePlaylistVideoIds.includes(v.id));
+                } else if (currentView === 'favorites') {
                     source = globalVideos.filter(v => favorites.includes(v.id));
                 }
-
                 const searchInput = document.getElementById('search-input');
                 const aramaMetni = searchInput ? searchInput.value : '';
                 const filters = {
-                    aramaMetni: aramaMetni,
+                    aramaMetni,
                     rol: document.getElementById('filter-role-select')?.value || 'all',
                     egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
                     etiket: document.getElementById('filter-tag-select')?.value || 'all',
@@ -238,7 +194,6 @@ function reconnectSentinel() {
                     platform: document.getElementById('filter-platform-select')?.value || 'all',
                     learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'
                 };
-
                 const filtered = getFilteredVideos(source, filters, currentLang);
                 if (visibleCount < filtered.length) {
                     isLoadingMore = true;
@@ -249,7 +204,6 @@ function reconnectSentinel() {
             }
         });
     }, { threshold: 0.1 });
-
     scrollObserver.observe(sentinel);
 }
 

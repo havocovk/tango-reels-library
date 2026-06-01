@@ -1,14 +1,15 @@
 // tangoVeritabani.js - Tüm veritabanı fonksiyonlarının merkezi export noktası
+// ✅ GÜNCELLEME (Adım 2.4): playlist fonksiyonları eklendi
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 
 // videos
-import { 
-    dbFetchVideos, 
-    dbDeleteVideo, 
-    dbSaveVideo, 
-    dbUpdateTagsDirectly, 
+import {
+    dbFetchVideos,
+    dbDeleteVideo,
+    dbSaveVideo,
+    dbUpdateTagsDirectly,
     dbUpdateNote,
-    dbUpdateLearningStatus   // 🔥 YENİ: eklendi
+    dbUpdateLearningStatus
 } from './db/videos.js';
 
 // instructors
@@ -20,28 +21,47 @@ import { dbFetchFavorites, dbAddFavorite, dbRemoveFavorite, dbClearAllFavorites 
 // tags (toplu işlemler)
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './db/tags.js';
 
+// ✅ YENİ (Adım 2.4): playlists
+import {
+    dbFetchPlaylists,
+    dbCreatePlaylist,
+    dbUpdatePlaylist,
+    dbDeletePlaylist,
+    dbFetchPlaylistVideoIds,
+    dbAddVideoToPlaylist,
+    dbRemoveVideoFromPlaylist
+} from './db/playlists.js';
+
 // Tüm fonksiyonları dışa aktar
-export { 
-    dbFetchVideos, 
-    dbDeleteVideo, 
-    dbSaveVideo, 
-    dbUpdateTagsDirectly, 
+export {
+    dbFetchVideos,
+    dbDeleteVideo,
+    dbSaveVideo,
+    dbUpdateTagsDirectly,
     dbUpdateNote,
-    dbUpdateLearningStatus,   // 🔥 YENİ
-    dbFetchInstructors, 
-    dbSaveInstructor, 
+    dbUpdateLearningStatus,
+    dbFetchInstructors,
+    dbSaveInstructor,
     dbDeleteInstructor,
-    dbFetchFavorites, 
-    dbAddFavorite, 
-    dbRemoveFavorite, 
+    dbFetchFavorites,
+    dbAddFavorite,
+    dbRemoveFavorite,
     dbClearAllFavorites,
-    dbMergeTags, 
-    dbDeleteTagFromAllVideos, 
-    dbRenameTag, 
-    dbCleanupUnusedTags
+    dbMergeTags,
+    dbDeleteTagFromAllVideos,
+    dbRenameTag,
+    dbCleanupUnusedTags,
+    // ✅ YENİ (Adım 2.4)
+    dbFetchPlaylists,
+    dbCreatePlaylist,
+    dbUpdatePlaylist,
+    dbDeletePlaylist,
+    dbFetchPlaylistVideoIds,
+    dbAddVideoToPlaylist,
+    dbRemoveVideoFromPlaylist
 };
 
-// Yardımcı fonksiyon (bağımlılığı yok, burada kalsın)
+// Yardımcı fonksiyon
 export function detectPlatform(url, isDownloaded) {
     if (isDownloaded) return 'drive';
     if (!url) return 'other';

@@ -1,32 +1,24 @@
-// store.js - Merkezi state yönetimi + yerel güncelleme metodları
-// ✅ GÜNCELLEME (Adım 2.2): dueTodayCount: 0 eklendi
+// store.js - Merkezi state yönetimi
+// ✅ GÜNCELLEME (Adım 2.2): dueTodayCount eklendi
+// ✅ GÜNCELLEME (Adım 2.4): globalPlaylists, activePlaylistId, activePlaylistVideoIds eklendi
 class Store {
   constructor(initialState = {}) {
     this.state = { ...initialState };
     this.listeners = new Map();
   }
 
-  get(key) {
-    return this.state[key];
-  }
-
-  getAll() {
-    return { ...this.state };
-  }
+  get(key) { return this.state[key]; }
+  getAll() { return { ...this.state }; }
 
   set(key, value, silent = false) {
     const oldValue = this.state[key];
     if (oldValue === value) return;
     this.state[key] = value;
-    if (!silent) {
-      this._notify(key, value, oldValue);
-    }
+    if (!silent) this._notify(key, value, oldValue);
   }
 
   subscribe(key, callback) {
-    if (!this.listeners.has(key)) {
-      this.listeners.set(key, []);
-    }
+    if (!this.listeners.has(key)) this.listeners.set(key, []);
     this.listeners.get(key).push(callback);
     callback(this.state[key], undefined, key);
     return () => this.unsubscribe(key, callback);
@@ -44,16 +36,11 @@ class Store {
   _notify(key, newVal, oldVal) {
     if (this.listeners.has(key)) {
       this.listeners.get(key).forEach(cb => {
-        try {
-          cb(newVal, oldVal, key);
-        } catch (err) {
-          console.error(`Store notification error for key "${key}":`, err);
-        }
+        try { cb(newVal, oldVal, key); }
+        catch (err) { console.error(`Store notification error for key "${key}":`, err); }
       });
     }
   }
-
-  // ========= YEREL GÜNCELLEME METODLARI =========
 
   updateVideoLocally(videoId, updates) {
     const videos = this.get('globalVideos');
@@ -68,14 +55,11 @@ class Store {
   }
 
   removeVideoLocally(videoId) {
-    const videos = this.get('globalVideos');
-    const newVideos = videos.filter(v => v.id !== videoId);
-    this.set('globalVideos', newVideos);
+    this.set('globalVideos', this.get('globalVideos').filter(v => v.id !== videoId));
   }
 
   addVideoLocally(video) {
-    const videos = this.get('globalVideos');
-    this.set('globalVideos', [video, ...videos]);
+    this.set('globalVideos', [video, ...this.get('globalVideos')]);
   }
 
   bulkUpdateVideos(updatesArray) {
@@ -83,14 +67,9 @@ class Store {
     let changed = false;
     for (const { id, updates } of updatesArray) {
       const index = videos.findIndex(v => v.id === id);
-      if (index !== -1) {
-        videos[index] = { ...videos[index], ...updates };
-        changed = true;
-      }
+      if (index !== -1) { videos[index] = { ...videos[index], ...updates }; changed = true; }
     }
-    if (changed) {
-      this.set('globalVideos', [...videos]);
-    }
+    if (changed) this.set('globalVideos', [...videos]);
   }
 
   updateFavoriteLocally(videoId, isFavorite) {
@@ -117,7 +96,10 @@ const initialState = {
   editingVideoId: null,
   editInstructorId: null,
   loading: false,
-  dueTodayCount: 0,   // ✅ YENİ (Adım 2.2): Bugün tekrar edilmesi gereken video sayısı
+  dueTodayCount: 0,
+  globalPlaylists: [],
+  activePlaylistId: null,
+  activePlaylistVideoIds: []
 };
 
 export const store = new Store(initialState);
