@@ -1,4 +1,4 @@
-// db/videos.js - Video ile ilgili tüm veritabanı işlemleri (öğrenme durumu eklendi)
+// db/videos.js - Video ile ilgili tüm veritabanı işlemleri
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 import { fetchWithRetry } from '../utils.js';
 
@@ -21,7 +21,7 @@ export async function dbDeleteVideo(videoId) {
 
 export async function dbSaveVideo(id, payload, old_updated_at = null) {
     let fixedPayload = { ...payload };
-    
+
     if (fixedPayload.is_downloaded === true && (!fixedPayload.url || fixedPayload.url === '' || fixedPayload.url.startsWith('drive_temp'))) {
         const uniqueSuffix = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
         fixedPayload.url = `drive_video_${uniqueSuffix}`;
@@ -42,7 +42,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
             },
             body: JSON.stringify(fixedPayload)
         });
-        
+
         const responseText = await res.text();
         let affectedRows = 0;
         let updatedVideo = null;
@@ -53,7 +53,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
                 if (json.length > 0) updatedVideo = json[0];
             }
         } catch(e) {}
-        
+
         if (affectedRows === 0) {
             throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
         }
@@ -72,7 +72,7 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         throw new Error(`Kontrol hatası: ${errorText}`);
     }
     const existing = await checkRes.json();
-    
+
     if (existing && existing.length > 0) {
         const existingId = existing[0].id;
         const updateRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existingId}`, {
@@ -189,14 +189,22 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
     return updatedVideo;
 }
 
-// 🔥 YENİ: Öğrenme durumu güncelleme
-export async function dbUpdateLearningStatus(videoId, status, old_updated_at = null) {
+// ✅ DÜZELTİLDİ: Öğrenme durumu güncelleme
+// Değişiklik: review_count artık sabit 0 veya 1 yazmak yerine,
+// mevcut değerin üzerine +1 ekliyor. Bu, Adım 2.2'deki
+// Spaced Repetition algoritmasının doğru çalışması için kritiktir.
+// Parametre olarak currentReviewCount eklendi.
+export async function dbUpdateLearningStatus(videoId, status, currentReviewCount = 0, old_updated_at = null) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
         url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
     }
     const now = new Date().toISOString();
-    // review_count'u artır sadece 'learning' ve 'mastered' durumlarında (isteğe bağlı)
+
+    // review_count: her tıklamada mevcut sayının üzerine +1 eklenir.
+    // Yol haritasının şartı: "mevcut + 1"
+    const newReviewCount = (currentReviewCount || 0) + 1;
+
     const res = await fetchWithRetry(url, {
         method: 'PATCH',
         headers: {
@@ -208,9 +216,10 @@ export async function dbUpdateLearningStatus(videoId, status, old_updated_at = n
         body: JSON.stringify({
             learning_status: status,
             last_reviewed_at: now,
-            review_count: status === 'mastered' ? 0 : 1 // basit mantık, isterseniz review_count artırma
+            review_count: newReviewCount
         })
     });
+
     const responseText = await res.text();
     let affectedRows = 0;
     let updatedVideo = null;
@@ -221,6 +230,7 @@ export async function dbUpdateLearningStatus(videoId, status, old_updated_at = n
             if (json.length > 0) updatedVideo = json[0];
         }
     } catch(e) {}
+
     if (affectedRows === 0) {
         throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
     }

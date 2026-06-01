@@ -1,4 +1,8 @@
-// videoHandlers.js - Optimize edilmiş + Sonsuz Kaydırma + Öğrenme Durumu
+// videoHandlers.js - Video işlemleri, filtreleme, sonsuz kaydırma, öğrenme durumu
+// ✅ DÜZELTİLDİ: updateLearningStatus artık 3 parametre alıyor:
+//    (videoId, newStatus, currentReviewCount)
+//    currentReviewCount videoCardRenderer'dan badge'in data-review-count özelliğinden geliyor.
+//    Bu değer db/videos.js'de +1 yapılarak Supabase'e yazılıyor.
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -32,7 +36,9 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
     deleteVideoFlowCallback = deleteCb;
 }
 
-// Favori ekleme/çıkarma
+// ─────────────────────────────────────────────────────────────
+// Favori ekleme / çıkarma
+// ─────────────────────────────────────────────────────────────
 export async function toggleFavorite(videoId) {
     try {
         let currentFavorites = store.get('globalFavorites');
@@ -52,21 +58,36 @@ export async function toggleFavorite(videoId) {
     }
 }
 
-// 🔥 YENİ: Öğrenme durumu güncelleme (yerel + supabase)
-export async function updateLearningStatus(videoId, newStatus) {
+// ─────────────────────────────────────────────────────────────
+// ✅ DÜZELTİLDİ: Öğrenme durumu güncelleme
+// Eski hali: updateLearningStatus(videoId, newStatus)
+//            → db'ye sabit 0 veya 1 gönderiyordu (HATALI)
+// Yeni hali: updateLearningStatus(videoId, newStatus, currentReviewCount)
+//            → mevcut sayıyı iletir, db/videos.js bunu +1 yaparak yazar (DOĞRU)
+// ─────────────────────────────────────────────────────────────
+export async function updateLearningStatus(videoId, newStatus, currentReviewCount = 0) {
     const video = store.get('globalVideos').find(v => v.id === videoId);
     if (!video) return;
     const oldUpdatedAt = video.updated_at;
+
     try {
-        const updatedVideo = await dbUpdateLearningStatus(videoId, newStatus, oldUpdatedAt);
+        // dbUpdateLearningStatus artık 4 parametre alıyor:
+        // (videoId, status, currentReviewCount, old_updated_at)
+        const updatedVideo = await dbUpdateLearningStatus(videoId, newStatus, currentReviewCount, oldUpdatedAt);
+
         if (updatedVideo) {
+            // Store'daki video nesnesini dönen güncel verilerle güncelle
             store.updateVideoLocally(videoId, {
                 learning_status: updatedVideo.learning_status,
                 last_reviewed_at: updatedVideo.last_reviewed_at,
                 review_count: updatedVideo.review_count,
                 updated_at: updatedVideo.updated_at
             });
-            showToast(`Öğrenme durumu: ${getStatusText(newStatus)}`, 'success');
+
+            // Kullanıcıya bildirim göster
+            showToast(`${getStatusText(newStatus)}`, 'success');
+
+            // Kartları yeniden render et
             applyFiltersAndSearch();
         }
     } catch (err) {
@@ -79,35 +100,37 @@ export async function updateLearningStatus(videoId, newStatus) {
     }
 }
 
+// Öğrenme durumunu okunabilir metne çevirir (toast mesajı için)
 function getStatusText(status) {
-    const lang = currentLang;
-    if (lang === 'tr') {
-        if (status === 'new') return 'Yeni';
-        if (status === 'learning') return 'Çalışıyorum';
-        if (status === 'mastered') return 'Ustalaştım';
+    if (currentLang === 'tr') {
+        if (status === 'new') return '🆕 Yeni olarak işaretlendi';
+        if (status === 'learning') return '📚 Çalışıyorum olarak işaretlendi';
+        if (status === 'mastered') return '✅ Ustalaştım olarak işaretlendi';
     } else {
-        if (status === 'new') return 'New';
-        if (status === 'learning') return 'Learning';
-        if (status === 'mastered') return 'Mastered';
+        if (status === 'new') return '🆕 Marked as New';
+        if (status === 'learning') return '📚 Marked as Learning';
+        if (status === 'mastered') return '✅ Marked as Mastered';
     }
     return status;
 }
 
+// ─────────────────────────────────────────────────────────────
 // Filtreleme ve listeleme
+// ─────────────────────────────────────────────────────────────
 export function applyFiltersAndSearch() {
     const globalVideos = store.get('globalVideos');
     const currentView = store.get('currentView');
     const visibleCount = store.get('visibleCount');
     const favorites = store.get('globalFavorites');
-    
+
     let source = globalVideos;
     if (currentView === 'favorites') {
         source = globalVideos.filter(v => favorites.includes(v.id));
     }
-    
+
     const searchInput = document.getElementById('search-input');
     const aramaMetni = searchInput ? searchInput.value : '';
-    
+
     const filters = {
         aramaMetni: aramaMetni,
         rol: document.getElementById('filter-role-select')?.value || 'all',
@@ -115,22 +138,25 @@ export function applyFiltersAndSearch() {
         etiket: document.getElementById('filter-tag-select')?.value || 'all',
         tarih: document.getElementById('filter-date-select')?.value || 'all',
         platform: document.getElementById('filter-platform-select')?.value || 'all',
-        learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'  // 🔥 YENİ
+        learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'
     };
-    
+
     const filtered = getFilteredVideos(source, filters, currentLang);
+
     const totalElem = document.getElementById('total-video-count');
     if (totalElem) {
-        let label = currentView === 'favorites' ? translations[currentLang].favoritesCountLabel : (currentLang === 'tr' ? 'Toplam Video Sayısı:' : 'Total Videos:');
+        let label = currentView === 'favorites'
+            ? translations[currentLang].favoritesCountLabel
+            : (currentLang === 'tr' ? 'Toplam Video Sayısı:' : 'Total Videos:');
         totalElem.innerText = `${label} ${filtered.length}`;
     }
-    
+
     const loadMoreDiv = document.getElementById('load-more-container');
     if (loadMoreDiv) {
         if (filtered.length > visibleCount) loadMoreDiv.classList.remove('d-none');
         else loadMoreDiv.classList.add('d-none');
     }
-    
+
     renderVideoCards(filtered.slice(0, visibleCount), {
         currentLang,
         currentView,
@@ -142,9 +168,9 @@ export function applyFiltersAndSearch() {
         deleteVideoFlow: deleteVideoFlowCallback,
         openVideoModal: openVideoModalCallback,
         refreshList: applyFiltersAndSearchCallback,
-        updateLearningStatus   // 🔥 YENİ: Kart içinden çağırmak için
+        updateLearningStatus   // ✅ Kart içinden çağrılıyor
     });
-    
+
     reconnectSentinel();
 }
 
@@ -157,6 +183,9 @@ export function incrementVisibleCount(inc) {
     store.set('visibleCount', current + inc);
 }
 
+// ─────────────────────────────────────────────────────────────
+// Video silme akışı
+// ─────────────────────────────────────────────────────────────
 export async function deleteVideoFlow(videoId) {
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
@@ -170,18 +199,21 @@ export async function deleteVideoFlow(videoId) {
         }
         await showCustomAlert(lang.successDeleteVideo, okText);
         applyFiltersAndSearch();
-    } catch (err) { 
+    } catch (err) {
         await showCustomAlert(currentLang === 'tr' ? 'Silme hatası!' : 'Deletion error!', okText);
     }
 }
 
-// Infinite Scroll
+// ─────────────────────────────────────────────────────────────
+// Sonsuz kaydırma (Infinite Scroll)
+// ─────────────────────────────────────────────────────────────
 function reconnectSentinel() {
     if (scrollObserver) {
         scrollObserver.disconnect();
     }
     const sentinel = document.getElementById('scroll-sentinel');
     if (!sentinel) return;
+
     scrollObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && !isLoadingMore) {
@@ -189,10 +221,12 @@ function reconnectSentinel() {
                 const globalVideos = store.get('globalVideos');
                 const currentView = store.get('currentView');
                 const favorites = store.get('globalFavorites');
+
                 let source = globalVideos;
                 if (currentView === 'favorites') {
                     source = globalVideos.filter(v => favorites.includes(v.id));
                 }
+
                 const searchInput = document.getElementById('search-input');
                 const aramaMetni = searchInput ? searchInput.value : '';
                 const filters = {
@@ -204,6 +238,7 @@ function reconnectSentinel() {
                     platform: document.getElementById('filter-platform-select')?.value || 'all',
                     learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'
                 };
+
                 const filtered = getFilteredVideos(source, filters, currentLang);
                 if (visibleCount < filtered.length) {
                     isLoadingMore = true;
@@ -214,6 +249,7 @@ function reconnectSentinel() {
             }
         });
     }, { threshold: 0.1 });
+
     scrollObserver.observe(sentinel);
 }
 
