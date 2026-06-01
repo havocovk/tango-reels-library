@@ -101,9 +101,12 @@ export const tr = {
     resetCoverBtn: "🗑️ Resmi Sıfırla",
     searchBtn: "🔍 Ara",
     selectFile: "📁 Dosya Seç",
-    // Öğrenme durumu
+    // Öğrenme durumu (Adım 2.1)
     allLearningStatuses: "Tüm Öğrenme Durumları",
     learningNew: "🆕 Yeni",
     learningActive: "📚 Çalışıyorum",
-    learningMastered: "✅ Ustalaştım"
+    learningMastered: "✅ Ustalaştım",
+    // ✅ YENİ (Adım 2.2): Spaced Repetition
+    dueToday: "Bugün tekrar edilecek",
+    videosForReview: "video var"
 };

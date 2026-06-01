@@ -101,9 +101,12 @@ export const en = {
     resetCoverBtn: "🗑️ Reset Image",
     searchBtn: "🔍 Search",
     selectFile: "📁 Select File",
-    // Learning status
+    // Learning status (Step 2.1)
     allLearningStatuses: "All Learning Statuses",
     learningNew: "🆕 New",
     learningActive: "📚 Learning",
-    learningMastered: "✅ Mastered"
+    learningMastered: "✅ Mastered",
+    // ✅ NEW (Step 2.2): Spaced Repetition
+    dueToday: "Due for review today",
+    videosForReview: "videos"
 };

@@ -1,4 +1,5 @@
-// store.js - Merkezi state yönetimi + yerel güncelleme metodları (tam kod)
+// store.js - Merkezi state yönetimi + yerel güncelleme metodları
+// ✅ GÜNCELLEME (Adım 2.2): dueTodayCount: 0 eklendi
 class Store {
   constructor(initialState = {}) {
     this.state = { ...initialState };
@@ -53,6 +54,7 @@ class Store {
   }
 
   // ========= YEREL GÜNCELLEME METODLARI =========
+
   updateVideoLocally(videoId, updates) {
     const videos = this.get('globalVideos');
     const index = videos.findIndex(v => v.id === videoId);
@@ -76,7 +78,6 @@ class Store {
     this.set('globalVideos', [video, ...videos]);
   }
 
-  // Toplu video güncelleme (örneğin etiket toplu silme/birleştirme sonrası)
   bulkUpdateVideos(updatesArray) {
     let videos = this.get('globalVideos');
     let changed = false;
@@ -116,6 +117,7 @@ const initialState = {
   editingVideoId: null,
   editInstructorId: null,
   loading: false,
+  dueTodayCount: 0,   // ✅ YENİ (Adım 2.2): Bugün tekrar edilmesi gereken video sayısı
 };
 
 export const store = new Store(initialState);
