@@ -180,7 +180,7 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     // ✅ ÖNEMLİ: Store'dan en güncel video nesnesini al, updated_at taze olsun
     const globalVideos = store.get('globalVideos');
     const currentVideo = globalVideos.find(v => v.id === video.id) || video;
-    
+
     activeNoteVideoId = currentVideo.id;
     activeNoteVideoUpdatedAt = currentVideo.updated_at;  // güncel timestamp
     const currentNote = currentVideo.notes || '';
@@ -205,26 +205,28 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const handleOk = async () => {
         const newNote = document.getElementById('note-textarea').value;
         try {
-            // ✅ dbUpdateNote artık güncellenmiş video nesnesini döndürüyor olmalı
+            // dbUpdateNote güncellenmiş video nesnesini döndürüyor
             const updatedVideo = await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);
-            
-            // Store'daki videoyu güncelle: notes ve updated_at
-            const globalVideosNow = store.get('globalVideos');
-            const videoIndex = globalVideosNow.findIndex(v => v.id === activeNoteVideoId);
-            if (videoIndex !== -1) {
-                // updatedVideo'dan yeni updated_at al (eğer döndüyse)
-                if (updatedVideo && updatedVideo.updated_at) {
-                    globalVideosNow[videoIndex].updated_at = updatedVideo.updated_at;
-                }
-                globalVideosNow[videoIndex].notes = newNote || null;
-                store.set('globalVideos', [...globalVideosNow]);
+
+            // ✅ ADIM 4.1: Tüm koleksiyonu yeniden çekmek (fetchVideos) yerine
+            // SADECE bu videoyu store içinde güncelliyoruz. Bu sayede yüzlerce
+            // video varken bile not kaydetmek anında olur, ağdan tekrar veri çekilmez.
+            store.updateVideoLocally(activeNoteVideoId, {
+                notes: newNote || null,
+                updated_at: updatedVideo?.updated_at || activeNoteVideoUpdatedAt
+            });
+
+            // Aynı modaldan ikinci kez kayıt yapılırsa "ÇAKIŞMA" hatası
+            // almamak için güncel zaman damgasını sakla.
+            if (updatedVideo && updatedVideo.updated_at) {
+                activeNoteVideoUpdatedAt = updatedVideo.updated_at;
             }
-            
+
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
-            
-            // Listeyi yenile (kartları güncelle)
+
+            // Ekrandaki kartları tazele (store güncellendiği için hızlı render olur)
             if (window.applyFiltersAndSearch) window.applyFiltersAndSearch();
-            
+
             showToast('Not kaydedildi', 'success');
         } catch (err) {
             if (err.message.includes('ÇAKIŞMA')) {
