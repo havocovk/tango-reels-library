@@ -26,8 +26,8 @@
 .video-card:hover {
     transform: translateY(-6px);
     background: rgba(11, 8, 19, 0.8);
-    border-color: rgba(255, 0, 127, 0.5);
     box-shadow: 0 12px 24px -10px rgba(255, 0, 127, 0.3);
+    animation: borderGlow 2s ease-in-out infinite;
 }
 
 .video-cover-link {
@@ -484,4 +484,25 @@
     .vl-badges { display: none; }
     .vl-thumb { width: 54px; height: 38px; }
     .vl-instructor { font-size: 0.78rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 7.3 — Hover-to-Glow Sınır Animasyonu
+   ═══════════════════════════════════════════════════════════ */
+@keyframes borderGlow {
+    0%   {
+        border-color: rgba(255, 0, 127, 0.5);
+        box-shadow: 0 12px 24px -10px rgba(255, 0, 127, 0.3),
+                    0 0 0 0 rgba(255, 0, 127, 0);
+    }
+    50%  {
+        border-color: rgba(0, 240, 255, 0.7);
+        box-shadow: 0 12px 24px -10px rgba(0, 240, 255, 0.3),
+                    0 0 20px 2px rgba(0, 240, 255, 0.12);
+    }
+    100% {
+        border-color: rgba(255, 0, 127, 0.5);
+        box-shadow: 0 12px 24px -10px rgba(255, 0, 127, 0.3),
+                    0 0 0 0 rgba(255, 0, 127, 0);
+    }
 }
