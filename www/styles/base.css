@@ -152,3 +152,113 @@ body {
         filter: blur(60px);
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 7.1 — Mobil Alt Navigasyon Barı
+   Masaüstünde gizlenir, sadece mobilde aktif olur.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Varsayılan: masaüstünde bottom nav yok */
+.bottom-nav {
+    display: none;
+}
+
+/* ── Mobil: bottom nav göster, sidebar menüyü gizle ── */
+@media screen and (max-width: 768px) {
+
+    /* Bottom nav barı göster ve sabitle */
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 66px;
+        background: rgba(11, 8, 19, 0.97);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(255, 0, 127, 0.25);
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0 4px;
+        /* iPhone alt çentik boşluğu için */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Sidebar menü butonlarını gizle — artık alt barda var */
+    .menu-items {
+        display: none !important;
+    }
+
+    /* Playlist bölümünü de gizle (mobilde yer kaplıyor) */
+    #playlist-section-container {
+        display: none !important;
+    }
+
+    /* Sidebar sadece logo + dil butonu — kompakt yap */
+    nav.sidebar-glass {
+        padding: 10px 15px !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* Ana içerik bottom nav'ın arkasında kalmasın */
+    .main-content-glass {
+        padding-bottom: 80px !important;
+    }
+}
+
+/* ── Bottom nav buton stilleri ── */
+.bottom-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: #475569;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    /* Dokunma hedefi: minimum 44x44px */
+    min-height: 44px;
+}
+
+.bottom-nav-btn .bn-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.bottom-nav-btn .bn-label {
+    font-size: 0.57rem;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+    transition: color 0.2s ease;
+}
+
+.bottom-nav-btn:hover {
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Aktif buton: synthwave pembe ile parlıyor */
+.bottom-nav-btn.active {
+    color: #ff007f;
+}
+
+.bottom-nav-btn.active .bn-icon {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.7));
+}
+
+.bottom-nav-btn.active .bn-label {
+    color: #ff007f;
+}

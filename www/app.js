@@ -98,12 +98,12 @@ async function initializeApp() {
         };
     }
 
-    // Menü butonları
-    document.getElementById('menu-library')?.addEventListener('click', () => callSwitchView('library'));
-    document.getElementById('menu-favorites')?.addEventListener('click', () => callSwitchView('favorites'));
-    document.getElementById('menu-stats')?.addEventListener('click', () => callSwitchView('stats'));
-    document.getElementById('menu-add-video')?.addEventListener('click', () => callSwitchView('add'));
-    document.getElementById('menu-tag-manager')?.addEventListener('click', () => callSwitchView('tagManager'));
+    // Sidebar menü butonları — tıklanınca bottom nav'ı da senkronize eder
+    document.getElementById('menu-library')?.addEventListener('click', () => { callSwitchView('library'); syncBottomNavActiveState('library'); });
+    document.getElementById('menu-favorites')?.addEventListener('click', () => { callSwitchView('favorites'); syncBottomNavActiveState('favorites'); });
+    document.getElementById('menu-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
+    document.getElementById('menu-add-video')?.addEventListener('click', () => { callSwitchView('add'); syncBottomNavActiveState('add'); });
+    document.getElementById('menu-tag-manager')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
 
     // Pratik Başlat
     document.getElementById('btn-start-practice')?.addEventListener('click', () => {
@@ -202,6 +202,34 @@ async function initializeApp() {
     setupStoreSubscriptions();
     window.applyFiltersAndSearch = applyFiltersAndSearch;
     setupInfiniteScroll();
+
+    // ── Adım 7.1: Bottom Nav butonları ──────────────────────────
+    document.getElementById('bn-library')?.addEventListener('click', () => { callSwitchView('library'); syncBottomNavActiveState('library'); });
+    document.getElementById('bn-favorites')?.addEventListener('click', () => { callSwitchView('favorites'); syncBottomNavActiveState('favorites'); });
+    document.getElementById('bn-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
+    document.getElementById('bn-add')?.addEventListener('click', () => { callSwitchView('add'); syncBottomNavActiveState('add'); });
+    document.getElementById('bn-tags')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
+}
+
+// ── Adım 7.1: Bottom nav aktif durumunu senkronize et ────────
+// Her view geçişinde çağrılır: ilgili bottom nav butonunu aktif yapar.
+export function syncBottomNavActiveState(viewName) {
+    const map = {
+        library:    'bn-library',
+        favorites:  'bn-favorites',
+        stats:      'bn-stats',
+        add:        'bn-add',
+        tagManager: 'bn-tags'
+    };
+    // Tüm bottom nav butonlarından active class'ı kaldır
+    document.querySelectorAll('.bottom-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    // İlgili butona active ekle
+    const targetId = map[viewName];
+    if (targetId) {
+        document.getElementById(targetId)?.classList.add('active');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
