@@ -1,5 +1,6 @@
 /* ============================================
    buttons.css - Tüm buton stilleri
+   ✅ GÜNCELLEME (Adım 2.3): .btn-start-practice eklendi
    ============================================ */
 
 /* Menü butonları */
@@ -78,6 +79,38 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
     background: linear-gradient(135deg, #ff4da6, #3cefff);
+}
+
+/* ✅ YENİ (Adım 2.3): Pratik Başlat butonu
+   Synthwave temasına uygun neon yeşil-cyan aksanı.
+   Koleksiyon sayfasında arama barının yanında durur.
+*/
+.btn-start-practice {
+    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,240,255,0.15));
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #10b981;
+    padding: 10px 20px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+.btn-start-practice:hover {
+    background: linear-gradient(135deg, rgba(16,185,129,0.35), rgba(0,240,255,0.25));
+    border-color: rgba(16, 185, 129, 0.8);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+    transform: translateY(-2px);
+    color: #34d399;
+}
+
+.btn-start-practice:active {
+    transform: translateY(0);
 }
 
 /* Tehlikeli buton (temizle, sil) */
@@ -199,6 +232,11 @@
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+
+    .btn-start-practice {
+        width: 100%;
+        justify-content: center;
     }
 
     .fav-star-btn,

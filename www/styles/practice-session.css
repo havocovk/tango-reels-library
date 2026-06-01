@@ -1,0 +1,371 @@
+/* styles/practice-session.css
+   Odak Pratik Modu — tam ekran kart görünümü
+   Mevcut synthwave temasıyla (pembe/cyan/koyu) uyumlu
+*/
+
+/* ── Dış kapsayıcı ── */
+#view-practice-session-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    padding: 0;
+    position: relative;
+}
+
+/* ── Üst bar (ilerleme + çıkış) ── */
+.practice-topbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px 12px 24px;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+    flex-shrink: 0;
+}
+
+.practice-exit-btn {
+    background: rgba(255, 0, 127, 0.15);
+    border: 1px solid rgba(255, 0, 127, 0.4);
+    color: #ff007f;
+    padding: 6px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.practice-exit-btn:hover {
+    background: rgba(255, 0, 127, 0.3);
+    transform: scale(1.03);
+}
+
+.practice-progress-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.practice-progress-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.practice-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff007f, #00f0ff);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.practice-progress-text {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 48px;
+    text-align: right;
+}
+
+/* ── Kapak resmi ── */
+.practice-cover-wrap {
+    padding: 20px 24px 0 24px;
+    flex-shrink: 0;
+}
+
+.practice-cover-img {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding-top: 56.25%;
+    background-size: cover;
+    background-position: center;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 0, 127, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    display: block;
+}
+
+.practice-play-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(11, 8, 19, 0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+}
+
+.practice-cover-img:hover .practice-play-overlay {
+    opacity: 1;
+}
+
+.practice-play-icon {
+    background: #ff007f;
+    color: #fff;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    padding-left: 4px;
+    box-shadow: 0 4px 16px rgba(255, 0, 127, 0.5);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.practice-cover-img:hover .practice-play-icon {
+    transform: scale(1.1);
+    background: #00f0ff;
+    color: #0b0813;
+}
+
+.practice-watch-label {
+    color: #f1f5f9;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ── Video bilgi bloğu ── */
+.practice-info-block {
+    padding: 18px 24px 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 520px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.practice-instructor {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ff007f;
+}
+
+.practice-partner {
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.practice-badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.practice-tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.practice-note {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-style: italic;
+    margin-top: 2px;
+    line-height: 1.5;
+}
+
+/* ── Aksiyon butonları ── */
+.practice-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px 24px 24px;
+    max-width: 520px;
+    margin: 0 auto;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.practice-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+}
+
+.practice-btn:hover {
+    transform: translateY(-3px);
+}
+
+.practice-btn-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+/* Geç (soluk gri) */
+.practice-btn-skip {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+}
+.practice-btn-skip:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #f1f5f9;
+}
+
+/* İzle (cyan) */
+.practice-btn-watch {
+    background: rgba(0, 240, 255, 0.12);
+    border-color: rgba(0, 240, 255, 0.35);
+    color: #00f0ff;
+}
+.practice-btn-watch:hover {
+    background: rgba(0, 240, 255, 0.22);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+}
+
+/* Çalıştım (pembe/yeşil gradient — başarı rengi) */
+.practice-btn-done {
+    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.1));
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #10b981;
+}
+.practice-btn-done:hover {
+    background: linear-gradient(135deg, rgba(16,185,129,0.35), rgba(16,185,129,0.2));
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+}
+
+/* ── ÖZET EKRANI ── */
+#practice-summary-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    padding: 40px 24px;
+}
+
+.practice-summary-card {
+    background: rgba(11, 8, 19, 0.7);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.08);
+}
+
+.practice-summary-emoji {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.practice-summary-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff007f, #00f0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 28px;
+}
+
+.practice-summary-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.practice-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.practice-stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #00f0ff;
+    line-height: 1;
+}
+
+.practice-stat-label {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.practice-stat-divider {
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 1.5rem;
+    padding-bottom: 18px;
+}
+
+.practice-summary-message {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.practice-return-btn {
+    background: linear-gradient(135deg, #ff007f, #c0005a);
+    border: none;
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(255, 0, 127, 0.35);
+    width: 100%;
+}
+
+.practice-return-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 0, 127, 0.45);
+}
+
+/* ── Mobil uyumu ── */
+@media screen and (max-width: 600px) {
+    .practice-topbar        { padding: 12px 16px 10px 16px; }
+    .practice-cover-wrap    { padding: 14px 16px 0 16px; }
+    .practice-info-block    { padding: 14px 16px 0 16px; }
+    .practice-actions       { padding: 16px 16px 20px 16px; gap: 8px; }
+    .practice-btn           { padding: 12px 6px; font-size: 0.76rem; }
+    .practice-btn-icon      { font-size: 1.2rem; }
+    .practice-summary-card  { padding: 28px 20px; }
+    .practice-summary-title { font-size: 1.25rem; }
+    .practice-stat-number   { font-size: 1.6rem; }
+}

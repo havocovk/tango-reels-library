@@ -1,0 +1,89 @@
+<!-- views/practice-session.html - Odak Pratik Modu -->
+<div id="view-practice-session-container" class="view-panel d-none">
+
+    <!-- ── AKTIF KART EKRANI ── -->
+    <div id="practice-active-screen">
+
+        <!-- Üst bar: ilerleme + çıkış -->
+        <div class="practice-topbar">
+            <button id="practice-exit-btn" class="practice-exit-btn" title="Çık">✕ Çık</button>
+            <div class="practice-progress-wrap">
+                <div class="practice-progress-bar-bg">
+                    <div id="practice-progress-bar" class="practice-progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <span id="practice-progress-text" class="practice-progress-text">0 / 0</span>
+            </div>
+        </div>
+
+        <!-- Büyük kapak resmi -->
+        <div class="practice-cover-wrap">
+            <div id="practice-cover-img" class="practice-cover-img">
+                <div id="practice-play-btn" class="practice-play-overlay">
+                    <span class="practice-play-icon">▶</span>
+                    <span id="practice-watch-label" class="practice-watch-label">İzle</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video bilgileri -->
+        <div class="practice-info-block">
+            <div class="practice-instructor" id="practice-instructor-name">—</div>
+            <div class="practice-partner" id="practice-partner-name"></div>
+
+            <!-- Statü badge -->
+            <div class="practice-badges-row" id="practice-badges-row"></div>
+
+            <!-- Etiketler -->
+            <div class="practice-tags-row" id="practice-tags-row"></div>
+
+            <!-- Not -->
+            <div class="practice-note" id="practice-note-text"></div>
+        </div>
+
+        <!-- Aksiyon butonları -->
+        <div class="practice-actions">
+            <button id="btn-practice-skip" class="practice-btn practice-btn-skip">
+                <span class="practice-btn-icon">⏭</span>
+                <span id="skip-label">Geç</span>
+            </button>
+            <button id="btn-practice-watch" class="practice-btn practice-btn-watch">
+                <span class="practice-btn-icon">▶</span>
+                <span id="watch-label">İzle</span>
+            </button>
+            <button id="btn-practice-done" class="practice-btn practice-btn-done">
+                <span class="practice-btn-icon">✓</span>
+                <span id="done-label">Çalıştım</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ── ÖZET EKRANI (oturum bitince gösterilir) ── -->
+    <div id="practice-summary-screen" class="d-none">
+        <div class="practice-summary-card">
+            <div class="practice-summary-emoji">🎉</div>
+            <h2 class="practice-summary-title" id="summary-title">Pratik Tamamlandı!</h2>
+            <div class="practice-summary-stats">
+                <div class="practice-stat-item">
+                    <span class="practice-stat-number" id="summary-practiced-count">0</span>
+                    <span class="practice-stat-label" id="summary-practiced-label">Çalışıldı</span>
+                </div>
+                <div class="practice-stat-divider">|</div>
+                <div class="practice-stat-item">
+                    <span class="practice-stat-number" id="summary-skipped-count">0</span>
+                    <span class="practice-stat-label" id="summary-skipped-label">Geçildi</span>
+                </div>
+                <div class="practice-stat-divider">|</div>
+                <div class="practice-stat-item">
+                    <span class="practice-stat-number" id="summary-duration">0:00</span>
+                    <span class="practice-stat-label" id="summary-duration-label">Süre</span>
+                </div>
+            </div>
+            <p class="practice-summary-message" id="summary-message"></p>
+            <button id="btn-practice-return" class="practice-return-btn">
+                📚 Koleksiyona Dön
+            </button>
+        </div>
+    </div>
+
+</div>
