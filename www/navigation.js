@@ -1,14 +1,18 @@
-// navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme (optimize edilmiş)
+// navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme
+// ✅ DÜZELTİLDİ (Adım 2.4 Sorun 3):
+//    callSwitchView() içine clearActivePlaylist() eklendi.
+//    Herhangi bir menü butonuna tıklanınca aktif playlist seçimi otomatik temizlenir.
 import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomConfirm } from './tangoModals.js';
-import { showToast } from './toast.js';  // ✅ DOĞRU IMPORT
+import { showToast } from './toast.js';
 import { setVisibleCount, setVideoHandlersGlobalData, applyFiltersAndSearch } from './videoHandlers.js';
 import { switchView, updateInterfaceLanguage, updateSmartFilenameAssistant } from './tangoUI.js';
 import { setEditingVideoId, setEditingVideoUpdatedAt, setFormTagsArray, renderFormChips, getFormTagsArray, formTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
 import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { store } from './store.js';
+import { clearActivePlaylist } from './playlistManager.js'; // ✅ YENİ
 
 export function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
@@ -16,11 +20,11 @@ export function callUpdateSmartAssistant() {
 
 export function callUpdateInterfaceLanguage() {
     updateInterfaceLanguage(
-        store.get('currentLang'), 
-        store.get('editingVideoId'), 
-        store.get('editInstructorId'), 
-        formTagsArray, 
-        applyFiltersAndSearch, 
+        store.get('currentLang'),
+        store.get('editingVideoId'),
+        store.get('editInstructorId'),
+        formTagsArray,
+        applyFiltersAndSearch,
         () => {
             const videos = store.get('globalVideos');
             if (videos.length) {
@@ -32,18 +36,22 @@ export function callUpdateInterfaceLanguage() {
     if (videos.length) {
         import('./tangoFilters.js').then(tf => tf.populateFilterDropdowns(videos, store.get('currentLang')));
     }
-    
     if (store.get('currentView') === 'stats') renderStatsPanel();
 }
 
 export function callSwitchView(viewName) {
+    // ✅ DÜZELTİLDİ (Sorun 3): Menü değişince playlist seçimini temizle.
+    // Bu sayede Koleksiyon, Favoriler, İstatistikler vb. butonlarına tıklanınca
+    // playlist filtresi kalkmaz ve tüm koleksiyon tekrar görünür.
+    clearActivePlaylist();
+
     store.set('currentView', viewName);
     store.set('visibleCount', 20);
     setVisibleCount(store.get('visibleCount'));
     setVideoHandlersGlobalData(store.get('currentLang'), viewName, store.get('visibleCount'));
     switchView(viewName, getUIState(), {
-        applyFiltersAndSearch, 
-        renderFormChips: () => renderFormChips(), 
+        applyFiltersAndSearch,
+        renderFormChips: () => renderFormChips(),
         resetUploadedCoverUrl: () => {
             import('./storage.js').then(s => s.resetUploadedCoverUrl());
         },
@@ -53,16 +61,15 @@ export function callSwitchView(viewName) {
     if (viewName === 'tagManager') renderTagManagerUI();
 }
 
-// ✅ DÜZELTİLMİŞ: clearAllFavorites (yerel güncelleme, fetchVideos yok, showToast kullanıyor)
 export async function clearAllFavorites() {
     const currentLang = store.get('currentLang');
     const lang = translations[currentLang];
-    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const okText     = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
     if (!await showCustomConfirm(lang.confirmClearFavs, okText, cancelText)) return;
     try {
         await dbClearAllFavorites();
-        store.clearFavoritesLocally();   // store.js'deki metod
+        store.clearFavoritesLocally();
         if (window.applyFiltersAndSearch) window.applyFiltersAndSearch();
         showToast('Pratik listesi temizlendi', 'success');
     } catch (err) {
@@ -71,15 +78,14 @@ export async function clearAllFavorites() {
     }
 }
 
-export function callGetUniqueTagsPool() { 
-    return getAllUniqueTagsPool(store.get('globalVideos')); 
+export function callGetUniqueTagsPool() {
+    return getAllUniqueTagsPool(store.get('globalVideos'));
 }
 
 export function startVideoEditFlow(video) {
     store.set('editingVideoId', video.id);
     setEditingVideoId(video.id);
     setEditingVideoUpdatedAt(video.updated_at);
-    console.log("Düzenlenen video updated_at:", video.updated_at);
     callSwitchView('add');
     const lang = translations[store.get('currentLang')];
     document.getElementById('form-title').innerText = lang.formTitleEdit;
@@ -88,24 +94,26 @@ export function startVideoEditFlow(video) {
     document.getElementById('form-video-url').value = video.url || '';
     document.getElementById('form-role-select').value = video.role_type || 'Both';
     document.getElementById('form-partner-name').value = video.partner_name || '';
-    const tagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(t => t) : [];
+    const tagsArray = video.tags
+        ? video.tags.split(',').map(t => t.trim()).filter(t => t)
+        : [];
     setFormTagsArray(tagsArray);
     renderFormChips();
-    const isDownloaded = document.getElementById('form-is-downloaded');
+    const isDownloaded      = document.getElementById('form-is-downloaded');
     const driveUrlContainer = document.getElementById('drive-url-container');
-    const driveUrlInput = document.getElementById('form-drive-url');
+    const driveUrlInput     = document.getElementById('form-drive-url');
     if (video.is_downloaded) {
         isDownloaded.checked = true;
         driveUrlContainer.classList.remove('d-none');
-        driveUrlInput.value = video.drive_url || '';
+        driveUrlInput.value    = video.drive_url || '';
         driveUrlInput.required = true;
     } else {
         isDownloaded.checked = false;
         driveUrlContainer.classList.add('d-none');
-        driveUrlInput.value = '';
+        driveUrlInput.value    = '';
         driveUrlInput.required = false;
     }
-    const imgPreview = document.getElementById('image-preview');
+    const imgPreview  = document.getElementById('image-preview');
     const dropAreaText = document.getElementById('drop-area-text');
     if (video.cover_url) {
         imgPreview.src = video.cover_url;
@@ -121,11 +129,11 @@ export function startVideoEditFlow(video) {
 
 function getUIState() {
     return {
-        currentLang: store.get('currentLang'),
+        currentLang:   store.get('currentLang'),
         editingVideoId: store.get('editingVideoId'),
         editInstructorId: store.get('editInstructorId'),
-        currentView: store.get('currentView'),
-        getFormTags: () => getFormTagsArray(),
+        currentView:   store.get('currentView'),
+        getFormTags:   () => getFormTagsArray(),
         resetFormTags: () => { setFormTagsArray([]); }
     };
 }

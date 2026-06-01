@@ -1,10 +1,13 @@
-// playlistManager.js - Çoklu Playlist Yönetimi (Adım 2.4)
-// Playlist oluşturma, silme, yeniden adlandırma ve video ekleme/çıkarma işlemlerini yönetir.
-// Sol menünün altında playlist listesi render edilir.
-// Video kartlarında playlist butonu açılır menü gösterir.
+// playlistManager.js - Çoklu Playlist Yönetimi
+// ✅ DÜZELTİLDİ (3 sorun):
+//   1. prompt()/confirm() → sitenin özel modal sistemi (showModernPrompt/showCustomConfirm)
+//   2. Renk kodu girişi → 10 renkli hazır palet (tıklayarak seçim)
+//   3. Koleksiyon butonuna dönünce playlist seçimi temizleniyor (navigation.js'de)
 
 import { store } from './store.js';
 import { showToast } from './toast.js';
+import { showCustomConfirm } from './tangoModals.js';
+import { showModernPrompt } from './utils.js';
 import {
     dbFetchPlaylists,
     dbCreatePlaylist,
@@ -16,9 +19,134 @@ import {
 } from './db/playlists.js';
 
 // ─────────────────────────────────────────────────────────────
-// initPlaylists()
-// Uygulama başlangıcında çağrılır. Tüm playlist'leri çeker
-// ve store'a yazar. Ardından sol menüde render eder.
+// Synthwave temasıyla uyumlu 10 hazır renk paleti
+// ─────────────────────────────────────────────────────────────
+const PALETTE = [
+    { color: '#ff007f', label: 'Neon Pembe'   },
+    { color: '#00f0ff', label: 'Cyan'          },
+    { color: '#10b981', label: 'Yeşil'         },
+    { color: '#f59e0b', label: 'Turuncu'       },
+    { color: '#8b5cf6', label: 'Mor'           },
+    { color: '#ef4444', label: 'Kırmızı'       },
+    { color: '#3b82f6', label: 'Mavi'          },
+    { color: '#ec4899', label: 'Pembe'         },
+    { color: '#14b8a6', label: 'Turkuaz'       },
+    { color: '#f97316', label: 'Turuncu-Kırmızı' }
+];
+
+// ─────────────────────────────────────────────────────────────
+// showPlaylistFormModal(title, defaultName, defaultColor)
+// Hem "yeni liste oluştur" hem "listeyi düzenle" için kullanılır.
+// Sitenin özel modal sistemi üzerinden çalışır.
+// { name, color } döner; iptal edilirse null döner.
+// ─────────────────────────────────────────────────────────────
+function showPlaylistFormModal(title, defaultName = '', defaultColor = '#ff007f') {
+    return new Promise((resolve) => {
+        const modal   = document.getElementById('custom-dialog-modal');
+        const msgEl   = document.getElementById('custom-dialog-message');
+        const okBtn   = document.getElementById('custom-dialog-ok-btn');
+        const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+        if (!modal || !msgEl || !okBtn || !cancelBtn) { resolve(null); return; }
+
+        const lang = store.get('currentLang');
+        let selectedColor = defaultColor;
+
+        // Renk paleti HTML'i
+        const paletteHtml = PALETTE.map(p => `
+            <button
+                type="button"
+                class="palette-dot"
+                data-color="${p.color}"
+                title="${p.label}"
+                style="
+                    width:28px; height:28px; border-radius:50%;
+                    background:${p.color};
+                    border: 3px solid ${p.color === defaultColor ? '#ffffff' : 'transparent'};
+                    cursor:pointer; transition: border 0.15s ease;
+                    flex-shrink:0;
+                "
+            ></button>
+        `).join('');
+
+        msgEl.innerHTML = `
+            <div style="text-align:left;">
+                <div style="font-size:1rem; font-weight:600; color:#f1f5f9; margin-bottom:14px;">
+                    ${title}
+                </div>
+                <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:6px;">
+                    ${lang === 'tr' ? 'Liste Adı:' : 'List Name:'}
+                </label>
+                <input
+                    type="text"
+                    id="playlist-form-name"
+                    value="${escapeHtml(defaultName)}"
+                    placeholder="${lang === 'tr' ? 'Örn: Milonga Repertuarı' : 'e.g. Milonga Repertoire'}"
+                    style="
+                        width:100%; padding:10px 12px;
+                        background:#0b0813; border:1px solid #ff007f;
+                        border-radius:8px; color:#f1f5f9; outline:none;
+                        font-size:0.9rem; margin-bottom:16px;
+                        font-family:inherit; box-sizing:border-box;
+                    "
+                >
+                <label style="font-size:0.8rem; color:#94a3b8; display:block; margin-bottom:8px;">
+                    ${lang === 'tr' ? 'Renk Seç:' : 'Pick a Color:'}
+                </label>
+                <div id="palette-container" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px;">
+                    ${paletteHtml}
+                </div>
+            </div>
+        `;
+
+        okBtn.innerText     = lang === 'tr' ? 'Kaydet' : 'Save';
+        cancelBtn.innerText = lang === 'tr' ? 'İptal'  : 'Cancel';
+        cancelBtn.classList.remove('d-none');
+        modal.classList.remove('d-none');
+
+        // Renk seçimi
+        const paletteContainer = document.getElementById('palette-container');
+        if (paletteContainer) {
+            paletteContainer.addEventListener('click', (e) => {
+                const dot = e.target.closest('.palette-dot');
+                if (!dot) return;
+                selectedColor = dot.dataset.color;
+                // Tüm dotları sıfırla, seçileni vurgula
+                paletteContainer.querySelectorAll('.palette-dot').forEach(d => {
+                    d.style.border = `3px solid ${d.dataset.color === selectedColor ? '#ffffff' : 'transparent'}`;
+                    d.style.transform = d.dataset.color === selectedColor ? 'scale(1.2)' : 'scale(1)';
+                });
+            });
+        }
+
+        // Input'a otomatik focus
+        setTimeout(() => document.getElementById('playlist-form-name')?.focus(), 50);
+
+        const handleOk = () => {
+            const name = document.getElementById('playlist-form-name')?.value?.trim();
+            modal.classList.add('d-none');
+            cleanup();
+            if (!name) { resolve(null); return; }
+            resolve({ name, color: selectedColor });
+        };
+
+        const handleCancel = () => {
+            modal.classList.add('d-none');
+            cleanup();
+            resolve(null);
+        };
+
+        const cleanup = () => {
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+        };
+
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// initPlaylists — uygulama başlangıcında çağrılır
 // ─────────────────────────────────────────────────────────────
 export async function initPlaylists() {
     try {
@@ -31,9 +159,7 @@ export async function initPlaylists() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// renderPlaylistsInSidebar()
-// Sol menüdeki #playlist-section-container div'ini doldurur.
-// Her playlist bir buton, aktif olan vurgulanır.
+// renderPlaylistsInSidebar — sol menüyü günceller
 // ─────────────────────────────────────────────────────────────
 export function renderPlaylistsInSidebar() {
     const container = document.getElementById('playlist-section-container');
@@ -45,7 +171,7 @@ export function renderPlaylistsInSidebar() {
 
     container.innerHTML = '';
 
-    // Bölüm başlığı + yeni playlist butonu
+    // Başlık + yeni liste butonu
     const header = document.createElement('div');
     header.className = 'playlist-sidebar-header';
     header.innerHTML = `
@@ -53,7 +179,6 @@ export function renderPlaylistsInSidebar() {
         <button id="btn-new-playlist" class="playlist-new-btn" title="${lang === 'tr' ? 'Yeni Liste' : 'New List'}">＋</button>
     `;
     container.appendChild(header);
-
     header.querySelector('#btn-new-playlist').onclick = () => promptCreatePlaylist();
 
     if (playlists.length === 0) {
@@ -69,7 +194,7 @@ export function renderPlaylistsInSidebar() {
         btn.className = 'playlist-sidebar-btn' + (pl.id === activeId ? ' active' : '');
         btn.dataset.playlistId = pl.id;
         btn.innerHTML = `
-            <span class="playlist-color-dot" style="background: ${pl.color || '#ff007f'};"></span>
+            <span class="playlist-color-dot" style="background:${pl.color || '#ff007f'};"></span>
             <span class="playlist-btn-name">${escapeHtml(pl.name)}</span>
             <span class="playlist-btn-actions">
                 <button class="playlist-edit-btn" data-id="${pl.id}" title="${lang === 'tr' ? 'Düzenle' : 'Edit'}">✏️</button>
@@ -77,19 +202,16 @@ export function renderPlaylistsInSidebar() {
             </span>
         `;
 
-        // Playlist'e tıkla → aktif yap ve filtrele
         btn.addEventListener('click', (e) => {
-            if (e.target.closest('.playlist-btn-actions')) return; // düzenle/sil tıklandı
+            if (e.target.closest('.playlist-btn-actions')) return;
             selectPlaylist(pl.id);
         });
 
-        // Düzenle
         btn.querySelector('.playlist-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             promptEditPlaylist(pl);
         });
 
-        // Sil
         btn.querySelector('.playlist-delete-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             confirmDeletePlaylist(pl);
@@ -100,19 +222,14 @@ export function renderPlaylistsInSidebar() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// selectPlaylist(playlistId)
-// Bir playlist'i aktif yapar; store güncellenir ve
-// videoHandlers applyFiltersAndSearch çağrılır (uiSubscriptions üzerinden).
-// null geçilirse seçim kaldırılır.
+// selectPlaylist — bir playlist'i aktif yap / seçimi kaldır
 // ─────────────────────────────────────────────────────────────
 export async function selectPlaylist(playlistId) {
     if (store.get('activePlaylistId') === playlistId) {
-        // Aynı playlist'e tekrar tıklandı → seçimi kaldır
         store.set('activePlaylistId', null);
         store.set('activePlaylistVideoIds', []);
     } else {
         store.set('activePlaylistId', playlistId);
-        // O playlist'in video ID'lerini çek
         try {
             const ids = await dbFetchPlaylistVideoIds(playlistId);
             store.set('activePlaylistVideoIds', ids);
@@ -122,28 +239,31 @@ export async function selectPlaylist(playlistId) {
         }
     }
     renderPlaylistsInSidebar();
-    // uiSubscriptions activePlaylistId değişimini dinliyor ve applyFiltersAndSearch tetikliyor
 }
 
 // ─────────────────────────────────────────────────────────────
-// promptCreatePlaylist()
-// Kullanıcıdan yeni playlist adı ve rengi ister.
+// clearActivePlaylist — menü değişince seçimi temizle (Sorun 3)
+// navigation.js callSwitchView() içinden çağrılır.
 // ─────────────────────────────────────────────────────────────
-export function promptCreatePlaylist() {
+export function clearActivePlaylist() {
+    if (store.get('activePlaylistId') !== null) {
+        store.set('activePlaylistId', null);
+        store.set('activePlaylistVideoIds', []);
+        renderPlaylistsInSidebar();
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// promptCreatePlaylist — yeni liste oluşturma formu (Sorun 1 + 2)
+// ─────────────────────────────────────────────────────────────
+export async function promptCreatePlaylist() {
     const lang = store.get('currentLang');
-    const name = prompt(lang === 'tr' ? 'Yeni liste adı:' : 'New list name:');
-    if (!name || !name.trim()) return;
-    const color = prompt(
-        lang === 'tr' ? 'Renk kodu (örn: #ff007f):' : 'Color code (e.g. #ff007f):',
-        '#ff007f'
-    ) || '#ff007f';
-    createNewPlaylist(name.trim(), color.trim());
+    const title = lang === 'tr' ? '➕ Yeni Liste Oluştur' : '➕ Create New List';
+    const result = await showPlaylistFormModal(title, '', '#ff007f');
+    if (!result) return;
+    await createNewPlaylist(result.name, result.color);
 }
 
-// ─────────────────────────────────────────────────────────────
-// createNewPlaylist(name, color)
-// DB'ye yazar, store'u günceller, sidebar'ı yeniler.
-// ─────────────────────────────────────────────────────────────
 export async function createNewPlaylist(name, color = '#ff007f') {
     const lang = store.get('currentLang');
     try {
@@ -151,7 +271,7 @@ export async function createNewPlaylist(name, color = '#ff007f') {
         const playlists = store.get('globalPlaylists') || [];
         store.set('globalPlaylists', [...playlists, newPlaylist]);
         renderPlaylistsInSidebar();
-        showToast(lang === 'tr' ? `"${name}" listesi oluşturuldu` : `"${name}" list created`, 'success');
+        showToast(lang === 'tr' ? `"${name}" listesi oluşturuldu ✅` : `"${name}" list created ✅`, 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Liste oluşturulamadı' : 'Failed to create list', 'error');
         console.error(err);
@@ -159,21 +279,14 @@ export async function createNewPlaylist(name, color = '#ff007f') {
 }
 
 // ─────────────────────────────────────────────────────────────
-// promptEditPlaylist(playlist)
-// Var olan bir playlist'in adını ve rengini düzenler.
+// promptEditPlaylist — liste düzenleme formu (Sorun 1 + 2)
 // ─────────────────────────────────────────────────────────────
-export function promptEditPlaylist(playlist) {
+export async function promptEditPlaylist(playlist) {
     const lang = store.get('currentLang');
-    const newName = prompt(
-        lang === 'tr' ? 'Liste adı:' : 'List name:',
-        playlist.name
-    );
-    if (!newName || !newName.trim()) return;
-    const newColor = prompt(
-        lang === 'tr' ? 'Renk kodu:' : 'Color code:',
-        playlist.color || '#ff007f'
-    ) || playlist.color || '#ff007f';
-    editPlaylist(playlist.id, newName.trim(), newColor.trim());
+    const title = lang === 'tr' ? '✏️ Listeyi Düzenle' : '✏️ Edit List';
+    const result = await showPlaylistFormModal(title, playlist.name, playlist.color || '#ff007f');
+    if (!result) return;
+    await editPlaylist(playlist.id, result.name, result.color);
 }
 
 export async function editPlaylist(id, name, color) {
@@ -185,7 +298,7 @@ export async function editPlaylist(id, name, color) {
         );
         store.set('globalPlaylists', playlists);
         renderPlaylistsInSidebar();
-        showToast(lang === 'tr' ? 'Liste güncellendi' : 'List updated', 'success');
+        showToast(lang === 'tr' ? 'Liste güncellendi ✅' : 'List updated ✅', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Güncelleme hatası' : 'Update failed', 'error');
         console.error(err);
@@ -193,16 +306,18 @@ export async function editPlaylist(id, name, color) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// confirmDeletePlaylist(playlist)
-// Onay alıp playlist'i siler.
+// confirmDeletePlaylist — silme onayı (Sorun 1)
 // ─────────────────────────────────────────────────────────────
-export function confirmDeletePlaylist(playlist) {
+export async function confirmDeletePlaylist(playlist) {
     const lang = store.get('currentLang');
+    const okText     = lang === 'tr' ? 'Evet, Sil' : 'Yes, Delete';
+    const cancelText = lang === 'tr' ? 'İptal'     : 'Cancel';
     const msg = lang === 'tr'
         ? `"${playlist.name}" listesini silmek istediğinize emin misiniz?`
         : `Are you sure you want to delete "${playlist.name}"?`;
-    if (!confirm(msg)) return;
-    deletePlaylist(playlist.id);
+    const confirmed = await showCustomConfirm(msg, okText, cancelText);
+    if (!confirmed) return;
+    await deletePlaylist(playlist.id);
 }
 
 export async function deletePlaylist(id) {
@@ -211,13 +326,12 @@ export async function deletePlaylist(id) {
         await dbDeletePlaylist(id);
         const playlists = store.get('globalPlaylists').filter(p => p.id !== id);
         store.set('globalPlaylists', playlists);
-        // Aktif playlist silindiyse seçimi kaldır
         if (store.get('activePlaylistId') === id) {
             store.set('activePlaylistId', null);
             store.set('activePlaylistVideoIds', []);
         }
         renderPlaylistsInSidebar();
-        showToast(lang === 'tr' ? 'Liste silindi' : 'List deleted', 'success');
+        showToast(lang === 'tr' ? 'Liste silindi 🗑️' : 'List deleted 🗑️', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Silme hatası' : 'Delete failed', 'error');
         console.error(err);
@@ -225,19 +339,15 @@ export async function deletePlaylist(id) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// addToPlaylist(videoId, playlistId)
-// Bir videoyu bir playlist'e ekler ve store'daki ID listesini günceller.
+// addToPlaylist / removeFromPlaylist
 // ─────────────────────────────────────────────────────────────
 export async function addToPlaylist(videoId, playlistId) {
     const lang = store.get('currentLang');
     try {
         await dbAddVideoToPlaylist(playlistId, videoId);
-        // Aktif playlist ise store'daki ID listesini güncelle
         if (store.get('activePlaylistId') === playlistId) {
             const ids = store.get('activePlaylistVideoIds') || [];
-            if (!ids.includes(videoId)) {
-                store.set('activePlaylistVideoIds', [...ids, videoId]);
-            }
+            if (!ids.includes(videoId)) store.set('activePlaylistVideoIds', [...ids, videoId]);
         }
         showToast(lang === 'tr' ? '✅ Listeye eklendi' : '✅ Added to list', 'success');
     } catch (err) {
@@ -246,15 +356,10 @@ export async function addToPlaylist(videoId, playlistId) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// removeFromPlaylist(videoId, playlistId)
-// Bir videoyu bir playlist'ten çıkarır.
-// ─────────────────────────────────────────────────────────────
 export async function removeFromPlaylist(videoId, playlistId) {
     const lang = store.get('currentLang');
     try {
         await dbRemoveVideoFromPlaylist(playlistId, videoId);
-        // Aktif playlist ise store'daki ID listesini güncelle
         if (store.get('activePlaylistId') === playlistId) {
             const ids = (store.get('activePlaylistVideoIds') || []).filter(id => id !== videoId);
             store.set('activePlaylistVideoIds', ids);
@@ -267,12 +372,9 @@ export async function removeFromPlaylist(videoId, playlistId) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// showPlaylistDropdown(videoId, anchorEl)
-// Bir video kartındaki ➕ butonuna tıklandığında
-// mevcut playlist'leri gösteren açılır mini menü render eder.
+// showPlaylistDropdown — kart üzerindeki 📋 butonuna tıklanınca
 // ─────────────────────────────────────────────────────────────
 export function showPlaylistDropdown(videoId, anchorEl) {
-    // Varsa önceki dropdown'ı kapat
     closeAllPlaylistDropdowns();
 
     const playlists = store.get('globalPlaylists') || [];
@@ -281,7 +383,7 @@ export function showPlaylistDropdown(videoId, anchorEl) {
 
     if (playlists.length === 0) {
         showToast(
-            lang === 'tr' ? 'Önce bir liste oluşturun (sol menü)' : 'Create a list first (left menu)',
+            lang === 'tr' ? 'Önce bir liste oluşturun (sol menü ＋)' : 'Create a list first (left menu ＋)',
             'error'
         );
         return;
@@ -302,20 +404,17 @@ export function showPlaylistDropdown(videoId, anchorEl) {
         `;
         item.onclick = async (e) => {
             e.stopPropagation();
-            if (isIn) {
-                await removeFromPlaylist(videoId, pl.id);
-            } else {
-                await addToPlaylist(videoId, pl.id);
-            }
+            if (isIn) await removeFromPlaylist(videoId, pl.id);
+            else       await addToPlaylist(videoId, pl.id);
             closeAllPlaylistDropdowns();
         };
         dropdown.appendChild(item);
     });
 
-    // Yeni liste oluştur kısayolu
+    // Yeni liste kısayolu
     const newBtn = document.createElement('button');
     newBtn.className = 'playlist-dropdown-new';
-    newBtn.textContent = lang === 'tr' ? '＋ Yeni Liste' : '＋ New List';
+    newBtn.textContent = lang === 'tr' ? '＋ Yeni Liste Oluştur' : '＋ Create New List';
     newBtn.onclick = (e) => {
         e.stopPropagation();
         closeAllPlaylistDropdowns();
@@ -323,15 +422,13 @@ export function showPlaylistDropdown(videoId, anchorEl) {
     };
     dropdown.appendChild(newBtn);
 
-    // Dropdown'ı anchor'ın yanına konumlandır
     document.body.appendChild(dropdown);
     const rect = anchorEl.getBoundingClientRect();
     dropdown.style.position = 'fixed';
-    dropdown.style.top = (rect.bottom + 4) + 'px';
-    dropdown.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+    dropdown.style.top  = (rect.bottom + 4) + 'px';
+    dropdown.style.left = Math.min(rect.left, window.innerWidth - 210) + 'px';
     dropdown.style.zIndex = '99999';
 
-    // Dışarı tıklanınca kapat
     setTimeout(() => {
         document.addEventListener('click', closeAllPlaylistDropdowns, { once: true });
     }, 10);
@@ -341,16 +438,13 @@ export function closeAllPlaylistDropdowns() {
     document.querySelectorAll('.playlist-dropdown').forEach(el => el.remove());
 }
 
-// Bir video hangi playlist'lerde? (store'daki globalPlaylists + activePlaylistVideoIds ile yaklaşık)
-// Tam doğruluk için her video için DB sorgusu gerekir; bu şimdilik sadece aktif playlist'i kontrol eder.
 function getVideoPlaylistIds(videoId) {
-    const activeId = store.get('activePlaylistId');
+    const activeId  = store.get('activePlaylistId');
     const activeIds = store.get('activePlaylistVideoIds') || [];
     if (activeId && activeIds.includes(videoId)) return [activeId];
     return [];
 }
 
-// XSS koruması
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>"']/g, m => ({
