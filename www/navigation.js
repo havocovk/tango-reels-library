@@ -1,7 +1,7 @@
 // navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme
 // ✅ DÜZELTİLDİ (Adım 2.4 Sorun 3):
 //    callSwitchView() içine clearActivePlaylist() eklendi.
-//    Herhangi bir menü butonuna tıklanınca aktif playlist seçimi otomatik temizlenir.
+// ✅ GÜNCELLEME (Adım 5.3): filterByTag() eklendi
 import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomConfirm } from './tangoModals.js';
@@ -12,7 +12,7 @@ import { setEditingVideoId, setEditingVideoUpdatedAt, setFormTagsArray, renderFo
 import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { store } from './store.js';
-import { clearActivePlaylist } from './playlistManager.js'; // ✅ YENİ
+import { clearActivePlaylist } from './playlistManager.js';
 
 export function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
@@ -40,11 +40,7 @@ export function callUpdateInterfaceLanguage() {
 }
 
 export function callSwitchView(viewName) {
-    // ✅ DÜZELTİLDİ (Sorun 3): Menü değişince playlist seçimini temizle.
-    // Bu sayede Koleksiyon, Favoriler, İstatistikler vb. butonlarına tıklanınca
-    // playlist filtresi kalkmaz ve tüm koleksiyon tekrar görünür.
     clearActivePlaylist();
-
     store.set('currentView', viewName);
     store.set('visibleCount', 20);
     setVisibleCount(store.get('visibleCount'));
@@ -59,6 +55,39 @@ export function callSwitchView(viewName) {
     });
     if (viewName === 'stats') renderStatsPanel();
     if (viewName === 'tagManager') renderTagManagerUI();
+}
+
+// ✅ YENİ (Adım 5.3): Etiket bulutu tıklamasından çağrılır
+// İstatistik sayfasındaki bir etikete tıklanınca koleksiyonu o etiketle filtreler
+export function filterByTag(tagName) {
+    if (!tagName) return;
+
+    // 1) Etiket dropdown'ını seç
+    const tagSelect = document.getElementById('filter-tag-select');
+    if (tagSelect) {
+        // Dropdown'da bu değer var mı kontrol et
+        const optionExists = Array.from(tagSelect.options).some(opt => opt.value === tagName);
+        if (optionExists) {
+            tagSelect.value = tagName;
+        }
+    }
+
+    // 2) Kütüphane görünümüne geç (clearActivePlaylist zaten callSwitchView içinde çağrılıyor)
+    callSwitchView('library');
+
+    // 3) Geçiş animasyonu bittikten sonra filtreyi uygula
+    // (switchView DOM'u yeniden oluştururken dropdown sıfırlanabilir,
+    //  bu yüzden kısa bir gecikmeyle tekrar set ediyoruz)
+    setTimeout(() => {
+        const tagSelectAfter = document.getElementById('filter-tag-select');
+        if (tagSelectAfter) {
+            const optionExists = Array.from(tagSelectAfter.options).some(opt => opt.value === tagName);
+            if (optionExists) {
+                tagSelectAfter.value = tagName;
+            }
+        }
+        applyFiltersAndSearch();
+    }, 50);
 }
 
 export async function clearAllFavorites() {
@@ -95,45 +124,29 @@ export function startVideoEditFlow(video) {
     document.getElementById('form-role-select').value = video.role_type || 'Both';
     document.getElementById('form-partner-name').value = video.partner_name || '';
     const tagsArray = video.tags
-        ? video.tags.split(',').map(t => t.trim()).filter(t => t)
+        ? video.tags.split(',').map(t => t.trim()).filter(Boolean)
         : [];
     setFormTagsArray(tagsArray);
     renderFormChips();
-    const isDownloaded      = document.getElementById('form-is-downloaded');
-    const driveUrlContainer = document.getElementById('drive-url-container');
-    const driveUrlInput     = document.getElementById('form-drive-url');
-    if (video.is_downloaded) {
-        isDownloaded.checked = true;
-        driveUrlContainer.classList.remove('d-none');
-        driveUrlInput.value    = video.drive_url || '';
-        driveUrlInput.required = true;
-    } else {
-        isDownloaded.checked = false;
-        driveUrlContainer.classList.add('d-none');
-        driveUrlInput.value    = '';
-        driveUrlInput.required = false;
-    }
-    const imgPreview  = document.getElementById('image-preview');
-    const dropAreaText = document.getElementById('drop-area-text');
-    if (video.cover_url) {
-        imgPreview.src = video.cover_url;
-        imgPreview.classList.remove('d-none');
-        dropAreaText.classList.add('d-none');
-    } else {
-        imgPreview.classList.add('d-none');
-        dropAreaText.innerText = lang.dropText;
-        dropAreaText.classList.remove('d-none');
-    }
     callUpdateSmartAssistant();
+
+    const preview = document.getElementById('image-preview');
+    const dropText = document.getElementById('drop-area-text');
+    if (video.cover_url) {
+        if (preview) { preview.src = video.cover_url; preview.classList.remove('d-none'); }
+        if (dropText) dropText.style.display = 'none';
+    } else {
+        if (preview) { preview.src = ''; preview.classList.add('d-none'); }
+        if (dropText) dropText.style.display = '';
+    }
 }
 
-function getUIState() {
+export function getUIState() {
     return {
-        currentLang:   store.get('currentLang'),
+        currentLang: store.get('currentLang'),
         editingVideoId: store.get('editingVideoId'),
         editInstructorId: store.get('editInstructorId'),
-        currentView:   store.get('currentView'),
-        getFormTags:   () => getFormTagsArray(),
-        resetFormTags: () => { setFormTagsArray([]); }
+        currentView: store.get('currentView'),
+        visibleCount: store.get('visibleCount')
     };
 }

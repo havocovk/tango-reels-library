@@ -1,11 +1,53 @@
 // stats/statsUI.js - İstatistikleri HTML olarak render etme ve grafik çizme
 // ✅ GÜNCELLEME (Adım 5.1): renderLearningHeatmap eklendi
+// ✅ GÜNCELLEME (Adım 5.3): renderTagCloud eklendi
 import { translations } from '../i18n.js';
 import { computeLearningHeatmap } from './computeStats.js';
 import { store } from '../store.js';
+import { filterByTag } from '../navigation.js';
 
 let platformChart = null;
 let monthlyChart = null;
+
+// ─────────────────────────────────────────────────────────────
+// renderTagCloud  ✅ YENİ (Adım 5.3)
+// Kullanım sıklığına göre boyutlandırılmış, tıklanabilir etiket bulutu
+// ─────────────────────────────────────────────────────────────
+function renderTagCloud(topTags, onTagClick) {
+    if (!topTags || topTags.length === 0) return '<span class="tag-badge">—</span>';
+
+    // Neon renk paleti — her etiket bu listeden sırayla renk alır
+    const neonPalette = [
+        '#00f0ff', // cyan
+        '#ff007f', // magenta
+        '#c084fc', // purple
+        '#facc15', // yellow
+        '#34d399', // emerald
+        '#f97316', // orange
+        '#60a5fa', // blue
+        '#f472b6', // pink
+        '#a3e635', // lime
+        '#fb7185', // rose
+    ];
+
+    return topTags.map((t, index) => {
+        const fontSize = Math.min(28, 12 + t.count * 2);
+        const color = neonPalette[index % neonPalette.length];
+        const glowColor = color + '55'; // %33 opaklıkla glow efekti
+        // data-tag attribute ile tıklama olayı JS tarafından yakalanır
+        return `<span
+            class="tag-cloud-item"
+            data-tag="${t.tag}"
+            style="
+                font-size: ${fontSize}px;
+                color: ${color};
+                text-shadow: 0 0 10px ${glowColor}, 0 0 20px ${glowColor};
+                border-color: ${color}33;
+            "
+            title="${t.tag}: ${t.count} video"
+        >#${t.tag} <sup style="font-size:0.6em; opacity:0.7;">${t.count}</sup></span>`;
+    }).join('');
+}
 
 // ─────────────────────────────────────────────────────────────
 // renderStats — Ana istatistik render fonksiyonu
@@ -14,6 +56,12 @@ export function renderStats(stats, currentLang) {
     const container = document.getElementById('stats-container');
     if (!container) return;
     const lang = translations[currentLang];
+
+    // ✅ Adım 5.3: Eski badge listesi yerine tag cloud HTML'i oluştur
+    const tagCloudHTML = renderTagCloud(stats.topTags, filterByTag);
+    const noTagsHTML = stats.topTags.length === 0
+        ? `<span class="tag-badge">${lang.statsNoTags}</span>`
+        : '';
 
     container.innerHTML = `
         <div class="stats-grid">
@@ -47,9 +95,15 @@ export function renderStats(stats, currentLang) {
         </div>
         <div class="stats-tags">
             <div class="stat-label">${lang.statsTopTags}</div>
-            <div class="top-tags-list">
-                ${stats.topTags.map(t => `<span class="tag-badge">#${t.tag} (${t.count})</span>`).join('')}
-                ${stats.topTags.length === 0 ? `<span class="tag-badge">${lang.statsNoTags}</span>` : ''}
+            <!-- ✅ Adım 5.3: tag-cloud-container ile yeni görsel -->
+            <div class="tag-cloud-container">
+                ${tagCloudHTML}
+                ${noTagsHTML}
+            </div>
+            <div class="tag-cloud-hint">
+                ${currentLang === 'tr'
+                    ? '💡 Bir etikete tıkla → koleksiyon o etiketle filtrelenir'
+                    : '💡 Click a tag → collection filters by that tag'}
             </div>
         </div>
         <div class="monthly-chart-container">
@@ -61,6 +115,20 @@ export function renderStats(stats, currentLang) {
         <!-- ✅ YENİ (Adım 5.1): Yıllık Aktivite Isı Haritası -->
         <div id="learning-heatmap-container"></div>
     `;
+
+    // ✅ Adım 5.3: Etiket bulutu tıklama olaylarını bağla
+    // innerHTML'e olay eklemek yerine container'a event delegation kullanıyoruz
+    const tagCloudContainer = container.querySelector('.tag-cloud-container');
+    if (tagCloudContainer) {
+        tagCloudContainer.addEventListener('click', (e) => {
+            const tagItem = e.target.closest('.tag-cloud-item');
+            if (!tagItem) return;
+            const tagName = tagItem.dataset.tag;
+            if (tagName) {
+                filterByTag(tagName);
+            }
+        });
+    }
 
     // ── Pie Chart ──────────────────────────────────────────────
     const platformKeys = [];
@@ -81,69 +149,73 @@ export function renderStats(stats, currentLang) {
         }
     }
 
-    function placeIconOverlays() {
-        document.querySelectorAll('.pie-icon-overlay').forEach(el => el.remove());
-        const canvas = document.getElementById('platform-pie-chart');
-        const chartContainer = document.querySelector('.platform-chart-container');
-        if (!canvas || !chartContainer || !platformChart) return;
-        const meta = platformChart.getDatasetMeta(0);
-        const arcs = meta.data;
-        const canvasRect = canvas.getBoundingClientRect();
-        const containerRect = chartContainer.getBoundingClientRect();
-        if (canvasRect.width === 0) return;
-        const canvasOffsetLeft = canvasRect.left - containerRect.left;
-        const canvasOffsetTop  = canvasRect.top  - containerRect.top;
-        const scaleX = canvasRect.width  / canvas.width;
-        const scaleY = canvasRect.height / canvas.height;
-        arcs.forEach((arc, index) => {
-            if (arc.hidden) return;
-            const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
-            const radius   = arc.outerRadius + 36;
-            const xInCanvas = arc.x + Math.cos(midAngle) * radius;
-            const yInCanvas = arc.y + Math.sin(midAngle) * radius;
-            const x = canvasOffsetLeft + xInCanvas * scaleX;
-            const y = canvasOffsetTop  + yInCanvas * scaleY;
-            const imgUrl = platformIconUrls[index];
-            if (imgUrl && imgUrl !== '') {
-                const img = document.createElement('img');
-                img.src = imgUrl;
-                img.className = 'pie-icon-overlay';
-                img.style.cssText = `position:absolute;width:36px;height:36px;object-fit:contain;left:${x - 18}px;top:${y - 18}px;pointer-events:none;z-index:10;`;
-                chartContainer.appendChild(img);
-            } else {
-                const label = document.createElement('div');
-                label.className = 'pie-icon-overlay';
-                label.innerText = platformCounts[index];
-                label.style.cssText = `position:absolute;color:#fff;font-weight:bold;font-size:14px;left:${x - 10}px;top:${y - 8}px;pointer-events:none;z-index:10;`;
-                chartContainer.appendChild(label);
+    const canvasPie = document.getElementById('platform-pie-chart');
+    if (canvasPie) {
+        const ctxPie = canvasPie.getContext('2d');
+        if (platformChart) platformChart.destroy();
+        platformChart = new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: platformKeys.map(k => lang.platformLabels[k] || k),
+                datasets: [{
+                    data: platformCounts,
+                    backgroundColor: platformColors,
+                    borderColor: 'transparent',
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: true,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = Math.round((ctx.raw / total) * 100);
+                                return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
             }
         });
     }
 
-    const resizeHandler = () => { placeIconOverlays(); };
-    window.removeEventListener('resize', window._pieResizeHandler);
-    window._pieResizeHandler = resizeHandler;
-    window.addEventListener('resize', resizeHandler);
+    function placeIconOverlays() {
+        const existing = document.querySelectorAll('.platform-icon-overlay');
+        existing.forEach(el => el.remove());
 
-    const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
-    if (platformChart) platformChart.destroy();
-    platformChart = new Chart(ctxPie, {
-        type: 'pie',
-        data: {
-            labels: platformKeys.map(k => lang.platformLabels[k] || k),
-            datasets: [{ data: platformCounts, backgroundColor: platformColors, borderWidth: 1 }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} video` } },
-                legend: { display: false }
-            },
-            layout: { padding: { top: 30, bottom: 30, left: 30, right: 30 } },
-            animation: { onComplete: placeIconOverlays }
-        }
-    });
+        if (!platformChart || !canvasPie) return;
+        const canvasRect = canvasPie.getBoundingClientRect();
+        const containerRect = canvasPie.parentElement.getBoundingClientRect();
+
+        const meta = platformChart.getDatasetMeta(0);
+        meta.data.forEach((arc, index) => {
+            const iconUrl = platformIconUrls[index];
+            if (!iconUrl) return;
+            const angle = (arc.startAngle + arc.endAngle) / 2;
+            const r = (arc.innerRadius + arc.outerRadius) / 2;
+            const x = arc.x + Math.cos(angle) * r;
+            const y = arc.y + Math.sin(angle) * r;
+
+            const imgEl = document.createElement('img');
+            imgEl.src = iconUrl;
+            imgEl.className = 'platform-icon-overlay';
+            imgEl.style.cssText = `
+                position: absolute;
+                width: 32px; height: 32px;
+                left: ${(canvasRect.left - containerRect.left) + x - 16}px;
+                top:  ${(canvasRect.top  - containerRect.top)  + y - 16}px;
+                pointer-events: none;
+                border-radius: 6px;
+            `;
+            canvasPie.parentElement.appendChild(imgEl);
+        });
+    }
+    setTimeout(placeIconOverlays, 300);
 
     const legendContainer = document.getElementById('custom-legend');
     if (legendContainer) {
@@ -247,13 +319,12 @@ function renderLearningHeatmap(heatmapData, currentLang) {
     const { weeks, year } = heatmapData;
     if (!weeks || weeks.length === 0) return;
 
-    const CELL = 11;    // hücre boyutu (px)
-    const GAP  = 2;     // hücreler arası boşluk (px)
+    const CELL = 11;
+    const GAP  = 2;
     const STEP = CELL + GAP;
-    const PAD_LEFT = 30;  // gün etiketleri için sol boşluk
-    const PAD_TOP  = 22;  // ay etiketleri için üst boşluk
+    const PAD_LEFT = 30;
+    const PAD_TOP  = 22;
 
-    // Renk skalası: synthwave teması
     function cellColor(total) {
         if (total === 0) return 'rgba(255,255,255,0.05)';
         if (total === 1) return 'rgba(0,240,255,0.30)';
@@ -270,7 +341,6 @@ function renderLearningHeatmap(heatmapData, currentLang) {
         ? ['', 'Pzt', '', 'Çar', '', 'Cum', '']
         : ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 
-    // Hücreleri oluştur
     let rects = '';
     weeks.forEach((week, wIdx) => {
         week.forEach((day, dIdx) => {
@@ -282,7 +352,6 @@ function renderLearningHeatmap(heatmapData, currentLang) {
         });
     });
 
-    // Ay etiketleri: her ay ilk günün hücresinin başına yerleş
     let monthLabels = '';
     const seenMonths = new Set();
     weeks.forEach((week, wIdx) => {
@@ -300,7 +369,6 @@ function renderLearningHeatmap(heatmapData, currentLang) {
         });
     });
 
-    // Gün etiketleri
     let dayLabelsSvg = '';
     dayLabels.forEach((label, dIdx) => {
         if (!label) return;
@@ -308,7 +376,6 @@ function renderLearningHeatmap(heatmapData, currentLang) {
         dayLabelsSvg += `<text x="${PAD_LEFT - 4}" y="${y}" fill="#64748b" font-size="9" text-anchor="end" font-family="Plus Jakarta Sans,sans-serif">${label}</text>`;
     });
 
-    // Lejant
     const legendY = PAD_TOP + 7 * STEP + 12;
     const legendColors = ['rgba(255,255,255,0.05)', 'rgba(0,240,255,0.30)', 'rgba(0,240,255,0.60)', 'rgba(255,0,127,0.55)', 'rgba(255,0,127,0.90)'];
     const lessLabel = currentLang === 'tr' ? 'Az' : 'Less';
@@ -340,7 +407,6 @@ function renderLearningHeatmap(heatmapData, currentLang) {
             </div>
         </div>`;
 
-    // Tooltip — SVG wrapper'daki mousemove ile takip eder
     const wrapper = container.querySelector('.heatmap-scroll-wrapper');
     const tooltip  = container.querySelector('#hm-tooltip');
 
@@ -350,16 +416,13 @@ function renderLearningHeatmap(heatmapData, currentLang) {
             tooltip.style.display = 'none';
             return;
         }
-
         const date     = target.dataset.date;
         const addCnt   = parseInt(target.dataset.add   || 0);
         const pracCnt  = parseInt(target.dataset.prac  || 0);
         const total    = parseInt(target.dataset.total || 0);
-
         const d = new Date(date + 'T12:00:00');
         const locale = currentLang === 'tr' ? 'tr-TR' : 'en-US';
         const dateStr = d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-
         if (total === 0) {
             tooltip.textContent = currentLang === 'tr'
                 ? `${dateStr} — aktivite yok`
@@ -370,7 +433,6 @@ function renderLearningHeatmap(heatmapData, currentLang) {
             if (pracCnt > 0) parts.push(currentLang === 'tr' ? `${pracCnt} pratik yapıldı` : `${pracCnt} practiced`);
             tooltip.textContent = `${dateStr}: ${parts.join(', ')}`;
         }
-
         const wrapRect = wrapper.getBoundingClientRect();
         tooltip.style.display = 'block';
         tooltip.style.left = (e.clientX - wrapRect.left + 12) + 'px';
