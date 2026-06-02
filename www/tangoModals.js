@@ -160,15 +160,32 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
         cancelBtn.classList.remove('d-none');
         modal.classList.remove('d-none');
 
+        // ✅ YENİ (Adım 7.4): Modal açılınca onay butonuna odaklan
+        setTimeout(() => okBtn.focus(), 50);
+
         const handleOk = () => { modal.classList.add('d-none'); cleanup(); resolve(true); };
         const handleCancel = () => { modal.classList.add('d-none'); cleanup(); resolve(false); };
+
+        // ✅ YENİ (Adım 7.4): Escape tuşuyla kapat + Tab focus trap
+        const handleKeydown = (e) => {
+            if (e.key === 'Escape') { handleCancel(); }
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                // Yalnızca okBtn ve cancelBtn arasında dolaş
+                if (document.activeElement === okBtn) cancelBtn.focus();
+                else okBtn.focus();
+            }
+        };
+
         const cleanup = () => {
             okBtn.removeEventListener('click', handleOk);
             cancelBtn.removeEventListener('click', handleCancel);
+            document.removeEventListener('keydown', handleKeydown);
         };
 
         okBtn.addEventListener('click', handleOk);
         cancelBtn.addEventListener('click', handleCancel);
+        document.addEventListener('keydown', handleKeydown);
     });
 }
 
@@ -242,13 +259,22 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     };
 
     const handleCancel = () => { modal.classList.add('d-none'); cleanup(); };
+
+    // ✅ YENİ (Adım 7.4): Escape ile kapat, modal açılınca kaydet'e odaklan
+    const handleKeydown = (e) => {
+        if (e.key === 'Escape') handleCancel();
+    };
+
     const cleanup = () => {
         okBtn.removeEventListener('click', handleOk);
         cancelBtn.removeEventListener('click', handleCancel);
+        document.removeEventListener('keydown', handleKeydown);
     };
 
+    setTimeout(() => okBtn.focus(), 50);
     okBtn.addEventListener('click', handleOk);
     cancelBtn.addEventListener('click', handleCancel);
+    document.addEventListener('keydown', handleKeydown);
 }
 
 function escapeHtml(str) {

@@ -270,6 +270,11 @@ export function renderVideoCards(videos, config) {
 
         const card = document.createElement('div');
         card.className = 'video-card';
+        // ✅ YENİ (Adım 7.4): ARIA rol, etiket ve klavye odağı
+        const instructorNameForAria = video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen';
+        card.setAttribute('role', 'article');
+        card.setAttribute('aria-label', `${instructorNameForAria} videosu`);
+        card.setAttribute('tabindex', '0');
 
         let roleDisplay = video.role_type || 'Both';
         let roleBadgeClass = '';
@@ -343,8 +348,8 @@ export function renderVideoCards(videos, config) {
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image:url('${coverImg}');">
-                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}">★</button>
-                    <button class="playlist-add-btn" data-video-id="${video.id}" title="${currentLang === 'tr' ? 'Listeye Ekle' : 'Add to List'}">📋</button>
+                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}" aria-label="${isFav ? (currentLang === 'tr' ? 'Pratik listesinden çıkar' : 'Remove from practice list') : (currentLang === 'tr' ? 'Pratik listesine ekle' : 'Add to practice list')}" aria-pressed="${isFav}">★</button>
+                    <button class="playlist-add-btn" data-video-id="${video.id}" title="${currentLang === 'tr' ? 'Listeye Ekle' : 'Add to List'}" aria-label="${currentLang === 'tr' ? 'Playlist\'e ekle' : 'Add to playlist'}">📋</button>
                     <a ${actionClickAttr}>
                         <div class="play-overlay"><span class="play-icon">▶</span></div>
                     </a>
@@ -365,10 +370,10 @@ export function renderVideoCards(videos, config) {
                 <div style="display:flex;justify-content:space-between;width:100%;align-items:center;margin-top:4px;">
                     <a ${actionLinkClickAttr}>${watchText}</a>
                     <div style="display:flex;gap:8px;">
-                        <button class="card-crud-btn card-annotate-btn" title="${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}">📍</button>
-                        <button class="card-crud-btn card-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}">🔗</button>
-                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
-                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
+                        <button class="card-crud-btn card-annotate-btn" title="${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}" aria-label="${currentLang === 'tr' ? 'Zaman notlarını aç' : 'Open time notes'}">📍</button>
+                        <button class="card-crud-btn card-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}" aria-label="${currentLang === 'tr' ? 'Zincir bağlantılarını yönet' : 'Manage chain links'}">🔗</button>
+                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}" aria-label="${currentLang === 'tr' ? 'Videoyu düzenle' : 'Edit video'}">✏️</button>
+                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}" aria-label="${currentLang === 'tr' ? 'Videoyu sil' : 'Delete video'}">🗑️</button>
                     </div>
                 </div>
             </div>`;
