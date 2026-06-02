@@ -33,3 +33,25 @@ export async function dbDeleteInstructor(id) {
     if (!res.ok) throw new Error("Eğitmen silinemedi");
     return res;
 }
+
+// ✅ YENİ (Adım 6.3): Eğitmen profil fotoğrafı ve biyografisi güncelleme
+export async function dbUpdateInstructorProfile(id, photoUrl, bio) {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+            photo_url: photoUrl || null,
+            bio: bio || null
+        })
+    });
+    if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Profil kaydedilemedi: ${errorText}`);
+    }
+    return res;
+}

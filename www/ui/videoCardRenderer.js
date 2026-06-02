@@ -8,6 +8,7 @@ import { store } from '../store.js';
 import { getTagColor } from '../tagColorManager.js'; // ✅ YENİ (Adım 3.3)
 import { openAnnotationModal } from '../annotationManager.js';
 import { openLinkManager, buildChainNavHtml } from '../chainManager.js'; // ✅ YENİ (Adım 6.2)
+import { openInstructorProfile } from '../instructorProfile.js'; // ✅ YENİ (Adım 6.3)
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -141,7 +142,7 @@ export function renderVideoList(videos, config) {
         row.innerHTML = `
             <div class="vl-thumb" style="background-image:url('${coverImg}');" title="${escapeHtml(instructorName)}"></div>
             <div class="vl-info">
-                <div class="vl-instructor">${escapeHtml(instructorName)}${video.partner_name ? ` <span class="vl-partner">/ ${escapeHtml(video.partner_name)}</span>` : ''}</div>
+                <div class="vl-instructor"><button class="instructor-profile-link" data-instructor-id="${video.instructor_id}" style="background:transparent;border:none;color:inherit;font:inherit;font-weight:600;cursor:pointer;padding:0;">${escapeHtml(instructorName)}</button>${video.partner_name ? ` <span class="vl-partner">/ ${escapeHtml(video.partner_name)}</span>` : ''}</div>
                 <div class="vl-tags">${tagsHtml || `<span style="color:#475569;font-size:0.65rem;">${currentLang === 'tr' ? 'etiket yok' : 'no tags'}</span>`}</div>
             </div>
             <div class="vl-badges">
@@ -160,6 +161,15 @@ export function renderVideoList(videos, config) {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
+
+        // ✅ YENİ (Adım 6.3): Liste görünümünde eğitmen adına tıklama
+        const vlInstructorBtn = row.querySelector('.instructor-profile-link');
+        if (vlInstructorBtn) {
+            vlInstructorBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openInstructorProfile(video.instructor_id);
+            });
+        }
 
         row.querySelector('.vl-watch-btn').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -341,7 +351,7 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>
             <div class="card-info-content">
-                <strong class="card-instructor">👤 ${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</strong>
+                <strong class="card-instructor">👤 <button class="instructor-profile-link" data-instructor-id="${video.instructor_id}" style="background:transparent;border:none;color:inherit;font:inherit;font-weight:700;cursor:pointer;padding:0;text-align:left;">${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</button></strong>
                 ${partnerDisplay}
                 <div class="card-badges">
                     <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
@@ -367,6 +377,15 @@ export function renderVideoCards(videos, config) {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
+
+        // ✅ YENİ (Adım 6.3): Eğitmen adına tıklayınca profil sayfasına git
+        const instructorLinkBtn = card.querySelector('.instructor-profile-link');
+        if (instructorLinkBtn) {
+            instructorLinkBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openInstructorProfile(video.instructor_id);
+            });
+        }
 
         const playlistBtn = card.querySelector('.playlist-add-btn');
         if (playlistBtn && showPlaylistDropdown) {

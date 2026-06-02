@@ -20,9 +20,10 @@ export function switchView(viewName, state, functions) {
     const addView                 = document.getElementById('view-add-container');
     const tagView                 = document.getElementById('view-tag-manager-container');
     const practiceSessionView     = document.getElementById('view-practice-session-container'); // ✅ YENİ
+    const instructorProfileView   = document.getElementById('view-instructor-profile-container'); // ✅ YENİ (Adım 6.3)
 
     // ── Tüm view'ları gizle (ortak başlangıç) ──
-    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView];
+    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView];
     allViews.forEach(v => { if (v) v.classList.add('d-none'); });
 
     if (viewName === 'library' || viewName === 'favorites') {
@@ -77,5 +78,11 @@ export function switchView(viewName, state, functions) {
         // Sidebar'da hiçbir menü butonu aktif değil (intentional)
         if (practiceSessionView) practiceSessionView.classList.remove('d-none');
         if (clearFavBtnContainer) clearFavBtnContainer.classList.add('d-none');
+
+    } else if (viewName === 'instructorProfile') {
+        // ✅ YENİ (Adım 6.3): Eğitmen Profil sayfası
+        if (instructorProfileView) instructorProfileView.classList.remove('d-none');
+        if (clearFavBtnContainer) clearFavBtnContainer.classList.add('d-none');
+        if (functions.renderProfile) functions.renderProfile();
     }
 }

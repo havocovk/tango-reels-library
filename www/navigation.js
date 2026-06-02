@@ -13,6 +13,7 @@ import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
+import { renderInstructorProfile } from './instructorProfile.js'; // ✅ YENİ (Adım 6.3)
 
 export function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
@@ -39,7 +40,7 @@ export function callUpdateInterfaceLanguage() {
     if (store.get('currentView') === 'stats') renderStatsPanel();
 }
 
-export function callSwitchView(viewName) {
+export function callSwitchView(viewName, options = {}) {
     clearActivePlaylist();
     store.set('currentView', viewName);
     store.set('visibleCount', 20);
@@ -51,7 +52,11 @@ export function callSwitchView(viewName) {
         resetUploadedCoverUrl: () => {
             import('./storage.js').then(s => s.resetUploadedCoverUrl());
         },
-        renderTagManager: renderTagManagerUI
+        renderTagManager: renderTagManagerUI,
+        // ✅ YENİ (Adım 6.3): Eğitmen profil render callback'i
+        renderProfile: options.instructorId
+            ? () => renderInstructorProfile(options.instructorId)
+            : null
     });
     if (viewName === 'stats') renderStatsPanel();
     if (viewName === 'tagManager') renderTagManagerUI();

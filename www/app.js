@@ -44,12 +44,13 @@ import { initPlaylists } from './playlistManager.js';
 import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
 import { initChainManager, loadAllVideoLinks } from './chainManager.js'; // ✅ YENİ (Adım 6.2)
+import { initInstructorProfile } from './instructorProfile.js'; // ✅ YENİ (Adım 6.3)
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
     if (!container) return;
     try {
-        const [library, stats, addVideo, tagManager, practiceSession,
+        const [library, stats, addVideo, tagManager, practiceSession, instructorProfile,
                videoModal, tagsEditModal, customDialogModal, annotationModal,
                linkManagerModal] = await Promise.all([
             fetch('views/library.html').then(r => r.text()),
@@ -57,6 +58,7 @@ async function loadTemplates() {
             fetch('views/add-video.html').then(r => r.text()),
             fetch('views/tag-manager.html').then(r => r.text()),
             fetch('views/practice-session.html').then(r => r.text()),
+            fetch('views/instructor-profile.html').then(r => r.text()),
             fetch('modals/video-modal.html').then(r => r.text()),
             fetch('modals/tags-edit-modal.html').then(r => r.text()),
             fetch('modals/custom-dialog-modal.html').then(r => r.text()),
@@ -72,7 +74,7 @@ async function loadTemplates() {
 
         // View'ları container'a ekle — her biri ayrı ayrı innerHTML ile
         // (string birleştirme kullanmıyoruz — bu sayede kapanmamış tag riski sıfır)
-        container.innerHTML = library + stats + addVideo + tagManager + practiceSession;
+        container.innerHTML = library + stats + addVideo + tagManager + practiceSession + instructorProfile;
 
         await initializeApp();
     } catch (err) {
@@ -94,6 +96,9 @@ async function initializeApp() {
     // ✅ Adım 6.2: Kombinasyon zinciri sistemi — bağlantıları yükle
     initChainManager(openVideoModal, applyFiltersAndSearch);
     await loadAllVideoLinks();
+
+    // ✅ Adım 6.3: Eğitmen profil sistemi
+    initInstructorProfile(callSwitchView);
 
     initPracticeSession(callSwitchView);
 
