@@ -41,7 +41,6 @@ function renderTagCloud(topTags) {
 
 // ─────────────────────────────────────────────────────────────
 // renderMonthlyChart  ✅ YENİ (Adım 5.4)
-// Bar chart'ı verilen aylık veriyle çizer (veya yeniden çizer).
 // ─────────────────────────────────────────────────────────────
 function renderMonthlyChart(monthlyData) {
     const canvasBar = document.getElementById('monthly-bar-chart');
@@ -53,7 +52,6 @@ function renderMonthlyChart(monthlyData) {
     const months = monthlyData.map(m => m.label);
     const counts = monthlyData.map(m => m.count);
 
-    // Canvas genişliğini veriye göre ayarla
     canvasBar.width = Math.max(700, monthlyData.length * 80);
 
     monthlyChart = new Chart(ctxBar, {
@@ -80,7 +78,6 @@ function renderMonthlyChart(monthlyData) {
         }
     });
 
-    // Bar üstlerine değer yazısı
     setTimeout(() => {
         const ctx = canvasBar.getContext('2d');
         const chart = monthlyChart;
@@ -101,6 +98,64 @@ function renderMonthlyChart(monthlyData) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// setupCustomYearDropdown  ✅ YENİ (Adım 5.4 düzeltme)
+// Native <select> yerine tamamen özel dropdown — koyu tema korunur.
+// ─────────────────────────────────────────────────────────────
+function setupCustomYearDropdown(availableYears, defaultYear, videos) {
+    const trigger = document.getElementById('year-dropdown-trigger');
+    const menu    = document.getElementById('year-dropdown-menu');
+    const label   = document.getElementById('year-dropdown-label');
+    if (!trigger || !menu || !label) return;
+
+    let selectedYear = defaultYear;
+
+    // Menü öğelerini oluştur
+    menu.innerHTML = availableYears.map(y => `
+        <div class="year-dropdown-item ${y === defaultYear ? 'active' : ''}" data-year="${y}">
+            ${y}
+        </div>
+    `).join('');
+
+    // Trigger tıklanınca menüyü aç/kapat
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = menu.classList.contains('open');
+        menu.classList.toggle('open', !isOpen);
+        trigger.classList.toggle('open', !isOpen);
+    });
+
+    // Menü öğesine tıklanınca
+    menu.addEventListener('click', (e) => {
+        const item = e.target.closest('.year-dropdown-item');
+        if (!item) return;
+
+        const year = parseInt(item.dataset.year);
+        selectedYear = year;
+
+        // Etiketi güncelle
+        label.textContent = year;
+
+        // Aktif sınıfı taşı
+        menu.querySelectorAll('.year-dropdown-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+
+        // Menüyü kapat
+        menu.classList.remove('open');
+        trigger.classList.remove('open');
+
+        // Grafiği yeniden çiz
+        const newMonthlyData = computeMonthlyData(videos, year);
+        renderMonthlyChart(newMonthlyData);
+    });
+
+    // Dışarı tıklanınca kapat
+    document.addEventListener('click', () => {
+        menu.classList.remove('open');
+        trigger.classList.remove('open');
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
 // renderStats — Ana istatistik render fonksiyonu
 // ─────────────────────────────────────────────────────────────
 export function renderStats(stats, currentLang) {
@@ -113,18 +168,10 @@ export function renderStats(stats, currentLang) {
         ? `<span class="tag-badge">${lang.statsNoTags}</span>`
         : '';
 
-    // ✅ Adım 5.4: Mevcut yılı seç, dropdown için yılları al
     const videos = store.get('globalVideos');
     const availableYears = getAvailableYears(videos);
     const currentYear = new Date().getFullYear();
-    // Seçili yıl: koleksiyonda mevcut yıl varsa onu, yoksa en yeni yılı göster
     const defaultYear = availableYears.includes(currentYear) ? currentYear : (availableYears[0] || currentYear);
-
-    const yearOptionsHTML = availableYears.length > 0
-        ? availableYears.map(y =>
-            `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>${y}</option>`
-          ).join('')
-        : `<option value="${currentYear}" selected>${currentYear}</option>`;
 
     container.innerHTML = `
         <div class="stats-grid">
@@ -169,12 +216,18 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
         <div class="monthly-chart-container">
-            <!-- ✅ Adım 5.4: Başlık + yıl seçici yan yana -->
             <div class="monthly-chart-header">
                 <div class="stat-label stat-label-centered">${lang.statsMonthlyTrend}</div>
-                <select id="year-selector" class="year-selector-dropdown">
-                    ${yearOptionsHTML}
-                </select>
+                <!-- ✅ Adım 5.4: Özel koyu temalı dropdown -->
+                <div class="year-dropdown-wrapper">
+                    <button id="year-dropdown-trigger" class="year-dropdown-trigger">
+                        <span id="year-dropdown-label">${defaultYear}</span>
+                        <span class="year-dropdown-arrow">▾</span>
+                    </button>
+                    <div id="year-dropdown-menu" class="year-dropdown-menu">
+                        <!-- JS tarafından doldurulur -->
+                    </div>
+                </div>
             </div>
             <div class="scrollable-chart" style="overflow-x: auto; width: 100%;">
                 <canvas id="monthly-bar-chart" width="${Math.max(700, stats.monthlyData.length * 80)}" height="350" style="width: auto; height: auto; display: block;"></canvas>
@@ -194,17 +247,10 @@ export function renderStats(stats, currentLang) {
         });
     }
 
-    // ✅ Adım 5.4: Yıl seçici olay dinleyicisi
-    const yearSelector = document.getElementById('year-selector');
-    if (yearSelector) {
-        yearSelector.addEventListener('change', () => {
-            const selectedYear = parseInt(yearSelector.value);
-            const newMonthlyData = computeMonthlyData(videos, selectedYear);
-            renderMonthlyChart(newMonthlyData);
-        });
-    }
+    // ✅ Adım 5.4: Özel dropdown kurulumu
+    setupCustomYearDropdown(availableYears, defaultYear, videos);
 
-    // ── Pie Chart (ORİJİNAL YAPI) ──────────────────────────────
+    // ── Pie Chart ──────────────────────────────────────────────
     const platformKeys = [];
     const platformCounts = [];
     const platformColors = [];
@@ -322,10 +368,10 @@ export function renderStats(stats, currentLang) {
         });
     }
 
-    // ── Bar Chart — ilk render ─────────────────────────────────
+    // ── Bar Chart — ilk render
     renderMonthlyChart(stats.monthlyData);
 
-    // ── Heatmap (Adım 5.1) ────────────────────────────────────
+    // ── Heatmap (Adım 5.1)
     const currentYear2 = new Date().getFullYear();
     const heatmapData = computeLearningHeatmap(videos, currentYear2);
     renderLearningHeatmap(heatmapData, currentLang);
@@ -438,10 +484,10 @@ function renderLearningHeatmap(heatmapData, currentLang) {
             tooltip.style.display = 'none';
             return;
         }
-        const date     = target.dataset.date;
-        const addCnt   = parseInt(target.dataset.add   || 0);
-        const pracCnt  = parseInt(target.dataset.prac  || 0);
-        const total    = parseInt(target.dataset.total || 0);
+        const date    = target.dataset.date;
+        const addCnt  = parseInt(target.dataset.add   || 0);
+        const pracCnt = parseInt(target.dataset.prac  || 0);
+        const total   = parseInt(target.dataset.total || 0);
         const d = new Date(date + 'T12:00:00');
         const locale = currentLang === 'tr' ? 'tr-TR' : 'en-US';
         const dateStr = d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });

@@ -352,7 +352,7 @@ canvas { max-height: 350px; width: 100%; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Adım 5.4 — Aylık Trend Yıl Seçici
+   Adım 5.4 — Aylık Trend Yıl Seçici (Özel Dropdown)
    ═══════════════════════════════════════════════════════════ */
 .monthly-chart-header {
     display: flex;
@@ -363,34 +363,88 @@ canvas { max-height: 350px; width: 100%; }
     flex-wrap: wrap;
 }
 
-.year-selector-dropdown {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 0, 127, 0.5);
+/* Dropdown'un position: relative referans noktası */
+.year-dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+/* Tetikleyici buton */
+.year-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 0, 127, 0.55);
     border-radius: 10px;
     color: #f1f5f9;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
-    padding: 4px 10px;
+    padding: 5px 12px;
     cursor: pointer;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    -webkit-appearance: none;
-    appearance: none;
-    /* Ok ikonu için sağa padding */
-    padding-right: 28px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ff007f' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
+    user-select: none;
 }
 
-.year-selector-dropdown:hover,
-.year-selector-dropdown:focus {
+.year-dropdown-trigger:hover,
+.year-dropdown-trigger.open {
     border-color: #ff007f;
     box-shadow: 0 0 8px rgba(255, 0, 127, 0.35);
 }
 
-.year-selector-dropdown option {
-    background: #0b0813;
+.year-dropdown-arrow {
+    font-size: 0.7rem;
+    color: #ff007f;
+    transition: transform 0.2s ease;
+    display: inline-block;
+}
+
+.year-dropdown-trigger.open .year-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Açılan menü paneli */
+.year-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 90px;
+    background: rgba(11, 8, 25, 0.97);
+    border: 1px solid rgba(255, 0, 127, 0.4);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 0, 127, 0.15);
+    overflow: hidden;
+    z-index: 1000;
+    backdrop-filter: blur(12px);
+}
+
+.year-dropdown-menu.open {
+    display: block;
+}
+
+/* Her yıl satırı */
+.year-dropdown-item {
+    padding: 9px 18px;
+    color: #cbd5e1;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.year-dropdown-item:hover {
+    background: rgba(255, 0, 127, 0.18);
     color: #f1f5f9;
+}
+
+.year-dropdown-item.active {
+    background: rgba(255, 0, 127, 0.25);
+    color: #ff007f;
+    font-weight: 700;
 }
