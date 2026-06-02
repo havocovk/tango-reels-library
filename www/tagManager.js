@@ -209,36 +209,43 @@ export function renderTagManagerUI() {
 export async function mergeSelectedTags() {
     if (selectedTagsForMerge.length < 2) return;
     const lang = store.get('currentLang');
-    const newTagName = document.getElementById('tag-merge-new-name')?.value.trim();
-    const alertOk = lang === 'tr' ? 'Tamam' : 'OK';
-    if (!newTagName) {
+    const mergeInput = document.getElementById('tag-merge-new-name');
+    const targetName = mergeInput?.value.trim();
+    if (!targetName) {
         await showCustomAlert(
-            lang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.',
-            alertOk
+            lang === 'tr' ? 'Birleştirilecek yeni etiketi yazın.' : 'Please enter the new tag name.',
+            lang === 'tr' ? 'Tamam' : 'OK'
         );
         return;
     }
+
+    const tagsToMerge = [...selectedTagsForMerge]; // Sayıyı şimdi al, döngüde kaybolmasın
+    const mergeCount = tagsToMerge.length;
+
     const ok = await showCustomConfirm(
         lang === 'tr'
-            ? `${selectedTagsForMerge.length} etiket "${newTagName}" çatısı altında birleştirilsin mi?`
-            : `Merge ${selectedTagsForMerge.length} tags into "${newTagName}"?`,
+            ? `${mergeCount} etiket "${targetName}" çatısı altında birleştirilsin mi?`
+            : `Merge ${mergeCount} tags into "${targetName}"?`,
         lang === 'tr' ? 'Evet' : 'Yes',
         lang === 'tr' ? 'Hayır' : 'No'
     );
     if (!ok) return;
-    showLoading(true);
+
     try {
-        await dbMergeTags(selectedTagsForMerge, newTagName);
-        mergeTagsLocally(selectedTagsForMerge, newTagName);
+        showLoading(true);
+        for (const tag of tagsToMerge) {
+            await dbMergeTags(tag, targetName);
+        }
+        renameTagLocally(tagsToMerge[0], targetName);
+        tagsToMerge.slice(1).forEach(tag => deleteTagsLocally([tag]));
         showLoading(false);
         await showCustomAlert(
             lang === 'tr'
-                ? `${selectedTagsForMerge.length} etiket birleştirildi → ${newTagName}`
-                : `${selectedTagsForMerge.length} tags merged → ${newTagName}`,
-            alertOk
+                ? `${mergeCount} etiket birleştirildi → ${targetName}`
+                : `${mergeCount} tags merged → ${targetName}`,
+            lang === 'tr' ? 'Tamam' : 'OK'
         );
-        const inp = document.getElementById('tag-merge-new-name');
-        if (inp) inp.value = '';
+        if (mergeInput) mergeInput.value = '';
         renderTagManagerUICallback?.();
     } catch (err) {
         showLoading(false);
