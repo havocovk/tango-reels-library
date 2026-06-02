@@ -1,7 +1,5 @@
-// tagManager.js - Toplu etiket işlemleri
-// ✅ GÜNCELLEME (Adım 3.3): Renk sistemi entegre
-// ✅ DÜZELTME: Butonlar sadece ikon — yazı yok, satır dar
-import { translations } from './i18n.js';
+// tagManager.js
+// ✅ GÜNCELLEME (Adım 3.3): Renk sistemi + ikon butonlar yan yana
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, showModernPrompt } from './utils.js';
@@ -38,7 +36,7 @@ export function updateTagManagerSelection() {
 }
 
 function updateAllVideosTagsLocally(updateFunction) {
-    let videos = store.get('globalVideos');
+    const videos = store.get('globalVideos');
     let changed = false;
     const newVideos = videos.map(video => {
         const newVideo = updateFunction(video);
@@ -46,28 +44,29 @@ function updateAllVideosTagsLocally(updateFunction) {
         return newVideo;
     });
     if (changed) store.set('globalVideos', newVideos);
-    return changed;
 }
 
 function renameTagLocally(oldTag, newTag) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
-        const tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-        if (tags.includes(oldTag)) {
-            return { ...video, tags: tags.map(t => t === oldTag ? newTag : t).join(', ') };
-        }
-        return video;
+        const tags = video.tags.split(',').map(t => t.trim()).filter(Boolean);
+        if (!tags.includes(oldTag)) return video;
+        return { ...video, tags: tags.map(t => t === oldTag ? newTag : t).join(', ') };
     });
+}
+
+function mergeTagsLocally(tagsArray, targetTag) {
+    tagsArray.forEach(tag => renameTagLocally(tag, targetTag));
 }
 
 function deleteTagsLocally(tagsArray) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        let tags = video.tags.split(',').map(t => t.trim()).filter(Boolean);
         const before = tags.length;
         tagsArray.forEach(tag => { tags = tags.filter(t => t !== tag); });
-        if (tags.length !== before) return { ...video, tags: tags.join(', ') };
-        return video;
+        if (tags.length === before) return video;
+        return { ...video, tags: tags.join(', ') };
     });
 }
 
@@ -131,74 +130,116 @@ export function renderTagManagerUI() {
         }
     });
 
-    const sortedTags = Array.from(tagMap.entries()).sort((a, b) => b[1] - a[1]);
     tbody.innerHTML = '';
 
-    sortedTags.forEach(([tag, count]) => {
-        const tagColor = getTagColor(tag);
+    Array.from(tagMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([tag, count]) => {
+            const color = getTagColor(tag);
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td style="width:36px; text-align:center;">
-                <input type="checkbox" class="tag-checkbox" data-tag="${tag}">
-            </td>
-            <td>
-                <span style="
-                    display:inline-block;
-                    background:${tagColor ? tagColor + '22' : 'rgba(255,255,255,0.05)'};
-                    color:${tagColor || '#cbd5e1'};
-                    border:1px solid ${tagColor ? tagColor + '66' : 'rgba(255,255,255,0.1)'};
-                    font-size:0.78rem;
-                    padding:2px 8px;
-                    border-radius:8px;
-                    font-weight:600;
-                ">#${tag}</span>
-            </td>
-            <td style="text-align:center; width:80px; font-size:0.85rem; color:#94a3b8;">
-                ${count}
-            </td>
-            <td style="width:80px; text-align:center;">
-                <button class="tag-action-btn tag-rename-btn" data-tag="${tag}" title="${currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename'}" style="padding:3px 7px; margin:0 2px;">✏️</button>
-                <button class="tag-action-btn tag-danger-btn tag-delete-btn" data-tag="${tag}" title="${currentLang === 'tr' ? 'Sil' : 'Delete'}" style="padding:3px 7px; margin:0 2px;">🗑️</button>
-            </td>`;
+            const row = tbody.insertRow();
 
-        tr.querySelector('.tag-checkbox').addEventListener('change', updateTagManagerSelection);
-        tr.querySelector('.tag-rename-btn').addEventListener('click', () => promptRenameTagModern(tag));
-        tr.querySelector('.tag-delete-btn').addEventListener('click', () => deleteSingleTag(tag));
+            // Checkbox
+            const cbCell = row.insertCell(0);
+            cbCell.style.cssText = 'width:36px; text-align:center;';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'tag-checkbox';
+            cb.dataset.tag = tag;
+            cb.addEventListener('change', updateTagManagerSelection);
+            cbCell.appendChild(cb);
 
-        tbody.appendChild(tr);
-    });
+            // Etiket
+            const tagCell = row.insertCell(1);
+            const badge = document.createElement('span');
+            badge.style.cssText = `
+                display:inline-block;
+                background:${color ? color + '22' : 'rgba(255,255,255,0.05)'};
+                color:${color || '#cbd5e1'};
+                border:1px solid ${color ? color + '66' : 'rgba(255,255,255,0.1)'};
+                font-size:0.78rem; padding:2px 8px; border-radius:8px; font-weight:600;
+            `;
+            badge.textContent = '#' + tag;
+            tagCell.appendChild(badge);
+
+            // Kullanım sayısı
+            const countCell = row.insertCell(2);
+            countCell.textContent = count;
+            countCell.style.cssText = 'text-align:center; width:80px; font-size:0.85rem; color:#94a3b8;';
+
+            // İşlemler — YAN YANA (display:flex)
+            const actionCell = row.insertCell(3);
+            actionCell.style.cssText = 'width:70px; text-align:center;';
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'display:flex; gap:4px; justify-content:center; align-items:center;';
+
+            const renameBtn = document.createElement('button');
+            renameBtn.textContent = '✏️';
+            renameBtn.className = 'tag-action-btn';
+            renameBtn.title = currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename';
+            renameBtn.style.cssText = 'padding:3px 6px; margin:0;';
+            renameBtn.onclick = () => promptRenameTagModern(tag);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.className = 'tag-action-btn tag-danger-btn';
+            deleteBtn.title = currentLang === 'tr' ? 'Sil' : 'Delete';
+            deleteBtn.style.cssText = 'padding:3px 6px; margin:0;';
+            deleteBtn.onclick = () => deleteSingleTag(tag);
+
+            wrapper.appendChild(renameBtn);
+            wrapper.appendChild(deleteBtn);
+            actionCell.appendChild(wrapper);
+        });
+
+    // Tümünü seç checkbox
+    const selectAll = document.getElementById('tag-select-all');
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.onclick = () => {
+            document.querySelectorAll('#tag-manager-tbody .tag-checkbox')
+                .forEach(cb => { cb.checked = selectAll.checked; });
+            updateTagManagerSelection();
+        };
+    }
+    updateTagManagerSelection();
 }
 
 export async function mergeSelectedTags() {
     if (selectedTagsForMerge.length < 2) return;
     const lang = store.get('currentLang');
-    const mergeInput = document.getElementById('tag-merge-new-name');
-    const targetName = mergeInput?.value.trim();
-    if (!targetName) {
+    const newTagName = document.getElementById('tag-merge-new-name')?.value.trim();
+    const alertOk = lang === 'tr' ? 'Tamam' : 'OK';
+    if (!newTagName) {
         await showCustomAlert(
-            lang === 'tr' ? 'Birleştirilecek yeni etiketi yazın.' : 'Please enter the new tag name.',
-            lang === 'tr' ? 'Tamam' : 'OK'
+            lang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.',
+            alertOk
         );
         return;
     }
     const ok = await showCustomConfirm(
         lang === 'tr'
-            ? `"${selectedTagsForMerge.join('", "')}" etiketlerini "${targetName}" ile birleştirmek istediğinize emin misiniz?`
-            : `Merge "${selectedTagsForMerge.join('", "')}" into "${targetName}"?`,
-        lang === 'tr' ? 'Birleştir' : 'Merge',
-        lang === 'tr' ? 'İptal' : 'Cancel'
+            ? `${selectedTagsForMerge.length} etiket "${newTagName}" çatısı altında birleştirilsin mi?`
+            : `Merge ${selectedTagsForMerge.length} tags into "${newTagName}"?`,
+        lang === 'tr' ? 'Evet' : 'Yes',
+        lang === 'tr' ? 'Hayır' : 'No'
     );
     if (!ok) return;
+    showLoading(true);
     try {
-        showLoading(true);
-        for (const tag of selectedTagsForMerge) {
-            await dbMergeTags(tag, targetName);
-        }
-        selectedTagsForMerge.forEach(tag => renameTagLocally(tag, targetName));
-        await fetchVideosCallback?.();
-        renderTagManagerUICallback?.();
+        await dbMergeTags(selectedTagsForMerge, newTagName);
+        mergeTagsLocally(selectedTagsForMerge, newTagName);
         showLoading(false);
+        await showCustomAlert(
+            lang === 'tr'
+                ? `${selectedTagsForMerge.length} etiket birleştirildi → ${newTagName}`
+                : `${selectedTagsForMerge.length} tags merged → ${newTagName}`,
+            alertOk
+        );
+        const inp = document.getElementById('tag-merge-new-name');
+        if (inp) inp.value = '';
+        renderTagManagerUICallback?.();
     } catch (err) {
         showLoading(false);
         console.error(err);
@@ -208,23 +249,22 @@ export async function mergeSelectedTags() {
 export async function deleteSelectedTags() {
     if (selectedTagsForMerge.length === 0) return;
     const lang = store.get('currentLang');
-    const deleteCount = selectedTagsForMerge.length;
     const ok = await showCustomConfirm(
         lang === 'tr'
-            ? `${deleteCount} etiketi tüm videolardan silmek istediğinize emin misiniz?`
-            : `Delete ${deleteCount} selected tags from all videos?`,
+            ? `${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?`
+            : `Delete ${selectedTagsForMerge.length} selected tags from all videos?`,
         lang === 'tr' ? 'Sil' : 'Delete',
         lang === 'tr' ? 'İptal' : 'Cancel'
     );
     if (!ok) return;
+    showLoading(true);
     try {
-        showLoading(true);
         for (const tag of selectedTagsForMerge) {
             await dbDeleteTagFromAllVideos(tag);
         }
         deleteTagsLocally(selectedTagsForMerge);
-        renderTagManagerUICallback?.();
         showLoading(false);
+        renderTagManagerUICallback?.();
     } catch (err) {
         showLoading(false);
         console.error(err);
@@ -241,8 +281,8 @@ export async function cleanupUnusedTags() {
         lang === 'tr' ? 'İptal' : 'Cancel'
     );
     if (!ok) return;
+    showLoading(true);
     try {
-        showLoading(true);
         await dbCleanupUnusedTags();
         await fetchVideosCallback?.();
         renderTagManagerUICallback?.();
