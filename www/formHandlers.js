@@ -108,7 +108,7 @@ export async function handleFormSubmit(e) {
     
     if (!instructor_id) return showCustomAlert(currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText);
     if (is_downloaded && !drive_url) return showCustomAlert(currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText);
-    if (!is_downloaded && !url) return showCustomAlert(currentLang === 'tr' ? 'Video URL zorunludur!' : 'Video URL is required!', okText);
+    if (!url && !drive_url) return showCustomAlert(currentLang === 'tr' ? 'Video URL veya Drive linki zorunludur!' : 'Video URL or Drive link is required!', okText);
     
     let platform = is_downloaded ? 'drive' : detectPlatform(url, false);
     let finalUrl = url;

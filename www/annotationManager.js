@@ -222,8 +222,11 @@ export async function openAnnotationModal(video) {
 
     // Aktif video bilgilerini sakla
     activeVideoId  = video.id;
-    activeVideoUrl = video.url;
     activePlatform = video.platform || 'other';
+    // Drive videolarında oynatma URL'si drive_url'dir, orijinal kaynak URL'si değil
+    activeVideoUrl = (activePlatform === 'drive')
+        ? (video.drive_url || video.url)
+        : video.url;
 
     // Alt başlık: eğitmen adı + YouTube uyarısı
     const subtitle = document.getElementById('annotation-modal-subtitle');
