@@ -1,0 +1,112 @@
+<!-- modals/annotation-modal.html -->
+<div id="annotation-modal" class="modal-overlay d-none">
+    <div class="modal-content" style="
+        max-width: 560px;
+        padding: 28px;
+        max-height: 85vh;
+        overflow-y: auto;
+        border-color: rgba(0,240,255,0.4);
+        box-shadow: 0 0 40px rgba(0,240,255,0.2);
+    ">
+        <span id="annotation-modal-close-btn" class="modal-close">&times;</span>
+
+        <h3 id="annotation-modal-title" style="
+            font-size: 1.15rem;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg,#ff007f,#00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        ">📍 Zaman Notları</h3>
+
+        <p id="annotation-modal-subtitle" style="
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 22px;
+            min-height: 18px;
+        "></p>
+
+        <!-- Not ekleme formu -->
+        <div style="
+            background: rgba(0,240,255,0.04);
+            border: 1px solid rgba(0,240,255,0.15);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+        ">
+            <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:0.75rem; color:#94a3b8; user-select:none;">
+                        ⏱ Dakika:Saniye
+                    </label>
+                    <input
+                        id="annotation-timestamp-input"
+                        type="text"
+                        placeholder="örn. 1:32"
+                        style="
+                            width: 100px;
+                            padding: 9px 10px;
+                            background: rgba(11,8,19,0.9);
+                            border: 1px solid rgba(255,0,127,0.35);
+                            border-radius: 9px;
+                            color: #f1f5f9;
+                            font-size: 0.9rem;
+                            outline: none;
+                            font-family: 'Poppins', sans-serif;
+                        "
+                    >
+                </div>
+
+                <div style="flex:1; display:flex; flex-direction:column; gap:5px; min-width:160px;">
+                    <label style="font-size:0.75rem; color:#94a3b8; user-select:none;">
+                        📝 Not
+                    </label>
+                    <input
+                        id="annotation-note-input"
+                        type="text"
+                        placeholder="Bu anda ne oluyor?"
+                        style="
+                            width: 100%;
+                            padding: 9px 10px;
+                            background: rgba(11,8,19,0.9);
+                            border: 1px solid rgba(255,0,127,0.35);
+                            border-radius: 9px;
+                            color: #f1f5f9;
+                            font-size: 0.9rem;
+                            outline: none;
+                            font-family: 'Poppins', sans-serif;
+                        "
+                    >
+                </div>
+
+                <button id="annotation-add-btn" style="
+                    padding: 9px 18px;
+                    background: linear-gradient(135deg, #ff007f, #c026d3);
+                    border: none;
+                    border-radius: 9px;
+                    color: #fff;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: opacity 0.2s;
+                    font-family: 'Poppins', sans-serif;
+                ">
+                    ＋ Ekle
+                </button>
+            </div>
+
+            <p id="annotation-form-error" style="
+                color: #ef4444;
+                font-size: 0.8rem;
+                margin-top: 8px;
+                display: none;
+            "></p>
+        </div>
+
+        <!-- Mevcut notlar listesi -->
+        <div id="annotation-list-container">
+            <!-- annotationManager.js tarafından doldurulur -->
+        </div>
+    </div>
+</div>

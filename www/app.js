@@ -49,7 +49,7 @@ async function loadTemplates() {
     if (!container) return;
     try {
         const [library, stats, addVideo, tagManager, practiceSession,
-               videoModal, tagsEditModal, customDialogModal] = await Promise.all([
+               videoModal, tagsEditModal, customDialogModal, annotationModal] = await Promise.all([
             fetch('views/library.html').then(r => r.text()),
             fetch('views/stats.html').then(r => r.text()),
             fetch('views/add-video.html').then(r => r.text()),
@@ -58,12 +58,13 @@ async function loadTemplates() {
             fetch('modals/video-modal.html').then(r => r.text()),
             fetch('modals/tags-edit-modal.html').then(r => r.text()),
             fetch('modals/custom-dialog-modal.html').then(r => r.text()),
+            fetch('modals/annotation-modal.html').then(r => r.text()),
         ]);
 
         // Modalleri body'e ekle
         const modalContainer = document.createElement('div');
         modalContainer.id = 'modals-container';
-        modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal;
+        modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal + annotationModal;
         document.body.appendChild(modalContainer);
 
         // View'ları container'a ekle — her biri ayrı ayrı innerHTML ile

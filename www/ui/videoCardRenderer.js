@@ -6,6 +6,7 @@
 import { openNoteEditModal } from '../tangoModals.js';
 import { store } from '../store.js';
 import { getTagColor } from '../tagColorManager.js'; // ✅ YENİ (Adım 3.3)
+import { openAnnotationModal } from '../annotationManager.js';
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -340,6 +341,7 @@ export function renderVideoCards(videos, config) {
                 <div style="display:flex;justify-content:space-between;width:100%;align-items:center;margin-top:4px;">
                     <a ${actionLinkClickAttr}>${watchText}</a>
                     <div style="display:flex;gap:8px;">
+                        <button class="card-crud-btn card-annotate-btn" title="${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}">📍</button>
                         <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
                         <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
                     </div>
@@ -363,6 +365,14 @@ export function renderVideoCards(videos, config) {
             e.stopPropagation();
             openTagsEditModal(video);
         });
+
+        const annotateBtn = card.querySelector('.card-annotate-btn');
+        if (annotateBtn) {
+            annotateBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openAnnotationModal(video);
+            });
+        }
 
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => { e.stopPropagation(); startVideoEditFlow(video); });
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteVideoFlow(video.id); });
