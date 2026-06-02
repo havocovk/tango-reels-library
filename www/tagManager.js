@@ -1,11 +1,12 @@
 // tagManager.js - Toplu etiket işlemleri + renk yönetimi
 // ✅ GÜNCELLEME (Adım 3.3): Her etiket satırına renk seçici eklendi
+// ✅ DÜZELTME: deleteSingleTag ve promptRenameTagModern export'ları eklendi
 import { translations } from './i18n.js';
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, showModernPrompt } from './utils.js';
 import { store } from './store.js';
-import { getTagColor, setTagColor, removeTagColor, getColorPalette } from './tagColorManager.js'; // ✅ YENİ
+import { getTagColor, setTagColor, removeTagColor, getColorPalette } from './tagColorManager.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -21,7 +22,9 @@ export function initTagManager(lang, videos, fetchVideosFn, renderUIFn) {
 }
 
 export function updateTagManagerSelection() {
-    const checked = Array.from(document.querySelectorAll('#tag-manager-tbody .tag-checkbox:checked')).map(cb => cb.dataset.tag);
+    const checked = Array.from(
+        document.querySelectorAll('#tag-manager-tbody .tag-checkbox:checked')
+    ).map(cb => cb.dataset.tag);
     selectedTagsForMerge = checked;
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
     const deleteBtn = document.getElementById('tag-manager-delete-btn');
@@ -72,8 +75,58 @@ function deleteTagsLocally(tagsArray) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// renderTagManagerTable  ✅ GÜNCELLEME (Adım 3.3)
-// Her satıra renk durumu + renk seçici sütunu eklendi
+// promptRenameTagModern  ✅ export edildi (dataManager.js uyumluluğu için)
+// ─────────────────────────────────────────────────────────────
+export async function promptRenameTagModern(tag) {
+    const lang = store.get('currentLang');
+    const newName = await showModernPrompt(
+        lang === 'tr' ? `"${tag}" etiketini yeniden adlandır:` : `Rename tag "${tag}":`,
+        tag
+    );
+    if (!newName || newName.trim() === tag) return;
+    try {
+        showLoading(true);
+        await dbRenameTag(tag, newName.trim());
+        renameTagLocally(tag, newName.trim());
+        renderTagManagerUICallback?.();
+        showLoading(false);
+    } catch (err) {
+        showLoading(false);
+        console.error(err);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// deleteSingleTag  ✅ export edildi (dataManager.js uyumluluğu için)
+// ─────────────────────────────────────────────────────────────
+export async function deleteSingleTag(tag) {
+    const lang = store.get('currentLang');
+    const ok = await showCustomConfirm(
+        lang === 'tr'
+            ? `"${tag}" etiketini TÜM videolardan silmek istediğinize emin misiniz?`
+            : `Are you sure you want to delete "${tag}" from ALL videos?`,
+        lang === 'tr' ? 'Evet' : 'Yes',
+        lang === 'tr' ? 'Hayır' : 'No'
+    );
+    if (!ok) return;
+    showLoading(true);
+    try {
+        await dbDeleteTagFromAllVideos([tag]);
+        deleteTagsLocally([tag]);
+        showLoading(false);
+        await showCustomAlert(
+            lang === 'tr' ? `"${tag}" etiketi kaldırıldı.` : `"${tag}" removed.`,
+            lang === 'tr' ? 'Tamam' : 'OK'
+        );
+        renderTagManagerUICallback?.();
+    } catch (err) {
+        showLoading(false);
+        console.error(err);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// renderTagManagerUI  ✅ GÜNCELLEME (Adım 3.3) — renk seçici eklendi
 // ─────────────────────────────────────────────────────────────
 export function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
@@ -98,7 +151,6 @@ export function renderTagManagerUI() {
     sortedTags.forEach(([tag, count]) => {
         const currentColor = getTagColor(tag);
 
-        // Palet butonları HTML'i
         const paletteHtml = palette.map(p => `
             <button
                 class="tm-color-dot ${currentColor === p.color ? 'tm-color-dot-active' : ''}"
@@ -108,9 +160,8 @@ export function renderTagManagerUI() {
             ></button>
         `).join('');
 
-        // Renk sıfırlama butonu
         const clearBtn = currentColor
-            ? `<button class="tm-color-clear tag-action-btn tag-danger-btn" data-tag="${tag}" title="Rengi kaldır" style="font-size:0.65rem;padding:2px 6px;">✕</button>`
+            ? `<button class="tm-color-clear tag-action-btn tag-danger-btn" data-tag="${tag}" title="${currentLang === 'tr' ? 'Rengi kaldır' : 'Remove color'}" style="font-size:0.65rem;padding:2px 6px;">✕</button>`
             : '';
 
         const tr = document.createElement('tr');
@@ -127,88 +178,45 @@ export function renderTagManagerUI() {
             </td>
             <td style="text-align:center;">${count}</td>
             <td>
-                <!-- ✅ Adım 3.3: Renk seçici -->
                 <div class="tm-color-picker" data-tag="${tag}" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">
                     ${paletteHtml}
                     ${clearBtn}
                 </div>
             </td>
             <td>
-                <button class="tag-action-btn tag-rename-btn" data-tag="${tag}">✏️ Yeniden Adlandır</button>
-                <button class="tag-action-btn tag-danger-btn tag-delete-btn" data-tag="${tag}">🗑️ Sil</button>
+                <button class="tag-action-btn tag-rename-btn" data-tag="${tag}">✏️ ${currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename'}</button>
+                <button class="tag-action-btn tag-danger-btn tag-delete-btn" data-tag="${tag}">🗑️ ${currentLang === 'tr' ? 'Sil' : 'Delete'}</button>
             </td>`;
 
-        // ── Renk dot tıklama ──
+        // Renk dot tıklama
         tr.querySelectorAll('.tm-color-dot').forEach(dot => {
             dot.addEventListener('click', async () => {
-                const color = dot.dataset.color;
                 try {
-                    await setTagColor(tag, color);
-                    renderTagManagerUI(); // tabloyu yeniden çiz
-                } catch (err) {
-                    console.error('Renk kaydedilemedi:', err);
-                }
+                    await setTagColor(tag, dot.dataset.color);
+                    renderTagManagerUI();
+                } catch (err) { console.error('Renk kaydedilemedi:', err); }
             });
         });
 
-        // ── Renk sıfırlama ──
+        // Renk sıfırlama
         const clearBtnEl = tr.querySelector('.tm-color-clear');
         if (clearBtnEl) {
             clearBtnEl.addEventListener('click', async () => {
                 try {
                     await removeTagColor(tag);
                     renderTagManagerUI();
-                } catch (err) {
-                    console.error('Renk silinemedi:', err);
-                }
+                } catch (err) { console.error('Renk silinemedi:', err); }
             });
         }
 
-        // ── Checkbox ──
+        // Checkbox
         tr.querySelector('.tag-checkbox').addEventListener('change', updateTagManagerSelection);
 
-        // ── Yeniden adlandır ──
-        tr.querySelector('.tag-rename-btn').addEventListener('click', async () => {
-            const lang = store.get('currentLang');
-            const newName = await showModernPrompt(
-                lang === 'tr' ? `"${tag}" etiketini yeniden adlandır:` : `Rename tag "${tag}":`,
-                tag
-            );
-            if (!newName || newName.trim() === tag) return;
-            try {
-                showLoading(true);
-                await dbRenameTag(tag, newName.trim());
-                renameTagLocally(tag, newName.trim());
-                renderTagManagerUICallback?.();
-                showLoading(false);
-            } catch (err) {
-                showLoading(false);
-                console.error(err);
-            }
-        });
+        // Yeniden adlandır
+        tr.querySelector('.tag-rename-btn').addEventListener('click', () => promptRenameTagModern(tag));
 
-        // ── Sil ──
-        tr.querySelector('.tag-delete-btn').addEventListener('click', async () => {
-            const lang = store.get('currentLang');
-            const ok = await showCustomConfirm(
-                lang === 'tr'
-                    ? `"${tag}" etiketini tüm videolardan silmek istediğinize emin misiniz?`
-                    : `Are you sure you want to delete the tag "${tag}" from all videos?`,
-                lang === 'tr' ? 'Sil' : 'Delete',
-                lang === 'tr' ? 'İptal' : 'Cancel'
-            );
-            if (!ok) return;
-            try {
-                showLoading(true);
-                await dbDeleteTagFromAllVideos(tag);
-                deleteTagsLocally([tag]);
-                renderTagManagerUICallback?.();
-                showLoading(false);
-            } catch (err) {
-                showLoading(false);
-                console.error(err);
-            }
-        });
+        // Sil
+        tr.querySelector('.tag-delete-btn').addEventListener('click', () => deleteSingleTag(tag));
 
         tbody.appendChild(tr);
     });
@@ -252,10 +260,11 @@ export async function mergeSelectedTags() {
 export async function deleteSelectedTags() {
     if (selectedTagsForMerge.length === 0) return;
     const lang = store.get('currentLang');
+    const deleteCount = selectedTagsForMerge.length;
     const ok = await showCustomConfirm(
         lang === 'tr'
-            ? `Seçili ${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?`
-            : `Delete ${selectedTagsForMerge.length} selected tags from all videos?`,
+            ? `${deleteCount} etiketi tüm videolardan silmek istediğinize emin misiniz?`
+            : `Delete ${deleteCount} selected tags from all videos?`,
         lang === 'tr' ? 'Sil' : 'Delete',
         lang === 'tr' ? 'İptal' : 'Cancel'
     );

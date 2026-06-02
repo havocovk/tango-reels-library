@@ -1,18 +1,22 @@
 // dataManager.js - Veri çekme, istatistik ve tag manager UI
 // ✅ GÜNCELLEME (Adım 2.2): fetchVideos artık getDueTodayCount çağırır
-//    ve sonucu store'a 'dueTodayCount' olarak kaydeder.
+// ✅ GÜNCELLEME (Adım 3.3): renderTagManagerUI tagManager.js'e taşındı
 import { translations } from './i18n.js';
 import { dbFetchInstructors, dbFetchVideos, dbFetchFavorites } from './tangoVeritabani.js';
 import { populateFilterDropdowns } from './tangoFilters.js';
 import { computeStats, renderStats } from './tangoStats.js';
 import { updateSmartFilenameAssistant } from './tangoUI.js';
-import { initTagManager, updateTagManagerSelection, promptRenameTagModern, deleteSingleTag, deleteSelectedTags, mergeSelectedTags, cleanupUnusedTags } from './tagManager.js';
-import { setVideoHandlersGlobalData, applyFiltersAndSearch } from './videoHandlers.js';
+import {
+    initTagManager,
+    updateTagManagerSelection,
+    renderTagManagerUI
+} from './tagManager.js';
+import { setVideoHandlersGlobalData } from './videoHandlers.js';
 import { setInstructorHandlersGlobalData } from './instructorHandlers.js';
 import { setFormHandlersGlobalData, formTagsArray } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
-import { getDueTodayCount } from './learning/spacedRepetition.js';  // ✅ YENİ
+import { getDueTodayCount } from './learning/spacedRepetition.js';
 
 export async function fetchInstructors() {
     try {
@@ -46,7 +50,7 @@ export async function fetchVideos() {
         }));
         store.set('globalVideos', videos);
 
-        // ✅ YENİ (Adım 2.2): Bugün tekrar edilmesi gereken video sayısını hesapla ve store'a yaz
+        // ✅ Adım 2.2: Bugün tekrar edilmesi gereken video sayısını hesapla
         const count = getDueTodayCount(videos);
         store.set('dueTodayCount', count);
 
@@ -80,7 +84,13 @@ function setupBackupButtons() {
     if (exportBtn.dataset.wired === 'true') return;
     exportBtn.dataset.wired = 'true';
     importBtn.dataset.wired = 'true';
-    exportBtn.onclick = () => { exportToJSON(store.get('globalVideos'), store.get('globalInstructors'), store.get('globalFavorites')); };
+    exportBtn.onclick = () => {
+        exportToJSON(
+            store.get('globalVideos'),
+            store.get('globalInstructors'),
+            store.get('globalFavorites')
+        );
+    };
     importBtn.onclick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -89,67 +99,21 @@ function setupBackupButtons() {
             const file = e.target.files[0];
             if (!file) return;
             try {
-                await importFromJSON(file, store.get('globalVideos'), store.get('globalInstructors'), store.get('globalFavorites'), fetchVideos, fetchInstructors);
+                await importFromJSON(
+                    file,
+                    store.get('globalVideos'),
+                    store.get('globalInstructors'),
+                    store.get('globalFavorites'),
+                    fetchVideos,
+                    fetchInstructors
+                );
             } catch (err) { console.error(err); }
         };
         fileInput.click();
     };
 }
 
-export function renderTagManagerUI() {
-    const tbody = document.getElementById('tag-manager-tbody');
-    if (!tbody) return;
-    const tagMap = new Map();
-    const videos = store.get('globalVideos');
-    videos.forEach(v => {
-        if (v.tags) {
-            v.tags.split(',').forEach(t => {
-                const tag = t.trim();
-                if (tag) tagMap.set(tag, (tagMap.get(tag) || 0) + 1);
-            });
-        }
-    });
-    const sortedTags = Array.from(tagMap.keys()).sort();
-    tbody.innerHTML = '';
-    sortedTags.forEach(tag => {
-        const count = tagMap.get(tag);
-        const row = tbody.insertRow();
-        const cbCell = row.insertCell(0);
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.className = 'tag-checkbox';
-        cb.dataset.tag = tag;
-        cb.addEventListener('change', () => updateTagManagerSelection());
-        cbCell.appendChild(cb);
-        row.insertCell(1).innerText = tag;
-        const countCell = row.insertCell(2);
-        countCell.innerText = count;
-        countCell.style.textAlign = 'center';
-        const actionCell = row.insertCell(3);
-        actionCell.style.textAlign = 'center';
-        const renameBtn = document.createElement('button');
-        renameBtn.innerText = '✏️';
-        renameBtn.className = 'tag-action-btn';
-        renameBtn.title = store.get('currentLang') === 'tr' ? 'Yeniden Adlandır' : 'Rename';
-        renameBtn.onclick = () => promptRenameTagModern(tag);
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerText = '🗑️';
-        deleteBtn.className = 'tag-action-btn tag-danger-btn';
-        deleteBtn.title = store.get('currentLang') === 'tr' ? 'Tüm Videolardan Sil' : 'Delete from all videos';
-        deleteBtn.onclick = () => deleteSingleTag(tag);
-        actionCell.appendChild(renameBtn);
-        actionCell.appendChild(deleteBtn);
-    });
-    const selectAll = document.getElementById('tag-select-all');
-    if (selectAll) {
-        selectAll.checked = false;
-        selectAll.onclick = () => {
-            document.querySelectorAll('#tag-manager-tbody .tag-checkbox').forEach(cb => cb.checked = selectAll.checked);
-            updateTagManagerSelection();
-        };
-    }
-    updateTagManagerSelection();
-}
+export { renderTagManagerUI };
 
 export function updateAllLanguages() {
     const currentLang = store.get('currentLang');
