@@ -3,7 +3,7 @@
 // ✅ GÜNCELLEME (Adım 5.3): renderTagCloud eklendi
 // ✅ GÜNCELLEME (Adım 5.4): Yıl seçici ve renderMonthlyChart eklendi
 import { translations } from '../i18n.js';
-import { computeLearningHeatmap, computeMonthlyData, getAvailableYears } from './computeStats.js';
+import { computeLearningHeatmap, computeMonthlyData, getAvailableYears, computeTagNetwork } from './computeStats.js';
 import { store } from '../store.js';
 import { filterByTag } from '../navigation.js';
 
@@ -37,6 +37,84 @@ function renderTagCloud(topTags) {
             title="${t.tag}: ${t.count} video"
         >#${t.tag} <sup style="font-size:0.6em; opacity:0.7;">${t.count}</sup></span>`;
     }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// renderTagNetwork  ✅ YENİ (Adım 5.2)
+// ─────────────────────────────────────────────────────────────
+let tagNetwork = null;   // Açık ağ haritası örneğini saklar (tekrar çizimde temizlemek için)
+
+function renderTagNetwork(networkData, currentLang) {
+    const container = document.getElementById('tag-network-container');
+    if (!container) return;
+
+    // Önceki harita örneğini temizle (aynı yere iki kere çizilmesini önler)
+    if (tagNetwork) { tagNetwork.destroy(); tagNetwork = null; }
+
+    // Yeterli veri yoksa kullanıcıya bilgi ver
+    if (!networkData.nodes || networkData.nodes.length < 2 || networkData.edges.length === 0) {
+        container.style.height = 'auto';
+        container.innerHTML = `<div class="info-msg" style="padding:24px;text-align:center;opacity:0.7;">
+            ${currentLang === 'tr'
+                ? 'Ağ haritası için henüz yeterli etiket bağlantısı yok. Aynı etiketleri birden fazla videoda kullandıkça buradaki bağlantılar oluşacak.'
+                : 'Not enough tag connections for a network map yet. As you reuse the same tags across multiple videos, connections will appear here.'}
+        </div>`;
+        return;
+    }
+
+    // Kütüphane yüklenmemişse sessizce çık
+    if (typeof vis === 'undefined') {
+        console.warn('vis-network kütüphanesi yüklenemedi.');
+        return;
+    }
+
+    const nodes = new vis.DataSet(networkData.nodes.map(n => ({
+        id: n.id,
+        label: n.label,
+        value: n.value,
+        title: `${n.label}: ${n.value} video`
+    })));
+
+    const edges = new vis.DataSet(networkData.edges.map(e => ({
+        from: e.from,
+        to: e.to,
+        value: e.value,
+        title: currentLang === 'tr' ? `${e.value} videoda birlikte` : `together in ${e.value} videos`
+    })));
+
+    const options = {
+        nodes: {
+            shape: 'dot',
+            scaling: { min: 10, max: 42 },
+            font: { color: '#f1f5f9', size: 14, face: 'Poppins' },
+            borderWidth: 2,
+            color: {
+                background: '#ff007f',
+                border: '#00f0ff',
+                highlight: { background: '#00f0ff', border: '#ff007f' }
+            }
+        },
+        edges: {
+            color: { color: 'rgba(0,240,255,0.30)', highlight: '#ff007f' },
+            scaling: { min: 1, max: 8 },
+            smooth: { type: 'continuous' }
+        },
+        physics: {
+            stabilization: { iterations: 150 },
+            barnesHut: { gravitationalConstant: -3200, springLength: 130 }
+        },
+        interaction: { hover: true, tooltipDelay: 120 }
+    };
+
+    tagNetwork = new vis.Network(container, { nodes, edges }, options);
+
+    // Düğüme tıklanınca koleksiyonu o etiketle filtrele
+    tagNetwork.on('click', (params) => {
+        if (params.nodes && params.nodes.length > 0) {
+            const tagName = params.nodes[0]; // düğümün id'si = etiket adı
+            if (tagName) filterByTag(tagName);
+        }
+    });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -234,6 +312,15 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
         <div id="learning-heatmap-container"></div>
+        <div class="stats-tag-network" style="margin-top:30px;">
+            <div class="stat-label stat-label-centered">${currentLang === 'tr' ? '🔗 Etiket Bağlantı Haritası' : '🔗 Tag Connection Map'}</div>
+            <div style="text-align:center; opacity:0.6; font-size:0.85rem; margin:8px 0 12px 0;">
+                ${currentLang === 'tr'
+                    ? '💡 Bir düğüme tıkla → koleksiyon o etiketle filtrelenir. Düğümleri sürükleyerek gezebilirsin.'
+                    : '💡 Click a node → collection filters by that tag. Drag nodes to explore.'}
+            </div>
+            <div id="tag-network-container" style="height:500px; background:rgba(11,8,19,0.4); border:1px solid rgba(0,240,255,0.2); border-radius:16px;"></div>
+        </div>
     `;
 
     // ✅ Adım 5.3: Etiket tıklama olayları
@@ -375,6 +462,10 @@ export function renderStats(stats, currentLang) {
     const currentYear2 = new Date().getFullYear();
     const heatmapData = computeLearningHeatmap(videos, currentYear2);
     renderLearningHeatmap(heatmapData, currentLang);
+
+    // ✅ Adım 5.2: Etiket ağ haritası
+    const tagNetworkData = computeTagNetwork(videos);
+    renderTagNetwork(tagNetworkData, currentLang);
 }
 
 // ─────────────────────────────────────────────────────────────

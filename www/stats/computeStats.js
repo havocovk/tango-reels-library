@@ -166,3 +166,56 @@ export function computeStats(videos, instructors) {
         monthlyData
     };
 }
+
+// ─────────────────────────────────────────────────────────────
+// computeTagNetwork  ✅ YENİ (Adım 5.2)
+// Etiketlerin birlikte geçme sıklığını hesaplar.
+// Döner: { nodes: [{id, label, value}], edges: [{from, to, value}] }
+// ─────────────────────────────────────────────────────────────
+export function computeTagNetwork(videos) {
+    const tagCount = new Map();    // etiket -> kaç videoda geçti
+    const pairCount = new Map();   // "etiketA|etiketB" -> kaç videoda birlikte geçti
+
+    videos.forEach(v => {
+        if (!v.tags) return;
+
+        // Videodaki etiketleri ayıkla ve aynı videoda tekrar edenleri teke indir
+        const tags = [...new Set(
+            v.tags.split(',').map(t => t.trim()).filter(Boolean)
+        )];
+
+        // Her etiketin toplam kullanım sayısını artır
+        tags.forEach(tag => {
+            tagCount.set(tag, (tagCount.get(tag) || 0) + 1);
+        });
+
+        // Bu videodaki her etiket çifti için "birlikte geçti" sayısını artır
+        for (let i = 0; i < tags.length; i++) {
+            for (let j = i + 1; j < tags.length; j++) {
+                // Çifti alfabetik sırala ki "a|b" ile "b|a" aynı sayılsın
+                const pair = [tags[i], tags[j]].sort();
+                const key = pair[0] + '|' + pair[1];
+                pairCount.set(key, (pairCount.get(key) || 0) + 1);
+            }
+        }
+    });
+
+    // Bağlantılar (çizgiler): en az 2 videoda birlikte geçen çiftler
+    const edges = [];
+    pairCount.forEach((count, key) => {
+        if (count >= 2) {
+            const [from, to] = key.split('|');
+            edges.push({ from, to, value: count });
+        }
+    });
+
+    // Düğümler (daireler): en az 2 videoda geçen etiketler
+    const nodes = [];
+    tagCount.forEach((count, tag) => {
+        if (count >= 2) {
+            nodes.push({ id: tag, label: '#' + tag, value: count });
+        }
+    });
+
+    return { nodes, edges };
+}
