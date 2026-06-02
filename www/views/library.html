@@ -52,6 +52,34 @@
         <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
     </div>
 
+    <!-- ✅ YENİ (Adım 6.4): Paylaşım çubuğu — her zaman görünür -->
+    <div id="share-bar" style="
+        display:flex; gap:8px; flex-wrap:wrap;
+        margin:6px 0 12px; align-items:center;
+    ">
+        <span style="font-size:0.7rem; color:#475569; flex-shrink:0;">
+            📤 Paylaş:
+        </span>
+        <button id="btn-share-whatsapp" title="WhatsApp'ta paylaş" style="
+            padding:5px 12px; border-radius:8px; font-size:0.76rem; font-weight:600;
+            background:rgba(37,211,102,0.12); border:1px solid rgba(37,211,102,0.4);
+            color:#25d366; cursor:pointer; font-family:'Poppins',sans-serif;
+            transition:background 0.15s;
+        ">📱 WhatsApp</button>
+        <button id="btn-share-clipboard" title="Panoya kopyala" style="
+            padding:5px 12px; border-radius:8px; font-size:0.76rem; font-weight:600;
+            background:rgba(0,240,255,0.08); border:1px solid rgba(0,240,255,0.3);
+            color:#00f0ff; cursor:pointer; font-family:'Poppins',sans-serif;
+            transition:background 0.15s;
+        ">📋 Kopyala</button>
+        <button id="btn-share-print" title="Yazdır / PDF olarak kaydet" style="
+            padding:5px 12px; border-radius:8px; font-size:0.76rem; font-weight:600;
+            background:rgba(255,0,127,0.08); border:1px solid rgba(255,0,127,0.3);
+            color:#ff6fae; cursor:pointer; font-family:'Poppins',sans-serif;
+            transition:background 0.15s;
+        ">🖨️ PDF / Yazdır</button>
+    </div>
+
     <div id="video-grid" class="video-grid">
         <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
     </div>

@@ -262,3 +262,73 @@ body {
 .bottom-nav-btn.active .bn-label {
     color: #ff007f;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 6.4 — @media print: Yazdırma / PDF modu
+   Ana sayfadan Ctrl+P ile yazdırılırsa temiz bir çıktı üretir.
+   (Asıl PDF özelliği popup pencerede ayrı HTML üretir —
+    bu kural yalnızca doğrudan ana sayfa baskısı için yedektir.)
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+
+    /* Arkaplan, glow ve dekoratif unsurlar — kağıtta gözükmesin */
+    body {
+        background: #ffffff !important;
+        color: #1e293b !important;
+    }
+    .bg-glow,
+    .sidebar-glass,
+    .bottom-nav,
+    #share-bar,
+    #clear-favorites-container,
+    .search-header,
+    #load-more-container,
+    #scroll-sentinel,
+    .card-crud-btn,
+    .fav-star-btn,
+    .playlist-add-btn,
+    .inline-edit-tags-btn,
+    .note-edit-btn,
+    .card-chain-btn,
+    .card-annotate-btn,
+    .similar-videos-section,
+    .chain-nav-section {
+        display: none !important;
+    }
+
+    /* Ana içerik tam genişlik */
+    .app-container {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+    }
+    .main-content-glass {
+        padding: 16px !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+    }
+
+    /* Kart grid'i tek sütun kompakt liste olarak */
+    .video-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+    .video-card {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 8px 12px !important;
+        background: #f8fafc !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+    }
+    .video-cover-link { display: none !important; }
+    .card-info-content { padding: 0 !important; }
+    .card-instructor { color: #0f172a !important; font-size: 0.9rem; }
+    .badge { border: 1px solid #e2e8f0 !important; color: #475569 !important; background: #f1f5f9 !important; }
+    .card-note-area { color: #475569 !important; }
+}

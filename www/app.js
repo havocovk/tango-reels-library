@@ -45,6 +45,7 @@ import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
 import { initChainManager, loadAllVideoLinks } from './chainManager.js'; // ✅ YENİ (Adım 6.2)
 import { initInstructorProfile } from './instructorProfile.js'; // ✅ YENİ (Adım 6.3)
+import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './export/listExport.js'; // ✅ YENİ (Adım 6.4)
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -148,6 +149,11 @@ async function initializeApp() {
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
     document.getElementById('btn-add-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
+
+    // ✅ Adım 6.4: Paylaşım butonları
+    document.getElementById('btn-share-whatsapp')?.addEventListener('click', shareToWhatsApp);
+    document.getElementById('btn-share-clipboard')?.addEventListener('click', copyListToClipboard);
+    document.getElementById('btn-share-print')?.addEventListener('click', exportToPrintView);
 
     // Dosya seçici
     const selectFileBtn = document.getElementById('select-file-btn');
