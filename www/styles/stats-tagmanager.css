@@ -350,3 +350,47 @@ canvas { max-height: 350px; width: 100%; }
     text-align: center;
     letter-spacing: 0.02em;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 5.4 — Aylık Trend Yıl Seçici
+   ═══════════════════════════════════════════════════════════ */
+.monthly-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.year-selector-dropdown {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 0, 127, 0.5);
+    border-radius: 10px;
+    color: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    /* Ok ikonu için sağa padding */
+    padding-right: 28px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ff007f' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+.year-selector-dropdown:hover,
+.year-selector-dropdown:focus {
+    border-color: #ff007f;
+    box-shadow: 0 0 8px rgba(255, 0, 127, 0.35);
+}
+
+.year-selector-dropdown option {
+    background: #0b0813;
+    color: #f1f5f9;
+}

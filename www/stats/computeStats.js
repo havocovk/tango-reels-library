@@ -1,9 +1,9 @@
 // stats/computeStats.js - Sadece verilerden istatistik hesaplama (DOM/UI yok)
 // ✅ GÜNCELLEME (Adım 5.1): computeLearningHeatmap eklendi
+// ✅ GÜNCELLEME (Adım 5.4): getAvailableYears ve computeMonthlyData eklendi
 
 // ─────────────────────────────────────────────────────────────
 // Yardımcı: Tarih objesini yerel saat dilimiyle 'YYYY-MM-DD' formatına çevirir.
-// toISOString() UTC kullandığı için gece yarısı civarında yanlış gün verebilir.
 // ─────────────────────────────────────────────────────────────
 function toLocalDateKey(dateObj) {
     const y = dateObj.getFullYear();
@@ -13,16 +13,60 @@ function toLocalDateKey(dateObj) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// getAvailableYears(videos)  ✅ YENİ (Adım 5.4)
+// Koleksiyondaki videolardan benzersiz yılları çıkarır.
+// Döner: [2026, 2025, 2024, ...] — azalan sırada
+// ─────────────────────────────────────────────────────────────
+export function getAvailableYears(videos) {
+    const yearsSet = new Set();
+    videos.forEach(v => {
+        if (v.created_at) {
+            const d = new Date(v.created_at);
+            if (!isNaN(d)) yearsSet.add(d.getFullYear());
+        }
+    });
+    // Azalan sırada döndür (en yeni yıl başta)
+    return Array.from(yearsSet).sort((a, b) => b - a);
+}
+
+// ─────────────────────────────────────────────────────────────
+// computeMonthlyData(videos, year)  ✅ YENİ (Adım 5.4)
+// Belirli bir yılın 12 aylık video ekleme verisini döndürür.
+// ─────────────────────────────────────────────────────────────
+export function computeMonthlyData(videos, year) {
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+        const d = new Date(year, i, 1);
+        months.push({
+            year: d.getFullYear(),
+            month: d.getMonth() + 1,
+            label: `${d.getMonth() + 1}/${d.getFullYear()}`,
+            count: 0
+        });
+    }
+    videos.forEach(v => {
+        if (v.created_at) {
+            const date = new Date(v.created_at);
+            if (!isNaN(date)) {
+                const vy = date.getFullYear();
+                const vm = date.getMonth() + 1;
+                const found = months.find(m => m.year === vy && m.month === vm);
+                if (found) found.count++;
+            }
+        }
+    });
+    return months;
+}
+
+// ─────────────────────────────────────────────────────────────
 // computeLearningHeatmap(videos, year)  ✅ YENİ (Adım 5.1)
 // Seçilen yıl için GitHub tarzı ısı haritası verisi üretir.
 // Döner: { weeks: [[{date, addCount, practiceCount, total}|null]], year }
 // ─────────────────────────────────────────────────────────────
 export function computeLearningHeatmap(videos, year) {
-    // Her güne ait aktiviteyi topla
-    const dateMap = new Map(); // 'YYYY-MM-DD' → { addCount, practiceCount }
+    const dateMap = new Map();
 
     videos.forEach(v => {
-        // Video ekleme tarihi
         if (v.created_at) {
             const d = new Date(v.created_at);
             if (!isNaN(d) && d.getFullYear() === year) {
@@ -31,7 +75,6 @@ export function computeLearningHeatmap(videos, year) {
                 dateMap.get(key).addCount++;
             }
         }
-        // Pratik tarihi
         if (v.last_reviewed_at) {
             const d = new Date(v.last_reviewed_at);
             if (!isNaN(d) && d.getFullYear() === year) {
@@ -42,13 +85,9 @@ export function computeLearningHeatmap(videos, year) {
         }
     });
 
-    // Yılın ilk günü
     const startDate = new Date(year, 0, 1);
-    // Pazartesi = 0, Pazar = 6 olacak şekilde haftanın gününü hesapla
-    // JS: 0=Pazar, 1=Pazartesi → (getDay() + 6) % 7 = Pazartesi=0
     const firstDayOffset = (startDate.getDay() + 6) % 7;
 
-    // Yılın tüm günleri
     const days = [];
     const cursor = new Date(year, 0, 1);
     while (cursor.getFullYear() === year) {
@@ -63,19 +102,16 @@ export function computeLearningHeatmap(videos, year) {
         cursor.setDate(cursor.getDate() + 1);
     }
 
-    // Hücre dizisi: başa boş hücreler ekle, sonra günler
     const cells = [];
     for (let i = 0; i < firstDayOffset; i++) cells.push(null);
     days.forEach(d => cells.push(d));
 
-    // 53 haftalık gruplara böl
     const weeks = [];
     for (let w = 0; w < 53; w++) {
         const week = [];
         for (let d = 0; d < 7; d++) {
             week.push(cells[w * 7 + d] || null);
         }
-        // Tamamen boş haftayı dahil etme (yılın sonunda olabilir)
         const hasData = week.some(c => c !== null);
         if (hasData) weeks.push(week);
     }
@@ -85,6 +121,7 @@ export function computeLearningHeatmap(videos, year) {
 
 // ─────────────────────────────────────────────────────────────
 // computeStats(videos, instructors) — ana istatistik hesaplama
+// ✅ GÜNCELLEME (Adım 5.4): monthlyData artık computeMonthlyData() kullanıyor
 // ─────────────────────────────────────────────────────────────
 export function computeStats(videos, instructors) {
     const totalVideos = videos.length;
@@ -118,34 +155,14 @@ export function computeStats(videos, instructors) {
         .slice(0, 10)
         .map(([tag, count]) => ({ tag, count }));
 
-    // 12 aylık periyot (Mayıs 2026'dan itibaren)
-    const startDate = new Date(2026, 4, 1);
-    const months = [];
-    for (let i = 0; i < 12; i++) {
-        const d = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        months.push({
-            year: d.getFullYear(),
-            month: d.getMonth() + 1,
-            label: `${d.getMonth() + 1}/${d.getFullYear()}`,
-            count: 0
-        });
-    }
-    videos.forEach(v => {
-        if (v.created_at) {
-            const date = new Date(v.created_at);
-            if (!isNaN(date)) {
-                const year = date.getFullYear();
-                const month = date.getMonth() + 1;
-                const found = months.find(m => m.year === year && m.month === month);
-                if (found) found.count++;
-            }
-        }
-    });
+    // ✅ Adım 5.4: Sabit tarih yerine mevcut yılı kullan, computeMonthlyData() çağır
+    const currentYear = new Date().getFullYear();
+    const monthlyData = computeMonthlyData(videos, currentYear);
 
     return {
         totalVideos, totalInstructors,
         leaderCount, followerCount, bothCount,
         platformCounts, topTags,
-        monthlyData: months
+        monthlyData
     };
 }

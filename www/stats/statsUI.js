@@ -1,8 +1,9 @@
 // stats/statsUI.js - İstatistikleri HTML olarak render etme ve grafik çizme
 // ✅ GÜNCELLEME (Adım 5.1): renderLearningHeatmap eklendi
 // ✅ GÜNCELLEME (Adım 5.3): renderTagCloud eklendi
+// ✅ GÜNCELLEME (Adım 5.4): Yıl seçici ve renderMonthlyChart eklendi
 import { translations } from '../i18n.js';
-import { computeLearningHeatmap } from './computeStats.js';
+import { computeLearningHeatmap, computeMonthlyData, getAvailableYears } from './computeStats.js';
 import { store } from '../store.js';
 import { filterByTag } from '../navigation.js';
 
@@ -39,6 +40,67 @@ function renderTagCloud(topTags) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// renderMonthlyChart  ✅ YENİ (Adım 5.4)
+// Bar chart'ı verilen aylık veriyle çizer (veya yeniden çizer).
+// ─────────────────────────────────────────────────────────────
+function renderMonthlyChart(monthlyData) {
+    const canvasBar = document.getElementById('monthly-bar-chart');
+    if (!canvasBar) return;
+
+    const ctxBar = canvasBar.getContext('2d');
+    if (monthlyChart) monthlyChart.destroy();
+
+    const months = monthlyData.map(m => m.label);
+    const counts = monthlyData.map(m => m.count);
+
+    // Canvas genişliğini veriye göre ayarla
+    canvasBar.width = Math.max(700, monthlyData.length * 80);
+
+    monthlyChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                data: counts,
+                backgroundColor: '#ff007f',
+                borderRadius: 8,
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: true,
+            scales: {
+                y: { display: false },
+                x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 11 } } }
+            },
+            plugins: { tooltip: { enabled: false }, legend: { display: false } },
+            layout: { padding: { top: 25 } }
+        }
+    });
+
+    // Bar üstlerine değer yazısı
+    setTimeout(() => {
+        const ctx = canvasBar.getContext('2d');
+        const chart = monthlyChart;
+        if (!chart) return;
+        const meta = chart.getDatasetMeta(0);
+        meta.data.forEach((bar, index) => {
+            const value = counts[index];
+            if (value === 0) return;
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(value.toString(), bar.x, bar.y - 6);
+            ctx.restore();
+        });
+    }, 150);
+}
+
+// ─────────────────────────────────────────────────────────────
 // renderStats — Ana istatistik render fonksiyonu
 // ─────────────────────────────────────────────────────────────
 export function renderStats(stats, currentLang) {
@@ -50,6 +112,19 @@ export function renderStats(stats, currentLang) {
     const noTagsHTML = stats.topTags.length === 0
         ? `<span class="tag-badge">${lang.statsNoTags}</span>`
         : '';
+
+    // ✅ Adım 5.4: Mevcut yılı seç, dropdown için yılları al
+    const videos = store.get('globalVideos');
+    const availableYears = getAvailableYears(videos);
+    const currentYear = new Date().getFullYear();
+    // Seçili yıl: koleksiyonda mevcut yıl varsa onu, yoksa en yeni yılı göster
+    const defaultYear = availableYears.includes(currentYear) ? currentYear : (availableYears[0] || currentYear);
+
+    const yearOptionsHTML = availableYears.length > 0
+        ? availableYears.map(y =>
+            `<option value="${y}" ${y === defaultYear ? 'selected' : ''}>${y}</option>`
+          ).join('')
+        : `<option value="${currentYear}" selected>${currentYear}</option>`;
 
     container.innerHTML = `
         <div class="stats-grid">
@@ -94,7 +169,13 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
         <div class="monthly-chart-container">
-            <div class="stat-label stat-label-centered">${lang.statsMonthlyTrend}</div>
+            <!-- ✅ Adım 5.4: Başlık + yıl seçici yan yana -->
+            <div class="monthly-chart-header">
+                <div class="stat-label stat-label-centered">${lang.statsMonthlyTrend}</div>
+                <select id="year-selector" class="year-selector-dropdown">
+                    ${yearOptionsHTML}
+                </select>
+            </div>
             <div class="scrollable-chart" style="overflow-x: auto; width: 100%;">
                 <canvas id="monthly-bar-chart" width="${Math.max(700, stats.monthlyData.length * 80)}" height="350" style="width: auto; height: auto; display: block;"></canvas>
             </div>
@@ -113,7 +194,17 @@ export function renderStats(stats, currentLang) {
         });
     }
 
-    // ── Pie Chart (ORIJINAL YAPI) ──────────────────────────────
+    // ✅ Adım 5.4: Yıl seçici olay dinleyicisi
+    const yearSelector = document.getElementById('year-selector');
+    if (yearSelector) {
+        yearSelector.addEventListener('change', () => {
+            const selectedYear = parseInt(yearSelector.value);
+            const newMonthlyData = computeMonthlyData(videos, selectedYear);
+            renderMonthlyChart(newMonthlyData);
+        });
+    }
+
+    // ── Pie Chart (ORİJİNAL YAPI) ──────────────────────────────
     const platformKeys = [];
     const platformCounts = [];
     const platformColors = [];
@@ -231,59 +322,12 @@ export function renderStats(stats, currentLang) {
         });
     }
 
-    // ── Bar Chart ──────────────────────────────────────────────
-    const canvasBar = document.getElementById('monthly-bar-chart');
-    if (canvasBar) {
-        const ctxBar = canvasBar.getContext('2d');
-        if (monthlyChart) monthlyChart.destroy();
-        const months = stats.monthlyData.map(m => m.label);
-        const counts = stats.monthlyData.map(m => m.count);
-        monthlyChart = new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: months,
-                datasets: [{
-                    data: counts,
-                    backgroundColor: '#ff007f',
-                    borderRadius: 8,
-                    barPercentage: 0.7,
-                    categoryPercentage: 0.8
-                }]
-            },
-            options: {
-                responsive: false,
-                maintainAspectRatio: true,
-                scales: {
-                    y: { display: false },
-                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 11 } } }
-                },
-                plugins: { tooltip: { enabled: false }, legend: { display: false } },
-                layout: { padding: { top: 25 } }
-            }
-        });
-        setTimeout(() => {
-            const ctx = canvasBar.getContext('2d');
-            const chart = monthlyChart;
-            if (!chart) return;
-            const meta = chart.getDatasetMeta(0);
-            meta.data.forEach((bar, index) => {
-                const value = counts[index];
-                if (value === 0) return;
-                ctx.save();
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(value.toString(), bar.x, bar.y - 6);
-                ctx.restore();
-            });
-        }, 150);
-    }
+    // ── Bar Chart — ilk render ─────────────────────────────────
+    renderMonthlyChart(stats.monthlyData);
 
     // ── Heatmap (Adım 5.1) ────────────────────────────────────
-    const videos = store.get('globalVideos');
-    const currentYear = new Date().getFullYear();
-    const heatmapData = computeLearningHeatmap(videos, currentYear);
+    const currentYear2 = new Date().getFullYear();
+    const heatmapData = computeLearningHeatmap(videos, currentYear2);
     renderLearningHeatmap(heatmapData, currentLang);
 }
 
