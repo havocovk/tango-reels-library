@@ -2,6 +2,7 @@
 // ✅ GÜNCELLEME (Adım 2.2): dueTodayCount eklendi
 // ✅ GÜNCELLEME (Adım 2.4): globalPlaylists, activePlaylistId, activePlaylistVideoIds eklendi
 // ✅ GÜNCELLEME (Adım 7.2): viewMode eklendi
+// ✅ GÜNCELLEME (Adım 3.3): tagColors eklendi
 class Store {
   constructor(initialState = {}) {
     this.state = { ...initialState };
@@ -101,7 +102,8 @@ const initialState = {
   globalPlaylists: [],
   activePlaylistId: null,
   activePlaylistVideoIds: [],
-  viewMode: 'grid'   // ✅ YENİ (Adım 7.2): 'grid' veya 'list'
+  viewMode: 'grid',
+  tagColors: {}   // ✅ YENİ (Adım 3.3): { tagName: colorCode } formatında
 };
 
 export const store = new Store(initialState);

@@ -1,6 +1,7 @@
 // app.js - TAM KOD
 // ✅ GÜNCELLEME (Adım 2.3): Practice Session modu
 // ✅ GÜNCELLEME (Adım 2.4): Playlist sistemi (initPlaylists çağrısı)
+// ✅ GÜNCELLEME (Adım 3.3): loadTagColors çağrısı eklendi
 import { translations } from './i18n.js';
 import { handlePasteEvent, handleFileSelect } from './storage.js';
 import {
@@ -39,7 +40,8 @@ import {
 import { setupStoreSubscriptions } from './uiSubscriptions.js';
 import { getDueVideos } from './learning/spacedRepetition.js';
 import { initPracticeSession, startPracticeSession } from './practiceSession.js';
-import { initPlaylists } from './playlistManager.js'; // ✅ YENİ (Adım 2.4)
+import { initPlaylists } from './playlistManager.js';
+import { loadTagColors } from './tagColorManager.js'; // ✅ YENİ (Adım 3.3)
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -51,47 +53,40 @@ async function loadTemplates() {
             addVideo:        await fetch('views/add-video.html').then(r => r.text()),
             tagManager:      await fetch('views/tag-manager.html').then(r => r.text()),
             practiceSession: await fetch('views/practice-session.html').then(r => r.text()),
-            videoModal:      await fetch('modals/video-modal.html').then(r => r.text()),
-            tagsEditModal:   await fetch('modals/tags-edit-modal.html').then(r => r.text()),
-            customDialogModal: await fetch('modals/custom-dialog-modal.html').then(r => r.text())
         };
-        const modalContainer = document.createElement('div');
-        modalContainer.id = 'modals-container';
-        modalContainer.innerHTML = templates.videoModal + templates.tagsEditModal + templates.customDialogModal;
-        document.body.appendChild(modalContainer);
-        container.innerHTML =
-            templates.library + templates.stats + templates.addVideo +
-            templates.tagManager + templates.practiceSession;
-        await initializeApp();
+        Object.values(templates).forEach(html => {
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            container.appendChild(div);
+        });
     } catch (err) {
         console.error('Şablon yükleme hatası:', err);
-        const dynamicViews = document.getElementById('dynamic-views');
-        if (dynamicViews) dynamicViews.innerHTML = '<div class="info-msg" style="color:#ef4444;">Sayfa yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>';
     }
 }
 
 async function initializeApp() {
+    await loadTemplates();
+
+    const savedLang = localStorage.getItem('tango_lang') || 'tr';
+    store.set('currentLang', savedLang);
+
+    // ✅ Adım 3.3: Etiket renkleri uygulama başında yüklenir
+    await loadTagColors();
+
     await fetchInstructors();
     await fetchVideos();
-
-    initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
-    initInstructorHandlers(fetchInstructors, fetchVideos);
-    initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
-    initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
-    initModalCallbacks(applyFiltersAndSearch);
-    initPracticeSession(callSwitchView);
-
-    // ✅ YENİ (Adım 2.4): Playlist'leri başlat
     await initPlaylists();
 
-    callUpdateInterfaceLanguage();
+    initPracticeSession();
 
-    // Dil değiştirme
-    const langToggleBtn = document.getElementById('lang-toggle-btn');
-    if (langToggleBtn) {
-        langToggleBtn.onclick = () => {
+    const langBtn = document.getElementById('lang-toggle-btn');
+    if (langBtn) {
+        langBtn.textContent = savedLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
+        langBtn.onclick = () => {
             const newLang = store.get('currentLang') === 'tr' ? 'en' : 'tr';
             store.set('currentLang', newLang);
+            localStorage.setItem('tango_lang', newLang);
+            langBtn.textContent = newLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
             updateAllLanguages();
             callUpdateInterfaceLanguage();
             if (store.get('currentView') === 'stats') renderStatsPanel();
@@ -99,7 +94,7 @@ async function initializeApp() {
         };
     }
 
-    // Sidebar menü butonları — tıklanınca bottom nav'ı da senkronize eder
+    // Sidebar menü butonları
     document.getElementById('menu-library')?.addEventListener('click', () => { callSwitchView('library'); syncBottomNavActiveState('library'); });
     document.getElementById('menu-favorites')?.addEventListener('click', () => { callSwitchView('favorites'); syncBottomNavActiveState('favorites'); });
     document.getElementById('menu-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
@@ -119,76 +114,58 @@ async function initializeApp() {
         startPracticeSession(dueVideos);
     });
 
-    // Favori temizleme
+    // Form
+    initFormHandlers();
+    initVideoHandlers(
+        applyFiltersAndSearch,
+        fetchVideos,
+        openVideoModal,
+        openTagsEditModal,
+        startVideoEditFlow,
+        deleteVideoFlow
+    );
+    initInstructorHandlers();
+    initModalCallbacks({ startVideoEditFlow, openTagsEditModal });
+
+    document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
+    document.getElementById('btn-add-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
 
-    // Drive checkbox
-    const driveCheckbox = document.getElementById('form-is-downloaded');
-    if (driveCheckbox) {
-        driveCheckbox.onchange = (e) => {
-            const container = document.getElementById('drive-url-container');
-            const input = document.getElementById('form-drive-url');
-            if (e.target.checked) {
-                if (container) container.classList.remove('d-none');
-                if (input) input.required = true;
-            } else {
-                if (container) container.classList.add('d-none');
-                if (input) { input.required = false; input.value = ''; }
+    const coverFileInput = document.getElementById('cover-file-input');
+    if (coverFileInput) {
+        coverFileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleFileSelect(e.target.files[0], store.get('currentLang'));
             }
-        };
+        });
     }
 
-    // Otomatik tamamlama
-    setupAutocomplete('form-tags-input', 'autocomplete-list', formTagsArray, () => renderFormChips(), (newTag) => {
-        if (!formTagsArray.includes(newTag)) { formTagsArray.push(newTag); renderFormChips(); callUpdateSmartAssistant(); }
-    }, callGetUniqueTagsPool);
-    setupAutocomplete('modal-tags-input', 'modal-autocomplete-list', modalTagsArray, () => {}, (newTag) => {
-        if (!modalTagsArray.includes(newTag)) modalTagsArray.push(newTag);
-    }, callGetUniqueTagsPool);
+    document.addEventListener('paste', (e) => handlePasteEvent(e, store.get('currentLang')));
 
-    // Form submit
-    document.getElementById('add-video-form')?.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
-    document.getElementById('instructor-form')?.addEventListener('submit', (e) => { e.preventDefault(); handleInstructorSubmit(); });
-    document.getElementById('btn-delete-instructor')?.addEventListener('click', deleteInstructor);
-
-    // Video URL → thumbnail
-    document.getElementById('form-video-url')?.addEventListener('input', async (e) => {
-        const url = e.target.value.trim();
-        if (url) await autoFetchThumbnail(url);
-    });
-
-    // Dosya seçici
-    const selectFileBtn = document.getElementById('select-file-btn');
-    const fileInput = document.getElementById('cover-file-input');
-    if (selectFileBtn && fileInput) {
-        selectFileBtn.onclick = () => fileInput.click();
-        fileInput.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (file) await handleFileSelect(file, store.get('currentLang'));
-            fileInput.value = '';
-        };
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            setVisibleCount(20);
+            applyFiltersAndSearch();
+        });
     }
 
-    // Arama
-    document.getElementById('search-btn')?.addEventListener('click', () => applyFiltersAndSearch());
-    document.getElementById('search-input')?.addEventListener('input', () => applyFiltersAndSearch());
+    const formVideoUrlInput = document.getElementById('form-video-url');
+    if (formVideoUrlInput) {
+        formVideoUrlInput.addEventListener('input', (e) => {
+            autoFetchThumbnail(e.target.value);
+        });
+    }
+
+    document.getElementById('btn-close-modal')?.addEventListener('click', closeVideoModal);
+    document.getElementById('btn-close-tags-modal')?.addEventListener('click', closeTagsEditModal);
+    document.getElementById('btn-save-tags')?.addEventListener('click', saveTagsToSupabaseDirectly);
 
     // Filtreler
     ['filter-role-select','filter-instructor-select','filter-tag-select',
-     'filter-date-select','filter-platform-select','filter-learning-status-select']
-    .forEach(id => document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSearch()));
-
-    // Load more
-    document.getElementById('btn-load-more')?.addEventListener('click', () => { incrementVisibleCount(20); applyFiltersAndSearch(); });
-
-    // Modaller
-    document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
-    document.getElementById('video-modal')?.addEventListener('click', (e) => { if (e.target.id === 'video-modal') closeVideoModal(); });
-    document.getElementById('tags-modal-close-btn')?.addEventListener('click', closeTagsEditModal);
-    document.getElementById('tags-edit-modal')?.addEventListener('click', (e) => { if (e.target.id === 'tags-edit-modal') closeTagsEditModal(); });
-
-    // Kapak resmi yapıştırma
-    document.getElementById('drop-area')?.addEventListener('paste', (e) => handlePasteEvent(e, store.get('currentLang')));
+     'filter-date-select','filter-platform-select','filter-learning-status-select'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', applyFiltersAndSearch);
+    });
 
     // Etiket yönetimi
     document.getElementById('tag-manager-merge-btn')?.addEventListener('click', () => mergeSelectedTags());
@@ -204,18 +181,17 @@ async function initializeApp() {
     window.applyFiltersAndSearch = applyFiltersAndSearch;
     setupInfiniteScroll();
 
-    // ── Adım 7.1: Bottom Nav butonları ──────────────────────────
+    // Adım 7.1: Bottom Nav butonları
     document.getElementById('bn-library')?.addEventListener('click', () => { callSwitchView('library'); syncBottomNavActiveState('library'); });
     document.getElementById('bn-favorites')?.addEventListener('click', () => { callSwitchView('favorites'); syncBottomNavActiveState('favorites'); });
     document.getElementById('bn-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
     document.getElementById('bn-add')?.addEventListener('click', () => { callSwitchView('add'); syncBottomNavActiveState('add'); });
     document.getElementById('bn-tags')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
-    // ✅ YENİ (Adım 7.2): Grid/Liste toggle butonu
+
+    // Adım 7.2: Grid/Liste toggle
     document.getElementById('btn-view-toggle')?.addEventListener('click', toggleViewMode);
 }
 
-// ── Adım 7.1: Bottom nav aktif durumunu senkronize et ────────
-// Her view geçişinde çağrılır: ilgili bottom nav butonunu aktif yapar.
 export function syncBottomNavActiveState(viewName) {
     const map = {
         library:    'bn-library',
@@ -224,15 +200,9 @@ export function syncBottomNavActiveState(viewName) {
         add:        'bn-add',
         tagManager: 'bn-tags'
     };
-    // Tüm bottom nav butonlarından active class'ı kaldır
-    document.querySelectorAll('.bottom-nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    // İlgili butona active ekle
+    document.querySelectorAll('.bottom-nav-btn').forEach(btn => btn.classList.remove('active'));
     const targetId = map[viewName];
-    if (targetId) {
-        document.getElementById(targetId)?.classList.add('active');
-    }
+    if (targetId) document.getElementById(targetId)?.classList.add('active');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -241,4 +211,5 @@ document.addEventListener('DOMContentLoaded', () => {
         const dv = document.getElementById('dynamic-views');
         if (dv) dv.innerHTML = '<div class="info-msg" style="color:#ef4444;">Sayfa yüklenirken hata oluştu. Lütfen sayfayı yenileyin.</div>';
     });
+    initializeApp();
 });

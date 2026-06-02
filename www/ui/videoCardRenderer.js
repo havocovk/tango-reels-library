@@ -2,8 +2,10 @@
 // ✅ GÜNCELLEME (Adım 2.4): Her karta 📋 playlist butonu eklendi.
 // ✅ GÜNCELLEME (Adım 3.2): Benzer kombinasyonlar bölümü eklendi.
 // ✅ GÜNCELLEME (Adım 7.2): Liste görünümü (renderVideoList) eklendi.
+// ✅ GÜNCELLEME (Adım 3.3): Etiket badge'lerine renk sistemi eklendi.
 import { openNoteEditModal } from '../tangoModals.js';
 import { store } from '../store.js';
+import { getTagColor } from '../tagColorManager.js'; // ✅ YENİ (Adım 3.3)
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -25,6 +27,26 @@ export function getLearningStatusBadgeHtml(video, currentLang) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// getTagBadgeHtml  ✅ YENİ (Adım 3.3)
+// Bir etiket için renkli veya varsayılan badge HTML'i döner.
+// ─────────────────────────────────────────────────────────────
+function getTagBadgeHtml(tag) {
+    const customColor = getTagColor(tag);
+    if (customColor) {
+        // Renk atanmışsa: o rengi bg/border/text olarak kullan
+        return `<span class="badge tag-colored-badge" style="
+            background: ${customColor}22;
+            color: ${customColor};
+            border: 1px solid ${customColor}66;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+        ">#${tag}</span>`;
+    }
+    // Renk atanmamışsa: varsayılan stil
+    return `<span class="badge" style="background:rgba(255,255,255,0.05);color:#cbd5e1;border:1px solid rgba(255,255,255,0.1);font-size:0.7rem;padding:2px 6px;">#${tag}</span>`;
+}
+
+// ─────────────────────────────────────────────────────────────
 // findSimilarVideos  (Adım 3.2)
 // ─────────────────────────────────────────────────────────────
 function findSimilarVideos(video, allVideos, limit = 3) {
@@ -39,18 +61,31 @@ function findSimilarVideos(video, allVideos, limit = 3) {
         if (!other.tags) continue;
         const otherTags = other.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
         let overlap = 0;
-        for (const tag of otherTags) {
-            if (myTags.has(tag)) overlap++;
-        }
+        for (const tag of otherTags) { if (myTags.has(tag)) overlap++; }
         if (overlap > 0) scored.push({ video: other, score: overlap });
     }
     scored.sort((a, b) => b.score - a.score);
     return scored.slice(0, limit).map(s => s.video);
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function convertYoutubeUrlToEmbed(url) {
+    if (!url) return url;
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+    if (match) return `https://www.youtube.com/embed/${match[1]}`;
+    return url;
+}
+
 // ─────────────────────────────────────────────────────────────
 // renderVideoList  ✅ YENİ (Adım 7.2)
-// Kompakt liste görünümü: her video bir satır.
 // ─────────────────────────────────────────────────────────────
 export function renderVideoList(videos, config) {
     const {
@@ -62,7 +97,6 @@ export function renderVideoList(videos, config) {
     const videoGrid = document.getElementById('video-grid');
     const lang = langPack[currentLang];
 
-    // Liste modunda container'ı flex sütununa çevir
     videoGrid.classList.add('video-list-mode');
     videoGrid.innerHTML = '';
 
@@ -81,13 +115,16 @@ export function renderVideoList(videos, config) {
         const isFav = favs.includes(video.id);
         const instructorName = video.instructors ? video.instructors.name : (video.instructor_name || 'Bilinmeyen');
 
-        // Etiketler: ilk 3'ü göster
+        // ✅ Adım 3.3: Liste görünümünde de renkli etiketler
         const tagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-        const tagsHtml = tagsArray.slice(0, 3).map(t =>
-            `<span class="vl-tag">#${escapeHtml(t)}</span>`
-        ).join('') + (tagsArray.length > 3 ? `<span class="vl-tag">+${tagsArray.length - 3}</span>` : '');
+        const tagsHtml = tagsArray.slice(0, 3).map(t => {
+            const color = getTagColor(t);
+            if (color) {
+                return `<span class="vl-tag" style="color:${color};border-color:${color}44;background:${color}11;">#${escapeHtml(t)}</span>`;
+            }
+            return `<span class="vl-tag">#${escapeHtml(t)}</span>`;
+        }).join('') + (tagsArray.length > 3 ? `<span class="vl-tag">+${tagsArray.length - 3}</span>` : '');
 
-        // Rol badge
         let roleDisplay = video.role_type || 'Both';
         let roleBadgeClass = '';
         if (roleDisplay === 'Leader')        { roleDisplay = lang.leader;   roleBadgeClass = 'badge-leader'; }
@@ -116,13 +153,11 @@ export function renderVideoList(videos, config) {
                 <button class="vl-btn vl-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
             </div>`;
 
-        // Favori
         row.querySelector('.vl-fav-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
 
-        // İzle
         row.querySelector('.vl-watch-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             if (isEmbeddable && openVideoModal) {
@@ -134,19 +169,16 @@ export function renderVideoList(videos, config) {
             }
         });
 
-        // Düzenle
         row.querySelector('.vl-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             startVideoEditFlow(video);
         });
 
-        // Sil
         row.querySelector('.vl-delete-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             deleteVideoFlow(video.id);
         });
 
-        // Öğrenme durumu
         const lBadge = row.querySelector('.learning-badge');
         if (lBadge) {
             lBadge.addEventListener('click', (e) => {
@@ -167,7 +199,6 @@ export function renderVideoList(videos, config) {
 // renderVideoCards  (Grid görünümü — ana fonksiyon)
 // ─────────────────────────────────────────────────────────────
 export function renderVideoCards(videos, config) {
-    // ✅ (Adım 7.2): viewMode kontrolü
     if (store.get('viewMode') === 'list') {
         renderVideoList(videos, config);
         return;
@@ -183,7 +214,6 @@ export function renderVideoCards(videos, config) {
     const videoGrid = document.getElementById('video-grid');
     const lang = langPack[currentLang];
 
-    // Grid moduna geçişte liste class'ını kaldır
     videoGrid.classList.remove('video-list-mode');
     videoGrid.innerHTML = '';
 
@@ -231,10 +261,11 @@ export function renderVideoCards(videos, config) {
             ? `<span class="card-partner">👥 ${video.partner_name}</span>`
             : '';
 
+        // ✅ Adım 3.3: getTagBadgeHtml ile renkli etiket badge'leri
         let tagsHtml = '';
         if (video.tags && video.tags.trim() !== '') {
             video.tags.split(',').map(t => t.trim()).filter(Boolean).forEach(tag => {
-                tagsHtml += `<span class="badge" style="background:rgba(255,255,255,0.05);color:#cbd5e1;border:1px solid rgba(255,255,255,0.1);font-size:0.7rem;padding:2px 6px;">#${tag}</span>`;
+                tagsHtml += getTagBadgeHtml(tag);
             });
             tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
         } else {
@@ -256,7 +287,6 @@ export function renderVideoCards(videos, config) {
 
         const platformBadgeHtml = `<span class="badge" style="background:rgba(0,240,255,0.15);color:#00f0ff;display:inline-flex;align-items:center;gap:4px;"><img src="${iconUrl}" style="width:14px;height:14px;object-fit:contain;" onerror="this.onerror=null;this.style.display='none';this.nextSibling.style.display='inline';"><span style="display:inline;">${platformLabel}</span></span>`;
 
-        // Benzer kombinasyonlar (Adım 3.2)
         const similarVideos = findSimilarVideos(video, allVideos, 3);
         let similarHtml = '';
         if (similarVideos.length > 0) {
@@ -316,13 +346,11 @@ export function renderVideoCards(videos, config) {
                 </div>
             </div>`;
 
-        // Favori
         card.querySelector('.fav-star-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleFavorite(video.id);
         });
 
-        // Playlist
         const playlistBtn = card.querySelector('.playlist-add-btn');
         if (playlistBtn && showPlaylistDropdown) {
             playlistBtn.addEventListener('click', (e) => {
@@ -331,17 +359,14 @@ export function renderVideoCards(videos, config) {
             });
         }
 
-        // Etiket düzenleme
         card.querySelector('.inline-edit-tags-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             openTagsEditModal(video);
         });
 
-        // Düzenle ve sil
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => { e.stopPropagation(); startVideoEditFlow(video); });
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteVideoFlow(video.id); });
 
-        // Not
         const noteEditBtn = card.querySelector('.note-edit-btn');
         if (noteEditBtn) {
             noteEditBtn.addEventListener('click', (e) => {
@@ -350,7 +375,6 @@ export function renderVideoCards(videos, config) {
             });
         }
 
-        // Öğrenme durumu
         const learningBadge = card.querySelector('.learning-badge');
         if (learningBadge) {
             learningBadge.addEventListener('click', (e) => {
@@ -363,61 +387,40 @@ export function renderVideoCards(videos, config) {
             });
         }
 
-        // Benzer video tıklamaları
-        card.querySelectorAll('.similar-video-mini').forEach(miniCard => {
-            miniCard.addEventListener('click', (e) => {
+        // Benzer video tıklama
+        card.querySelectorAll('.similar-video-mini').forEach(mini => {
+            mini.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const svPlatform = miniCard.dataset.similarPlatform;
-                const svUrl      = miniCard.dataset.similarUrl;
-                const svDrive    = miniCard.dataset.similarDrive;
-                const isEmb = (svPlatform === 'drive' || svPlatform === 'youtube');
-                if (isEmb && openVideoModal) {
-                    let targetUrl = svPlatform === 'drive' ? svDrive : svUrl;
-                    if (svPlatform === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+                const miniPlatform = mini.dataset.similarPlatform;
+                const miniUrl = mini.dataset.similarUrl;
+                const miniDrive = mini.dataset.similarDrive;
+                const isEmbeddableMini = (miniPlatform === 'drive' || miniPlatform === 'youtube');
+                if (isEmbeddableMini && openVideoModal) {
+                    let targetUrl = miniPlatform === 'drive' ? miniDrive : miniUrl;
+                    if (miniPlatform === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
                     openVideoModal(targetUrl);
-                } else if (svUrl) {
-                    window.open(svUrl, '_blank');
+                } else if (miniUrl) {
+                    window.open(miniUrl, '_blank');
                 }
             });
         });
 
-        // Modal açma
-        if (shouldOpenInModal) {
-            card.querySelectorAll('[data-modal-url]').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    let targetUrl = (platform === 'drive') ? video.drive_url : video.url;
-                    if (platform === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
-                    openVideoModal(targetUrl);
-                });
-            });
-        }
-
         videoGrid.appendChild(card);
     });
-}
 
-// ─────────────────────────────────────────────────────────────
-// Yardımcı fonksiyonlar
-// ─────────────────────────────────────────────────────────────
-function convertYoutubeUrlToEmbed(url) {
-    if (!url) return '';
-    if (url.includes('/shorts/')) {
-        const id = url.split('/shorts/')[1]?.split(/[?#]/)[0];
-        if (id) return `https://www.youtube.com/embed/${id}`;
-    }
-    if (url.includes('v=')) {
-        const m = url.match(/[?&]v=([^&#]+)/);
-        if (m) return `https://www.youtube.com/embed/${m[1]}`;
-    }
-    if (url.includes('youtu.be/')) {
-        const id = url.split('youtu.be/')[1]?.split(/[?#]/)[0];
-        if (id) return `https://www.youtube.com/embed/${id}`;
-    }
-    return url;
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    // Play overlay tıklama
+    videoGrid.querySelectorAll('.play-trigger-btn, .drive-trigger').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const card = btn.closest('.video-card');
+            if (!card) return;
+            const videoId = parseInt(card.querySelector('.fav-star-btn')?.dataset.id);
+            const vid = allVideos.find(v => v.id === videoId);
+            if (!vid) return;
+            const pl = vid.platform || 'other';
+            if (pl === 'drive') { openVideoModal(vid.drive_url || vid.url); }
+            else if (pl === 'youtube') { openVideoModal(convertYoutubeUrlToEmbed(vid.url)); }
+        });
+    });
 }

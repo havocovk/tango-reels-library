@@ -448,3 +448,45 @@ canvas { max-height: 350px; width: 100%; }
     color: #ff007f;
     font-weight: 700;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 3.3 — Etiket Renk Sistemi (Tag Manager Renk Seçici)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Renk paleti nokta butonu */
+.tm-color-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.tm-color-dot:hover {
+    transform: scale(1.25);
+    border-color: #fff !important;
+}
+
+.tm-color-dot-active {
+    transform: scale(1.15);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+}
+
+/* Renk önizleme + seçici sarmalayıcı */
+.tm-color-picker {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* Renkli etiket badge — kartlarda kullanılır */
+.tag-colored-badge {
+    transition: filter 0.15s ease;
+}
+
+.tag-colored-badge:hover {
+    filter: brightness(1.2);
+}
