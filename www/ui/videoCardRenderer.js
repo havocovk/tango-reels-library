@@ -7,6 +7,7 @@ import { openNoteEditModal } from '../tangoModals.js';
 import { store } from '../store.js';
 import { getTagColor } from '../tagColorManager.js'; // ✅ YENİ (Adım 3.3)
 import { openAnnotationModal } from '../annotationManager.js';
+import { openLinkManager, buildChainNavHtml } from '../chainManager.js'; // ✅ YENİ (Adım 6.2)
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -150,6 +151,7 @@ export function renderVideoList(videos, config) {
             <div class="vl-actions">
                 <button class="vl-btn vl-fav-btn ${isFav ? 'active' : ''}" title="${currentLang === 'tr' ? 'Pratik listesi' : 'Favorites'}">★</button>
                 <button class="vl-btn vl-watch-btn" title="${currentLang === 'tr' ? 'İzle' : 'Watch'}">▶</button>
+                <button class="vl-btn vl-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}">🔗</button>
                 <button class="vl-btn vl-edit-btn" title="${lang.btnCardEdit}">✏️</button>
                 <button class="vl-btn vl-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
             </div>`;
@@ -169,6 +171,14 @@ export function renderVideoList(videos, config) {
                 window.open(video.url, '_blank');
             }
         });
+
+        const vlChainBtn = row.querySelector('.vl-chain-btn');
+        if (vlChainBtn) {
+            vlChainBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openLinkManager(video);
+            });
+        }
 
         row.querySelector('.vl-edit-btn').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -317,6 +327,9 @@ export function renderVideoCards(videos, config) {
                 </div>`;
         }
 
+        // ✅ YENİ (Adım 6.2): Kombinasyon zinciri navigasyon şeridi
+        const chainNavHtml = buildChainNavHtml(video, currentLang);
+
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image:url('${coverImg}');">
@@ -338,10 +351,12 @@ export function renderVideoCards(videos, config) {
                 <div class="card-badges card-tags-wrapper-row" style="margin-top:2px;gap:4px;align-items:center;">${tagsHtml}</div>
                 ${noteHtml}
                 ${similarHtml}
+                ${chainNavHtml}
                 <div style="display:flex;justify-content:space-between;width:100%;align-items:center;margin-top:4px;">
                     <a ${actionLinkClickAttr}>${watchText}</a>
                     <div style="display:flex;gap:8px;">
                         <button class="card-crud-btn card-annotate-btn" title="${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}">📍</button>
+                        <button class="card-crud-btn card-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}">🔗</button>
                         <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}">✏️</button>
                         <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
                     </div>
@@ -373,6 +388,33 @@ export function renderVideoCards(videos, config) {
                 openAnnotationModal(video);
             });
         }
+
+        // ✅ YENİ (Adım 6.2): Zincir yönetim butonu
+        const chainBtn = card.querySelector('.card-chain-btn');
+        if (chainBtn) {
+            chainBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openLinkManager(video);
+            });
+        }
+
+        // ✅ YENİ (Adım 6.2): Zincir chip'lerine tıklayınca bağlı videoyu aç
+        card.querySelectorAll('.chain-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const p = chip.dataset.chainPlatform;
+                const u = chip.dataset.chainUrl;
+                const d = chip.dataset.chainDrive;
+                const embeddable = (p === 'drive' || p === 'youtube');
+                if (embeddable && openVideoModal) {
+                    let targetUrl = p === 'drive' ? d : u;
+                    if (p === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+                    openVideoModal(targetUrl);
+                } else if (u) {
+                    window.open(u, '_blank');
+                }
+            });
+        });
 
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => { e.stopPropagation(); startVideoEditFlow(video); });
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteVideoFlow(video.id); });

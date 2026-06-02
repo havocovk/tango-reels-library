@@ -1,0 +1,251 @@
+<!-- modals/link-manager-modal.html -->
+<!-- ✅ YENİ (Adım 6.2): Kombinasyon Zinciri Yöneticisi -->
+<div id="link-manager-modal" class="modal-overlay d-none">
+    <div class="modal-content" style="
+        max-width: 620px;
+        padding: 28px;
+        max-height: 86vh;
+        overflow-y: auto;
+        border-color: rgba(0,240,255,0.4);
+        box-shadow: 0 0 40px rgba(0,240,255,0.2);
+    ">
+        <span id="link-manager-close-btn" class="modal-close">&times;</span>
+
+        <h3 style="
+            font-size: 1.15rem;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg,#ff007f,#00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        ">🔗 Kombinasyon Zinciri</h3>
+
+        <p id="link-manager-subtitle" style="
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 22px;
+            min-height: 18px;
+        "></p>
+
+        <!-- Mevcut bağlantılar: Önceki / Sonraki -->
+        <div class="link-current-grid">
+            <div class="link-col">
+                <div class="link-col-title">← Önceki kombinasyonlar</div>
+                <div id="link-prev-list" class="link-col-list"></div>
+            </div>
+            <div class="link-col">
+                <div class="link-col-title">Sonraki kombinasyonlar →</div>
+                <div id="link-next-list" class="link-col-list"></div>
+            </div>
+        </div>
+
+        <!-- Yeni bağlantı ekleme: arama -->
+        <div class="link-add-box">
+            <input id="link-search-input" type="text" class="link-search-input"
+                   placeholder="Eğitmen, partner veya etiket ara...">
+            <div id="link-search-results" class="link-search-results"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ============================================
+   Adım 6.2 — Kombinasyon Zinciri stilleri
+   (Bu blok body'e enjekte edildiğinde hem modal
+    hem de kart üzerindeki zincir şeritlerini biçimlendirir)
+   ============================================ */
+
+/* — Modal: mevcut bağlantılar iki sütun — */
+.link-current-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+@media (max-width: 520px) {
+    .link-current-grid { grid-template-columns: 1fr; }
+}
+.link-col-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #00f0ff;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+}
+.link-col-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-height: 40px;
+}
+.link-empty {
+    font-size: 0.78rem;
+    color: #475569;
+    padding: 8px 4px;
+    font-style: italic;
+}
+
+/* — Bağlantı satırı (mevcut) — */
+.link-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,240,255,0.04);
+    border: 1px solid rgba(0,240,255,0.15);
+    border-radius: 10px;
+    padding: 7px 9px;
+}
+.link-row-thumb {
+    flex-shrink: 0;
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    background-color: #1e293b;
+}
+.link-row-info { flex: 1; min-width: 0; }
+.link-row-name {
+    font-size: 0.84rem;
+    color: #e2e8f0;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.link-row-tags {
+    font-size: 0.7rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.link-row-del {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: #475569;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.15s;
+}
+.link-row-del:hover { color: #ef4444; }
+
+/* — Arama kutusu — */
+.link-add-box {
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 16px;
+}
+.link-search-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(11,8,19,0.9);
+    border: 1px solid rgba(255,0,127,0.35);
+    border-radius: 10px;
+    color: #f1f5f9;
+    font-size: 0.9rem;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+.link-search-input:focus { border-color: rgba(0,240,255,0.6); }
+.link-search-results {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+/* — Arama sonuç satırı — */
+.link-search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 7px 9px;
+}
+.link-search-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.link-add-next, .link-add-prev {
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+    transition: opacity 0.15s, background 0.15s;
+}
+.link-add-next {
+    background: rgba(0,240,255,0.12);
+    border: 1px solid rgba(0,240,255,0.4);
+    color: #00f0ff;
+}
+.link-add-next:hover:not(:disabled) { background: rgba(0,240,255,0.25); }
+.link-add-prev {
+    background: rgba(255,0,127,0.12);
+    border: 1px solid rgba(255,0,127,0.4);
+    color: #ff6fae;
+}
+.link-add-prev:hover:not(:disabled) { background: rgba(255,0,127,0.25); }
+.link-add-next:disabled, .link-add-prev:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* — KART üzerindeki zincir şeridi — */
+.chain-nav-section {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(0,240,255,0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.chain-nav-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+.chain-nav-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #00f0ff;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+.chain-nav-chips {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+.chain-chip {
+    max-width: 130px;
+    padding: 3px 9px;
+    background: rgba(0,240,255,0.08);
+    border: 1px solid rgba(0,240,255,0.3);
+    border-radius: 999px;
+    color: #bdf5ff;
+    font-size: 0.7rem;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.15s;
+}
+.chain-chip:hover { background: rgba(0,240,255,0.2); }
+.chain-chip-name {
+    display: inline-block;
+    max-width: 110px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+</style>

@@ -86,6 +86,19 @@ class Store {
   clearFavoritesLocally() {
     this.set('globalFavorites', []);
   }
+
+  // ✅ YENİ (Adım 6.2): Kombinasyon zinciri bağlantıları
+  addVideoLinkLocally(link) {
+    const links = this.get('globalVideoLinks') || [];
+    // Aynı id zaten varsa tekrar ekleme
+    if (links.some(l => l.id === link.id)) return;
+    this.set('globalVideoLinks', [...links, link]);
+  }
+
+  removeVideoLinkLocally(linkId) {
+    const links = this.get('globalVideoLinks') || [];
+    this.set('globalVideoLinks', links.filter(l => l.id !== linkId));
+  }
 }
 
 const initialState = {
@@ -103,7 +116,8 @@ const initialState = {
   activePlaylistId: null,
   activePlaylistVideoIds: [],
   viewMode: 'grid',
-  tagColors: {}   // ✅ YENİ (Adım 3.3): { tagName: colorCode } formatında
+  tagColors: {},   // ✅ YENİ (Adım 3.3): { tagName: colorCode } formatında
+  globalVideoLinks: []   // ✅ YENİ (Adım 6.2): kombinasyon zinciri bağlantıları
 };
 
 export const store = new Store(initialState);

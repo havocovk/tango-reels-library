@@ -43,13 +43,15 @@ import { initPracticeSession, startPracticeSession } from './practiceSession.js'
 import { initPlaylists } from './playlistManager.js';
 import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
+import { initChainManager, loadAllVideoLinks } from './chainManager.js'; // ✅ YENİ (Adım 6.2)
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
     if (!container) return;
     try {
         const [library, stats, addVideo, tagManager, practiceSession,
-               videoModal, tagsEditModal, customDialogModal, annotationModal] = await Promise.all([
+               videoModal, tagsEditModal, customDialogModal, annotationModal,
+               linkManagerModal] = await Promise.all([
             fetch('views/library.html').then(r => r.text()),
             fetch('views/stats.html').then(r => r.text()),
             fetch('views/add-video.html').then(r => r.text()),
@@ -59,12 +61,13 @@ async function loadTemplates() {
             fetch('modals/tags-edit-modal.html').then(r => r.text()),
             fetch('modals/custom-dialog-modal.html').then(r => r.text()),
             fetch('modals/annotation-modal.html').then(r => r.text()),
+            fetch('modals/link-manager-modal.html').then(r => r.text()),
         ]);
 
         // Modalleri body'e ekle
         const modalContainer = document.createElement('div');
         modalContainer.id = 'modals-container';
-        modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal + annotationModal;
+        modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal + annotationModal + linkManagerModal;
         document.body.appendChild(modalContainer);
 
         // View'ları container'a ekle — her biri ayrı ayrı innerHTML ile
@@ -87,6 +90,10 @@ async function initializeApp() {
     await fetchVideos();
     await initPlaylists();
     initRealtimeSync();   // ✅ Adım 4.2: Realtime senkronizasyonu başlat
+
+    // ✅ Adım 6.2: Kombinasyon zinciri sistemi — bağlantıları yükle
+    initChainManager(openVideoModal, applyFiltersAndSearch);
+    await loadAllVideoLinks();
 
     initPracticeSession(callSwitchView);
 
