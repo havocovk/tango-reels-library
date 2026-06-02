@@ -204,6 +204,7 @@ async function initializeApp() {
             if (!formTagsArray.includes(tag)) {
                 formTagsArray.push(tag);
                 renderFormChips();
+                callUpdateSmartAssistant();
             }
         },
         callGetUniqueTagsPool
