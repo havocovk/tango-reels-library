@@ -211,15 +211,17 @@ export async function mergeSelectedTags() {
     const lang = store.get('currentLang');
     const mergeInput = document.getElementById('tag-merge-new-name');
     const targetName = mergeInput?.value.trim();
+    const alertOk = lang === 'tr' ? 'Tamam' : 'OK';
+
     if (!targetName) {
         await showCustomAlert(
-            lang === 'tr' ? 'Birleştirilecek yeni etiketi yazın.' : 'Please enter the new tag name.',
-            lang === 'tr' ? 'Tamam' : 'OK'
+            lang === 'tr' ? 'Lütfen yeni etiket adını girin.' : 'Please enter the new tag name.',
+            alertOk
         );
         return;
     }
 
-    const tagsToMerge = [...selectedTagsForMerge]; // Sayıyı şimdi al, döngüde kaybolmasın
+    const tagsToMerge = [...selectedTagsForMerge];
     const mergeCount = tagsToMerge.length;
 
     const ok = await showCustomConfirm(
@@ -231,24 +233,25 @@ export async function mergeSelectedTags() {
     );
     if (!ok) return;
 
+    showLoading(true);
     try {
-        showLoading(true);
-        for (const tag of tagsToMerge) {
-            await dbMergeTags(tag, targetName);
-        }
-        renameTagLocally(tagsToMerge[0], targetName);
-        tagsToMerge.slice(1).forEach(tag => deleteTagsLocally([tag]));
+        // Diziyi tek seferde RPC'ye gönder
+        await dbMergeTags(tagsToMerge, targetName);
+        // Lokal store güncelle
+        tagsToMerge.forEach(tag => renameTagLocally(tag, targetName));
         showLoading(false);
         await showCustomAlert(
             lang === 'tr'
                 ? `${mergeCount} etiket birleştirildi → ${targetName}`
                 : `${mergeCount} tags merged → ${targetName}`,
-            lang === 'tr' ? 'Tamam' : 'OK'
+            alertOk
         );
         if (mergeInput) mergeInput.value = '';
+        selectedTagsForMerge = [];
         renderTagManagerUICallback?.();
     } catch (err) {
         showLoading(false);
+        await showCustomAlert(`Hata: ${err.message}`, alertOk);
         console.error(err);
     }
 }
