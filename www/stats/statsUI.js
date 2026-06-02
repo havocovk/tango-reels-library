@@ -11,30 +11,19 @@ let monthlyChart = null;
 
 // ─────────────────────────────────────────────────────────────
 // renderTagCloud  ✅ YENİ (Adım 5.3)
-// Kullanım sıklığına göre boyutlandırılmış, tıklanabilir etiket bulutu
 // ─────────────────────────────────────────────────────────────
-function renderTagCloud(topTags, onTagClick) {
+function renderTagCloud(topTags) {
     if (!topTags || topTags.length === 0) return '<span class="tag-badge">—</span>';
 
-    // Neon renk paleti — her etiket bu listeden sırayla renk alır
     const neonPalette = [
-        '#00f0ff', // cyan
-        '#ff007f', // magenta
-        '#c084fc', // purple
-        '#facc15', // yellow
-        '#34d399', // emerald
-        '#f97316', // orange
-        '#60a5fa', // blue
-        '#f472b6', // pink
-        '#a3e635', // lime
-        '#fb7185', // rose
+        '#00f0ff', '#ff007f', '#c084fc', '#facc15', '#34d399',
+        '#f97316', '#60a5fa', '#f472b6', '#a3e635', '#fb7185',
     ];
 
     return topTags.map((t, index) => {
         const fontSize = Math.min(28, 12 + t.count * 2);
         const color = neonPalette[index % neonPalette.length];
-        const glowColor = color + '55'; // %33 opaklıkla glow efekti
-        // data-tag attribute ile tıklama olayı JS tarafından yakalanır
+        const glowColor = color + '55';
         return `<span
             class="tag-cloud-item"
             data-tag="${t.tag}"
@@ -57,8 +46,7 @@ export function renderStats(stats, currentLang) {
     if (!container) return;
     const lang = translations[currentLang];
 
-    // ✅ Adım 5.3: Eski badge listesi yerine tag cloud HTML'i oluştur
-    const tagCloudHTML = renderTagCloud(stats.topTags, filterByTag);
+    const tagCloudHTML = renderTagCloud(stats.topTags);
     const noTagsHTML = stats.topTags.length === 0
         ? `<span class="tag-badge">${lang.statsNoTags}</span>`
         : '';
@@ -95,7 +83,6 @@ export function renderStats(stats, currentLang) {
         </div>
         <div class="stats-tags">
             <div class="stat-label">${lang.statsTopTags}</div>
-            <!-- ✅ Adım 5.3: tag-cloud-container ile yeni görsel -->
             <div class="tag-cloud-container">
                 ${tagCloudHTML}
                 ${noTagsHTML}
@@ -112,25 +99,21 @@ export function renderStats(stats, currentLang) {
                 <canvas id="monthly-bar-chart" width="${Math.max(700, stats.monthlyData.length * 80)}" height="350" style="width: auto; height: auto; display: block;"></canvas>
             </div>
         </div>
-        <!-- ✅ YENİ (Adım 5.1): Yıllık Aktivite Isı Haritası -->
         <div id="learning-heatmap-container"></div>
     `;
 
-    // ✅ Adım 5.3: Etiket bulutu tıklama olaylarını bağla
-    // innerHTML'e olay eklemek yerine container'a event delegation kullanıyoruz
+    // ✅ Adım 5.3: Etiket tıklama olayları
     const tagCloudContainer = container.querySelector('.tag-cloud-container');
     if (tagCloudContainer) {
         tagCloudContainer.addEventListener('click', (e) => {
             const tagItem = e.target.closest('.tag-cloud-item');
             if (!tagItem) return;
             const tagName = tagItem.dataset.tag;
-            if (tagName) {
-                filterByTag(tagName);
-            }
+            if (tagName) filterByTag(tagName);
         });
     }
 
-    // ── Pie Chart ──────────────────────────────────────────────
+    // ── Pie Chart (ORIJINAL YAPI) ──────────────────────────────
     const platformKeys = [];
     const platformCounts = [];
     const platformColors = [];
@@ -149,73 +132,69 @@ export function renderStats(stats, currentLang) {
         }
     }
 
-    const canvasPie = document.getElementById('platform-pie-chart');
-    if (canvasPie) {
-        const ctxPie = canvasPie.getContext('2d');
-        if (platformChart) platformChart.destroy();
-        platformChart = new Chart(ctxPie, {
-            type: 'doughnut',
-            data: {
-                labels: platformKeys.map(k => lang.platformLabels[k] || k),
-                datasets: [{
-                    data: platformCounts,
-                    backgroundColor: platformColors,
-                    borderColor: 'transparent',
-                    hoverOffset: 20
-                }]
-            },
-            options: {
-                responsive: false,
-                maintainAspectRatio: true,
-                cutout: '65%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => {
-                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                const pct = Math.round((ctx.raw / total) * 100);
-                                return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
-                            }
-                        }
-                    }
-                }
+    function placeIconOverlays() {
+        document.querySelectorAll('.pie-icon-overlay').forEach(el => el.remove());
+        const canvas = document.getElementById('platform-pie-chart');
+        const chartContainer = document.querySelector('.platform-chart-container');
+        if (!canvas || !chartContainer || !platformChart) return;
+        const meta = platformChart.getDatasetMeta(0);
+        const arcs = meta.data;
+        const canvasRect = canvas.getBoundingClientRect();
+        const containerRect = chartContainer.getBoundingClientRect();
+        if (canvasRect.width === 0) return;
+        const canvasOffsetLeft = canvasRect.left - containerRect.left;
+        const canvasOffsetTop  = canvasRect.top  - containerRect.top;
+        const scaleX = canvasRect.width  / canvas.width;
+        const scaleY = canvasRect.height / canvas.height;
+        arcs.forEach((arc, index) => {
+            if (arc.hidden) return;
+            const midAngle = arc.startAngle + (arc.endAngle - arc.startAngle) / 2;
+            const radius   = arc.outerRadius + 36;
+            const xInCanvas = arc.x + Math.cos(midAngle) * radius;
+            const yInCanvas = arc.y + Math.sin(midAngle) * radius;
+            const x = canvasOffsetLeft + xInCanvas * scaleX;
+            const y = canvasOffsetTop  + yInCanvas * scaleY;
+            const imgUrl = platformIconUrls[index];
+            if (imgUrl && imgUrl !== '') {
+                const img = document.createElement('img');
+                img.src = imgUrl;
+                img.className = 'pie-icon-overlay';
+                img.style.cssText = `position:absolute;width:36px;height:36px;object-fit:contain;left:${x - 18}px;top:${y - 18}px;pointer-events:none;z-index:10;`;
+                chartContainer.appendChild(img);
+            } else {
+                const label = document.createElement('div');
+                label.className = 'pie-icon-overlay';
+                label.innerText = platformCounts[index];
+                label.style.cssText = `position:absolute;color:#fff;font-weight:bold;font-size:14px;left:${x - 10}px;top:${y - 8}px;pointer-events:none;z-index:10;`;
+                chartContainer.appendChild(label);
             }
         });
     }
 
-    function placeIconOverlays() {
-        const existing = document.querySelectorAll('.platform-icon-overlay');
-        existing.forEach(el => el.remove());
+    const resizeHandler = () => { placeIconOverlays(); };
+    window.removeEventListener('resize', window._pieResizeHandler);
+    window._pieResizeHandler = resizeHandler;
+    window.addEventListener('resize', resizeHandler);
 
-        if (!platformChart || !canvasPie) return;
-        const canvasRect = canvasPie.getBoundingClientRect();
-        const containerRect = canvasPie.parentElement.getBoundingClientRect();
-
-        const meta = platformChart.getDatasetMeta(0);
-        meta.data.forEach((arc, index) => {
-            const iconUrl = platformIconUrls[index];
-            if (!iconUrl) return;
-            const angle = (arc.startAngle + arc.endAngle) / 2;
-            const r = (arc.innerRadius + arc.outerRadius) / 2;
-            const x = arc.x + Math.cos(angle) * r;
-            const y = arc.y + Math.sin(angle) * r;
-
-            const imgEl = document.createElement('img');
-            imgEl.src = iconUrl;
-            imgEl.className = 'platform-icon-overlay';
-            imgEl.style.cssText = `
-                position: absolute;
-                width: 32px; height: 32px;
-                left: ${(canvasRect.left - containerRect.left) + x - 16}px;
-                top:  ${(canvasRect.top  - containerRect.top)  + y - 16}px;
-                pointer-events: none;
-                border-radius: 6px;
-            `;
-            canvasPie.parentElement.appendChild(imgEl);
-        });
-    }
-    setTimeout(placeIconOverlays, 300);
+    const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
+    if (platformChart) platformChart.destroy();
+    platformChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: platformKeys.map(k => lang.platformLabels[k] || k),
+            datasets: [{ data: platformCounts, backgroundColor: platformColors, borderWidth: 1 }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} video` } },
+                legend: { display: false }
+            },
+            layout: { padding: { top: 30, bottom: 30, left: 30, right: 30 } },
+            animation: { onComplete: placeIconOverlays }
+        }
+    });
 
     const legendContainer = document.getElementById('custom-legend');
     if (legendContainer) {
@@ -301,7 +280,7 @@ export function renderStats(stats, currentLang) {
         }, 150);
     }
 
-    // ── Heatmap ✅ YENİ (Adım 5.1) ────────────────────────────
+    // ── Heatmap (Adım 5.1) ────────────────────────────────────
     const videos = store.get('globalVideos');
     const currentYear = new Date().getFullYear();
     const heatmapData = computeLearningHeatmap(videos, currentYear);
@@ -310,7 +289,6 @@ export function renderStats(stats, currentLang) {
 
 // ─────────────────────────────────────────────────────────────
 // renderLearningHeatmap  ✅ YENİ (Adım 5.1)
-// GitHub tarzı yıllık aktivite ısı haritasını render eder.
 // ─────────────────────────────────────────────────────────────
 function renderLearningHeatmap(heatmapData, currentLang) {
     const container = document.getElementById('learning-heatmap-container');
