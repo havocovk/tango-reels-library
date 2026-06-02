@@ -1,5 +1,5 @@
 // db/tagColors.js - Etiket renk eşleşmelerini Supabase'den çeker/günceller
-import { SUPABASE_URL, SUPABASE_KEY } from '../tangoVeritabani.js';
+import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 
 // ─────────────────────────────────────────────────────────────
 // dbFetchTagColors()
