@@ -1,15 +1,20 @@
 // stats/statsUI.js - İstatistikleri HTML olarak render etme ve grafik çizme
+// ✅ GÜNCELLEME (Adım 5.1): renderLearningHeatmap eklendi
 import { translations } from '../i18n.js';
+import { computeLearningHeatmap } from './computeStats.js';
+import { store } from '../store.js';
 
 let platformChart = null;
 let monthlyChart = null;
 
+// ─────────────────────────────────────────────────────────────
+// renderStats — Ana istatistik render fonksiyonu
+// ─────────────────────────────────────────────────────────────
 export function renderStats(stats, currentLang) {
     const container = document.getElementById('stats-container');
     if (!container) return;
     const lang = translations[currentLang];
-    
-    // HTML yapısı
+
     container.innerHTML = `
         <div class="stats-grid">
             <div class="stat-card">
@@ -53,9 +58,11 @@ export function renderStats(stats, currentLang) {
                 <canvas id="monthly-bar-chart" width="${Math.max(700, stats.monthlyData.length * 80)}" height="350" style="width: auto; height: auto; display: block;"></canvas>
             </div>
         </div>
+        <!-- ✅ YENİ (Adım 5.1): Yıllık Aktivite Isı Haritası -->
+        <div id="learning-heatmap-container"></div>
     `;
-    
-    // Pie Chart verileri
+
+    // ── Pie Chart ──────────────────────────────────────────────
     const platformKeys = [];
     const platformCounts = [];
     const platformColors = [];
@@ -65,15 +72,15 @@ export function renderStats(stats, currentLang) {
             platformKeys.push(key);
             platformCounts.push(count);
             switch (key) {
-                case 'drive': platformColors.push('#4285F4'); platformIconUrls.push(lang.platformIconUrls.drive); break;
-                case 'youtube': platformColors.push('#FF0000'); platformIconUrls.push(lang.platformIconUrls.youtube); break;
+                case 'drive':     platformColors.push('#4285F4'); platformIconUrls.push(lang.platformIconUrls.drive); break;
+                case 'youtube':   platformColors.push('#FF0000'); platformIconUrls.push(lang.platformIconUrls.youtube); break;
                 case 'instagram': platformColors.push('#E4405F'); platformIconUrls.push(lang.platformIconUrls.instagram); break;
-                case 'facebook': platformColors.push('#1877F2'); platformIconUrls.push(lang.platformIconUrls.facebook); break;
-                default: platformColors.push('#00f0ff'); platformIconUrls.push('');
+                case 'facebook':  platformColors.push('#1877F2'); platformIconUrls.push(lang.platformIconUrls.facebook); break;
+                default:          platformColors.push('#00f0ff'); platformIconUrls.push('');
             }
         }
     }
-    
+
     function placeIconOverlays() {
         document.querySelectorAll('.pie-icon-overlay').forEach(el => el.remove());
         const canvas = document.getElementById('platform-pie-chart');
@@ -101,48 +108,30 @@ export function renderStats(stats, currentLang) {
                 const img = document.createElement('img');
                 img.src = imgUrl;
                 img.className = 'pie-icon-overlay';
-                img.style.cssText = `
-                    position: absolute;
-                    width: 36px;
-                    height: 36px;
-                    object-fit: contain;
-                    left: ${x - 18}px;
-                    top: ${y - 18}px;
-                    pointer-events: none;
-                    z-index: 10;
-                    transform: translate(0, 0);
-                `;
+                img.style.cssText = `position:absolute;width:36px;height:36px;object-fit:contain;left:${x - 18}px;top:${y - 18}px;pointer-events:none;z-index:10;`;
                 chartContainer.appendChild(img);
             } else {
                 const label = document.createElement('div');
                 label.className = 'pie-icon-overlay';
                 label.innerText = platformCounts[index];
-                label.style.cssText = `
-                    position: absolute;
-                    color: #fff;
-                    font-weight: bold;
-                    font-size: 14px;
-                    left: ${x - 10}px;
-                    top: ${y - 8}px;
-                    pointer-events: none;
-                    z-index: 10;
-                `;
+                label.style.cssText = `position:absolute;color:#fff;font-weight:bold;font-size:14px;left:${x - 10}px;top:${y - 8}px;pointer-events:none;z-index:10;`;
                 chartContainer.appendChild(label);
             }
         });
     }
-    
+
+    const resizeHandler = () => { placeIconOverlays(); };
+    window.removeEventListener('resize', window._pieResizeHandler);
+    window._pieResizeHandler = resizeHandler;
+    window.addEventListener('resize', resizeHandler);
+
     const ctxPie = document.getElementById('platform-pie-chart').getContext('2d');
     if (platformChart) platformChart.destroy();
     platformChart = new Chart(ctxPie, {
         type: 'pie',
         data: {
             labels: platformKeys.map(k => lang.platformLabels[k] || k),
-            datasets: [{
-                data: platformCounts,
-                backgroundColor: platformColors,
-                borderWidth: 1
-            }]
+            datasets: [{ data: platformCounts, backgroundColor: platformColors, borderWidth: 1 }]
         },
         options: {
             responsive: true,
@@ -155,7 +144,7 @@ export function renderStats(stats, currentLang) {
             animation: { onComplete: placeIconOverlays }
         }
     });
-    
+
     const legendContainer = document.getElementById('custom-legend');
     if (legendContainer) {
         legendContainer.innerHTML = '';
@@ -165,37 +154,21 @@ export function renderStats(stats, currentLang) {
             const color = platformColors[index];
             const iconUrl = platformIconUrls[index];
             const legendItem = document.createElement('div');
-            legendItem.style.display = 'flex';
-            legendItem.style.alignItems = 'center';
-            legendItem.style.gap = '8px';
-            legendItem.style.cursor = 'pointer';
-            legendItem.style.backgroundColor = 'rgba(0,0,0,0.4)';
-            legendItem.style.padding = '6px 14px';
-            legendItem.style.borderRadius = '20px';
+            legendItem.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(0,0,0,0.4);padding:6px 14px;border-radius:20px;color:#f1f5f9;font-size:0.85rem;';
             legendItem.style.border = `1px solid ${color}`;
-            legendItem.style.color = '#f1f5f9';
-            legendItem.style.fontSize = '0.85rem';
             if (iconUrl && iconUrl !== '') {
                 const img = document.createElement('img');
                 img.src = iconUrl;
-                img.style.width = '20px';
-                img.style.height = '20px';
-                img.style.marginRight = '6px';
+                img.style.cssText = 'width:20px;height:20px;margin-right:6px;';
                 legendItem.appendChild(img);
             } else {
                 const colorBox = document.createElement('span');
-                colorBox.style.display = 'inline-block';
-                colorBox.style.width = '16px';
-                colorBox.style.height = '16px';
-                colorBox.style.backgroundColor = color;
-                colorBox.style.borderRadius = '50%';
-                colorBox.style.marginRight = '6px';
+                colorBox.style.cssText = `display:inline-block;width:16px;height:16px;background:${color};border-radius:50%;margin-right:6px;`;
                 legendItem.appendChild(colorBox);
             }
             const textSpan = document.createElement('span');
             textSpan.innerText = `${label} (${count})`;
             legendItem.appendChild(textSpan);
-            let hidden = false;
             legendItem.addEventListener('click', () => {
                 const meta = platformChart.getDatasetMeta(0);
                 meta.data[index].hidden = !meta.data[index].hidden;
@@ -206,13 +179,8 @@ export function renderStats(stats, currentLang) {
             legendContainer.appendChild(legendItem);
         });
     }
-    
-    const resizeHandler = () => { placeIconOverlays(); };
-    window.removeEventListener('resize', window._pieResizeHandler);
-    window._pieResizeHandler = resizeHandler;
-    window.addEventListener('resize', resizeHandler);
-    
-    // Bar chart
+
+    // ── Bar Chart ──────────────────────────────────────────────
     const canvasBar = document.getElementById('monthly-bar-chart');
     if (canvasBar) {
         const ctxBar = canvasBar.getContext('2d');
@@ -236,14 +204,7 @@ export function renderStats(stats, currentLang) {
                 maintainAspectRatio: true,
                 scales: {
                     y: { display: false },
-                    x: {
-                        ticks: {
-                            autoSkip: false,
-                            maxRotation: 45,
-                            minRotation: 45,
-                            font: { size: 11 }
-                        }
-                    }
+                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 11 } } }
                 },
                 plugins: { tooltip: { enabled: false }, legend: { display: false } },
                 layout: { padding: { top: 25 } }
@@ -254,8 +215,7 @@ export function renderStats(stats, currentLang) {
             const chart = monthlyChart;
             if (!chart) return;
             const meta = chart.getDatasetMeta(0);
-            const bars = meta.data;
-            bars.forEach((bar, index) => {
+            meta.data.forEach((bar, index) => {
                 const value = counts[index];
                 if (value === 0) return;
                 ctx.save();
@@ -268,4 +228,156 @@ export function renderStats(stats, currentLang) {
             });
         }, 150);
     }
+
+    // ── Heatmap ✅ YENİ (Adım 5.1) ────────────────────────────
+    const videos = store.get('globalVideos');
+    const currentYear = new Date().getFullYear();
+    const heatmapData = computeLearningHeatmap(videos, currentYear);
+    renderLearningHeatmap(heatmapData, currentLang);
+}
+
+// ─────────────────────────────────────────────────────────────
+// renderLearningHeatmap  ✅ YENİ (Adım 5.1)
+// GitHub tarzı yıllık aktivite ısı haritasını render eder.
+// ─────────────────────────────────────────────────────────────
+function renderLearningHeatmap(heatmapData, currentLang) {
+    const container = document.getElementById('learning-heatmap-container');
+    if (!container) return;
+
+    const { weeks, year } = heatmapData;
+    if (!weeks || weeks.length === 0) return;
+
+    const CELL = 11;    // hücre boyutu (px)
+    const GAP  = 2;     // hücreler arası boşluk (px)
+    const STEP = CELL + GAP;
+    const PAD_LEFT = 30;  // gün etiketleri için sol boşluk
+    const PAD_TOP  = 22;  // ay etiketleri için üst boşluk
+
+    // Renk skalası: synthwave teması
+    function cellColor(total) {
+        if (total === 0) return 'rgba(255,255,255,0.05)';
+        if (total === 1) return 'rgba(0,240,255,0.30)';
+        if (total === 2) return 'rgba(0,240,255,0.60)';
+        if (total <= 4)  return 'rgba(255,0,127,0.55)';
+        return                  'rgba(255,0,127,0.90)';
+    }
+
+    const monthNames = currentLang === 'tr'
+        ? ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara']
+        : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    const dayLabels = currentLang === 'tr'
+        ? ['', 'Pzt', '', 'Çar', '', 'Cum', '']
+        : ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+
+    // Hücreleri oluştur
+    let rects = '';
+    weeks.forEach((week, wIdx) => {
+        week.forEach((day, dIdx) => {
+            if (!day) return;
+            const x = PAD_LEFT + wIdx * STEP;
+            const y = PAD_TOP + dIdx * STEP;
+            const color = cellColor(day.total);
+            rects += `<rect class="hm-cell" x="${x}" y="${y}" width="${CELL}" height="${CELL}" rx="2" fill="${color}" data-date="${day.date}" data-add="${day.addCount}" data-prac="${day.practiceCount}" data-total="${day.total}"/>`;
+        });
+    });
+
+    // Ay etiketleri: her ay ilk günün hücresinin başına yerleş
+    let monthLabels = '';
+    const seenMonths = new Set();
+    weeks.forEach((week, wIdx) => {
+        week.forEach((day) => {
+            if (!day) return;
+            const d = new Date(day.date + 'T12:00:00');
+            if (d.getDate() === 1) {
+                const m = d.getMonth();
+                if (!seenMonths.has(m)) {
+                    seenMonths.add(m);
+                    const x = PAD_LEFT + wIdx * STEP;
+                    monthLabels += `<text x="${x}" y="${PAD_TOP - 6}" fill="#64748b" font-size="9" font-family="Plus Jakarta Sans,sans-serif">${monthNames[m]}</text>`;
+                }
+            }
+        });
+    });
+
+    // Gün etiketleri
+    let dayLabelsSvg = '';
+    dayLabels.forEach((label, dIdx) => {
+        if (!label) return;
+        const y = PAD_TOP + dIdx * STEP + CELL;
+        dayLabelsSvg += `<text x="${PAD_LEFT - 4}" y="${y}" fill="#64748b" font-size="9" text-anchor="end" font-family="Plus Jakarta Sans,sans-serif">${label}</text>`;
+    });
+
+    // Lejant
+    const legendY = PAD_TOP + 7 * STEP + 12;
+    const legendColors = ['rgba(255,255,255,0.05)', 'rgba(0,240,255,0.30)', 'rgba(0,240,255,0.60)', 'rgba(255,0,127,0.55)', 'rgba(255,0,127,0.90)'];
+    const lessLabel = currentLang === 'tr' ? 'Az' : 'Less';
+    const moreLabel = currentLang === 'tr' ? 'Çok' : 'More';
+    let legendSvg = `<text x="${PAD_LEFT}" y="${legendY + 9}" fill="#475569" font-size="9" font-family="Plus Jakarta Sans,sans-serif">${lessLabel}</text>`;
+    legendColors.forEach((c, i) => {
+        legendSvg += `<rect x="${PAD_LEFT + 24 + i * 14}" y="${legendY}" width="${CELL}" height="${CELL}" rx="2" fill="${c}"/>`;
+    });
+    legendSvg += `<text x="${PAD_LEFT + 24 + legendColors.length * 14 + 4}" y="${legendY + 9}" fill="#475569" font-size="9" font-family="Plus Jakarta Sans,sans-serif">${moreLabel}</text>`;
+
+    const svgW = PAD_LEFT + weeks.length * STEP + 10;
+    const svgH = legendY + 20;
+
+    const titleText = currentLang === 'tr'
+        ? `📅 Yıllık Aktivite Haritası — ${year}`
+        : `📅 Annual Activity Map — ${year}`;
+
+    container.innerHTML = `
+        <div class="heatmap-section">
+            <div class="heatmap-title">${titleText}</div>
+            <div class="heatmap-scroll-wrapper">
+                <svg class="heatmap-svg" viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="min-width:${svgW}px; height:${svgH}px;">
+                    ${monthLabels}
+                    ${dayLabelsSvg}
+                    ${rects}
+                    ${legendSvg}
+                </svg>
+                <div id="hm-tooltip" class="heatmap-tooltip"></div>
+            </div>
+        </div>`;
+
+    // Tooltip — SVG wrapper'daki mousemove ile takip eder
+    const wrapper = container.querySelector('.heatmap-scroll-wrapper');
+    const tooltip  = container.querySelector('#hm-tooltip');
+
+    wrapper.addEventListener('mousemove', (e) => {
+        const target = e.target;
+        if (!target.classList.contains('hm-cell')) {
+            tooltip.style.display = 'none';
+            return;
+        }
+
+        const date     = target.dataset.date;
+        const addCnt   = parseInt(target.dataset.add   || 0);
+        const pracCnt  = parseInt(target.dataset.prac  || 0);
+        const total    = parseInt(target.dataset.total || 0);
+
+        const d = new Date(date + 'T12:00:00');
+        const locale = currentLang === 'tr' ? 'tr-TR' : 'en-US';
+        const dateStr = d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+
+        if (total === 0) {
+            tooltip.textContent = currentLang === 'tr'
+                ? `${dateStr} — aktivite yok`
+                : `${dateStr} — no activity`;
+        } else {
+            const parts = [];
+            if (addCnt  > 0) parts.push(currentLang === 'tr' ? `${addCnt} video eklendi`  : `${addCnt} added`);
+            if (pracCnt > 0) parts.push(currentLang === 'tr' ? `${pracCnt} pratik yapıldı` : `${pracCnt} practiced`);
+            tooltip.textContent = `${dateStr}: ${parts.join(', ')}`;
+        }
+
+        const wrapRect = wrapper.getBoundingClientRect();
+        tooltip.style.display = 'block';
+        tooltip.style.left = (e.clientX - wrapRect.left + 12) + 'px';
+        tooltip.style.top  = (e.clientY - wrapRect.top  - 38) + 'px';
+    });
+
+    wrapper.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+    });
 }

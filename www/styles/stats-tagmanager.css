@@ -233,3 +233,69 @@ canvas { max-height: 350px; width: 100%; }
         font-size: 0.65rem;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 5.1 — Yıllık Aktivite Isı Haritası
+   ═══════════════════════════════════════════════════════════ */
+.heatmap-section {
+    margin-top: 28px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    padding: 18px 16px 14px;
+}
+
+.heatmap-title {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    font-weight: 600;
+    margin-bottom: 14px;
+    letter-spacing: 0.02em;
+}
+
+/* Yatay kaydırma: dar ekranlarda heatmap taşmaz */
+.heatmap-scroll-wrapper {
+    overflow-x: auto;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 0, 127, 0.3) transparent;
+}
+
+.heatmap-scroll-wrapper::-webkit-scrollbar {
+    height: 4px;
+}
+.heatmap-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 127, 0.3);
+    border-radius: 2px;
+}
+
+.heatmap-svg {
+    display: block;
+}
+
+/* Her hücre hover'da hafif parlıyor */
+.hm-cell {
+    cursor: default;
+    transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.hm-cell:hover {
+    filter: brightness(1.5);
+    opacity: 0.9;
+}
+
+/* Tooltip */
+.heatmap-tooltip {
+    display: none;
+    position: absolute;
+    background: rgba(11, 8, 19, 0.95);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: #f1f5f9;
+    font-size: 0.72rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    padding: 5px 10px;
+    border-radius: 7px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
