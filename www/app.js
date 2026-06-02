@@ -42,6 +42,7 @@ import { getDueVideos } from './learning/spacedRepetition.js';
 import { initPracticeSession, startPracticeSession } from './practiceSession.js';
 import { initPlaylists } from './playlistManager.js';
 import { loadTagColors } from './tagColorManager.js';
+import { initRealtimeSync } from './realtime.js';
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -84,6 +85,7 @@ async function initializeApp() {
     await fetchInstructors();
     await fetchVideos();
     await initPlaylists();
+    initRealtimeSync();   // ✅ Adım 4.2: Realtime senkronizasyonu başlat
 
     initPracticeSession(callSwitchView);
 
