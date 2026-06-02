@@ -3,7 +3,7 @@
 // ✅ GÜNCELLEME (Adım 2.4): Playlist sistemi
 // ✅ GÜNCELLEME (Adım 3.3): loadTagColors çağrısı
 import { translations } from './i18n.js';
-import { handlePasteEvent, handleFileSelect } from './storage.js';
+import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
 import {
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly,
@@ -162,6 +162,59 @@ async function initializeApp() {
         if (url) await autoFetchThumbnail(url);
     });
 
+    // ── Eğitmen yönetim butonları ────────────────────────────────
+    document.getElementById('btn-toggle-new-instructor')?.addEventListener('click', () => {
+        const container = document.getElementById('new-instructor-container');
+        if (container) container.classList.toggle('d-none');
+        store.set('editInstructorId', null);
+        const input = document.getElementById('form-new-instructor-input');
+        if (input) input.value = '';
+        const saveBtn = document.getElementById('btn-save-instructor');
+        const lang = translations[store.get('currentLang')];
+        if (saveBtn) saveBtn.innerText = lang.btnAddIns || 'Ekle';
+    });
+
+    document.getElementById('btn-edit-instructor')?.addEventListener('click', () => {
+        const select = document.getElementById('form-instructor-select');
+        if (!select || !select.value) return;
+        const selectedId = parseInt(select.value);
+        const instructors = store.get('globalInstructors');
+        const instructor = instructors.find(i => i.id === selectedId);
+        if (!instructor) return;
+        store.set('editInstructorId', selectedId);
+        const container = document.getElementById('new-instructor-container');
+        if (container) container.classList.remove('d-none');
+        const input = document.getElementById('form-new-instructor-input');
+        if (input) input.value = instructor.name;
+        const saveBtn = document.getElementById('btn-save-instructor');
+        const lang = translations[store.get('currentLang')];
+        if (saveBtn) saveBtn.innerText = lang.btnEditIns || 'Güncelle';
+    });
+
+    document.getElementById('btn-delete-instructor')?.addEventListener('click', deleteInstructor);
+    document.getElementById('btn-save-instructor')?.addEventListener('click', handleInstructorSubmit);
+
+    // ── Etiket autocomplete (virgülle chip oluşturma) ─────────────
+    setupAutocomplete(
+        'form-tags-input',
+        'autocomplete-list',
+        formTagsArray,
+        renderFormChips,
+        (tag) => {
+            if (!formTagsArray.includes(tag)) {
+                formTagsArray.push(tag);
+                renderFormChips();
+            }
+        },
+        callGetUniqueTagsPool
+    );
+
+    // ── Drive URL kutucuğunu göster / gizle ──────────────────────
+    document.getElementById('form-is-downloaded')?.addEventListener('change', (e) => {
+        const driveContainer = document.getElementById('drive-url-container');
+        if (driveContainer) driveContainer.classList.toggle('d-none', !e.target.checked);
+    });
+
     // Filtreler
     ['filter-role-select','filter-instructor-select','filter-tag-select',
      'filter-date-select','filter-platform-select','filter-learning-status-select']
@@ -188,7 +241,11 @@ async function initializeApp() {
         handlePasteEvent(e, store.get('currentLang'))
     );
     document.getElementById('btn-reset-cover')?.addEventListener('click', () => {
-        import('./storage.js').then(s => s.resetUploadedCoverUrl());
+        resetUploadedCoverUrl();
+        const imgPreview = document.getElementById('image-preview');
+        if (imgPreview) imgPreview.classList.add('d-none');
+        const dropAreaText = document.getElementById('drop-area-text');
+        if (dropAreaText) dropAreaText.classList.remove('d-none');
     });
 
     // Etiket yönetimi butonları
