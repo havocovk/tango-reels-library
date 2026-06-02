@@ -1,6 +1,7 @@
 // dataManager.js - Veri çekme, istatistik ve tag manager UI
 // ✅ GÜNCELLEME (Adım 2.2): fetchVideos artık getDueTodayCount çağırır
 // ✅ GÜNCELLEME (Adım 3.3): renderTagManagerUI tagManager.js'e taşındı
+// ✅ GÜNCELLEME (Adım 3.3 v2): ensureAllTagsHaveColors çağrısı eklendi
 import { translations } from './i18n.js';
 import { dbFetchInstructors, dbFetchVideos, dbFetchFavorites } from './tangoVeritabani.js';
 import { populateFilterDropdowns } from './tangoFilters.js';
@@ -17,6 +18,7 @@ import { setFormHandlersGlobalData, formTagsArray } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 import { getDueTodayCount } from './learning/spacedRepetition.js';
+import { ensureAllTagsHaveColors } from './tagColorManager.js'; // ✅ YENİ
 
 export async function fetchInstructors() {
     try {
@@ -50,9 +52,14 @@ export async function fetchVideos() {
         }));
         store.set('globalVideos', videos);
 
-        // ✅ Adım 2.2: Bugün tekrar edilmesi gereken video sayısını hesapla
+        // Adım 2.2: Bugün tekrar edilmesi gereken video sayısı
         const count = getDueTodayCount(videos);
         store.set('dueTodayCount', count);
+
+        // ✅ Adım 3.3 v2: Tüm etiketlerin rengi olduğunu garanti et
+        // loadTagColors() zaten app.js'de çalıştı; bu fonksiyon sadece
+        // renksiz kalan etiketleri bulup otomatik renk atar.
+        ensureAllTagsHaveColors(videos); // await yok — arka planda çalışır
 
         populateFilterDropdowns(videos, store.get('currentLang'));
 
