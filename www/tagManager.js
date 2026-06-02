@@ -1,5 +1,6 @@
 // tagManager.js - Toplu etiket işlemleri
-// ✅ GÜNCELLEME (Adım 3.3 v2): Renk seçici kaldırıldı, sistem otomatik atar
+// ✅ GÜNCELLEME (Adım 3.3): Renk sistemi entegre
+// ✅ DÜZELTME: Butonlar sadece ikon — yazı yok, satır dar
 import { translations } from './i18n.js';
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
@@ -51,10 +52,9 @@ function updateAllVideosTagsLocally(updateFunction) {
 function renameTagLocally(oldTag, newTag) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        const tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
         if (tags.includes(oldTag)) {
-            const newTags = tags.map(t => t === oldTag ? newTag : t);
-            return { ...video, tags: newTags.join(', ') };
+            return { ...video, tags: tags.map(t => t === oldTag ? newTag : t).join(', ') };
         }
         return video;
     });
@@ -64,11 +64,9 @@ function deleteTagsLocally(tagsArray) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
         let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
-        let changed = false;
-        tagsArray.forEach(tag => {
-            if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); changed = true; }
-        });
-        if (changed) return { ...video, tags: tags.length ? tags.join(', ') : '' };
+        const before = tags.length;
+        tagsArray.forEach(tag => { tags = tags.filter(t => t !== tag); });
+        if (tags.length !== before) return { ...video, tags: tags.join(', ') };
         return video;
     });
 }
@@ -118,10 +116,6 @@ export async function deleteSingleTag(tag) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// renderTagManagerUI
-// ✅ Adım 3.3 v2: Renk seçici kaldırıldı — sadece renkli önizleme gösterir
-// ─────────────────────────────────────────────────────────────
 export function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -145,23 +139,27 @@ export function renderTagManagerUI() {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="checkbox" class="tag-checkbox" data-tag="${tag}"></td>
+            <td style="width:36px; text-align:center;">
+                <input type="checkbox" class="tag-checkbox" data-tag="${tag}">
+            </td>
             <td>
                 <span style="
-                    display: inline-block;
-                    background: ${tagColor ? tagColor + '22' : 'rgba(255,255,255,0.05)'};
-                    color: ${tagColor || '#cbd5e1'};
-                    border: 1px solid ${tagColor ? tagColor + '66' : 'rgba(255,255,255,0.1)'};
-                    font-size: 0.8rem;
-                    padding: 3px 10px;
-                    border-radius: 8px;
-                    font-weight: 600;
+                    display:inline-block;
+                    background:${tagColor ? tagColor + '22' : 'rgba(255,255,255,0.05)'};
+                    color:${tagColor || '#cbd5e1'};
+                    border:1px solid ${tagColor ? tagColor + '66' : 'rgba(255,255,255,0.1)'};
+                    font-size:0.78rem;
+                    padding:2px 8px;
+                    border-radius:8px;
+                    font-weight:600;
                 ">#${tag}</span>
             </td>
-            <td style="text-align:center;">${count}</td>
-            <td style="text-align:center;">
-                <button class="tag-action-btn tag-rename-btn" data-tag="${tag}">✏️ ${currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename'}</button>
-                <button class="tag-action-btn tag-danger-btn tag-delete-btn" data-tag="${tag}">🗑️ ${currentLang === 'tr' ? 'Sil' : 'Delete'}</button>
+            <td style="text-align:center; width:80px; font-size:0.85rem; color:#94a3b8;">
+                ${count}
+            </td>
+            <td style="width:80px; text-align:center;">
+                <button class="tag-action-btn tag-rename-btn" data-tag="${tag}" title="${currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename'}" style="padding:3px 7px; margin:0 2px;">✏️</button>
+                <button class="tag-action-btn tag-danger-btn tag-delete-btn" data-tag="${tag}" title="${currentLang === 'tr' ? 'Sil' : 'Delete'}" style="padding:3px 7px; margin:0 2px;">🗑️</button>
             </td>`;
 
         tr.querySelector('.tag-checkbox').addEventListener('change', updateTagManagerSelection);
@@ -175,7 +173,7 @@ export function renderTagManagerUI() {
 export async function mergeSelectedTags() {
     if (selectedTagsForMerge.length < 2) return;
     const lang = store.get('currentLang');
-    const mergeInput = document.getElementById('tag-merge-input');
+    const mergeInput = document.getElementById('tag-merge-new-name');
     const targetName = mergeInput?.value.trim();
     if (!targetName) {
         await showCustomAlert(

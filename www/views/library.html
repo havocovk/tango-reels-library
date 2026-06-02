@@ -3,25 +3,17 @@
 <!-- ✅ GÜNCELLEME (Adım 7.2): Grid/Liste toggle butonu eklendi -->
 <div id="view-library-container" class="view-panel">
 
-    <!-- Arama satırı -->
-    <div class="search-header" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px; align-items: center;">
+    <div class="search-header" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px; align-items:center;">
         <input type="text" id="search-input" class="form-control"
             placeholder="Eğitmen, etiket, platform veya not ara..."
-            style="flex: 3; background: rgba(11,8,19,0.8); border: 1px solid rgba(255,0,127,0.5); padding: 10px 16px; border-radius: 12px; color: #f1f5f9; outline: none;">
+            style="flex:3; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px 16px; border-radius:12px; color:#f1f5f9; outline:none;">
         <button id="search-btn" class="btn-primary">🔍 Ara</button>
-
-        <button id="btn-start-practice" class="btn-start-practice">
-            🎯 Pratik Başlat
-        </button>
-
-        <button id="btn-view-toggle" class="btn-view-toggle" title="Görünümü değiştir">
-            ☰ Liste
-        </button>
+        <button id="btn-start-practice" class="btn-start-practice">🎯 Pratik Başlat</button>
+        <button id="btn-view-toggle" class="btn-view-toggle" title="Görünümü değiştir">☰ Liste</button>
     </div>
 
-    <!-- Filtre dropdown'ları -->
-    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; margin-bottom: 12px;">
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px; margin-bottom:12px;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <select id="filter-role-select" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
                 <option value="all" id="opt-all-roles">Tüm Roller</option>
                 <option value="Leader" id="opt-leader">Lider</option>
@@ -35,7 +27,7 @@
                 <option value="all">Tüm Etiketler</option>
             </select>
         </div>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <select id="filter-date-select" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
                 <option value="all">Tüm Tarihler</option>
             </select>
@@ -64,9 +56,10 @@
         <div class="info-msg" id="loading-msg">Veritabanı bağlantısı kuruluyor...</div>
     </div>
 
-    <div id="scroll-sentinel" style="height: 1px;"></div>
+    <div id="scroll-sentinel" style="height:1px;"></div>
 
     <div id="load-more-container" class="d-none" style="text-align:center; margin:25px 0 10px 0;">
         <button id="btn-load-more" class="btn-primary" style="padding:12px 35px;">➕ Daha Fazla Video Yükle</button>
     </div>
+
 </div>
