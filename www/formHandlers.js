@@ -1,4 +1,5 @@
-// formHandlers.js - Video ekleme ve güncelleme (thumbnail otomatik, instructor hatası düzeltildi)
+// formHandlers.js - Video ekleme ve güncelleme
+// ✅ GÜNCELLEME (Adım 6.1): URL olmadan Drive linki yeterli
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -52,7 +53,9 @@ export function renderFormChips() {
     });
 }
 
-// ========= YOUTUBE THUMBNAIL OTOMATİK =========
+// ─────────────────────────────────────────────────────────────
+// YouTube video ID çıkarma
+// ─────────────────────────────────────────────────────────────
 export function extractYoutubeVideoId(url) {
     if (!url) return null;
     const patterns = [
@@ -66,6 +69,9 @@ export function extractYoutubeVideoId(url) {
     return null;
 }
 
+// ─────────────────────────────────────────────────────────────
+// YouTube thumbnail otomatik çekme
+// ─────────────────────────────────────────────────────────────
 export async function autoFetchThumbnail(url) {
     const videoId = extractYoutubeVideoId(url);
     if (!videoId) return null;
@@ -80,13 +86,15 @@ export async function autoFetchThumbnail(url) {
     return thumbnailUrl;
 }
 
-// ========= FORM KAYIT (düzeltilmiş instructor bilgisi) =========
+// ─────────────────────────────────────────────────────────────
+// handleFormSubmit — Video kaydetme / güncelleme
+// ─────────────────────────────────────────────────────────────
 export async function handleFormSubmit(e) {
     e.preventDefault();
     const currentLang = store.get('currentLang');
     const lang = translations[currentLang];
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
-    
+
     const instructor_id = document.getElementById('form-instructor-select').value;
     let url = document.getElementById('form-video-url').value.trim();
     const role_type = document.getElementById('form-role-select').value;
@@ -95,55 +103,87 @@ export async function handleFormSubmit(e) {
     const is_downloaded = document.getElementById('form-is-downloaded').checked;
     const drive_url = document.getElementById('form-drive-url').value.trim();
     let cover_url = getUploadedCoverUrl();
-    
+
     const editingVideoId = store.get('editingVideoId');
     if (!cover_url && editingVideoId) {
         const curr = store.get('globalVideos').find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
     }
-    // Eğer kapak yoksa ve URL YouTube ise otomatik çek
+    // Kapak yoksa ve URL YouTube ise thumbnail otomatik çek
     if (!cover_url && url && extractYoutubeVideoId(url)) {
         cover_url = await autoFetchThumbnail(url);
     }
-    
-    if (!instructor_id) return showCustomAlert(currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText);
-    if (is_downloaded && !drive_url) return showCustomAlert(currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText);
-    if (!url && !drive_url) return showCustomAlert(currentLang === 'tr' ? 'Video URL veya Drive linki zorunludur!' : 'Video URL or Drive link is required!', okText);
-    
-    let platform = is_downloaded ? 'drive' : detectPlatform(url, false);
+
+    // ── Doğrulama ──────────────────────────────────────────────
+    if (!instructor_id) {
+        return showCustomAlert(
+            currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!',
+            okText
+        );
+    }
+    if (is_downloaded && !drive_url) {
+        return showCustomAlert(
+            currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!',
+            okText
+        );
+    }
+    // ✅ GÜNCELLEME (Adım 6.1): URL veya Drive linkinden en az biri yeterli
+    if (!url && !drive_url) {
+        return showCustomAlert(
+            currentLang === 'tr'
+                ? 'Video URL veya Drive linki zorunludur!'
+                : 'Video URL or Drive link is required!',
+            okText
+        );
+    }
+
+    // ── Platform ve URL tespiti ──────────────────────────────────
+    // ✅ GÜNCELLEME (Adım 6.1): Drive linki varsa platform = 'drive'
+    let platform = (is_downloaded || (!url && drive_url))
+        ? 'drive'
+        : detectPlatform(url, false);
+
     let finalUrl = url;
-    if (is_downloaded && (!finalUrl || finalUrl === '')) {
+    // ✅ GÜNCELLEME (Adım 6.1): URL boşsa veritabanı için placeholder oluştur
+    if (!finalUrl || finalUrl === '') {
         finalUrl = `drive_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
     }
-    
+
     const payload = {
         instructor_id: parseInt(instructor_id),
         url: finalUrl,
-        role_type, partner_name: partner_name || null,
-        tags: tags || null, is_downloaded,
-        drive_url: is_downloaded ? drive_url : null,
-        cover_url, platform
+        role_type,
+        partner_name: partner_name || null,
+        tags: tags || null,
+        is_downloaded,
+        // ✅ GÜNCELLEME (Adım 6.1): Drive URL her durumda kaydedilir
+        drive_url: drive_url || null,
+        cover_url,
+        platform
     };
-    
+
     try {
         const updatedVideo = await dbSaveVideo(editingVideoId, payload, editingVideoUpdatedAt);
         const instructors = store.get('globalInstructors');
         const instructor = instructors.find(i => i.id === parseInt(instructor_id));
-        
+
         if (editingVideoId) {
-            // Güncelleme
+            // ── Mevcut video güncelleme ──
             if (updatedVideo) {
-                // instructors objesini ekle (render için)
                 updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.updateVideoLocally(editingVideoId, updatedVideo);
                 if (updatedVideo.updated_at) editingVideoUpdatedAt = updatedVideo.updated_at;
             } else {
-                const newData = { ...payload, instructors: { name: instructor?.name || 'Bilinmeyen' }, updated_at: new Date().toISOString() };
+                const newData = {
+                    ...payload,
+                    instructors: { name: instructor?.name || 'Bilinmeyen' },
+                    updated_at: new Date().toISOString()
+                };
                 store.updateVideoLocally(editingVideoId, newData);
                 editingVideoUpdatedAt = newData.updated_at;
             }
         } else {
-            // Yeni video
+            // ── Yeni video ekleme ──
             if (updatedVideo) {
                 updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.addVideoLocally(updatedVideo);
@@ -158,30 +198,40 @@ export async function handleFormSubmit(e) {
                 store.addVideoLocally(newVideo);
             }
         }
-        
-        await showCustomAlert(editingVideoId ? lang.successUpdate : lang.successSave, okText);
+
+        await showCustomAlert(
+            editingVideoId ? lang.successUpdate : lang.successSave,
+            okText
+        );
+
+        // ── Formu ve durumu sıfırla ──
         store.set('editingVideoId', null);
         editingVideoUpdatedAt = null;
         setFormTagsArray([]);
         renderFormChips();
         document.getElementById('add-video-form').reset();
+
         const imgPreview = document.getElementById('image-preview');
         if (imgPreview) imgPreview.classList.add('d-none');
+
         const dropAreaText = document.getElementById('drop-area-text');
         if (dropAreaText) dropAreaText.innerText = lang.dropText;
+
         const driveUrlContainer = document.getElementById('drive-url-container');
         if (driveUrlContainer) driveUrlContainer.classList.add('d-none');
+
         resetUploadedCoverUrl();
         if (callSwitchViewCallback) callSwitchViewCallback('library');
+
     } catch (err) {
-        let hataMesaji = err.message;
+        const hataMesaji = err.message;
         if (hataMesaji.includes('ÇAKIŞMA')) {
             await showCustomAlert(hataMesaji, okText);
             if (callSwitchViewCallback) callSwitchViewCallback('library');
             if (fetchVideosCallback) await fetchVideosCallback();
             location.reload();
         } else {
-            let hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
+            const hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
             await showCustomAlert(hata, okText);
         }
     }
