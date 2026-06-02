@@ -147,6 +147,8 @@ export function getUIState() {
         editingVideoId: store.get('editingVideoId'),
         editInstructorId: store.get('editInstructorId'),
         currentView: store.get('currentView'),
-        visibleCount: store.get('visibleCount')
+        visibleCount: store.get('visibleCount'),
+        resetFormTags: () => setFormTagsArray([]),   // ✅ DÜZELTME: switchView bu fonksiyonu bekliyordu
+        getFormTags: () => getFormTagsArray()         // ✅ DÜZELTME: switchView bu fonksiyonu bekliyordu
     };
 }
