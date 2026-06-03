@@ -117,7 +117,9 @@ const initialState = {
   activePlaylistVideoIds: [],
   viewMode: 'grid',
   tagColors: {},   // ✅ YENİ (Adım 3.3): { tagName: colorCode } formatında
-  globalVideoLinks: []   // ✅ YENİ (Adım 6.2): kombinasyon zinciri bağlantıları
+  globalVideoLinks: [],   // ✅ YENİ (Adım 6.2): kombinasyon zinciri bağlantıları
+  totalVideoCount: 0,   // ✅ YENİ (Adım 4.3): sunucudaki toplam video sayısı
+  currentPage: 0        // ✅ YENİ (Adım 4.3): yüklenmiş son sayfa indeksi
 };
 
 export const store = new Store(initialState);

@@ -5,6 +5,8 @@ import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 // videos
 import {
     dbFetchVideos,
+    dbFetchVideosPage,
+    dbFetchVideosCount,
     dbDeleteVideo,
     dbSaveVideo,
     dbUpdateTagsDirectly,
@@ -35,6 +37,8 @@ import {
 // Tüm fonksiyonları dışa aktar
 export {
     dbFetchVideos,
+    dbFetchVideosPage,
+    dbFetchVideosCount,
     dbDeleteVideo,
     dbSaveVideo,
     dbUpdateTagsDirectly,

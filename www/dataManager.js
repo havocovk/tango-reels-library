@@ -3,7 +3,7 @@
 // ✅ GÜNCELLEME (Adım 3.3): renderTagManagerUI tagManager.js'e taşındı
 // ✅ GÜNCELLEME (Adım 3.3 v2): ensureAllTagsHaveColors çağrısı eklendi
 import { translations } from './i18n.js';
-import { dbFetchInstructors, dbFetchVideos, dbFetchFavorites } from './tangoVeritabani.js';
+import { dbFetchInstructors, dbFetchVideos, dbFetchVideosPage, dbFetchFavorites } from './tangoVeritabani.js';
 import { populateFilterDropdowns } from './tangoFilters.js';
 import { computeStats, renderStats } from './tangoStats.js';
 import { updateSmartFilenameAssistant } from './tangoUI.js';
@@ -42,31 +42,75 @@ export async function fetchVideos() {
     try {
         const instructors = await dbFetchInstructors();
         store.set('globalInstructors', instructors);
-        const rawVideos = await dbFetchVideos();
         const favRows = await dbFetchFavorites().catch(() => []);
         store.set('globalFavorites', favRows.map(f => f.video_id));
 
-        const videos = rawVideos.map(video => ({
+        // Eğitmen adını her videoya ekleyen yardımcı (kartlarda "Bilinmeyen" yazmaması için)
+        const enrich = (arr) => arr.map(video => ({
             ...video,
             instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
         }));
-        store.set('globalVideos', videos);
+
+        // ✅ Adım 4.3: Sayfa sayfa (paginated) yükleme.
+        // Büyük koleksiyonlarda tek dev istek yerine küçük sayfalar çekilir.
+        // ÖNEMLİ: Tüm sayfalar birleştirilerek bellekte tam liste oluşturulur;
+        // böylece arama, filtreleme, istatistikler vb. istemci tarafında
+        // aynen çalışmaya devam eder (yol haritası notu gereği).
+        const PAGE_SIZE = 100;
+        let allVideos = [];
+
+        try {
+            // İlk sayfa
+            const first = await dbFetchVideosPage(0, PAGE_SIZE);
+            store.set('totalVideoCount', first.totalCount);
+            store.set('currentPage', 0);
+            allVideos = enrich(first.videos);
+            store.set('globalVideos', [...allVideos]);
+
+            // Kalan sayfaları çek. Sayıma (count) GÜVENMİYORUZ:
+            // bir sayfa PAGE_SIZE'dan az kayıt döndürürse son sayfadır → dur.
+            // Bu, count=exact çalışmasa bile tüm videoların yüklenmesini garanti eder.
+            let page = 1;
+            let lastPageSize = first.videos.length;
+            while (lastPageSize === PAGE_SIZE) {
+                const next = await dbFetchVideosPage(page, PAGE_SIZE);
+                lastPageSize = next.videos.length;
+                if (lastPageSize === 0) break;
+                allVideos = allVideos.concat(enrich(next.videos));
+                store.set('currentPage', page);
+                store.set('globalVideos', [...allVideos]);
+                // totalCount güncel değilse, çekilen kadarını yansıt
+                if (allVideos.length > (store.get('totalVideoCount') || 0)) {
+                    store.set('totalVideoCount', allVideos.length);
+                }
+                page++;
+            }
+        } catch (pageErr) {
+            // ── Güvenlik ağı: sayfalı çekme başarısız olursa hepsini birden çek ──
+            // (Range header'ı bir nedenle çalışmazsa uygulama eskisi gibi yüklenir.)
+            console.warn('Sayfalı yükleme başarısız oldu, tam yüklemeye geçiliyor:', pageErr);
+            const rawVideos = await dbFetchVideos();
+            allVideos = enrich(rawVideos);
+            store.set('totalVideoCount', allVideos.length);
+            store.set('globalVideos', [...allVideos]);
+        }
+
+        // ── Tüm veri hazır: pahalı hesaplamalar yalnızca bir kez ──
+        const finalVideos = store.get('globalVideos');
 
         // Adım 2.2: Bugün tekrar edilmesi gereken video sayısı
-        const count = getDueTodayCount(videos);
+        const count = getDueTodayCount(finalVideos);
         store.set('dueTodayCount', count);
 
         // ✅ Adım 3.3 v2: Tüm etiketlerin rengi olduğunu garanti et
-        // loadTagColors() zaten app.js'de çalıştı; bu fonksiyon sadece
-        // renksiz kalan etiketleri bulup otomatik renk atar.
-        ensureAllTagsHaveColors(videos); // await yok — arka planda çalışır
+        ensureAllTagsHaveColors(finalVideos); // await yok — arka planda çalışır
 
-        populateFilterDropdowns(videos, store.get('currentLang'));
+        populateFilterDropdowns(finalVideos, store.get('currentLang'));
 
         setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
         setInstructorHandlersGlobalData(store.get('currentLang'));
-        setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, videos);
-        initTagManager(store.get('currentLang'), videos, fetchVideos, renderTagManagerUI);
+        setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, finalVideos);
+        initTagManager(store.get('currentLang'), finalVideos, fetchVideos, renderTagManagerUI);
 
         if (store.get('currentView') === 'stats') renderStatsPanel();
         if (store.get('currentView') === 'tagManager') renderTagManagerUI();

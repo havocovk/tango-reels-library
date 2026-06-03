@@ -10,6 +10,65 @@ export async function dbFetchVideos() {
     return await res.json();
 }
 
+// ✅ YENİ (Adım 4.3): Sayfa sayfa video çekme (server-side pagination)
+// page: 0'dan başlar, pageSize: bir sayfadaki kayıt sayısı.
+// Supabase'in Range header'ı kullanılır. Hem videos dizisini hem de
+// toplam kayıt sayısını (totalCount) döner.
+export async function dbFetchVideosPage(page = 0, pageSize = 100) {
+    const start = page * pageSize;
+    const end = start + pageSize - 1;
+
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`,
+        {
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Range-Unit': 'items',
+                'Range': `${start}-${end}`,
+                // count=exact: Content-Range header'ında toplam kayıt sayısı döner
+                'Prefer': 'count=exact'
+            }
+        }
+    );
+
+    // Range kullanılınca Supabase başarıda 200 veya 206 döner; ikisi de OK kabul edilir.
+    if (!res.ok && res.status !== 206) {
+        throw new Error('Videolar alınamadı (sayfalı)');
+    }
+
+    const videos = await res.json();
+
+    // Content-Range örneği: "0-99/247" → toplam 247 kayıt
+    const contentRange = res.headers.get('Content-Range') || '';
+    let totalCount = videos.length;
+    const match = contentRange.match(/\/(\d+)\s*$/);
+    if (match) totalCount = parseInt(match[1], 10);
+
+    return { videos, totalCount };
+}
+
+// ✅ YENİ (Adım 4.3): Sadece toplam video sayısını döndürür (HEAD isteği).
+// Filtresiz toplam sayıyı hızlıca almak için kullanılabilir.
+export async function dbFetchVideosCount() {
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/videos?select=id`,
+        {
+            method: 'HEAD',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Range-Unit': 'items',
+                'Range': '0-0',
+                'Prefer': 'count=exact'
+            }
+        }
+    );
+    const contentRange = res.headers.get('Content-Range') || '';
+    const match = contentRange.match(/\/(\d+)\s*$/);
+    return match ? parseInt(match[1], 10) : 0;
+}
+
 export async function dbDeleteVideo(videoId) {
     const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
         method: 'DELETE',
