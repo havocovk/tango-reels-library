@@ -7,7 +7,7 @@ import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './sto
 import {
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
     modalTagsArray, showCustomAlert, showCustomConfirm, saveTagsToSupabaseDirectly,
-    initModalCallbacks
+    renderModalChips, initModalCallbacks
 } from './tangoModals.js';
 import { setupAutocomplete } from './uiRenderer.js';
 import { renderFormChips } from './formHandlers.js';
@@ -223,6 +223,24 @@ async function initializeApp() {
                 formTagsArray.push(tag);
                 renderFormChips();
                 callUpdateSmartAssistant();
+            }
+        },
+        callGetUniqueTagsPool
+    );
+
+    // ── ✅ DÜZELTME (Sorun 3): Satır içi etiket DÜZENLEME modalı için autocomplete ──
+    // Daha önce yalnızca ekleme formu için kuruluyordu; kart üzerindeki
+    // "Etiketleri Düzenle" modalında virgülle yeni etiket eklenemiyordu.
+    setupAutocomplete(
+        'modal-tags-input',
+        'modal-autocomplete-list',
+        modalTagsArray,
+        renderModalChips,
+        (tag) => {
+            if (!modalTagsArray.includes(tag)) {
+                modalTagsArray.push(tag);
+                renderModalChips();
+                saveTagsToSupabaseDirectly();   // anında kaydet (çip silmeyle aynı davranış)
             }
         },
         callGetUniqueTagsPool

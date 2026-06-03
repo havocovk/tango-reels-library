@@ -6,6 +6,7 @@ import { applyFiltersAndSearch, setVideoHandlersGlobalData } from './videoHandle
 import { setInstructorHandlersGlobalData } from './instructorHandlers.js';
 import { setFormHandlersGlobalData, formTagsArray } from './formHandlers.js';
 import { initTagManager } from './tagManager.js';
+import { populateFilterDropdowns } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { callUpdateInterfaceLanguage } from './navigation.js';
 import { renderPlaylistsInSidebar } from './playlistManager.js';
@@ -49,6 +50,9 @@ export function setupStoreSubscriptions() {
     subscriptions.push(store.subscribe('globalVideos', (newVideos) => {
         setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, newVideos);
         initTagManager(store.get('currentLang'), newVideos, fetchVideos, renderTagManagerUI);
+        // ✅ DÜZELTME (Sorun 2): Etiket birleştirme/yeniden adlandırma/silme veya
+        // yeni etiket eklendiğinde koleksiyon filtre dropdown'ları da tazelensin.
+        populateFilterDropdowns(newVideos, store.get('currentLang'));
         applyFiltersAndSearch();
         if (store.get('currentView') === 'stats') renderStatsPanel();
         if (store.get('currentView') === 'tagManager') renderTagManagerUI();
