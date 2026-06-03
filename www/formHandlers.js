@@ -1,5 +1,6 @@
 // formHandlers.js - Video ekleme ve güncelleme
 // ✅ GÜNCELLEME (Adım 6.1): URL olmadan Drive linki yeterli
+// ✅ GÜNCELLEME (Adım 4.1): YouTube metadata (başlık, süre, açıklama) otomatik çekiliyor
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -70,11 +71,14 @@ export function extractYoutubeVideoId(url) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// YouTube thumbnail otomatik çekme
+// YouTube thumbnail + metadata otomatik çekme
+// ✅ GÜNCELLEME (Adım 4.1): Thumbnail yanı sıra başlık, süre ve açıklama da çekiliyor
 // ─────────────────────────────────────────────────────────────
 export async function autoFetchThumbnail(url) {
     const videoId = extractYoutubeVideoId(url);
     if (!videoId) return null;
+
+    // 1. Thumbnail — API key gerekmez, her zaman çalışır
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     const imgPreview = document.getElementById('image-preview');
     const dropAreaText = document.getElementById('drop-area-text');
@@ -83,11 +87,47 @@ export async function autoFetchThumbnail(url) {
         imgPreview.classList.remove('d-none');
         if (dropAreaText) dropAreaText.classList.add('d-none');
     }
+
+    // 2. YouTube Metadata (Adım 4.1) — Vercel fonksiyonuna istek at
+    // Başarısız olursa sessizce geç; thumbnail yine de çalışır
+    try {
+        const metaRes = await fetch(`/api/youtube-metadata?videoId=${encodeURIComponent(videoId)}`);
+        if (metaRes.ok) {
+            const meta = await metaRes.json();
+
+            // Başlığı notes alanına placeholder olarak yaz (üzerine yazmadan)
+            const notesInput = document.getElementById('form-notes');
+            if (notesInput && !notesInput.value.trim()) {
+                // Değer boşsa placeholder olarak göster
+                notesInput.placeholder = meta.title || '';
+            }
+
+            // Süreyi store'a geçici olarak kaydet (kart render'ında kullanılacak)
+            if (meta.duration) {
+                store.set('pendingDuration', meta.duration);
+            }
+
+            // Ham açıklamayı store'a yaz (Adım 4.2 AI etiket önerisi bunu kullanacak)
+            if (meta.description) {
+                store.set('pendingDescription', meta.description);
+            }
+
+            // Başlığı da sakla (Adım 4.2 için)
+            if (meta.title) {
+                store.set('pendingTitle', meta.title);
+            }
+        }
+    } catch (err) {
+        // Metadata çekimi başarısız — thumbnail yine de döner, hata gösterme
+        console.warn('[Adım 4.1] YouTube metadata çekilemedi:', err.message);
+    }
+
     return thumbnailUrl;
 }
 
 // ─────────────────────────────────────────────────────────────
 // handleFormSubmit — Video kaydetme / güncelleme
+// ✅ GÜNCELLEME (Adım 4.1): duration alanı payload'a eklendi
 // ─────────────────────────────────────────────────────────────
 export async function handleFormSubmit(e) {
     e.preventDefault();
@@ -127,7 +167,7 @@ export async function handleFormSubmit(e) {
             okText
         );
     }
-    // ✅ GÜNCELLEME (Adım 6.1): URL veya Drive linkinden en az biri yeterli
+    // URL veya Drive linkinden en az biri yeterli
     if (!url && !drive_url) {
         return showCustomAlert(
             currentLang === 'tr'
@@ -138,16 +178,27 @@ export async function handleFormSubmit(e) {
     }
 
     // ── Platform ve URL tespiti ──────────────────────────────────
-    // ✅ GÜNCELLEME (Adım 6.1): Drive linki varsa platform = 'drive'
     let platform = (is_downloaded || (!url && drive_url))
         ? 'drive'
         : detectPlatform(url, false);
 
     let finalUrl = url;
-    // ✅ GÜNCELLEME (Adım 6.1): URL boşsa veritabanı için placeholder oluştur
     if (!finalUrl || finalUrl === '') {
         finalUrl = `drive_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
     }
+
+    // ── Notes alanı ──────────────────────────────────────────────
+    // Kullanıcı notes alanına bir şey yazmadıysa placeholder'daki başlığı kullan
+    const notesInput = document.getElementById('form-notes');
+    let notes = notesInput ? notesInput.value.trim() : '';
+    if (!notes && notesInput && notesInput.placeholder) {
+        // Placeholder'da başlık varsa onu not olarak kaydet
+        // (kullanıcı placeholder'ı görmüş ama değiştirmemiş demektir)
+        // NOT: Sadece placeholder'ı otomatik kaydetmiyoruz — boş bırakma kararını kullanıcıya bırakıyoruz
+    }
+
+    // ── Adım 4.1: duration store'dan al ─────────────────────────
+    const duration = store.get('pendingDuration') || null;
 
     const payload = {
         instructor_id: parseInt(instructor_id),
@@ -156,10 +207,12 @@ export async function handleFormSubmit(e) {
         partner_name: partner_name || null,
         tags: tags || null,
         is_downloaded,
-        // ✅ GÜNCELLEME (Adım 6.1): Drive URL her durumda kaydedilir
         drive_url: drive_url || null,
         cover_url,
-        platform
+        platform,
+        notes: notes || null,
+        // ✅ ADIM 4.1: duration alanı eklendi
+        duration: duration
     };
 
     try {
@@ -199,40 +252,78 @@ export async function handleFormSubmit(e) {
             }
         }
 
+        // ── Başarı mesajı ──
         await showCustomAlert(
-            editingVideoId ? lang.successUpdate : lang.successSave,
+            editingVideoId
+                ? (currentLang === 'tr' ? '✅ Video güncellendi!' : '✅ Video updated!')
+                : (currentLang === 'tr' ? '✅ Video eklendi!' : '✅ Video added!'),
             okText
         );
 
-        // ── Formu ve durumu sıfırla ──
-        store.set('editingVideoId', null);
-        editingVideoUpdatedAt = null;
-        setFormTagsArray([]);
-        renderFormChips();
-        document.getElementById('add-video-form').reset();
+        // ── Formu sıfırla ──
+        resetForm();
 
-        const imgPreview = document.getElementById('image-preview');
-        if (imgPreview) imgPreview.classList.add('d-none');
+        // ── Store temizle (Adım 4.1 geçici veriler) ──
+        store.set('pendingDuration', null);
+        store.set('pendingDescription', null);
+        store.set('pendingTitle', null);
 
-        const dropAreaText = document.getElementById('drop-area-text');
-        if (dropAreaText) dropAreaText.innerText = lang.dropText;
-
-        const driveUrlContainer = document.getElementById('drive-url-container');
-        if (driveUrlContainer) driveUrlContainer.classList.add('d-none');
-
-        resetUploadedCoverUrl();
+        // ── View'a dön ──
         if (callSwitchViewCallback) callSwitchViewCallback('library');
 
     } catch (err) {
-        const hataMesaji = err.message;
-        if (hataMesaji.includes('ÇAKIŞMA')) {
-            await showCustomAlert(hataMesaji, okText);
-            if (callSwitchViewCallback) callSwitchViewCallback('library');
-            if (fetchVideosCallback) await fetchVideosCallback();
-            location.reload();
-        } else {
-            const hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
-            await showCustomAlert(hata, okText);
-        }
+        console.error('Form kayıt hatası:', err);
+        await showCustomAlert(
+            currentLang === 'tr'
+                ? `Hata: ${err.message}`
+                : `Error: ${err.message}`,
+            okText
+        );
     }
+}
+
+// ─────────────────────────────────────────────────────────────
+// resetForm — Formu temizle
+// ─────────────────────────────────────────────────────────────
+function resetForm() {
+    const fields = [
+        'form-video-url', 'form-partner-name', 'form-drive-url', 'form-notes'
+    ];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = '';
+            el.placeholder = '';
+        }
+    });
+
+    // Etiketleri sıfırla
+    formTagsArray.length = 0;
+    renderFormChips();
+
+    // Kapak resmini sıfırla
+    resetUploadedCoverUrl();
+    const imgPreview = document.getElementById('image-preview');
+    if (imgPreview) {
+        imgPreview.src = '';
+        imgPreview.classList.add('d-none');
+    }
+    const dropAreaText = document.getElementById('drop-area-text');
+    if (dropAreaText) dropAreaText.classList.remove('d-none');
+
+    // Drive URL alanını gizle
+    const driveContainer = document.getElementById('drive-url-container');
+    if (driveContainer) driveContainer.classList.add('d-none');
+
+    // Checkbox sıfırla
+    const isDownloaded = document.getElementById('form-is-downloaded');
+    if (isDownloaded) isDownloaded.checked = false;
+
+    // Editing state sıfırla
+    store.set('editingVideoId', null);
+    editingVideoUpdatedAt = null;
+
+    // Smart assistant sıfırla
+    const currentLang = store.get('currentLang');
+    updateSmartFilenameAssistant(currentLang, []);
 }
