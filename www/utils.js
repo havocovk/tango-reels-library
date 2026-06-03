@@ -72,26 +72,41 @@ export function showModernPrompt(title, defaultValue = '', placeholder = '') {
 
 // ================= YENİ: FETCH RETRY =================
 export async function fetchWithRetry(url, options = {}, retries = 3, baseDelay = 1000) {
+    // ✅ Auth token inject: giriş yapılmışsa tüm Supabase çağrılarına
+    // otomatik olarak güncel JWT token'ı yaz. Veritabanı dosyalarında
+    // tek satır değişiklik gerekmez.
+    const authToken = window.__tangoAuthToken;
+    if (authToken && options.headers && 'Authorization' in options.headers) {
+        options = {
+            ...options,
+            headers: { ...options.headers, 'Authorization': `Bearer ${authToken}` }
+        };
+    }
+
     let lastError;
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
             const response = await fetch(url, options);
-            // 409 Conflict - çakışma durumunda retry yapma
+            // 409 Conflict — çakışma durumunda retry yapma
             if (response.status === 409) {
                 throw new Error('ÇAKIŞMA: Kaynak başka bir cihazda değiştirildi. Sayfayı yenileyin.');
             }
             // Başarılı yanıt
             if (response.ok) return response;
-            // 5xx veya ağ hatası (status 0) durumunda retry dene
+            // 401 Unauthorized — token geçersiz veya süresi dolmuş
+            if (response.status === 401) {
+                throw new Error('Oturum süresi dolmuş. Lütfen sayfayı yenileyip tekrar giriş yapın.');
+            }
+            // 5xx veya ağ hatası → retry dene
             if (response.status >= 500 || response.status === 0) {
                 throw new Error(`HTTP ${response.status}`);
             }
-            // Diğer hatalar (4xx) retry yapma, olduğu gibi döndür
+            // Diğer hatalar (4xx) — retry yapma, olduğu gibi döndür
             return response;
         } catch (err) {
             lastError = err;
-            // Çakışma hatasını direkt fırlat
             if (err.message.includes('ÇAKIŞMA')) throw err;
+            if (err.message.includes('Oturum süresi')) throw err;
             if (attempt === retries) break;
             const delay = baseDelay * Math.pow(2, attempt - 1);
             console.warn(`Fetch attempt ${attempt} failed. Retrying in ${delay}ms...`, err);

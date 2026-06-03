@@ -3,6 +3,7 @@
 // ✅ GÜNCELLEME (Adım 2.4): Playlist sistemi
 // ✅ GÜNCELLEME (Adım 3.3): loadTagColors çağrısı
 import { translations } from './i18n.js';
+import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
 import {
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
@@ -145,6 +146,18 @@ async function initializeApp() {
     initInstructorHandlers(fetchInstructors, fetchVideos);
     initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
     initModalCallbacks(applyFiltersAndSearch);
+
+    // ✅ Çıkış butonu
+    document.getElementById('btn-logout')?.addEventListener('click', async () => {
+        const ok = await showCustomConfirm(
+            store.get('currentLang') === 'tr'
+                ? 'Çıkış yapmak istediğinize emin misiniz?'
+                : 'Are you sure you want to sign out?',
+            store.get('currentLang') === 'tr' ? 'Çıkış Yap' : 'Sign Out',
+            store.get('currentLang') === 'tr' ? 'İptal' : 'Cancel'
+        );
+        if (ok) await signOut();
+    });
 
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
     document.getElementById('btn-add-instructor')?.addEventListener('click', handleInstructorSubmit);
@@ -326,7 +339,5 @@ export function syncBottomNavActiveState(viewName) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadTemplates().catch(err => {
-        console.error('DOMContentLoaded hata:', err);
-    });
+    initAuth(loadTemplates);
 });

@@ -30,13 +30,16 @@
     </script>
 </head>
 <body>
-<!-- ✅ YENİ (Adım 7.4): Ekran okuyucu kullanıcıları için içeriğe atla bağlantısı -->
+
+<!-- Ekran okuyucu için içeriğe atla bağlantısı -->
 <a href="#main-content" class="skip-link">Ana içeriğe geç</a>
 
 <div class="bg-glow current-location-glow"></div>
 <div class="secondary-glow bg-glow"></div>
 
 <div class="app-container">
+
+    <!-- Sol Menü -->
     <nav class="sidebar-glass">
         <div class="sidebar-header">
             <h2 id="sidebar-title"></h2>
@@ -51,26 +54,45 @@
             <button id="menu-tag-manager" class="menu-btn">🏷️ Etiket Yönetimi</button>
         </div>
 
-        <!-- Playlist bölümü — menü butonlarının hemen altına gelir -->
+        <!-- Playlist bölümü -->
         <div id="playlist-section-container"></div>
 
+        <!-- ✅ YENİ: Çıkış butonu — menünün en altına itilir -->
+        <div style="margin-top: auto; padding-top: 20px;">
+            <hr style="border-color: rgba(255, 0, 127, 0.15); margin-bottom: 16px;">
+            <button id="btn-logout" style="
+                width: 100%;
+                background: transparent;
+                border: 1px solid rgba(255, 0, 127, 0.3);
+                color: rgba(255, 255, 255, 0.45);
+                border-radius: 10px;
+                padding: 9px 14px;
+                font-size: 0.8rem;
+                font-family: 'Poppins', sans-serif;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-align: left;"
+                onmouseover="this.style.borderColor='rgba(255,0,127,0.7)'; this.style.color='#ff007f'; this.style.background='rgba(255,0,127,0.08)'"
+                onmouseout="this.style.borderColor='rgba(255,0,127,0.3)'; this.style.color='rgba(255,255,255,0.45)'; this.style.background='transparent'">
+                🚪 Çıkış Yap
+            </button>
+        </div>
     </nav>
 
+    <!-- Ana İçerik -->
     <main class="main-content-glass" id="main-content" aria-label="Ana içerik">
-        <!-- Tüm view'lar ve modallar buraya yüklenecek -->
         <div id="dynamic-views"></div>
     </main>
+
 </div>
 
-<!-- Loading overlay -->
+<!-- Yükleniyor göstergesi -->
 <div id="loading-overlay" class="loading-overlay d-none">
     <div class="spinner"></div>
     <div id="loading-text">İşlem yapılıyor...</div>
 </div>
 
-<!-- ✅ YENİ (Adım 7.1): Mobil Alt Navigasyon Barı
-     Masaüstünde CSS ile tamamen gizlenir.
-     Telefonda ekranın altına sabitlenir. -->
+<!-- Mobil Alt Navigasyon Barı -->
 <nav class="bottom-nav" id="bottom-nav" aria-label="Alt navigasyon">
     <button class="bottom-nav-btn active" id="bn-library">
         <span class="bn-icon">📚</span>
@@ -93,6 +115,136 @@
         <span class="bn-label" data-i18n="menuTags">Etiketler</span>
     </button>
 </nav>
+
+<!-- ✅ YENİ: Giriş Ekranı
+     Uygulama açılınca önce bu görünür.
+     Doğru e-posta + şifre girilince kaybolur, uygulama açılır. -->
+<div id="login-overlay" style="
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 99999;
+    background: #07040f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', sans-serif;">
+
+    <div style="
+        width: 100%;
+        max-width: 400px;
+        margin: 1rem;
+        background: #0f0a1e;
+        border: 1px solid rgba(0, 240, 255, 0.25);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 0 40px rgba(255, 0, 127, 0.15);">
+
+        <!-- Başlık -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">💃</div>
+            <h1 style="
+                color: #ffffff;
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin: 0 0 0.4rem;">
+                Tango Koleksiyon
+            </h1>
+            <p style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin: 0;">
+                Devam etmek için giriş yapın
+            </p>
+        </div>
+
+        <!-- E-posta alanı -->
+        <div style="margin-bottom: 1rem;">
+            <label style="
+                display: block;
+                color: rgba(255,255,255,0.55);
+                font-size: 0.8rem;
+                margin-bottom: 7px;">
+                E-posta
+            </label>
+            <input
+                id="login-email"
+                type="email"
+                placeholder="ornek@email.com"
+                autocomplete="email"
+                style="
+                    width: 100%;
+                    box-sizing: border-box;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(0,240,255,0.3);
+                    border-radius: 10px;
+                    padding: 12px 14px;
+                    color: #ffffff;
+                    font-size: 0.95rem;
+                    font-family: 'Poppins', sans-serif;
+                    outline: none;
+                    transition: border-color 0.2s;"
+                onfocus="this.style.borderColor='rgba(0,240,255,0.7)'"
+                onblur="this.style.borderColor='rgba(0,240,255,0.3)'" />
+        </div>
+
+        <!-- Şifre alanı -->
+        <div style="margin-bottom: 0.5rem;">
+            <label style="
+                display: block;
+                color: rgba(255,255,255,0.55);
+                font-size: 0.8rem;
+                margin-bottom: 7px;">
+                Şifre
+            </label>
+            <input
+                id="login-password"
+                type="password"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                style="
+                    width: 100%;
+                    box-sizing: border-box;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(0,240,255,0.3);
+                    border-radius: 10px;
+                    padding: 12px 14px;
+                    color: #ffffff;
+                    font-size: 0.95rem;
+                    font-family: 'Poppins', sans-serif;
+                    outline: none;
+                    transition: border-color 0.2s;"
+                onfocus="this.style.borderColor='rgba(0,240,255,0.7)'"
+                onblur="this.style.borderColor='rgba(0,240,255,0.3)'" />
+        </div>
+
+        <!-- Hata mesajı (giriş başarısız olursa burada görünür) -->
+        <p id="login-error" style="
+            color: #ff6b6b;
+            font-size: 0.82rem;
+            min-height: 1.4rem;
+            margin: 8px 0 16px;"></p>
+
+        <!-- Giriş Yap butonu -->
+        <button
+            id="login-btn"
+            style="
+                width: 100%;
+                padding: 13px;
+                background: linear-gradient(135deg, #ff007f, #cc0066);
+                border: none;
+                border-radius: 10px;
+                color: #ffffff;
+                font-size: 1rem;
+                font-weight: 600;
+                font-family: 'Poppins', sans-serif;
+                cursor: pointer;
+                transition: opacity 0.2s, transform 0.1s;"
+            onmouseover="this.style.opacity='0.88'"
+            onmouseout="this.style.opacity='1'"
+            onmousedown="this.style.transform='scale(0.98)'"
+            onmouseup="this.style.transform='scale(1)'">
+            Giriş Yap
+        </button>
+
+    </div>
+</div>
 
 <script type="module" src="app.js"></script>
 </body>
