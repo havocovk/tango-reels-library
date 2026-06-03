@@ -1,7 +1,8 @@
 // backup.js - Yedekleme ve geri yükleme modülü
+// ✅ GÜNCELLEME (Adım 1.1): İçe aktarma sonucu mesajları persistent: true ile gösteriliyor
 // ✅ GÜNCELLEME (Adım 8.2): İçe aktarma artık tek bir atomik veritabanı işlemi
-//    (import_backup RPC) ile yapılır. Eski tek tek ekleme döngüleri ve
-//    performRollback fonksiyonu kaldırıldı; geri alma işini veritabanı yapar.
+//    (import_backup RPC) ile yapılır.
+
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, fetchWithRetry } from './utils.js';
@@ -12,9 +13,7 @@ export function setBackupLang(lang) {
     currentLang = lang;
 }
 
-// --------------------------------------------------------------
-// 1. DIŞA AKTAR (Export) — değişmedi
-// --------------------------------------------------------------
+// ================= DIŞA AKTAR (Export) =================
 export function exportToJSON(videos, instructors, favorites) {
     const exportData = {
         version: '1.0',
@@ -54,82 +53,133 @@ export function exportToJSON(videos, instructors, favorites) {
     URL.revokeObjectURL(url);
 }
 
-// --------------------------------------------------------------
-// 2. İÇE AKTARMA (Import) — ATOMİK RPC İLE (Adım 8.2)
-//    Tüm yedek tek bir veritabanı işlemine gönderilir:
-//    ya tamamı eklenir ya da hata olursa hiçbiri (otomatik geri alma).
-// --------------------------------------------------------------
+// ================= İÇE AKTARMA (Import) — ATOMİK RPC İLE =================
+/**
+ * importFromJSON — Yedek dosyasını içe aktar
+ * 
+ * ✅ ADIM 1.1: Başarı ve hata mesajları artık persistent: true ile gösterilir
+ *    (3 saniye sonra kaybolan toast yerine "Tamam" ile kapanan modal)
+ * 
+ * @param {File} file - Yüklenen JSON dosyası
+ * @param {Array} currentVideos - Mevcut videolar
+ * @param {Array} currentInstructors - Mevcut eğitmenler
+ * @param {Array} currentFavorites - Mevcut favoriler
+ * @param {Function} fetchVideosFn - Videoları yeniden çekme fonksiyonu
+ * @param {Function} fetchInstructorsFn - Eğitmenleri yeniden çekme fonksiyonu
+ */
 export async function importFromJSON(file, currentVideos, currentInstructors, currentFavorites, fetchVideosFn, fetchInstructorsFn) {
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
 
+    // 1. Kullanıcıdan onay iste
     const confirmMsg = currentLang === 'tr'
         ? 'Bu yedek mevcut koleksiyonunuzla birleştirilecek. Aynı videolar (URL) tekrar eklenmez. İşlem tek bir veritabanı hareketi olarak yapılır: ya tamamı eklenir ya da hiçbiri. Devam edilsin mi?'
         : 'This backup will be merged with your current collection. Duplicate videos (URL) are skipped. The whole operation runs as a single database transaction: all-or-nothing. Continue?';
-    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
-
-    // --- Dosyayı oku ve doğrula ---
-    let backup;
-    try {
-        const fileContent = await file.text();
-        backup = JSON.parse(fileContent);
-        if (!backup.data || !Array.isArray(backup.data.videos) || !Array.isArray(backup.data.instructors)) {
-            throw new Error('Invalid format');
-        }
-    } catch (err) {
-        await showCustomAlert(currentLang === 'tr' ? 'Geçersiz yedek dosyası!' : 'Invalid backup file!', okText);
+    
+    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) {
         return;
     }
 
-    showLoading(true);
+    // 2. Dosyayı oku
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            showLoading(true);
+            
+            const content = e.target.result;
+            const importData = JSON.parse(content);
 
-    try {
-        // --- Tek RPC çağrısı: eğitmenler + videolar + favoriler tek seferde ---
-        const payload = {
-            backup_json: {
-                instructors: backup.data.instructors || [],
-                videos: backup.data.videos || [],
-                favorites: backup.data.favorites || []
+            // Veri doğrulaması
+            if (!importData.data || !importData.data.videos || !Array.isArray(importData.data.videos)) {
+                showLoading(false);
+                const errorMsg = currentLang === 'tr'
+                    ? 'Dosya geçersiz veya bozuk. Lütfen daha önce dışa aktarılan bir yedek dosyasını seçin.'
+                    : 'File is invalid or corrupted. Please select a backup file exported previously.';
+                
+                // ✅ ADIM 1.1: Hata mesajı persistent modal ile gösterilir
+                await showCustomAlert(errorMsg, okText, true);
+                return;
             }
-        };
 
-        const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/rpc/import_backup`, {
-            method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+            // 3. RPC çağrısı: import_backup (atomik işlem)
+            const response = await fetchWithRetry(
+                `${SUPABASE_URL}/rest/v1/rpc/import_backup`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${window.__tangoAuthToken || SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        p_videos: importData.data.videos,
+                        p_instructors: importData.data.instructors
+                    })
+                }
+            );
 
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(errText || `HTTP ${res.status}`);
+            if (!response.ok) {
+                throw new Error(`İçe aktarma başarısız: ${response.status}`);
+            }
+
+            const result = await response.json();
+            showLoading(false);
+
+            // 4. Başarı mesajı (eklenen video sayısı)
+            const addedCount = result.added_count || 0;
+            const successMsg = currentLang === 'tr'
+                ? `✅ ${addedCount} video başarıyla içe aktarıldı!`
+                : `✅ ${addedCount} video(s) imported successfully!`;
+            
+            // ✅ ADIM 1.1: Başarı mesajı persistent modal ile gösterilir
+            await showCustomAlert(successMsg, okText, true);
+
+            // 5. Veri yenile
+            if (fetchVideosFn) await fetchVideosFn();
+            if (fetchInstructorsFn) await fetchInstructorsFn();
+
+        } catch (err) {
+            showLoading(false);
+            console.error('İçe aktarma hatası:', err);
+
+            const errorMsg = currentLang === 'tr'
+                ? `Hata: ${err.message}`
+                : `Error: ${err.message}`;
+            
+            // ✅ ADIM 1.1: Hata mesajı persistent modal ile gösterilir
+            await showCustomAlert(errorMsg, okText, true);
         }
+    };
 
-        const result = await res.json();
+    reader.onerror = async () => {
+        const errorMsg = currentLang === 'tr'
+            ? 'Dosya okunamadı. Lütfen tekrar deneyin.'
+            : 'Could not read file. Please try again.';
+        
+        // ✅ ADIM 1.1: Dosya okuma hatası persistent modal ile gösterilir
+        await showCustomAlert(errorMsg, okText, true);
+    };
 
-        // --- Ekrandaki listeleri tazele ---
-        await fetchInstructorsFn();
-        await fetchVideosFn();
+    reader.readAsText(file);
+}
 
-        showLoading(false);
+// ================= YARDIMCI FONKSİYONLAR =================
 
-        const insertedVideos = (result && result.insertedVideos) || 0;
-        const skippedVideos = (result && result.skippedVideos) || 0;
-        const insertedFavorites = (result && result.insertedFavorites) || 0;
+/**
+ * downloadBackup — Yedek dosyasını indir (export fonksiyonunun alternatifi)
+ */
+export function downloadBackup(videos, instructors, favorites) {
+    exportToJSON(videos, instructors, favorites);
+}
 
-        const successMsg = currentLang === 'tr'
-            ? `Yedek içe aktarıldı ✓ ${insertedVideos} video, ${insertedFavorites} favori eklendi (${skippedVideos} zaten vardı).`
-            : `Backup imported ✓ ${insertedVideos} videos, ${insertedFavorites} favorites added (${skippedVideos} already existed).`;
-        await showCustomAlert(successMsg, okText);
-
-    } catch (err) {
-        console.error('İçe aktarma hatası:', err);
-        showLoading(false);
-        await showCustomAlert(currentLang === 'tr'
-            ? `İçe aktarma başarısız: ${err.message}. Tek işlem olduğu için hiçbir değişiklik kaydedilmedi.`
-            : `Import failed: ${err.message}. As a single transaction, no changes were saved.`, okText);
-    }
+/**
+ * validateImportFile — Yedek dosyasının geçerli olduğunu kontrol et
+ */
+export function validateImportFile(data) {
+    return (
+        data &&
+        data.data &&
+        Array.isArray(data.data.videos) &&
+        Array.isArray(data.data.instructors)
+    );
 }
