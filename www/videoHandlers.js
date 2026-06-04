@@ -1,5 +1,6 @@
 // videoHandlers.js
 // ✅ GÜNCELLEME (Adım 2.4): playlist filtre ve dropdown desteği eklendi
+// ✅ GÜNCELLEME (Adım 3.2): applyFiltersAndSearch URL durumunu yazıyor
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -8,6 +9,7 @@ import { translations } from './i18n.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { showPlaylistDropdown } from './playlistManager.js';
+import { writeUrlState } from './urlState.js';
 
 let currentLang = 'tr';
 let applyFiltersAndSearchCallback = null;
@@ -102,15 +104,26 @@ export function applyFiltersAndSearch() {
 
     const searchInput = document.getElementById('search-input');
     const aramaMetni = searchInput ? searchInput.value : '';
-    const filters = {
-        aramaMetni,
-        rol: document.getElementById('filter-role-select')?.value || 'all',
-        egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
-        etiket: document.getElementById('filter-tag-select')?.value || 'all',
-        tarih: document.getElementById('filter-date-select')?.value || 'all',
-        platform: document.getElementById('filter-platform-select')?.value || 'all',
-        learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'
-    };
+    const rol = document.getElementById('filter-role-select')?.value || 'all';
+    const egitmen = document.getElementById('filter-instructor-select')?.value || 'all';
+    const etiket = document.getElementById('filter-tag-select')?.value || 'all';
+    const tarih = document.getElementById('filter-date-select')?.value || 'all';
+    const platform = document.getElementById('filter-platform-select')?.value || 'all';
+    const learningStatus = document.getElementById('filter-learning-status-select')?.value || 'all';
+
+    const filters = { aramaMetni, rol, egitmen, etiket, tarih, platform, learningStatus };
+
+    // ✅ ADIM 3.2: Filtre durumunu URL'e yaz
+    writeUrlState({
+        view: currentView,
+        instructor: egitmen,
+        platform: platform,
+        tag: etiket,
+        status: learningStatus,
+        role: rol,
+        date: tarih,
+        search: aramaMetni
+    });
 
     const filtered = getFilteredVideos(source, filters, currentLang);
     const totalElem = document.getElementById('total-video-count');
@@ -215,22 +228,16 @@ export function setupInfiniteScroll() {
     }
 }
 
-// ✅ YENİ (Adım 7.2): Grid/Liste görünüm geçişi
-// Toggle butonuna basılınca çağrılır. Modu değiştirir ve yeniden render eder.
 export function toggleViewMode() {
     const current = store.get('viewMode');
     const next = current === 'grid' ? 'list' : 'grid';
     store.set('viewMode', next);
-
-    // Toggle butonunun metnini güncelle
     const btn = document.getElementById('btn-view-toggle');
     if (btn) {
         const lang = store.get('currentLang');
-        // "Şu an listede → butona basınca grid'e dön" mantığı
         btn.textContent = next === 'list'
             ? (lang === 'tr' ? '⊞ Grid' : '⊞ Grid')
             : (lang === 'tr' ? '☰ Liste' : '☰ List');
     }
-
     applyFiltersAndSearch();
 }

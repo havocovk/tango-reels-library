@@ -1,7 +1,7 @@
 // navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme
-// ✅ DÜZELTİLDİ (Adım 2.4 Sorun 3):
-//    callSwitchView() içine clearActivePlaylist() eklendi.
+// ✅ DÜZELTİLDİ (Adım 2.4 Sorun 3): callSwitchView() içine clearActivePlaylist() eklendi
 // ✅ GÜNCELLEME (Adım 5.3): filterByTag() eklendi
+// ✅ GÜNCELLEME (Adım 3.2): callSwitchView URL durumunu yazıyor
 import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomConfirm } from './tangoModals.js';
@@ -13,7 +13,8 @@ import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
-import { renderInstructorProfile } from './instructorProfile.js'; // ✅ YENİ (Adım 6.3)
+import { renderInstructorProfile } from './instructorProfile.js';
+import { writeUrlState, clearUrlState } from './urlState.js';
 
 export function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
@@ -46,6 +47,10 @@ export function callSwitchView(viewName, options = {}) {
     store.set('visibleCount', 20);
     setVisibleCount(store.get('visibleCount'));
     setVideoHandlersGlobalData(store.get('currentLang'), viewName, store.get('visibleCount'));
+
+    // ✅ ADIM 3.2: View değişince URL'e yaz, filtreler sıfırlanır
+    writeUrlState({ view: viewName });
+
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch,
         renderFormChips: () => renderFormChips(),
@@ -53,7 +58,6 @@ export function callSwitchView(viewName, options = {}) {
             import('./storage.js').then(s => s.resetUploadedCoverUrl());
         },
         renderTagManager: renderTagManagerUI,
-        // ✅ YENİ (Adım 6.3): Eğitmen profil render callback'i
         renderProfile: options.instructorId
             ? () => renderInstructorProfile(options.instructorId)
             : null
@@ -62,34 +66,19 @@ export function callSwitchView(viewName, options = {}) {
     if (viewName === 'tagManager') renderTagManagerUI();
 }
 
-// ✅ YENİ (Adım 5.3): Etiket bulutu tıklamasından çağrılır
-// İstatistik sayfasındaki bir etikete tıklanınca koleksiyonu o etiketle filtreler
 export function filterByTag(tagName) {
     if (!tagName) return;
-
-    // 1) Etiket dropdown'ını seç
     const tagSelect = document.getElementById('filter-tag-select');
     if (tagSelect) {
-        // Dropdown'da bu değer var mı kontrol et
         const optionExists = Array.from(tagSelect.options).some(opt => opt.value === tagName);
-        if (optionExists) {
-            tagSelect.value = tagName;
-        }
+        if (optionExists) tagSelect.value = tagName;
     }
-
-    // 2) Kütüphane görünümüne geç (clearActivePlaylist zaten callSwitchView içinde çağrılıyor)
     callSwitchView('library');
-
-    // 3) Geçiş animasyonu bittikten sonra filtreyi uygula
-    // (switchView DOM'u yeniden oluştururken dropdown sıfırlanabilir,
-    //  bu yüzden kısa bir gecikmeyle tekrar set ediyoruz)
     setTimeout(() => {
         const tagSelectAfter = document.getElementById('filter-tag-select');
         if (tagSelectAfter) {
             const optionExists = Array.from(tagSelectAfter.options).some(opt => opt.value === tagName);
-            if (optionExists) {
-                tagSelectAfter.value = tagName;
-            }
+            if (optionExists) tagSelectAfter.value = tagName;
         }
         applyFiltersAndSearch();
     }, 50);
@@ -98,7 +87,7 @@ export function filterByTag(tagName) {
 export async function clearAllFavorites() {
     const currentLang = store.get('currentLang');
     const lang = translations[currentLang];
-    const okText     = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
     if (!await showCustomConfirm(lang.confirmClearFavs, okText, cancelText)) return;
     try {
@@ -142,7 +131,7 @@ export function startVideoEditFlow(video) {
         if (dropText) dropText.style.display = 'none';
     } else {
         if (preview) { preview.src = ''; preview.classList.add('d-none'); }
-        if (dropText) dropText.style.display = '';
+        if (dropText) dropText.style.display = ''; 
     }
 }
 
@@ -153,7 +142,7 @@ export function getUIState() {
         editInstructorId: store.get('editInstructorId'),
         currentView: store.get('currentView'),
         visibleCount: store.get('visibleCount'),
-        resetFormTags: () => setFormTagsArray([]),   // ✅ DÜZELTME: switchView bu fonksiyonu bekliyordu
-        getFormTags: () => getFormTagsArray()         // ✅ DÜZELTME: switchView bu fonksiyonu bekliyordu
+        resetFormTags: () => setFormTagsArray([]),
+        getFormTags: () => getFormTagsArray()
     };
 }
