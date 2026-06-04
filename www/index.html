@@ -116,9 +116,7 @@
     </button>
 </nav>
 
-<!-- ✅ YENİ: Giriş Ekranı
-     Uygulama açılınca önce bu görünür.
-     Doğru e-posta + şifre girilince kaybolur, uygulama açılır. -->
+<!-- ✅ YENİ: Giriş Ekranı (Adım 1.3: data-auth-i18n öznitelikleri eklendi) -->
 <div id="login-overlay" style="
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -142,21 +140,21 @@
         <!-- Başlık -->
         <div style="text-align: center; margin-bottom: 2rem;">
             <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">💃</div>
-            <h1 style="
+            <h1 data-auth-i18n="title" style="
                 color: #ffffff;
                 font-size: 1.25rem;
                 font-weight: 600;
                 margin: 0 0 0.4rem;">
                 Tango Koleksiyon
             </h1>
-            <p style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin: 0;">
+            <p data-auth-i18n="subtitle" style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin: 0;">
                 Devam etmek için giriş yapın
             </p>
         </div>
 
         <!-- E-posta alanı -->
         <div style="margin-bottom: 1rem;">
-            <label style="
+            <label data-auth-i18n="email-label" style="
                 display: block;
                 color: rgba(255,255,255,0.55);
                 font-size: 0.8rem;
@@ -165,6 +163,7 @@
             </label>
             <input
                 id="login-email"
+                data-auth-i18n="email-input"
                 type="email"
                 placeholder="ornek@email.com"
                 autocomplete="email"
@@ -186,7 +185,7 @@
 
         <!-- Şifre alanı -->
         <div style="margin-bottom: 0.5rem;">
-            <label style="
+            <label data-auth-i18n="pass-label" style="
                 display: block;
                 color: rgba(255,255,255,0.55);
                 font-size: 0.8rem;
@@ -195,6 +194,7 @@
             </label>
             <input
                 id="login-password"
+                data-auth-i18n="pass-input"
                 type="password"
                 placeholder="••••••••"
                 autocomplete="current-password"
@@ -214,7 +214,7 @@
                 onblur="this.style.borderColor='rgba(0,240,255,0.3)'" />
         </div>
 
-        <!-- Hata mesajı (giriş başarısız olursa burada görünür) -->
+        <!-- Hata mesajı -->
         <p id="login-error" style="
             color: #ff6b6b;
             font-size: 0.82rem;
@@ -224,6 +224,7 @@
         <!-- Giriş Yap butonu -->
         <button
             id="login-btn"
+            data-auth-i18n="login-btn"
             style="
                 width: 100%;
                 padding: 13px;

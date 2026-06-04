@@ -1,10 +1,12 @@
-// tagManager.js
-// ✅ GÜNCELLEME (Adım 3.3): Renk sistemi + ikon butonlar yan yana
+// tagManager.js - Toplu etiket işlemleri
+// ✅ GÜNCELLEME (Adım 3.3): Etiket Sağlık Kontrolü butonu eklendi
+import { translations } from './i18n.js';
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, showModernPrompt } from './utils.js';
 import { store } from './store.js';
-import { getTagColor } from './tagColorManager.js';
+import { dbRunTagSyncCheck, dbRepairTagSync } from './db/healthCheck.js';
+import { showToast } from './toast.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -20,9 +22,7 @@ export function initTagManager(lang, videos, fetchVideosFn, renderUIFn) {
 }
 
 export function updateTagManagerSelection() {
-    const checked = Array.from(
-        document.querySelectorAll('#tag-manager-tbody .tag-checkbox:checked')
-    ).map(cb => cb.dataset.tag);
+    const checked = Array.from(document.querySelectorAll('#tag-manager-tbody .tag-checkbox:checked')).map(cb => cb.dataset.tag);
     selectedTagsForMerge = checked;
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
     const deleteBtn = document.getElementById('tag-manager-delete-btn');
@@ -36,7 +36,7 @@ export function updateTagManagerSelection() {
 }
 
 function updateAllVideosTagsLocally(updateFunction) {
-    const videos = store.get('globalVideos');
+    let videos = store.get('globalVideos');
     let changed = false;
     const newVideos = videos.map(video => {
         const newVideo = updateFunction(video);
@@ -44,30 +44,52 @@ function updateAllVideosTagsLocally(updateFunction) {
         return newVideo;
     });
     if (changed) store.set('globalVideos', newVideos);
+    return changed;
 }
 
 function renameTagLocally(oldTag, newTag) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
-        const tags = video.tags.split(',').map(t => t.trim()).filter(Boolean);
-        if (!tags.includes(oldTag)) return video;
-        return { ...video, tags: tags.map(t => t === oldTag ? newTag : t).join(', ') };
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        if (tags.includes(oldTag)) {
+            const newTags = tags.map(t => t === oldTag ? newTag : t);
+            return { ...video, tags: newTags.join(', ') };
+        }
+        return video;
     });
 }
 
-function mergeTagsLocally(tagsArray, targetTag) {
-    tagsArray.forEach(tag => renameTagLocally(tag, targetTag));
+function mergeTagsLocally(tagsToMerge, targetTag) {
+    updateAllVideosTagsLocally(video => {
+        if (!video.tags) return video;
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        let changed = false;
+        const newTags = tags.map(t => {
+            if (tagsToMerge.includes(t) && t !== targetTag) { changed = true; return targetTag; }
+            return t;
+        });
+        const unique = [...new Set(newTags)];
+        if (changed) return { ...video, tags: unique.join(', ') };
+        return video;
+    });
 }
 
 function deleteTagsLocally(tagsArray) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(Boolean);
-        const before = tags.length;
-        tagsArray.forEach(tag => { tags = tags.filter(t => t !== tag); });
-        if (tags.length === before) return video;
-        return { ...video, tags: tags.join(', ') };
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        let changed = false;
+        tagsArray.forEach(tag => {
+            if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); changed = true; }
+        });
+        if (changed) return { ...video, tags: tags.length ? tags.join(', ') : null };
+        return video;
     });
+}
+
+function getTagColor(tag) {
+    const tagColors = store.get('tagColors') || {};
+    return tagColors[tag] || null;
 }
 
 export async function promptRenameTagModern(tag) {
@@ -115,6 +137,80 @@ export async function deleteSingleTag(tag) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────
+// ✅ YENİ (Adım 3.3): Etiket Sağlık Kontrolü
+// ─────────────────────────────────────────────────────────────
+export async function runTagHealthCheck() {
+    const lang = store.get('currentLang');
+    const okText = lang === 'tr' ? 'Tamam' : 'OK';
+
+    showLoading(true);
+    try {
+        const problems = await dbRunTagSyncCheck();
+        showLoading(false);
+
+        if (!problems || problems.length === 0) {
+            showToast(
+                lang === 'tr' ? '✅ Tüm etiketler senkron' : '✅ All tags are in sync',
+                'success', 3000
+            );
+            return;
+        }
+
+        // Sorun var — kalıcı modal ile göster
+        const problemList = problems.slice(0, 10).map(p =>
+            `• ${p.video_url || 'ID:' + p.video_id}\n  videos.tags: "${p.tags_text || ''}"\n  video_tags: "${p.normalized_tags || ''}"`
+        ).join('\n\n');
+
+        const more = problems.length > 10 ? `\n\n...ve ${problems.length - 10} tane daha` : '';
+
+        const msg = lang === 'tr'
+            ? `⚠️ ${problems.length} videoda etiket senkron bozukluğu tespit edildi:\n\n${problemList}${more}\n\nOtomatik onar?`
+            : `⚠️ ${problems.length} video(s) have tag sync issues:\n\n${problemList}${more}\n\nAuto-repair?`;
+
+        const repair = await showCustomConfirm(
+            msg,
+            lang === 'tr' ? '🔧 Onar' : '🔧 Repair',
+            lang === 'tr' ? 'İptal' : 'Cancel'
+        );
+
+        if (!repair) return;
+
+        // Otomatik onar
+        showLoading(true);
+        let fixed = 0;
+        let failed = 0;
+        for (const p of problems) {
+            try {
+                await dbRepairTagSync(p.video_id);
+                fixed++;
+            } catch (err) {
+                console.warn(`Video ${p.video_id} onarılamadı:`, err.message);
+                failed++;
+            }
+        }
+        showLoading(false);
+
+        const resultMsg = lang === 'tr'
+            ? `✅ ${fixed} video onarıldı${failed > 0 ? `, ${failed} video onarılamadı` : ''}`
+            : `✅ ${fixed} video(s) repaired${failed > 0 ? `, ${failed} failed` : ''}`;
+
+        await showCustomAlert(resultMsg, okText, true);
+
+        // Veriyi yenile
+        if (fetchVideosCallback) await fetchVideosCallback();
+        renderTagManagerUICallback?.();
+
+    } catch (err) {
+        showLoading(false);
+        console.error('Sağlık kontrolü hatası:', err);
+        await showCustomAlert(
+            lang === 'tr' ? `Hata: ${err.message}` : `Error: ${err.message}`,
+            okText, true
+        );
+    }
+}
+
 export function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -136,7 +232,6 @@ export function renderTagManagerUI() {
         .sort((a, b) => b[1] - a[1])
         .forEach(([tag, count]) => {
             const color = getTagColor(tag);
-
             const row = tbody.insertRow();
 
             // Checkbox
@@ -167,10 +262,9 @@ export function renderTagManagerUI() {
             countCell.textContent = count;
             countCell.style.cssText = 'text-align:center; width:80px; font-size:0.85rem; color:#94a3b8;';
 
-            // İşlemler — YAN YANA (display:flex)
+            // İşlemler
             const actionCell = row.insertCell(3);
             actionCell.style.cssText = 'width:70px; text-align:center;';
-
             const wrapper = document.createElement('div');
             wrapper.style.cssText = 'display:flex; gap:4px; justify-content:center; align-items:center;';
 
@@ -204,6 +298,63 @@ export function renderTagManagerUI() {
         };
     }
     updateTagManagerSelection();
+
+    // ✅ YENİ (Adım 3.3): Sağlık Kontrolü butonu — varsa yeniden bağla
+    _attachHealthCheckButton();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Yardımcı: Sağlık Kontrolü butonunu bul ve bağla
+// ─────────────────────────────────────────────────────────────
+function _attachHealthCheckButton() {
+    const btn = document.getElementById('tag-manager-health-btn');
+    if (!btn) return;
+    // Önceki listener'ı temizle
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', runTagHealthCheck);
+}
+
+export async function deleteSelectedTags() {
+    if (selectedTagsForMerge.length === 0) return;
+    const lang = store.get('currentLang');
+    const alertOk = lang === 'tr' ? 'Tamam' : 'OK';
+    const ok = await showCustomConfirm(
+        lang === 'tr'
+            ? `${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?`
+            : `Delete ${selectedTagsForMerge.length} selected tags from all videos?`,
+        lang === 'tr' ? 'Sil' : 'Delete',
+        lang === 'tr' ? 'İptal' : 'Cancel'
+    );
+    if (!ok) return;
+    showLoading(true);
+    const deleteCount = selectedTagsForMerge.length;
+    try {
+        for (const tag of selectedTagsForMerge) {
+            await dbDeleteTagFromAllVideos(tag);
+        }
+        deleteTagsLocally(selectedTagsForMerge);
+        showLoading(false);
+        await showCustomAlert(
+            lang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`,
+            alertOk
+        );
+        selectedTagsForMerge = [];
+        renderTagManagerUICallback?.();
+    } catch (err) {
+        showLoading(false);
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                lang === 'tr'
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
+        } else {
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
+        }
+    }
 }
 
 export async function mergeSelectedTags() {
@@ -223,7 +374,6 @@ export async function mergeSelectedTags() {
 
     const tagsToMerge = [...selectedTagsForMerge];
     const mergeCount = tagsToMerge.length;
-
     const ok = await showCustomConfirm(
         lang === 'tr'
             ? `${mergeCount} etiket "${targetName}" çatısı altında birleştirilsin mi?`
@@ -235,10 +385,8 @@ export async function mergeSelectedTags() {
 
     showLoading(true);
     try {
-        // Diziyi tek seferde RPC'ye gönder
         await dbMergeTags(tagsToMerge, targetName);
-        // Lokal store güncelle
-        tagsToMerge.forEach(tag => renameTagLocally(tag, targetName));
+        mergeTagsLocally(tagsToMerge, targetName);
         showLoading(false);
         await showCustomAlert(
             lang === 'tr'
@@ -251,33 +399,17 @@ export async function mergeSelectedTags() {
         renderTagManagerUICallback?.();
     } catch (err) {
         showLoading(false);
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-        console.error(err);
-    }
-}
-
-export async function deleteSelectedTags() {
-    if (selectedTagsForMerge.length === 0) return;
-    const lang = store.get('currentLang');
-    const ok = await showCustomConfirm(
-        lang === 'tr'
-            ? `${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?`
-            : `Delete ${selectedTagsForMerge.length} selected tags from all videos?`,
-        lang === 'tr' ? 'Sil' : 'Delete',
-        lang === 'tr' ? 'İptal' : 'Cancel'
-    );
-    if (!ok) return;
-    showLoading(true);
-    try {
-        for (const tag of selectedTagsForMerge) {
-            await dbDeleteTagFromAllVideos(tag);
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                lang === 'tr'
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
+        } else {
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
         }
-        deleteTagsLocally(selectedTagsForMerge);
-        showLoading(false);
-        renderTagManagerUICallback?.();
-    } catch (err) {
-        showLoading(false);
-        console.error(err);
     }
 }
 

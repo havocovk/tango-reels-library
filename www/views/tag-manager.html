@@ -1,11 +1,16 @@
 <!-- views/tag-manager.html - Etiket Yönetimi görünümü -->
+<!-- ✅ GÜNCELLEME (Adım 3.3): Sağlık Kontrolü butonu eklendi -->
 <div id="view-tag-manager-container" class="view-panel d-none">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
         <h2 id="tag-manager-title" style="color:#f1f5f9; text-shadow:0 0 4px #ff007f;">🏷️ Etiket Yönetimi</h2>
-        <div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <button id="tag-manager-merge-btn" class="tag-action-btn">🔗 Birleştir</button>
             <button id="tag-manager-delete-btn" class="tag-action-btn tag-danger-btn">🗑️ Seçilenleri Sil</button>
             <button id="tag-manager-cleanup-btn" class="tag-action-btn">🧹 Kullanılmayanları Temizle</button>
+            <!-- ✅ YENİ (Adım 3.3): Sağlık Kontrolü butonu -->
+            <button id="tag-manager-health-btn" class="tag-action-btn" style="background:rgba(0,240,255,0.1); border-color:rgba(0,240,255,0.4); color:#00f0ff;">
+                🔍 Sağlık Kontrolü
+            </button>
         </div>
     </div>
     <div style="background:rgba(11,8,19,0.4); border-radius:20px; padding:15px;">
