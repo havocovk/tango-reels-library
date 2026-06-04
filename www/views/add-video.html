@@ -89,20 +89,25 @@
                         <button type="button" id="select-file-btn" class="lang-btn" style="flex:1;">📁 Dosya Seç</button>
                         <input type="file" id="cover-file-input" accept="image/*" style="display: none;">
                     </div>
-                    <button type="button" id="btn-reset-cover" class="lang-btn" style="margin-top:6px; width:100%; background:rgba(239,68,68,0.15);">🗑️ Resmi Sıfırla</button>
+                    <button type="button" id="btn-reset-cover" class="lang-btn" style="width:100%; background:rgba(239,68,68,0.2);">🗑️ Resmi Sıfırla</button>
                 </div>
-                <div class="form-group">
-                    <label id="lbl-downloaded">
-                        <input type="checkbox" id="form-is-downloaded" style="margin-right:6px;">
-                        <span id="lbl-downloaded-text">Drive'a İndirildi</span>
+                <div class="form-group" style="background:rgba(255,0,127,0.05); padding:10px; border-radius:10px;">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="form-is-downloaded">
+                        <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
                     </label>
+                    <div id="drive-url-container" class="d-none" style="margin-top:8px;">
+                        <label id="lbl-drive-url" style="font-size:0.75rem;">Drive Paylaşım Linki:</label>
+                        <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/...">
+                    </div>
                 </div>
-                <div id="drive-url-container" class="form-group d-none">
-                    <label id="lbl-drive-url">Google Drive Linki:</label>
-                    <input type="url" id="form-drive-url" placeholder="https://drive.google.com/...">
+                <div id="assistant-panel" class="compact-assistant-box">
+                    <h4 id="assistant-title">💡 Dosya İsmi Asistanı</h4>
+                    <p id="assistant-text">Drive yüklemesi öncesi önerilen isim şablonu:</p>
+                    <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
                 </div>
-                <button type="button" id="btn-submit-video" class="submit-btn">💾 Kaydet</button>
             </div>
         </div>
+        <button type="submit" id="btn-submit-video" class="btn-primary" style="width:100%; padding:12px; margin-top:16px;">💾 Veritabanına Kaydet</button>
     </form>
 </div>
