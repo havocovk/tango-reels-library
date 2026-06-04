@@ -1,7 +1,8 @@
 <!-- views/library.html -->
 <!-- ✅ GÜNCELLEME (Adım 2.3): "Pratik Başlat" butonu eklendi -->
 <!-- ✅ GÜNCELLEME (Adım 7.2): Grid/Liste toggle butonu eklendi -->
-<!-- ✅ GÜNCELLEME (Button Unification): search-btn → btn-search sınıfı -->
+<!-- ✅ GÜNCELLEME (Button Unification): search-btn → btn-search -->
+<!-- ✅ GÜNCELLEME (Share Fix): share bar ID'leri ve CSS sınıfları düzeltildi -->
 <div id="view-library-container" class="view-panel">
 
     <div class="search-header" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px; align-items:center;" role="search" aria-label="Koleksiyon araması">
@@ -58,11 +59,12 @@
         <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
     </div>
 
-    <div style="margin:8px 0 12px 0; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-        <span style="font-size:0.8rem; color:#475569;">Paylaş:</span>
-        <button id="btn-share-whatsapp" class="btn-share-whatsapp">💬 WhatsApp</button>
-        <button id="btn-copy-list" class="btn-copy-list">📋 Kopyala</button>
-        <button id="btn-print-list" class="btn-print-list">📄 PDF / Yazdır</button>
+    <!-- ✅ Share bar: doğru ID'ler + CSS sınıfları -->
+    <div id="share-bar" style="display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 12px; align-items:center;">
+        <span style="font-size:0.78rem; color:#475569; flex-shrink:0;">📤 Paylaş:</span>
+        <button id="btn-share-whatsapp" class="btn-share-whatsapp" title="WhatsApp'ta paylaş">📱 WhatsApp</button>
+        <button id="btn-share-clipboard" class="btn-share-clipboard" title="Panoya kopyala">📋 Kopyala</button>
+        <button id="btn-share-print" class="btn-share-print" title="Yazdır / PDF olarak kaydet">🖨️ PDF / Yazdır</button>
     </div>
 
     <div id="video-grid" class="video-grid">
@@ -74,4 +76,5 @@
     <div id="load-more-container" class="d-none" style="text-align:center; margin:25px 0 10px 0;">
         <button id="btn-load-more" class="btn-primary" style="padding:12px 35px;">➕ Daha Fazla Video Yükle</button>
     </div>
+
 </div>

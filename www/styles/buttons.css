@@ -2,10 +2,7 @@
    buttons.css - Tüm buton stilleri
    ✅ GÜNCELLEME (Adım 2.3): .btn-start-practice eklendi
    ✅ GÜNCELLEME (Button Unification): Neon buton ailesi eklendi
-      btn-search, btn-action-export, btn-action-import,
-      btn-action-save, btn-action-file, btn-action-reset
-      Hepsi .btn-start-practice / .btn-view-toggle tasarım dilini paylaşır:
-      yarı-şeffaf arka plan + renkli border + neon text + glow
+   ✅ GÜNCELLEME (Share Buttons): btn-share-whatsapp/clipboard/print eklendi
    ============================================ */
 
 /* ── Menü butonları ────────────────────────────────────────── */
@@ -66,7 +63,7 @@
     box-shadow: 0 0 8px #00f0ff;
 }
 
-/* ── Ana buton (gradyan) — yalnızca özel durumlarda ───────── */
+/* ── Ana buton (gradyan) ───────────────────────────────────── */
 .btn-primary {
     background: linear-gradient(135deg, #ff007f, #00f0ff);
     color: #ffffff;
@@ -113,13 +110,9 @@
 
 .btn-start-practice:active { transform: translateY(0); }
 
-/* ── Liste/Toggle butonu (referans tasarım) ───────────────── */
-/* Not: .btn-view-toggle cards.css içinde tanımlı, burada sadece referans */
-
 /* ════════════════════════════════════════════════════════════
-   NEON BUTON AİLESİ
-   Tümü .btn-start-practice / .btn-view-toggle tasarım dilini paylaşır.
-   Yarı-şeffaf arka plan + ince renkli border + neon metin + hover glow
+   NEON BUTON AİLESİ — .btn-start-practice / .btn-view-toggle
+   tasarım dilini paylaşır: yarı-şeffaf bg + renkli border + glow
    ════════════════════════════════════════════════════════════ */
 
 /* ── Ara Butonu (Neon Pembe) ──────────────────────────────── */
@@ -203,7 +196,7 @@
 
 .btn-action-import:active { transform: translateY(0); }
 
-/* ── Veritabanına Kaydet Butonu (Neon Yeşil — geniş) ─────── */
+/* ── Veritabanına Kaydet Butonu (Neon Yeşil — tam genişlik) ─ */
 .btn-action-save {
     background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(0,240,255,0.15));
     border: 1px solid rgba(16, 185, 129, 0.55);
@@ -274,6 +267,8 @@
     white-space: nowrap;
     transition: all 0.25s ease;
     width: 100%;
+    margin-top: 8px;
+    display: block;
 }
 
 .btn-action-reset:hover {
@@ -287,10 +282,93 @@
 .btn-action-reset:active { transform: translateY(0); }
 
 /* ════════════════════════════════════════════════════════════
+   PAYLAŞIM BUTON AİLESİ (WhatsApp, Kopyala, PDF/Yazdır)
+   Aynı neon tasarım dili — daha kompakt padding (paylaş çubuğu)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── WhatsApp (Neon Yeşil — WhatsApp rengi) ───────────────── */
+.btn-share-whatsapp {
+    background: linear-gradient(135deg, rgba(37,211,102,0.15), rgba(0,240,255,0.06));
+    border: 1px solid rgba(37, 211, 102, 0.45);
+    color: #25d366;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.1);
+}
+
+.btn-share-whatsapp:hover {
+    background: linear-gradient(135deg, rgba(37,211,102,0.28), rgba(0,240,255,0.1));
+    border-color: rgba(37, 211, 102, 0.8);
+    box-shadow: 0 0 16px rgba(37, 211, 102, 0.3);
+    transform: translateY(-1px);
+    color: #4ade80;
+}
+
+.btn-share-whatsapp:active { transform: translateY(0); }
+
+/* ── Kopyala (Neon Cyan) ──────────────────────────────────── */
+.btn-share-clipboard {
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.35);
+    color: #00f0ff;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.08);
+}
+
+.btn-share-clipboard:hover {
+    background: rgba(0, 240, 255, 0.18);
+    border-color: rgba(0, 240, 255, 0.65);
+    box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+    transform: translateY(-1px);
+    color: #3cefff;
+}
+
+.btn-share-clipboard:active { transform: translateY(0); }
+
+/* ── PDF / Yazdır (Neon Pembe) ────────────────────────────── */
+.btn-share-print {
+    background: linear-gradient(135deg, rgba(255,0,127,0.12), rgba(0,240,255,0.05));
+    border: 1px solid rgba(255, 0, 127, 0.4);
+    color: #ff007f;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.08);
+}
+
+.btn-share-print:hover {
+    background: linear-gradient(135deg, rgba(255,0,127,0.25), rgba(0,240,255,0.1));
+    border-color: rgba(255, 0, 127, 0.75);
+    box-shadow: 0 0 16px rgba(255, 0, 127, 0.25);
+    transform: translateY(-1px);
+    color: #ff4da6;
+}
+
+.btn-share-print:active { transform: translateY(0); }
+
+/* ════════════════════════════════════════════════════════════
    DİĞER BUTONLAR (değişmedi)
    ════════════════════════════════════════════════════════════ */
 
-/* ── Tehlikeli buton (temizle, sil) ───────────────────────── */
+/* ── Tehlikeli buton ───────────────────────────────────────── */
 .btn-clear-danger {
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -413,6 +491,14 @@
     .btn-action-import {
         width: 100%;
         justify-content: center;
+    }
+
+    .btn-share-whatsapp,
+    .btn-share-clipboard,
+    .btn-share-print {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
     }
 
     .btn-action-file { flex: 1; }
