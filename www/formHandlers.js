@@ -1,6 +1,6 @@
 // formHandlers.js - Video ekleme ve güncelleme
 // ✅ GÜNCELLEME (Adım 6.1): URL olmadan Drive linki yeterli
-// ✅ GÜNCELLEME (Adım 4.1): YouTube metadata (başlık, süre, açıklama) otomatik çekiliyor
+// ✅ GÜNCELLEME (Adım 4.1): YouTube metadata bilgi kutusu (başlık + süre)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -72,13 +72,17 @@ export function extractYoutubeVideoId(url) {
 
 // ─────────────────────────────────────────────────────────────
 // YouTube thumbnail + metadata otomatik çekme
-// ✅ GÜNCELLEME (Adım 4.1): Thumbnail yanı sıra başlık, süre ve açıklama da çekiliyor
+// ✅ GÜNCELLEME (Adım 4.1): Başlık ve süre bilgi kutusunda gösteriliyor
 // ─────────────────────────────────────────────────────────────
 export async function autoFetchThumbnail(url) {
     const videoId = extractYoutubeVideoId(url);
-    if (!videoId) return null;
+    if (!videoId) {
+        // YouTube değilse bilgi kutusunu gizle
+        _hideMetaBox();
+        return null;
+    }
 
-    // 1. Thumbnail — API key gerekmez, her zaman çalışır
+    // 1. Thumbnail — API key gerekmez
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     const imgPreview = document.getElementById('image-preview');
     const dropAreaText = document.getElementById('drop-area-text');
@@ -88,46 +92,53 @@ export async function autoFetchThumbnail(url) {
         if (dropAreaText) dropAreaText.classList.add('d-none');
     }
 
-    // 2. YouTube Metadata (Adım 4.1) — Vercel fonksiyonuna istek at
-    // Başarısız olursa sessizce geç; thumbnail yine de çalışır
+    // 2. Metadata — yükleniyor göster
+    _showMetaBox('⏳ Video bilgileri yükleniyor...', '');
+
     try {
         const metaRes = await fetch(`/api/youtube-metadata?videoId=${encodeURIComponent(videoId)}`);
         if (metaRes.ok) {
             const meta = await metaRes.json();
 
-            // Başlığı notes alanına placeholder olarak yaz (üzerine yazmadan)
-            const notesInput = document.getElementById('form-notes');
-            if (notesInput && !notesInput.value.trim()) {
-                // Değer boşsa placeholder olarak göster
-                notesInput.placeholder = meta.title || '';
-            }
-
-            // Süreyi store'a geçici olarak kaydet (kart render'ında kullanılacak)
-            if (meta.duration) {
-                store.set('pendingDuration', meta.duration);
-            }
-
-            // Ham açıklamayı store'a yaz (Adım 4.2 AI etiket önerisi bunu kullanacak)
-            if (meta.description) {
-                store.set('pendingDescription', meta.description);
-            }
-
-            // Başlığı da sakla (Adım 4.2 için)
+            // Bilgi kutusunu doldur
             if (meta.title) {
-                store.set('pendingTitle', meta.title);
+                _showMetaBox(meta.title, meta.duration || '');
             }
+
+            // Store'a geçici kaydet (Adım 4.2 AI etiket önerisi için)
+            store.set('pendingDuration', meta.duration || null);
+            store.set('pendingDescription', meta.description || null);
+            store.set('pendingTitle', meta.title || null);
+        } else {
+            _hideMetaBox();
         }
     } catch (err) {
-        // Metadata çekimi başarısız — thumbnail yine de döner, hata gösterme
         console.warn('[Adım 4.1] YouTube metadata çekilemedi:', err.message);
+        _hideMetaBox();
     }
 
     return thumbnailUrl;
 }
 
+// Metadata bilgi kutusunu göster
+function _showMetaBox(title, duration) {
+    const box = document.getElementById('yt-meta-box');
+    if (!box) return;
+    box.classList.remove('d-none');
+    const titleEl = document.getElementById('yt-meta-title');
+    const durEl = document.getElementById('yt-meta-duration');
+    if (titleEl) titleEl.textContent = title;
+    if (durEl) durEl.textContent = duration ? `⏱ ${duration}` : '';
+}
+
+// Metadata bilgi kutusunu gizle
+function _hideMetaBox() {
+    const box = document.getElementById('yt-meta-box');
+    if (box) box.classList.add('d-none');
+}
+
 // ─────────────────────────────────────────────────────────────
 // handleFormSubmit — Video kaydetme / güncelleme
-// ✅ GÜNCELLEME (Adım 4.1): duration alanı payload'a eklendi
 // ─────────────────────────────────────────────────────────────
 export async function handleFormSubmit(e) {
     e.preventDefault();
@@ -149,25 +160,21 @@ export async function handleFormSubmit(e) {
         const curr = store.get('globalVideos').find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
     }
-    // Kapak yoksa ve URL YouTube ise thumbnail otomatik çek
     if (!cover_url && url && extractYoutubeVideoId(url)) {
         cover_url = await autoFetchThumbnail(url);
     }
 
-    // ── Doğrulama ──────────────────────────────────────────────
+    // ── Doğrulama ──
     if (!instructor_id) {
         return showCustomAlert(
-            currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!',
-            okText
+            currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText
         );
     }
     if (is_downloaded && !drive_url) {
         return showCustomAlert(
-            currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!',
-            okText
+            currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText
         );
     }
-    // URL veya Drive linkinden en az biri yeterli
     if (!url && !drive_url) {
         return showCustomAlert(
             currentLang === 'tr'
@@ -177,27 +184,13 @@ export async function handleFormSubmit(e) {
         );
     }
 
-    // ── Platform ve URL tespiti ──────────────────────────────────
-    let platform = (is_downloaded || (!url && drive_url))
-        ? 'drive'
-        : detectPlatform(url, false);
-
+    let platform = (is_downloaded || (!url && drive_url)) ? 'drive' : detectPlatform(url, false);
     let finalUrl = url;
     if (!finalUrl || finalUrl === '') {
         finalUrl = `drive_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
     }
 
-    // ── Notes alanı ──────────────────────────────────────────────
-    // Kullanıcı notes alanına bir şey yazmadıysa placeholder'daki başlığı kullan
-    const notesInput = document.getElementById('form-notes');
-    let notes = notesInput ? notesInput.value.trim() : '';
-    if (!notes && notesInput && notesInput.placeholder) {
-        // Placeholder'da başlık varsa onu not olarak kaydet
-        // (kullanıcı placeholder'ı görmüş ama değiştirmemiş demektir)
-        // NOT: Sadece placeholder'ı otomatik kaydetmiyoruz — boş bırakma kararını kullanıcıya bırakıyoruz
-    }
-
-    // ── Adım 4.1: duration store'dan al ─────────────────────────
+    // Adım 4.1: duration store'dan al
     const duration = store.get('pendingDuration') || null;
 
     const payload = {
@@ -210,8 +203,6 @@ export async function handleFormSubmit(e) {
         drive_url: drive_url || null,
         cover_url,
         platform,
-        notes: notes || null,
-        // ✅ ADIM 4.1: duration alanı eklendi
         duration: duration
     };
 
@@ -221,7 +212,6 @@ export async function handleFormSubmit(e) {
         const instructor = instructors.find(i => i.id === parseInt(instructor_id));
 
         if (editingVideoId) {
-            // ── Mevcut video güncelleme ──
             if (updatedVideo) {
                 updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.updateVideoLocally(editingVideoId, updatedVideo);
@@ -236,7 +226,6 @@ export async function handleFormSubmit(e) {
                 editingVideoUpdatedAt = newData.updated_at;
             }
         } else {
-            // ── Yeni video ekleme ──
             if (updatedVideo) {
                 updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.addVideoLocally(updatedVideo);
@@ -252,7 +241,6 @@ export async function handleFormSubmit(e) {
             }
         }
 
-        // ── Başarı mesajı ──
         await showCustomAlert(
             editingVideoId
                 ? (currentLang === 'tr' ? '✅ Video güncellendi!' : '✅ Video updated!')
@@ -260,70 +248,51 @@ export async function handleFormSubmit(e) {
             okText
         );
 
-        // ── Formu sıfırla ──
-        resetForm();
+        // Formu sıfırla
+        _resetForm();
 
-        // ── Store temizle (Adım 4.1 geçici veriler) ──
+        // Store temizle
         store.set('pendingDuration', null);
         store.set('pendingDescription', null);
         store.set('pendingTitle', null);
 
-        // ── View'a dön ──
         if (callSwitchViewCallback) callSwitchViewCallback('library');
 
     } catch (err) {
         console.error('Form kayıt hatası:', err);
         await showCustomAlert(
-            currentLang === 'tr'
-                ? `Hata: ${err.message}`
-                : `Error: ${err.message}`,
+            currentLang === 'tr' ? `Hata: ${err.message}` : `Error: ${err.message}`,
             okText
         );
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// resetForm — Formu temizle
-// ─────────────────────────────────────────────────────────────
-function resetForm() {
-    const fields = [
-        'form-video-url', 'form-partner-name', 'form-drive-url', 'form-notes'
-    ];
-    fields.forEach(id => {
+function _resetForm() {
+    ['form-video-url', 'form-partner-name', 'form-drive-url'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) {
-            el.value = '';
-            el.placeholder = '';
-        }
+        if (el) el.value = '';
     });
 
-    // Etiketleri sıfırla
     formTagsArray.length = 0;
     renderFormChips();
 
-    // Kapak resmini sıfırla
     resetUploadedCoverUrl();
     const imgPreview = document.getElementById('image-preview');
-    if (imgPreview) {
-        imgPreview.src = '';
-        imgPreview.classList.add('d-none');
-    }
+    if (imgPreview) { imgPreview.src = ''; imgPreview.classList.add('d-none'); }
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText) dropAreaText.classList.remove('d-none');
 
-    // Drive URL alanını gizle
     const driveContainer = document.getElementById('drive-url-container');
     if (driveContainer) driveContainer.classList.add('d-none');
 
-    // Checkbox sıfırla
     const isDownloaded = document.getElementById('form-is-downloaded');
     if (isDownloaded) isDownloaded.checked = false;
 
-    // Editing state sıfırla
     store.set('editingVideoId', null);
     editingVideoUpdatedAt = null;
 
-    // Smart assistant sıfırla
+    _hideMetaBox();
+
     const currentLang = store.get('currentLang');
     updateSmartFilenameAssistant(currentLang, []);
 }

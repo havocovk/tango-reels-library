@@ -1,4 +1,5 @@
 <!-- views/add-video.html - Yeni video ekleme/düzenleme formu -->
+<!-- ✅ GÜNCELLEME (Adım 4.1): YouTube metadata bilgi kutusu eklendi -->
 <div id="view-add-container" class="view-panel d-none">
     <form id="add-video-form" class="glass-form" style="max-width:900px; margin:0 auto;">
         <h2 id="form-title">➕ Yeni Video Kaydet</h2>
@@ -23,6 +24,34 @@
                 <div class="form-group">
                     <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
                     <input type="url" id="form-video-url" placeholder="https://... (Drive için boş bırakabilirsiniz)">
+                    <!-- ✅ YENİ (Adım 4.1): YouTube metadata bilgi kutusu -->
+                    <div id="yt-meta-box" class="d-none" style="
+                        margin-top: 8px;
+                        padding: 10px 14px;
+                        background: rgba(0, 240, 255, 0.06);
+                        border: 1px solid rgba(0, 240, 255, 0.25);
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    ">
+                        <span style="font-size: 1.2rem;">📹</span>
+                        <div style="flex:1; min-width:0;">
+                            <div id="yt-meta-title" style="
+                                font-size: 0.85rem;
+                                font-weight: 600;
+                                color: #f1f5f9;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            "></div>
+                            <div id="yt-meta-duration" style="
+                                font-size: 0.75rem;
+                                color: #00f0ff;
+                                margin-top: 2px;
+                            "></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="atkk-inline-row">
                     <div class="form-group">
@@ -56,30 +85,24 @@
                         <span id="drop-area-text">📸 Tıklayıp Ctrl + V ile ekran görüntüsü yapıştırın</span>
                         <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
                     </div>
-                    <!-- 🔥 YENİ: Dosya seçici butonu ve gizli input -->
                     <div style="display: flex; gap: 8px; margin-top: 8px;">
                         <button type="button" id="select-file-btn" class="lang-btn" style="flex:1;">📁 Dosya Seç</button>
                         <input type="file" id="cover-file-input" accept="image/*" style="display: none;">
                     </div>
-                    <button type="button" id="btn-reset-cover" class="lang-btn" style="width:100%; background:rgba(239,68,68,0.2);">🗑️ Resmi Sıfırla</button>
+                    <button type="button" id="btn-reset-cover" class="lang-btn" style="margin-top:6px; width:100%; background:rgba(239,68,68,0.15);">🗑️ Resmi Sıfırla</button>
                 </div>
-                <div class="form-group" style="background:rgba(255,0,127,0.05); padding:10px; border-radius:10px;">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="form-is-downloaded">
-                        <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
+                <div class="form-group">
+                    <label id="lbl-downloaded">
+                        <input type="checkbox" id="form-is-downloaded" style="margin-right:6px;">
+                        <span id="lbl-downloaded-text">Drive'a İndirildi</span>
                     </label>
-                    <div id="drive-url-container" class="d-none" style="margin-top:8px;">
-                        <label id="lbl-drive-url" style="font-size:0.75rem;">Drive Paylaşım Linki:</label>
-                        <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/...">
-                    </div>
                 </div>
-                <div id="assistant-panel" class="compact-assistant-box">
-                    <h4 id="assistant-title">💡 Dosya İsmi Asistanı</h4>
-                    <p id="assistant-text">Drive yüklemesi öncesi önerilen isim şablonu:</p>
-                    <div id="assistant-filename-output" class="assistant-code">example_filename.mp4</div>
+                <div id="drive-url-container" class="form-group d-none">
+                    <label id="lbl-drive-url">Google Drive Linki:</label>
+                    <input type="url" id="form-drive-url" placeholder="https://drive.google.com/...">
                 </div>
+                <button type="button" id="btn-submit-video" class="submit-btn">💾 Kaydet</button>
             </div>
         </div>
-        <button type="submit" id="btn-submit-video" class="btn-primary" style="width:100%; padding:12px; margin-top:16px;">💾 Veritabanına Kaydet</button>
     </form>
 </div>
