@@ -1,20 +1,19 @@
 <!-- views/library.html -->
 <!-- ✅ GÜNCELLEME (Adım 2.3): "Pratik Başlat" butonu eklendi -->
 <!-- ✅ GÜNCELLEME (Adım 7.2): Grid/Liste toggle butonu eklendi -->
+<!-- ✅ GÜNCELLEME (Button Unification): search-btn → btn-search sınıfı -->
 <div id="view-library-container" class="view-panel">
 
-    <!-- ✅ YENİ (Adım 7.4): role="search" ile ekran okuyucu uyumu -->
     <div class="search-header" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px; align-items:center;" role="search" aria-label="Koleksiyon araması">
         <input type="text" id="search-input" class="form-control"
             placeholder="Eğitmen, etiket, platform veya not ara..."
             aria-label="Koleksiyonda ara"
             style="flex:3; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px 16px; border-radius:12px; color:#f1f5f9; outline:none;">
-        <button id="search-btn" class="btn-primary" aria-label="Ara">🔍 Ara</button>
+        <button id="search-btn" class="btn-search" aria-label="Ara">🔍 Ara</button>
         <button id="btn-start-practice" class="btn-start-practice" aria-label="Pratik modunu başlat">🎯 Pratik Başlat</button>
         <button id="btn-view-toggle" class="btn-view-toggle" title="Görünümü değiştir" aria-label="Liste veya grid görünümüne geç">☰ Liste</button>
     </div>
 
-    <!-- ✅ YENİ (Adım 7.4): Filtre alanlarına aria-label eklendi -->
     <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px; margin-bottom:12px;" role="group" aria-label="Filtreler">
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <select id="filter-role-select" aria-label="Role göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
@@ -33,6 +32,9 @@
         <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <select id="filter-date-select" aria-label="Tarihe göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
                 <option value="all">Tüm Tarihler</option>
+                <option value="week">Bu Hafta</option>
+                <option value="month">Bu Ay</option>
+                <option value="3months">Son 3 Ay</option>
             </select>
             <select id="filter-platform-select" aria-label="Platforma göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
                 <option value="all">Tüm Platformlar</option>
@@ -51,36 +53,16 @@
     </div>
 
     <div id="total-video-count" style="text-align:right; margin:10px 0 5px 0; color:#00f0ff; font-size:1.1rem;"></div>
+
     <div id="clear-favorites-container" class="d-none" style="margin:10px 0;">
         <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
     </div>
 
-    <!-- ✅ YENİ (Adım 6.4): Paylaşım çubuğu — her zaman görünür -->
-    <div id="share-bar" style="
-        display:flex; gap:8px; flex-wrap:wrap;
-        margin:6px 0 12px; align-items:center;
-    ">
-        <span style="font-size:0.7rem; color:#475569; flex-shrink:0;">
-            📤 Paylaş:
-        </span>
-        <button id="btn-share-whatsapp" title="WhatsApp'ta paylaş" style="
-            padding:5px 12px; border-radius:8px; font-size:0.76rem; font-weight:600;
-            background:rgba(37,211,102,0.12); border:1px solid rgba(37,211,102,0.4);
-            color:#25d366; cursor:pointer; font-family:'Poppins',sans-serif;
-            transition:background 0.15s;
-        ">📱 WhatsApp</button>
-        <button id="btn-share-clipboard" title="Panoya kopyala" style="
-            padding:5px 12px; border-radius:8px; font-size:0.76rem; font-weight:600;
-            background:rgba(0,240,255,0.08); border:1px solid rgba(0,240,255,0.3);
-            color:#00f0ff; cursor:pointer; font-family:'Poppins',sans-serif;
-            transition:background 0.15s;
-        ">📋 Kopyala</button>
-        <button id="btn-share-print" title="Yazdır / PDF olarak kaydet" style="
-            padding:5px 12px; border-radius:8px; font-size:0.76rem; font-weight:600;
-            background:rgba(255,0,127,0.08); border:1px solid rgba(255,0,127,0.3);
-            color:#ff6fae; cursor:pointer; font-family:'Poppins',sans-serif;
-            transition:background 0.15s;
-        ">🖨️ PDF / Yazdır</button>
+    <div style="margin:8px 0 12px 0; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:0.8rem; color:#475569;">Paylaş:</span>
+        <button id="btn-share-whatsapp" class="btn-share-whatsapp">💬 WhatsApp</button>
+        <button id="btn-copy-list" class="btn-copy-list">📋 Kopyala</button>
+        <button id="btn-print-list" class="btn-print-list">📄 PDF / Yazdır</button>
     </div>
 
     <div id="video-grid" class="video-grid">
@@ -92,5 +74,4 @@
     <div id="load-more-container" class="d-none" style="text-align:center; margin:25px 0 10px 0;">
         <button id="btn-load-more" class="btn-primary" style="padding:12px 35px;">➕ Daha Fazla Video Yükle</button>
     </div>
-
 </div>

@@ -1,9 +1,14 @@
 /* ============================================
    buttons.css - Tüm buton stilleri
    ✅ GÜNCELLEME (Adım 2.3): .btn-start-practice eklendi
+   ✅ GÜNCELLEME (Button Unification): Neon buton ailesi eklendi
+      btn-search, btn-action-export, btn-action-import,
+      btn-action-save, btn-action-file, btn-action-reset
+      Hepsi .btn-start-practice / .btn-view-toggle tasarım dilini paylaşır:
+      yarı-şeffaf arka plan + renkli border + neon text + glow
    ============================================ */
 
-/* Menü butonları */
+/* ── Menü butonları ────────────────────────────────────────── */
 .menu-items {
     display: flex;
     flex-direction: column;
@@ -42,7 +47,7 @@
     box-shadow: inset 0 0 8px rgba(0,240,255,0.2);
 }
 
-/* Dil butonu */
+/* ── Dil butonu ────────────────────────────────────────────── */
 .lang-btn {
     background: rgba(255, 0, 127, 0.15);
     border: 1px solid rgba(0, 240, 255, 0.4);
@@ -61,7 +66,7 @@
     box-shadow: 0 0 8px #00f0ff;
 }
 
-/* Ana buton (gradyan) */
+/* ── Ana buton (gradyan) — yalnızca özel durumlarda ───────── */
 .btn-primary {
     background: linear-gradient(135deg, #ff007f, #00f0ff);
     color: #ffffff;
@@ -81,10 +86,7 @@
     background: linear-gradient(135deg, #ff4da6, #3cefff);
 }
 
-/* ✅ YENİ (Adım 2.3): Pratik Başlat butonu
-   Synthwave temasına uygun neon yeşil-cyan aksanı.
-   Koleksiyon sayfasında arama barının yanında durur.
-*/
+/* ── Pratik Başlat butonu (referans tasarım) ──────────────── */
 .btn-start-practice {
     background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,240,255,0.15));
     border: 1px solid rgba(16, 185, 129, 0.5);
@@ -109,11 +111,186 @@
     color: #34d399;
 }
 
-.btn-start-practice:active {
-    transform: translateY(0);
+.btn-start-practice:active { transform: translateY(0); }
+
+/* ── Liste/Toggle butonu (referans tasarım) ───────────────── */
+/* Not: .btn-view-toggle cards.css içinde tanımlı, burada sadece referans */
+
+/* ════════════════════════════════════════════════════════════
+   NEON BUTON AİLESİ
+   Tümü .btn-start-practice / .btn-view-toggle tasarım dilini paylaşır.
+   Yarı-şeffaf arka plan + ince renkli border + neon metin + hover glow
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Ara Butonu (Neon Pembe) ──────────────────────────────── */
+.btn-search {
+    background: linear-gradient(135deg, rgba(255,0,127,0.18), rgba(0,240,255,0.08));
+    border: 1px solid rgba(255, 0, 127, 0.5);
+    color: #ff007f;
+    padding: 10px 20px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    box-shadow: 0 0 12px rgba(255, 0, 127, 0.15);
 }
 
-/* Tehlikeli buton (temizle, sil) */
+.btn-search:hover {
+    background: linear-gradient(135deg, rgba(255,0,127,0.32), rgba(0,240,255,0.15));
+    border-color: rgba(255, 0, 127, 0.85);
+    box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+    transform: translateY(-2px);
+    color: #ff4da6;
+}
+
+.btn-search:active { transform: translateY(0); }
+
+/* ── Yedekle / Dışa Aktar Butonu (Neon Cyan) ─────────────── */
+.btn-action-export {
+    background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(16,185,129,0.08));
+    border: 1px solid rgba(0, 240, 255, 0.5);
+    color: #00f0ff;
+    padding: 10px 20px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+}
+
+.btn-action-export:hover {
+    background: linear-gradient(135deg, rgba(0,240,255,0.28), rgba(16,185,129,0.15));
+    border-color: rgba(0, 240, 255, 0.85);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    transform: translateY(-2px);
+    color: #3cefff;
+}
+
+.btn-action-export:active { transform: translateY(0); }
+
+/* ── Yedekten Geri Yükle Butonu (Neon Mor) ───────────────── */
+.btn-action-import {
+    background: linear-gradient(135deg, rgba(192,132,252,0.18), rgba(0,240,255,0.06));
+    border: 1px solid rgba(192, 132, 252, 0.5);
+    color: #c084fc;
+    padding: 10px 20px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    box-shadow: 0 0 12px rgba(192, 132, 252, 0.15);
+}
+
+.btn-action-import:hover {
+    background: linear-gradient(135deg, rgba(192,132,252,0.32), rgba(0,240,255,0.12));
+    border-color: rgba(192, 132, 252, 0.85);
+    box-shadow: 0 0 20px rgba(192, 132, 252, 0.4);
+    transform: translateY(-2px);
+    color: #d8b4fe;
+}
+
+.btn-action-import:active { transform: translateY(0); }
+
+/* ── Veritabanına Kaydet Butonu (Neon Yeşil — geniş) ─────── */
+.btn-action-save {
+    background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(0,240,255,0.15));
+    border: 1px solid rgba(16, 185, 129, 0.55);
+    color: #10b981;
+    padding: 14px 20px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+    width: 100%;
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-action-save:hover {
+    background: linear-gradient(135deg, rgba(16,185,129,0.38), rgba(0,240,255,0.25));
+    border-color: rgba(16, 185, 129, 0.85);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
+    transform: translateY(-2px);
+    color: #34d399;
+}
+
+.btn-action-save:active { transform: translateY(0); }
+
+/* ── Dosya Seç Butonu (Neon Cyan — kompakt) ──────────────── */
+.btn-action-file {
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.38);
+    color: #00f0ff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    flex: 1;
+}
+
+.btn-action-file:hover {
+    background: rgba(0, 240, 255, 0.18);
+    border-color: rgba(0, 240, 255, 0.65);
+    box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.btn-action-file:active { transform: translateY(0); }
+
+/* ── Resmi Sıfırla Butonu (Neon Kırmızı) ─────────────────── */
+.btn-action-reset {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.42);
+    color: #ef4444;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+    width: 100%;
+}
+
+.btn-action-reset:hover {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: rgba(239, 68, 68, 0.72);
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.28);
+    transform: translateY(-1px);
+    color: #f87171;
+}
+
+.btn-action-reset:active { transform: translateY(0); }
+
+/* ════════════════════════════════════════════════════════════
+   DİĞER BUTONLAR (değişmedi)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Tehlikeli buton (temizle, sil) ───────────────────────── */
 .btn-clear-danger {
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -132,7 +309,7 @@
     transform: translateY(-1px);
 }
 
-/* Etiket yönetimi butonları */
+/* ── Etiket yönetimi butonları ────────────────────────────── */
 .tag-action-btn {
     background: rgba(0, 240, 255, 0.15);
     border: 1px solid rgba(0, 240, 255, 0.4);
@@ -148,9 +325,7 @@
     gap: 4px;
 }
 
-.tag-action-btn:hover {
-    background: rgba(0, 240, 255, 0.3);
-}
+.tag-action-btn:hover { background: rgba(0, 240, 255, 0.3); }
 
 .tag-danger-btn {
     background: rgba(239, 68, 68, 0.2);
@@ -158,11 +333,9 @@
     color: #ef4444;
 }
 
-.tag-danger-btn:hover {
-    background: rgba(239, 68, 68, 0.4);
-}
+.tag-danger-btn:hover { background: rgba(239, 68, 68, 0.4); }
 
-/* Kart içi butonlar (düzenle/sil) */
+/* ── Kart içi butonlar ────────────────────────────────────── */
 .card-crud-btn {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255, 0, 127, 0.2);
@@ -208,7 +381,7 @@
     background: rgba(255, 0, 127, 0.1);
 }
 
-/* Mobil buton düzenlemeleri */
+/* ── Mobil buton düzenlemeleri ───────────────────────────── */
 @media screen and (max-width: 768px) {
     .menu-items {
         flex-direction: row;
@@ -234,10 +407,15 @@
         align-items: center;
     }
 
-    .btn-start-practice {
+    .btn-start-practice,
+    .btn-search,
+    .btn-action-export,
+    .btn-action-import {
         width: 100%;
         justify-content: center;
     }
+
+    .btn-action-file { flex: 1; }
 
     .fav-star-btn,
     .card-crud-btn,
