@@ -493,6 +493,7 @@ canvas { max-height: 350px; width: 100%; }
 
 /* ============================================
    ✅ YENİ (Adım 4.3): Öğrenme Yolu Önerisi Kartı
+   ✅ DÜZELTME: lp-continue-tags, lp-tag-meta stilleri eklendi
    ============================================ */
 
 .learning-path-card {
@@ -514,9 +515,7 @@ canvas { max-height: 350px; width: 100%; }
     text-shadow: 0 0 8px rgba(192,132,252,0.4);
 }
 
-.lp-icon {
-    font-size: 1.3rem;
-}
+.lp-icon { font-size: 1.3rem; }
 
 .lp-refresh-btn {
     margin-left: auto;
@@ -529,9 +528,7 @@ canvas { max-height: 350px; width: 100%; }
     font-size: 0.85rem;
     transition: all 0.2s;
 }
-.lp-refresh-btn:hover {
-    background: rgba(192,132,252,0.3);
-}
+.lp-refresh-btn:hover { background: rgba(192,132,252,0.3); }
 
 .lp-overall {
     display: flex;
@@ -543,19 +540,9 @@ canvas { max-height: 350px; width: 100%; }
     border-radius: 12px;
 }
 
-.lp-stat {
-    font-size: 0.82rem;
-    color: #94a3b8;
-}
-
-.lp-stat strong {
-    color: #f1f5f9;
-}
-
-.lp-rate {
-    color: #c084fc !important;
-    font-weight: 600;
-}
+.lp-stat { font-size: 0.82rem; color: #94a3b8; }
+.lp-stat strong { color: #f1f5f9; }
+.lp-rate { color: #c084fc !important; font-weight: 600; }
 
 .lp-suggestions {
     display: flex;
@@ -572,41 +559,24 @@ canvas { max-height: 350px; width: 100%; }
     border-left: 3px solid;
 }
 
-.lp-continue {
-    background: rgba(0, 240, 255, 0.06);
-    border-color: #00f0ff;
-}
-
-.lp-next {
-    background: rgba(255, 0, 127, 0.06);
-    border-color: #ff007f;
-}
-
-.lp-almost {
-    background: rgba(250, 204, 21, 0.06);
-    border-color: #facc21;
-}
-
-.lp-neglected {
-    background: rgba(239, 68, 68, 0.06);
-    border-color: #ef4444;
-}
+.lp-continue  { background: rgba(0, 240, 255, 0.06); border-color: #00f0ff; }
+.lp-next      { background: rgba(255, 0, 127, 0.06); border-color: #ff007f; }
+.lp-almost    { background: rgba(250, 204, 21, 0.06); border-color: #facc21; }
+.lp-neglected { background: rgba(239, 68, 68, 0.06);  border-color: #ef4444; }
 
 .lp-suggestion-icon {
     font-size: 1.3rem;
     flex-shrink: 0;
-    margin-top: 1px;
+    margin-top: 2px;
 }
 
-.lp-suggestion-content {
-    flex: 1;
-}
+.lp-suggestion-content { flex: 1; }
 
 .lp-suggestion-title {
     font-size: 0.82rem;
     font-weight: 600;
     color: #f1f5f9;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .lp-suggestion-detail {
@@ -618,6 +588,25 @@ canvas { max-height: 350px; width: 100%; }
     flex-wrap: wrap;
 }
 
+/* ── Hemen Devam Et — birden fazla etiket satırı ── */
+.lp-continue-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lp-continue-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lp-tag-meta {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
 .lp-tag-badge {
     background: rgba(192,132,252,0.15);
     color: #c084fc;
@@ -626,6 +615,7 @@ canvas { max-height: 350px; width: 100%; }
     border-radius: 8px;
     font-size: 0.78rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .lp-empty {
@@ -633,13 +623,11 @@ canvas { max-height: 350px; width: 100%; }
     color: #64748b;
     padding: 12px;
     text-align: center;
+    line-height: 1.6;
 }
 
 @media (max-width: 768px) {
-    .lp-overall {
-        gap: 8px;
-    }
-    .lp-stat {
-        font-size: 0.78rem;
-    }
+    .lp-overall { gap: 8px; }
+    .lp-stat { font-size: 0.78rem; }
+    .lp-continue-tag-row { flex-direction: column; align-items: flex-start; }
 }
