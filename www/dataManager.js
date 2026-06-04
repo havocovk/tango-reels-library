@@ -3,6 +3,7 @@
 // ✅ GÜNCELLEME (Adım 2.2): IndexedDB offline önbellek eklendi
 // ✅ GÜNCELLEME (Adım 3.3): renderTagManagerUI tagManager.js'e taşındı
 // ✅ GÜNCELLEME (Adım 3.3 v2): ensureAllTagsHaveColors çağrısı eklendi
+// ✅ GÜNCELLEME (Backup v2.0): setupBackupButtons içinde exportToJSON async oldu
 import { translations } from './i18n.js';
 import { dbFetchInstructors, dbFetchVideos, dbFetchVideosPage, dbFetchFavorites } from './tangoVeritabani.js';
 import { populateFilterDropdowns } from './tangoFilters.js';
@@ -20,7 +21,7 @@ import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 import { getDueTodayCount } from './learning/spacedRepetition.js';
 import { ensureAllTagsHaveColors } from './tagColorManager.js';
-import { renderLearningPathCard } from './learningPathAdvisor.js'; // ✅ ADIM 4.3
+import { renderLearningPathCard } from './learningPathAdvisor.js';
 import {
     initOfflineCache,
     cacheVideos,
@@ -37,7 +38,7 @@ export async function fetchInstructors() {
         const instructors = await dbFetchInstructors();
         store.set('globalInstructors', instructors);
 
-        // ✅ ADIM 2.2: Başarılı çekimi önbelleğe yaz
+        // Başarılı çekimi önbelleğe yaz
         cacheInstructors(instructors).catch(() => {});
 
         const select = document.getElementById('form-instructor-select');
@@ -52,9 +53,9 @@ export async function fetchInstructors() {
         }
         updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
     } catch (err) {
-        console.error(err);
+        console.error('fetchInstructors hatası:', err);
 
-        // ✅ ADIM 2.2: Ağ hatası → önbellekten eğitmenleri yükle
+        // Ağ hatası → önbellekten eğitmenleri yükle
         const cached = await getCachedInstructors();
         if (cached) {
             store.set('globalInstructors', cached);
@@ -118,7 +119,7 @@ export async function fetchVideos() {
             store.set('globalVideos', [...allVideos]);
         }
 
-        // ✅ ADIM 2.2: Başarılı çekimi IndexedDB'e yaz (arka planda)
+        // Başarılı çekimi IndexedDB'e yaz (arka planda)
         cacheVideos(allVideos).catch(() => {});
 
         const finalVideos = store.get('globalVideos');
@@ -140,8 +141,8 @@ export async function fetchVideos() {
     } catch (err) {
         console.error('fetchVideos hatası:', err);
 
-        // ✅ ADIM 2.2: Ağ hatası → önbellekten yükle
-        const cachedVideos = await getCachedVideos();
+        // Ağ hatası → önbellekten yükle
+        const cachedVideos     = await getCachedVideos();
         const cachedInstructors = await getCachedInstructors();
 
         if (cachedVideos) {
@@ -166,13 +167,12 @@ export async function fetchVideos() {
             if (store.get('currentView') === 'stats') renderStatsPanel();
             if (store.get('currentView') === 'tagManager') renderTagManagerUI();
 
-            // Kullanıcıya offline modda olduğunu bildir
             import('./toast.js').then(({ showToast }) => {
                 showToast('📴 Çevrimdışı mod — son kayıtlı veri gösteriliyor', 'info', 5000);
             });
         } else {
             const grid = document.getElementById('video-grid');
-            if (grid) grid.innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[store.get('currentLang')].error || 'Bağlantı hatası'}</div>`;
+            if (grid) grid.innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[store.get('currentLang')]?.error || 'Bağlantı hatası'}</div>`;
         }
     }
 }
@@ -182,7 +182,7 @@ export function renderStatsPanel() {
     const stats = computeStats(store.get('globalVideos'), store.get('globalInstructors'));
     renderStats(stats, store.get('currentLang'));
     setupBackupButtons();
-    // ✅ ADIM 4.3: Öğrenme yolu önerisi kartını render et
+    // Öğrenme yolu önerisi kartını render et
     renderLearningPathCard(store.get('globalVideos'), store.get('currentLang'));
 }
 
@@ -193,13 +193,18 @@ function setupBackupButtons() {
     if (exportBtn.dataset.wired === 'true') return;
     exportBtn.dataset.wired = 'true';
     importBtn.dataset.wired = 'true';
-    exportBtn.onclick = () => {
-        exportToJSON(
+
+    // ✅ GÜNCELLEME (Backup v2.0): exportToJSON artık async,
+    //    await ile çağrılmadan da çalışır ama hataları yakalamak için
+    //    async onclick kullanılır.
+    exportBtn.onclick = async () => {
+        await exportToJSON(
             store.get('globalVideos'),
             store.get('globalInstructors'),
             store.get('globalFavorites')
         );
     };
+
     importBtn.onclick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
@@ -216,7 +221,9 @@ function setupBackupButtons() {
                     fetchVideos,
                     fetchInstructors
                 );
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error('İçe aktarma beklenmeyen hata:', err);
+            }
         };
         fileInput.click();
     };

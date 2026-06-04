@@ -1,4 +1,5 @@
 // db/playlists.js - Playlist ile ilgili tüm veritabanı işlemleri
+// ✅ GÜNCELLEME (Backup v2.0): dbFetchAllPlaylistVideos eklendi
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 import { fetchWithRetry } from '../utils.js';
 
@@ -12,7 +13,10 @@ const JSON_HEADERS = {
     'Prefer': 'return=representation'
 };
 
+// ─────────────────────────────────────────────────────────────
+// dbFetchPlaylists()
 // Tüm playlist'leri çek (oluşturulma tarihine göre sıralı)
+// ─────────────────────────────────────────────────────────────
 export async function dbFetchPlaylists() {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/playlists?select=*&order=created_at.asc`,
@@ -22,7 +26,23 @@ export async function dbFetchPlaylists() {
     return await res.json();
 }
 
+// ─────────────────────────────────────────────────────────────
+// dbFetchAllPlaylistVideos()
+// Tüm playlist-video ilişkilerini tek seferde çeker (yedekleme için)
+// ─────────────────────────────────────────────────────────────
+export async function dbFetchAllPlaylistVideos() {
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/playlist_videos?select=playlist_id,video_id`,
+        { headers: HEADERS }
+    );
+    if (!res.ok) throw new Error('Playlist-video ilişkileri alınamadı');
+    return await res.json();
+}
+
+// ─────────────────────────────────────────────────────────────
+// dbCreatePlaylist(name, color)
 // Yeni playlist oluştur
+// ─────────────────────────────────────────────────────────────
 export async function dbCreatePlaylist(name, color = '#ff007f') {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/playlists`,
@@ -40,7 +60,10 @@ export async function dbCreatePlaylist(name, color = '#ff007f') {
     return Array.isArray(data) ? data[0] : data;
 }
 
+// ─────────────────────────────────────────────────────────────
+// dbUpdatePlaylist(id, name, color)
 // Playlist adını veya rengini güncelle
+// ─────────────────────────────────────────────────────────────
 export async function dbUpdatePlaylist(id, name, color) {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/playlists?id=eq.${id}`,
@@ -58,7 +81,10 @@ export async function dbUpdatePlaylist(id, name, color) {
     return Array.isArray(data) ? data[0] : data;
 }
 
+// ─────────────────────────────────────────────────────────────
+// dbDeletePlaylist(id)
 // Playlist'i sil (playlist_videos cascade ile otomatik silinir)
+// ─────────────────────────────────────────────────────────────
 export async function dbDeletePlaylist(id) {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/playlists?id=eq.${id}`,
@@ -68,7 +94,10 @@ export async function dbDeletePlaylist(id) {
     return res;
 }
 
+// ─────────────────────────────────────────────────────────────
+// dbFetchPlaylistVideoIds(playlistId)
 // Bir playlist'teki tüm video ID'lerini çek
+// ─────────────────────────────────────────────────────────────
 export async function dbFetchPlaylistVideoIds(playlistId) {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/playlist_videos?playlist_id=eq.${playlistId}&select=video_id`,
@@ -79,7 +108,10 @@ export async function dbFetchPlaylistVideoIds(playlistId) {
     return rows.map(r => r.video_id);
 }
 
+// ─────────────────────────────────────────────────────────────
+// dbAddVideoToPlaylist(playlistId, videoId)
 // Playlist'e video ekle
+// ─────────────────────────────────────────────────────────────
 export async function dbAddVideoToPlaylist(playlistId, videoId) {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/playlist_videos`,
@@ -97,7 +129,10 @@ export async function dbAddVideoToPlaylist(playlistId, videoId) {
     return res;
 }
 
+// ─────────────────────────────────────────────────────────────
+// dbRemoveVideoFromPlaylist(playlistId, videoId)
 // Playlist'ten video çıkar
+// ─────────────────────────────────────────────────────────────
 export async function dbRemoveVideoFromPlaylist(playlistId, videoId) {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/playlist_videos?playlist_id=eq.${playlistId}&video_id=eq.${videoId}`,

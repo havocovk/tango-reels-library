@@ -331,7 +331,9 @@ DOSYA YOLU: .\app.js
 // ✅ GÜNCELLEME (Adım 2.3): Practice Session modu
 // ✅ GÜNCELLEME (Adım 2.4): Playlist sistemi
 // ✅ GÜNCELLEME (Adım 3.3): loadTagColors çağrısı
+// ✅ GÜNCELLEME (Adım 3.2): URL durum senkronizasyonu — sayfa açılınca URL'den filtreler yükleniyor
 import { translations } from './i18n.js';
+import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
 import {
     openVideoModal, closeVideoModal, openTagsEditModal, closeTagsEditModal,
@@ -372,9 +374,11 @@ import { initPracticeSession, startPracticeSession } from './practiceSession.js'
 import { initPlaylists } from './playlistManager.js';
 import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
-import { initChainManager, loadAllVideoLinks } from './chainManager.js'; // ✅ YENİ (Adım 6.2)
-import { initInstructorProfile } from './instructorProfile.js'; // ✅ YENİ (Adım 6.3)
-import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './export/listExport.js'; // ✅ YENİ (Adım 6.4)
+import { initChainManager, loadAllVideoLinks } from './chainManager.js';
+import { initInstructorProfile } from './instructorProfile.js';
+import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './export/listExport.js';
+import { readUrlState, applyUrlStateToUI } from './urlState.js'; // ✅ ADIM 3.2
+import { flushQueue, hasPendingItems } from './syncQueue.js'; // ✅ ADIM 2.3
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -396,14 +400,11 @@ async function loadTemplates() {
             fetch('modals/link-manager-modal.html').then(r => r.text()),
         ]);
 
-        // Modalleri body'e ekle
         const modalContainer = document.createElement('div');
         modalContainer.id = 'modals-container';
         modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal + annotationModal + linkManagerModal;
         document.body.appendChild(modalContainer);
 
-        // View'ları container'a ekle — her biri ayrı ayrı innerHTML ile
-        // (string birleştirme kullanmıyoruz — bu sayede kapanmamış tag riski sıfır)
         container.innerHTML = library + stats + addVideo + tagManager + practiceSession + instructorProfile;
 
         await initializeApp();
@@ -415,21 +416,16 @@ async function loadTemplates() {
 }
 
 async function initializeApp() {
-    // ✅ Etiket renklerini yükle (videolardan önce — kartlar ilk render'da renkli olsun)
     await loadTagColors();
-
     await fetchInstructors();
     await fetchVideos();
     await initPlaylists();
-    initRealtimeSync();   // ✅ Adım 4.2: Realtime senkronizasyonu başlat
+    initRealtimeSync();
 
-    // ✅ Adım 6.2: Kombinasyon zinciri sistemi — bağlantıları yükle
     initChainManager(openVideoModal, applyFiltersAndSearch);
     await loadAllVideoLinks();
 
-    // ✅ Adım 6.3: Eğitmen profil sistemi
     initInstructorProfile(callSwitchView);
-
     initPracticeSession(callSwitchView);
 
     const langBtn = document.getElementById('lang-toggle-btn');
@@ -475,11 +471,19 @@ async function initializeApp() {
     initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
     initModalCallbacks(applyFiltersAndSearch);
 
-    document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
-    document.getElementById('btn-add-instructor')?.addEventListener('click', handleInstructorSubmit);
-    document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
+    // Çıkış butonu
+    document.getElementById('btn-logout')?.addEventListener('click', async () => {
+        const ok = await showCustomConfirm(
+            store.get('currentLang') === 'tr'
+                ? 'Çıkış yapmak istediğinize emin misiniz?'
+                : 'Are you sure you want to sign out?',
+            store.get('currentLang') === 'tr' ? 'Çıkış Yap' : 'Sign Out',
+            store.get('currentLang') === 'tr' ? 'İptal' : 'Cancel'
+        );
+        if (ok) await signOut();
+    });
 
-    // ✅ Adım 6.4: Paylaşım butonları
+    // Paylaşım butonları
     document.getElementById('btn-share-whatsapp')?.addEventListener('click', shareToWhatsApp);
     document.getElementById('btn-share-clipboard')?.addEventListener('click', copyListToClipboard);
     document.getElementById('btn-share-print')?.addEventListener('click', exportToPrintView);
@@ -496,94 +500,36 @@ async function initializeApp() {
         };
     }
 
+    // Video URL input → thumbnail + metadata otomatik çek
+    const videoUrlInput = document.getElementById('form-video-url');
+    if (videoUrlInput) {
+        videoUrlInput.addEventListener('input', async (e) => {
+            const url = e.target.value.trim();
+            if (url) await autoFetchThumbnail(url);
+        });
+    }
+
+    // Kapak resmi
+    document.getElementById('drop-area')?.addEventListener('paste', (e) =>
+        handlePasteEvent(e, store.get('currentLang'))
+    );
+    document.getElementById('btn-reset-cover')?.addEventListener('click', () => {
+        resetUploadedCoverUrl();
+        const imgPreview = document.getElementById('image-preview');
+        if (imgPreview) imgPreview.classList.add('d-none');
+        const dropAreaText = document.getElementById('drop-area-text');
+        if (dropAreaText) dropAreaText.classList.remove('d-none');
+    });
+
     // Arama
-    document.getElementById('search-btn')?.addEventListener('click', () => applyFiltersAndSearch());
-    document.getElementById('search-input')?.addEventListener('input', () => {
-        setVisibleCount(20);
-        applyFiltersAndSearch();
-    });
-
-    // Video URL → thumbnail
-    document.getElementById('form-video-url')?.addEventListener('input', async (e) => {
-        const url = e.target.value.trim();
-        if (url) await autoFetchThumbnail(url);
-    });
-
-    // ── Eğitmen yönetim butonları ────────────────────────────────
-    document.getElementById('btn-toggle-new-instructor')?.addEventListener('click', () => {
-        const container = document.getElementById('new-instructor-container');
-        if (container) container.classList.toggle('d-none');
-        store.set('editInstructorId', null);
-        const input = document.getElementById('form-new-instructor-input');
-        if (input) input.value = '';
-        const saveBtn = document.getElementById('btn-save-instructor');
-        const lang = translations[store.get('currentLang')];
-        if (saveBtn) saveBtn.innerText = lang.btnAddIns || 'Ekle';
-    });
-
-    document.getElementById('btn-edit-instructor')?.addEventListener('click', () => {
-        const select = document.getElementById('form-instructor-select');
-        if (!select || !select.value) return;
-        const selectedId = parseInt(select.value);
-        const instructors = store.get('globalInstructors');
-        const instructor = instructors.find(i => i.id === selectedId);
-        if (!instructor) return;
-        store.set('editInstructorId', selectedId);
-        const container = document.getElementById('new-instructor-container');
-        if (container) container.classList.remove('d-none');
-        const input = document.getElementById('form-new-instructor-input');
-        if (input) input.value = instructor.name;
-        const saveBtn = document.getElementById('btn-save-instructor');
-        const lang = translations[store.get('currentLang')];
-        if (saveBtn) saveBtn.innerText = lang.btnEditIns || 'Güncelle';
-    });
-
-    document.getElementById('btn-delete-instructor')?.addEventListener('click', deleteInstructor);
-    document.getElementById('btn-save-instructor')?.addEventListener('click', handleInstructorSubmit);
-
-    // ── Etiket autocomplete (virgülle chip oluşturma) ─────────────
-    setupAutocomplete(
-        'form-tags-input',
-        'autocomplete-list',
-        formTagsArray,
-        renderFormChips,
-        (tag) => {
-            if (!formTagsArray.includes(tag)) {
-                formTagsArray.push(tag);
-                renderFormChips();
-                callUpdateSmartAssistant();
-            }
-        },
-        callGetUniqueTagsPool
-    );
-
-    // ── ✅ DÜZELTME (Sorun 3): Satır içi etiket DÜZENLEME modalı için autocomplete ──
-    // Daha önce yalnızca ekleme formu için kuruluyordu; kart üzerindeki
-    // "Etiketleri Düzenle" modalında virgülle yeni etiket eklenemiyordu.
-    setupAutocomplete(
-        'modal-tags-input',
-        'modal-autocomplete-list',
-        modalTagsArray,
-        renderModalChips,
-        (tag) => {
-            if (!modalTagsArray.includes(tag)) {
-                modalTagsArray.push(tag);
-                renderModalChips();
-                saveTagsToSupabaseDirectly();   // anında kaydet (çip silmeyle aynı davranış)
-            }
-        },
-        callGetUniqueTagsPool
-    );
-
-    // ── Drive URL kutucuğunu göster / gizle ──────────────────────
-    document.getElementById('form-is-downloaded')?.addEventListener('change', (e) => {
-        const driveContainer = document.getElementById('drive-url-container');
-        if (driveContainer) driveContainer.classList.toggle('d-none', !e.target.checked);
-    });
+    const searchBtn = document.getElementById('search-btn');
+    if (searchBtn) searchBtn.onclick = () => applyFiltersAndSearch();
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.addEventListener('input', () => applyFiltersAndSearch());
 
     // Filtreler
-    ['filter-role-select','filter-instructor-select','filter-tag-select',
-     'filter-date-select','filter-platform-select','filter-learning-status-select']
+    ['filter-role-select', 'filter-instructor-select', 'filter-tag-select',
+     'filter-date-select', 'filter-platform-select', 'filter-learning-status-select']
     .forEach(id => document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSearch()));
 
     // Load more
@@ -602,17 +548,10 @@ async function initializeApp() {
         if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
     });
 
-    // Kapak resmi
-    document.getElementById('drop-area')?.addEventListener('paste', (e) =>
-        handlePasteEvent(e, store.get('currentLang'))
-    );
-    document.getElementById('btn-reset-cover')?.addEventListener('click', () => {
-        resetUploadedCoverUrl();
-        const imgPreview = document.getElementById('image-preview');
-        if (imgPreview) imgPreview.classList.add('d-none');
-        const dropAreaText = document.getElementById('drop-area-text');
-        if (dropAreaText) dropAreaText.classList.remove('d-none');
-    });
+    // Form submit
+    document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
+    document.getElementById('btn-add-instructor')?.addEventListener('click', handleInstructorSubmit);
+    document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
 
     // Etiket yönetimi butonları
     document.getElementById('tag-manager-merge-btn')?.addEventListener('click', () => mergeSelectedTags());
@@ -624,18 +563,71 @@ async function initializeApp() {
     });
     document.getElementById('tag-merge-confirm-btn')?.addEventListener('click', () => mergeSelectedTags());
 
+    // Etiket autocomplete
+    setupAutocomplete(
+        'form-tags-input', 'autocomplete-list', formTagsArray, renderFormChips,
+        (tag) => {
+            if (!formTagsArray.includes(tag)) {
+                formTagsArray.push(tag);
+                renderFormChips();
+                callUpdateSmartAssistant();
+            }
+        },
+        callGetUniqueTagsPool
+    );
+    setupAutocomplete(
+        'modal-tags-input', 'modal-autocomplete-list', modalTagsArray, renderModalChips,
+        (tag) => {
+            if (!modalTagsArray.includes(tag)) {
+                modalTagsArray.push(tag);
+                renderModalChips();
+                saveTagsToSupabaseDirectly();
+            }
+        },
+        callGetUniqueTagsPool
+    );
+
+    // Drive URL checkbox
+    document.getElementById('form-is-downloaded')?.addEventListener('change', (e) => {
+        const driveContainer = document.getElementById('drive-url-container');
+        if (driveContainer) driveContainer.classList.toggle('d-none', !e.target.checked);
+    });
+
+    // ✅ ADIM 3.2: Sayfa yüklenince URL'den filtre durumunu oku ve uygula
+    const urlState = readUrlState();
+    if (urlState) {
+        // View değiştirilmesi gerekiyorsa
+        if (urlState.view && urlState.view !== 'library') {
+            callSwitchView(urlState.view);
+        }
+        // Dropdown'lara filtre değerlerini uygula (kısa gecikmeyle — DOM'un hazır olması için)
+        setTimeout(() => {
+            applyUrlStateToUI(urlState);
+            applyFiltersAndSearch();
+        }, 100);
+    }
+
+    // ✅ ADIM 2.3: Online olunca bekleyen offline işlemleri gönder
+    window.addEventListener('online', () => {
+        flushQueue();
+    });
+    // Sayfa açılışında online ve bekleyen işlem varsa hemen gönder
+    if (navigator.onLine && hasPendingItems()) {
+        flushQueue();
+    }
+
     setupStoreSubscriptions();
     window.applyFiltersAndSearch = applyFiltersAndSearch;
     setupInfiniteScroll();
 
-    // Adım 7.1: Bottom Nav
+    // Bottom Nav
     document.getElementById('bn-library')?.addEventListener('click', () => { callSwitchView('library'); syncBottomNavActiveState('library'); });
     document.getElementById('bn-favorites')?.addEventListener('click', () => { callSwitchView('favorites'); syncBottomNavActiveState('favorites'); });
     document.getElementById('bn-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
     document.getElementById('bn-add')?.addEventListener('click', () => { callSwitchView('add'); syncBottomNavActiveState('add'); });
     document.getElementById('bn-tags')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
 
-    // Adım 7.2: Grid/Liste toggle
+    // Grid/Liste toggle
     document.getElementById('btn-view-toggle')?.addEventListener('click', toggleViewMode);
 
     callUpdateInterfaceLanguage();
@@ -655,19 +647,200 @@ export function syncBottomNavActiveState(viewName) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadTemplates().catch(err => {
-        console.error('DOMContentLoaded hata:', err);
-    });
+    initAuth(loadTemplates);
 });
+
+============================================================
+DOSYA YOLU: .\auth.js
+============================================================
+
+// auth.js - Kimlik doğrulama yönetimi
+// ✅ GÜNCELLEME (Adım 1.3): Auth ekranı iki dil desteği eklendi
+
+import { supabase } from './supabaseClient.js';
+
+let _onAuthReady = null;
+
+// ─────────────────────────────────────────────────────────
+// initAuth — app.js'in DOMContentLoaded içinde çağrılır
+// ─────────────────────────────────────────────────────────
+export function initAuth(onReady) {
+    _onAuthReady = onReady;
+
+    // ✅ ADIM 1.3: Dil belirle ve auth ekranına uygula
+    const lang = localStorage.getItem('tango_lang') ||
+        (navigator.language.startsWith('en') ? 'en' : 'tr');
+    _applyAuthLang(lang);
+
+    // Sayfa yenilendiğinde mevcut oturum varsa hemen kullan
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            window.__tangoAuthToken = session.access_token;
+            _hideLogin();
+            _onAuthReady?.();
+        } else {
+            _showLogin();
+        }
+    });
+
+    // Token otomatik yenilenince güncel token'ı al
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            window.__tangoAuthToken = session.access_token;
+        } else {
+            window.__tangoAuthToken = null;
+        }
+        if (event === 'SIGNED_OUT') {
+            _showLogin();
+        }
+    });
+
+    // Login formu butonlarını bağla
+    document.getElementById('login-btn')
+        ?.addEventListener('click', _handleLogin);
+    document.getElementById('login-password')
+        ?.addEventListener('keypress', (e) => { if (e.key === 'Enter') _handleLogin(); });
+}
+
+// ─────────────────────────────────────────────────────────
+// signOut — sidebar'daki çıkış butonundan çağrılır
+// ─────────────────────────────────────────────────────────
+export async function signOut() {
+    await supabase.auth.signOut();
+    window.__tangoAuthToken = null;
+}
+
+// ─────────────────────────────────────────────────────────
+// _handleLogin — giriş butonuna basılınca çalışır
+// ─────────────────────────────────────────────────────────
+async function _handleLogin() {
+    const emailEl    = document.getElementById('login-email');
+    const passwordEl = document.getElementById('login-password');
+    const errorEl    = document.getElementById('login-error');
+    const btnEl      = document.getElementById('login-btn');
+
+    const email    = emailEl?.value?.trim();
+    const password = passwordEl?.value;
+
+    // Dili al (buton metnini güncel tutmak için)
+    const lang = localStorage.getItem('tango_lang') ||
+        (navigator.language.startsWith('en') ? 'en' : 'tr');
+
+    if (!email || !password) {
+        if (errorEl) {
+            errorEl.textContent = lang === 'en'
+                ? 'Email and password are required.'
+                : 'E-posta ve şifre gereklidir.';
+        }
+        return;
+    }
+
+    // Butonu devre dışı bırak
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = lang === 'en' ? 'Signing in...' : 'Giriş yapılıyor...';
+    }
+    if (errorEl) errorEl.textContent = '';
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // Butonu geri aç
+    if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.textContent = lang === 'en' ? 'Sign In' : 'Giriş Yap';
+    }
+
+    if (error) {
+        const isWrongCredentials = error.message.includes('Invalid login credentials');
+        if (errorEl) {
+            errorEl.textContent = isWrongCredentials
+                ? (lang === 'en'
+                    ? 'Incorrect email or password. Please try again.'
+                    : 'E-posta veya şifre hatalı. Lütfen tekrar deneyin.')
+                : (lang === 'en'
+                    ? 'Login error: ' + error.message
+                    : 'Giriş hatası: ' + error.message);
+        }
+        return;
+    }
+
+    // Başarılı giriş
+    window.__tangoAuthToken = data.session.access_token;
+    _hideLogin();
+    _onAuthReady?.();
+}
+
+// ─────────────────────────────────────────────────────────
+// ✅ YENİ (Adım 1.3): _applyAuthLang — login ekranı metinlerini dile göre güncelle
+// ─────────────────────────────────────────────────────────
+function _applyAuthLang(lang) {
+    const texts = {
+        tr: {
+            title:       'Hoş Geldiniz',
+            subtitle:    'Koleksiyonunuza erişmek için giriş yapın',
+            emailLabel:  'E-posta',
+            emailPh:     'ornek@email.com',
+            passLabel:   'Şifre',
+            passPh:      '••••••••',
+            btnText:     'Giriş Yap'
+        },
+        en: {
+            title:       'Welcome Back',
+            subtitle:    'Sign in to access your collection',
+            emailLabel:  'Email',
+            emailPh:     'example@email.com',
+            passLabel:   'Password',
+            passPh:      '••••••••',
+            btnText:     'Sign In'
+        }
+    };
+
+    const t = texts[lang] || texts.tr;
+
+    // data-auth-i18n özelliğine göre elementleri güncelle
+    const set = (attr, value) => {
+        const el = document.querySelector(`[data-auth-i18n="${attr}"]`);
+        if (!el) return;
+        if (el.tagName === 'INPUT') {
+            el.placeholder = value;
+        } else {
+            el.textContent = value;
+        }
+    };
+
+    set('title',      t.title);
+    set('subtitle',   t.subtitle);
+    set('email-label', t.emailLabel);
+    set('email-input', t.emailPh);
+    set('pass-label',  t.passLabel);
+    set('pass-input',  t.passPh);
+    set('login-btn',   t.btnText);
+
+    // Buton element ID'si farklı olabilir — doğrudan da set et
+    const btn = document.getElementById('login-btn');
+    if (btn) btn.textContent = t.btnText;
+}
+
+// ─────────────────────────────────────────────────────────
+// Yardımcı: ekranı göster / gizle
+// ─────────────────────────────────────────────────────────
+function _showLogin() {
+    document.getElementById('login-overlay')?.classList.remove('d-none');
+}
+
+function _hideLogin() {
+    document.getElementById('login-overlay')?.classList.add('d-none');
+}
 
 ============================================================
 DOSYA YOLU: .\backup.js
 ============================================================
 
 // backup.js - Yedekleme ve geri yükleme modülü
+// ✅ GÜNCELLEME (Adım 1.1): İçe aktarma sonucu mesajları persistent: true ile gösteriliyor
 // ✅ GÜNCELLEME (Adım 8.2): İçe aktarma artık tek bir atomik veritabanı işlemi
-//    (import_backup RPC) ile yapılır. Eski tek tek ekleme döngüleri ve
-//    performRollback fonksiyonu kaldırıldı; geri alma işini veritabanı yapar.
+//    (import_backup RPC) ile yapılır.
+
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, fetchWithRetry } from './utils.js';
@@ -678,9 +851,7 @@ export function setBackupLang(lang) {
     currentLang = lang;
 }
 
-// --------------------------------------------------------------
-// 1. DIŞA AKTAR (Export) — değişmedi
-// --------------------------------------------------------------
+// ================= DIŞA AKTAR (Export) =================
 export function exportToJSON(videos, instructors, favorites) {
     const exportData = {
         version: '1.0',
@@ -720,84 +891,135 @@ export function exportToJSON(videos, instructors, favorites) {
     URL.revokeObjectURL(url);
 }
 
-// --------------------------------------------------------------
-// 2. İÇE AKTARMA (Import) — ATOMİK RPC İLE (Adım 8.2)
-//    Tüm yedek tek bir veritabanı işlemine gönderilir:
-//    ya tamamı eklenir ya da hata olursa hiçbiri (otomatik geri alma).
-// --------------------------------------------------------------
+// ================= İÇE AKTARMA (Import) — ATOMİK RPC İLE =================
+/**
+ * importFromJSON — Yedek dosyasını içe aktar
+ * 
+ * ✅ ADIM 1.1: Başarı ve hata mesajları artık persistent: true ile gösterilir
+ *    (3 saniye sonra kaybolan toast yerine "Tamam" ile kapanan modal)
+ * 
+ * @param {File} file - Yüklenen JSON dosyası
+ * @param {Array} currentVideos - Mevcut videolar
+ * @param {Array} currentInstructors - Mevcut eğitmenler
+ * @param {Array} currentFavorites - Mevcut favoriler
+ * @param {Function} fetchVideosFn - Videoları yeniden çekme fonksiyonu
+ * @param {Function} fetchInstructorsFn - Eğitmenleri yeniden çekme fonksiyonu
+ */
 export async function importFromJSON(file, currentVideos, currentInstructors, currentFavorites, fetchVideosFn, fetchInstructorsFn) {
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
 
+    // 1. Kullanıcıdan onay iste
     const confirmMsg = currentLang === 'tr'
         ? 'Bu yedek mevcut koleksiyonunuzla birleştirilecek. Aynı videolar (URL) tekrar eklenmez. İşlem tek bir veritabanı hareketi olarak yapılır: ya tamamı eklenir ya da hiçbiri. Devam edilsin mi?'
         : 'This backup will be merged with your current collection. Duplicate videos (URL) are skipped. The whole operation runs as a single database transaction: all-or-nothing. Continue?';
-    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
-
-    // --- Dosyayı oku ve doğrula ---
-    let backup;
-    try {
-        const fileContent = await file.text();
-        backup = JSON.parse(fileContent);
-        if (!backup.data || !Array.isArray(backup.data.videos) || !Array.isArray(backup.data.instructors)) {
-            throw new Error('Invalid format');
-        }
-    } catch (err) {
-        await showCustomAlert(currentLang === 'tr' ? 'Geçersiz yedek dosyası!' : 'Invalid backup file!', okText);
+    
+    if (!await showCustomConfirm(confirmMsg, okText, cancelText)) {
         return;
     }
 
-    showLoading(true);
+    // 2. Dosyayı oku
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            showLoading(true);
+            
+            const content = e.target.result;
+            const importData = JSON.parse(content);
 
-    try {
-        // --- Tek RPC çağrısı: eğitmenler + videolar + favoriler tek seferde ---
-        const payload = {
-            backup_json: {
-                instructors: backup.data.instructors || [],
-                videos: backup.data.videos || [],
-                favorites: backup.data.favorites || []
+            // Veri doğrulaması
+            if (!importData.data || !importData.data.videos || !Array.isArray(importData.data.videos)) {
+                showLoading(false);
+                const errorMsg = currentLang === 'tr'
+                    ? 'Dosya geçersiz veya bozuk. Lütfen daha önce dışa aktarılan bir yedek dosyasını seçin.'
+                    : 'File is invalid or corrupted. Please select a backup file exported previously.';
+                
+                // ✅ ADIM 1.1: Hata mesajı persistent modal ile gösterilir
+                await showCustomAlert(errorMsg, okText, true);
+                return;
             }
-        };
 
-        const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/rpc/import_backup`, {
-            method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+            // 3. RPC çağrısı: import_backup (atomik işlem)
+            const response = await fetchWithRetry(
+                `${SUPABASE_URL}/rest/v1/rpc/import_backup`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${window.__tangoAuthToken || SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        p_videos: importData.data.videos,
+                        p_instructors: importData.data.instructors
+                    })
+                }
+            );
 
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(errText || `HTTP ${res.status}`);
+            if (!response.ok) {
+                throw new Error(`İçe aktarma başarısız: ${response.status}`);
+            }
+
+            const result = await response.json();
+            showLoading(false);
+
+            // 4. Başarı mesajı (eklenen video sayısı)
+            const addedCount = result.added_count || 0;
+            const successMsg = currentLang === 'tr'
+                ? `✅ ${addedCount} video başarıyla içe aktarıldı!`
+                : `✅ ${addedCount} video(s) imported successfully!`;
+            
+            // ✅ ADIM 1.1: Başarı mesajı persistent modal ile gösterilir
+            await showCustomAlert(successMsg, okText, true);
+
+            // 5. Veri yenile
+            if (fetchVideosFn) await fetchVideosFn();
+            if (fetchInstructorsFn) await fetchInstructorsFn();
+
+        } catch (err) {
+            showLoading(false);
+            console.error('İçe aktarma hatası:', err);
+
+            const errorMsg = currentLang === 'tr'
+                ? `Hata: ${err.message}`
+                : `Error: ${err.message}`;
+            
+            // ✅ ADIM 1.1: Hata mesajı persistent modal ile gösterilir
+            await showCustomAlert(errorMsg, okText, true);
         }
+    };
 
-        const result = await res.json();
+    reader.onerror = async () => {
+        const errorMsg = currentLang === 'tr'
+            ? 'Dosya okunamadı. Lütfen tekrar deneyin.'
+            : 'Could not read file. Please try again.';
+        
+        // ✅ ADIM 1.1: Dosya okuma hatası persistent modal ile gösterilir
+        await showCustomAlert(errorMsg, okText, true);
+    };
 
-        // --- Ekrandaki listeleri tazele ---
-        await fetchInstructorsFn();
-        await fetchVideosFn();
+    reader.readAsText(file);
+}
 
-        showLoading(false);
+// ================= YARDIMCI FONKSİYONLAR =================
 
-        const insertedVideos = (result && result.insertedVideos) || 0;
-        const skippedVideos = (result && result.skippedVideos) || 0;
-        const insertedFavorites = (result && result.insertedFavorites) || 0;
+/**
+ * downloadBackup — Yedek dosyasını indir (export fonksiyonunun alternatifi)
+ */
+export function downloadBackup(videos, instructors, favorites) {
+    exportToJSON(videos, instructors, favorites);
+}
 
-        const successMsg = currentLang === 'tr'
-            ? `Yedek içe aktarıldı ✓ ${insertedVideos} video, ${insertedFavorites} favori eklendi (${skippedVideos} zaten vardı).`
-            : `Backup imported ✓ ${insertedVideos} videos, ${insertedFavorites} favorites added (${skippedVideos} already existed).`;
-        await showCustomAlert(successMsg, okText);
-
-    } catch (err) {
-        console.error('İçe aktarma hatası:', err);
-        showLoading(false);
-        await showCustomAlert(currentLang === 'tr'
-            ? `İçe aktarma başarısız: ${err.message}. Tek işlem olduğu için hiçbir değişiklik kaydedilmedi.`
-            : `Import failed: ${err.message}. As a single transaction, no changes were saved.`, okText);
-    }
+/**
+ * validateImportFile — Yedek dosyasının geçerli olduğunu kontrol et
+ */
+export function validateImportFile(data) {
+    return (
+        data &&
+        data.data &&
+        Array.isArray(data.data.videos) &&
+        Array.isArray(data.data.instructors)
+    );
 }
 
 ============================================================
@@ -1197,6 +1419,7 @@ DOSYA YOLU: .\dataManager.js
 
 // dataManager.js - Veri çekme, istatistik ve tag manager UI
 // ✅ GÜNCELLEME (Adım 2.2): fetchVideos artık getDueTodayCount çağırır
+// ✅ GÜNCELLEME (Adım 2.2): IndexedDB offline önbellek eklendi
 // ✅ GÜNCELLEME (Adım 3.3): renderTagManagerUI tagManager.js'e taşındı
 // ✅ GÜNCELLEME (Adım 3.3 v2): ensureAllTagsHaveColors çağrısı eklendi
 import { translations } from './i18n.js';
@@ -1215,12 +1438,27 @@ import { setFormHandlersGlobalData, formTagsArray } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 import { getDueTodayCount } from './learning/spacedRepetition.js';
-import { ensureAllTagsHaveColors } from './tagColorManager.js'; // ✅ YENİ
+import { ensureAllTagsHaveColors } from './tagColorManager.js';
+import { renderLearningPathCard } from './learningPathAdvisor.js'; // ✅ ADIM 4.3
+import {
+    initOfflineCache,
+    cacheVideos,
+    cacheInstructors,
+    getCachedVideos,
+    getCachedInstructors
+} from './offlineCache.js';
+
+// Önbelleği uygulama başlarken başlat
+initOfflineCache().catch(() => {});
 
 export async function fetchInstructors() {
     try {
         const instructors = await dbFetchInstructors();
         store.set('globalInstructors', instructors);
+
+        // ✅ ADIM 2.2: Başarılı çekimi önbelleğe yaz
+        cacheInstructors(instructors).catch(() => {});
+
         const select = document.getElementById('form-instructor-select');
         if (select) {
             select.innerHTML = '';
@@ -1232,41 +1470,51 @@ export async function fetchInstructors() {
             });
         }
         updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+        console.error(err);
+
+        // ✅ ADIM 2.2: Ağ hatası → önbellekten eğitmenleri yükle
+        const cached = await getCachedInstructors();
+        if (cached) {
+            store.set('globalInstructors', cached);
+            const select = document.getElementById('form-instructor-select');
+            if (select) {
+                select.innerHTML = '';
+                cached.forEach(ins => {
+                    const opt = document.createElement('option');
+                    opt.value = ins.id;
+                    opt.innerText = ins.name;
+                    select.appendChild(opt);
+                });
+            }
+        }
+    }
 }
 
 export async function fetchVideos() {
     try {
         const instructors = await dbFetchInstructors();
         store.set('globalInstructors', instructors);
+        cacheInstructors(instructors).catch(() => {});
+
         const favRows = await dbFetchFavorites().catch(() => []);
         store.set('globalFavorites', favRows.map(f => f.video_id));
 
-        // Eğitmen adını her videoya ekleyen yardımcı (kartlarda "Bilinmeyen" yazmaması için)
         const enrich = (arr) => arr.map(video => ({
             ...video,
             instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
         }));
 
-        // ✅ Adım 4.3: Sayfa sayfa (paginated) yükleme.
-        // Büyük koleksiyonlarda tek dev istek yerine küçük sayfalar çekilir.
-        // ÖNEMLİ: Tüm sayfalar birleştirilerek bellekte tam liste oluşturulur;
-        // böylece arama, filtreleme, istatistikler vb. istemci tarafında
-        // aynen çalışmaya devam eder (yol haritası notu gereği).
         const PAGE_SIZE = 100;
         let allVideos = [];
 
         try {
-            // İlk sayfa
             const first = await dbFetchVideosPage(0, PAGE_SIZE);
             store.set('totalVideoCount', first.totalCount);
             store.set('currentPage', 0);
             allVideos = enrich(first.videos);
             store.set('globalVideos', [...allVideos]);
 
-            // Kalan sayfaları çek. Sayıma (count) GÜVENMİYORUZ:
-            // bir sayfa PAGE_SIZE'dan az kayıt döndürürse son sayfadır → dur.
-            // Bu, count=exact çalışmasa bile tüm videoların yüklenmesini garanti eder.
             let page = 1;
             let lastPageSize = first.videos.length;
             while (lastPageSize === PAGE_SIZE) {
@@ -1276,15 +1524,12 @@ export async function fetchVideos() {
                 allVideos = allVideos.concat(enrich(next.videos));
                 store.set('currentPage', page);
                 store.set('globalVideos', [...allVideos]);
-                // totalCount güncel değilse, çekilen kadarını yansıt
                 if (allVideos.length > (store.get('totalVideoCount') || 0)) {
                     store.set('totalVideoCount', allVideos.length);
                 }
                 page++;
             }
         } catch (pageErr) {
-            // ── Güvenlik ağı: sayfalı çekme başarısız olursa hepsini birden çek ──
-            // (Range header'ı bir nedenle çalışmazsa uygulama eskisi gibi yüklenir.)
             console.warn('Sayfalı yükleme başarısız oldu, tam yüklemeye geçiliyor:', pageErr);
             const rawVideos = await dbFetchVideos();
             allVideos = enrich(rawVideos);
@@ -1292,18 +1537,17 @@ export async function fetchVideos() {
             store.set('globalVideos', [...allVideos]);
         }
 
-        // ── Tüm veri hazır: pahalı hesaplamalar yalnızca bir kez ──
+        // ✅ ADIM 2.2: Başarılı çekimi IndexedDB'e yaz (arka planda)
+        cacheVideos(allVideos).catch(() => {});
+
         const finalVideos = store.get('globalVideos');
 
-        // Adım 2.2: Bugün tekrar edilmesi gereken video sayısı
         const count = getDueTodayCount(finalVideos);
         store.set('dueTodayCount', count);
 
-        // ✅ Adım 3.3 v2: Tüm etiketlerin rengi olduğunu garanti et
-        ensureAllTagsHaveColors(finalVideos); // await yok — arka planda çalışır
+        ensureAllTagsHaveColors(finalVideos);
 
         populateFilterDropdowns(finalVideos, store.get('currentLang'));
-
         setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
         setInstructorHandlersGlobalData(store.get('currentLang'));
         setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, finalVideos);
@@ -1311,10 +1555,44 @@ export async function fetchVideos() {
 
         if (store.get('currentView') === 'stats') renderStatsPanel();
         if (store.get('currentView') === 'tagManager') renderTagManagerUI();
+
     } catch (err) {
-        const grid = document.getElementById('video-grid');
-        if (grid) grid.innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[store.get('currentLang')].error}</div>`;
-        console.error(err);
+        console.error('fetchVideos hatası:', err);
+
+        // ✅ ADIM 2.2: Ağ hatası → önbellekten yükle
+        const cachedVideos = await getCachedVideos();
+        const cachedInstructors = await getCachedInstructors();
+
+        if (cachedVideos) {
+            const instructors = cachedInstructors || store.get('globalInstructors') || [];
+            const enriched = cachedVideos.map(video => ({
+                ...video,
+                instructor_name: instructors.find(ins => ins.id === video.instructor_id)?.name || 'Bilinmeyen Eğitmen'
+            }));
+
+            store.set('globalVideos', enriched);
+            store.set('globalInstructors', instructors);
+
+            const count = getDueTodayCount(enriched);
+            store.set('dueTodayCount', count);
+
+            populateFilterDropdowns(enriched, store.get('currentLang'));
+            setVideoHandlersGlobalData(store.get('currentLang'), store.get('currentView'), store.get('visibleCount'));
+            setInstructorHandlersGlobalData(store.get('currentLang'));
+            setFormHandlersGlobalData(store.get('currentLang'), formTagsArray, enriched);
+            initTagManager(store.get('currentLang'), enriched, fetchVideos, renderTagManagerUI);
+
+            if (store.get('currentView') === 'stats') renderStatsPanel();
+            if (store.get('currentView') === 'tagManager') renderTagManagerUI();
+
+            // Kullanıcıya offline modda olduğunu bildir
+            import('./toast.js').then(({ showToast }) => {
+                showToast('📴 Çevrimdışı mod — son kayıtlı veri gösteriliyor', 'info', 5000);
+            });
+        } else {
+            const grid = document.getElementById('video-grid');
+            if (grid) grid.innerHTML = `<div class="info-msg" style="color:#ef4444;">${translations[store.get('currentLang')].error || 'Bağlantı hatası'}</div>`;
+        }
     }
 }
 
@@ -1323,6 +1601,8 @@ export function renderStatsPanel() {
     const stats = computeStats(store.get('globalVideos'), store.get('globalInstructors'));
     renderStats(stats, store.get('currentLang'));
     setupBackupButtons();
+    // ✅ ADIM 4.3: Öğrenme yolu önerisi kartını render et
+    renderLearningPathCard(store.get('globalVideos'), store.get('currentLang'));
 }
 
 function setupBackupButtons() {
@@ -1380,6 +1660,7 @@ DOSYA YOLU: .\formHandlers.js
 
 // formHandlers.js - Video ekleme ve güncelleme
 // ✅ GÜNCELLEME (Adım 6.1): URL olmadan Drive linki yeterli
+// ✅ GÜNCELLEME (Adım 4.1): YouTube metadata bilgi kutusu (başlık + süre)
 import { getUploadedCoverUrl, resetUploadedCoverUrl } from './storage.js';
 import { dbSaveVideo, detectPlatform } from './tangoVeritabani.js';
 import { showCustomAlert } from './tangoModals.js';
@@ -1450,11 +1731,18 @@ export function extractYoutubeVideoId(url) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// YouTube thumbnail otomatik çekme
+// YouTube thumbnail + metadata otomatik çekme
+// ✅ GÜNCELLEME (Adım 4.1): Başlık ve süre bilgi kutusunda gösteriliyor
 // ─────────────────────────────────────────────────────────────
 export async function autoFetchThumbnail(url) {
     const videoId = extractYoutubeVideoId(url);
-    if (!videoId) return null;
+    if (!videoId) {
+        // YouTube değilse bilgi kutusunu gizle
+        _hideMetaBox();
+        return null;
+    }
+
+    // 1. Thumbnail — API key gerekmez
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     const imgPreview = document.getElementById('image-preview');
     const dropAreaText = document.getElementById('drop-area-text');
@@ -1463,7 +1751,50 @@ export async function autoFetchThumbnail(url) {
         imgPreview.classList.remove('d-none');
         if (dropAreaText) dropAreaText.classList.add('d-none');
     }
+
+    // 2. Metadata — yükleniyor göster
+    _showMetaBox('⏳ Video bilgileri yükleniyor...', '');
+
+    try {
+        const metaRes = await fetch(`/api/youtube-metadata?videoId=${encodeURIComponent(videoId)}`);
+        if (metaRes.ok) {
+            const meta = await metaRes.json();
+
+            // Bilgi kutusunu doldur
+            if (meta.title) {
+                _showMetaBox(meta.title, meta.duration || '');
+            }
+
+            // Store'a geçici kaydet (Adım 4.2 AI etiket önerisi için)
+            store.set('pendingDuration', meta.duration || null);
+            store.set('pendingDescription', meta.description || null);
+            store.set('pendingTitle', meta.title || null);
+        } else {
+            _hideMetaBox();
+        }
+    } catch (err) {
+        console.warn('[Adım 4.1] YouTube metadata çekilemedi:', err.message);
+        _hideMetaBox();
+    }
+
     return thumbnailUrl;
+}
+
+// Metadata bilgi kutusunu göster
+function _showMetaBox(title, duration) {
+    const box = document.getElementById('yt-meta-box');
+    if (!box) return;
+    box.classList.remove('d-none');
+    const titleEl = document.getElementById('yt-meta-title');
+    const durEl = document.getElementById('yt-meta-duration');
+    if (titleEl) titleEl.textContent = title;
+    if (durEl) durEl.textContent = duration ? `⏱ ${duration}` : '';
+}
+
+// Metadata bilgi kutusunu gizle
+function _hideMetaBox() {
+    const box = document.getElementById('yt-meta-box');
+    if (box) box.classList.add('d-none');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1489,25 +1820,21 @@ export async function handleFormSubmit(e) {
         const curr = store.get('globalVideos').find(v => v.id === editingVideoId);
         if (curr) cover_url = curr.cover_url;
     }
-    // Kapak yoksa ve URL YouTube ise thumbnail otomatik çek
     if (!cover_url && url && extractYoutubeVideoId(url)) {
         cover_url = await autoFetchThumbnail(url);
     }
 
-    // ── Doğrulama ──────────────────────────────────────────────
+    // ── Doğrulama ──
     if (!instructor_id) {
         return showCustomAlert(
-            currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!',
-            okText
+            currentLang === 'tr' ? 'Lütfen eğitmen seçin!' : 'Please select instructor!', okText
         );
     }
     if (is_downloaded && !drive_url) {
         return showCustomAlert(
-            currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!',
-            okText
+            currentLang === 'tr' ? 'Drive linki zorunludur!' : 'Drive link is required!', okText
         );
     }
-    // ✅ GÜNCELLEME (Adım 6.1): URL veya Drive linkinden en az biri yeterli
     if (!url && !drive_url) {
         return showCustomAlert(
             currentLang === 'tr'
@@ -1517,17 +1844,14 @@ export async function handleFormSubmit(e) {
         );
     }
 
-    // ── Platform ve URL tespiti ──────────────────────────────────
-    // ✅ GÜNCELLEME (Adım 6.1): Drive linki varsa platform = 'drive'
-    let platform = (is_downloaded || (!url && drive_url))
-        ? 'drive'
-        : detectPlatform(url, false);
-
+    let platform = (is_downloaded || (!url && drive_url)) ? 'drive' : detectPlatform(url, false);
     let finalUrl = url;
-    // ✅ GÜNCELLEME (Adım 6.1): URL boşsa veritabanı için placeholder oluştur
     if (!finalUrl || finalUrl === '') {
         finalUrl = `drive_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
     }
+
+    // Adım 4.1: duration store'dan al
+    const duration = store.get('pendingDuration') || null;
 
     const payload = {
         instructor_id: parseInt(instructor_id),
@@ -1536,10 +1860,10 @@ export async function handleFormSubmit(e) {
         partner_name: partner_name || null,
         tags: tags || null,
         is_downloaded,
-        // ✅ GÜNCELLEME (Adım 6.1): Drive URL her durumda kaydedilir
         drive_url: drive_url || null,
         cover_url,
-        platform
+        platform,
+        duration: duration
     };
 
     try {
@@ -1548,7 +1872,6 @@ export async function handleFormSubmit(e) {
         const instructor = instructors.find(i => i.id === parseInt(instructor_id));
 
         if (editingVideoId) {
-            // ── Mevcut video güncelleme ──
             if (updatedVideo) {
                 updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.updateVideoLocally(editingVideoId, updatedVideo);
@@ -1563,7 +1886,6 @@ export async function handleFormSubmit(e) {
                 editingVideoUpdatedAt = newData.updated_at;
             }
         } else {
-            // ── Yeni video ekleme ──
             if (updatedVideo) {
                 updatedVideo.instructors = { name: instructor?.name || 'Bilinmeyen' };
                 store.addVideoLocally(updatedVideo);
@@ -1580,41 +1902,59 @@ export async function handleFormSubmit(e) {
         }
 
         await showCustomAlert(
-            editingVideoId ? lang.successUpdate : lang.successSave,
+            editingVideoId
+                ? (currentLang === 'tr' ? '✅ Video güncellendi!' : '✅ Video updated!')
+                : (currentLang === 'tr' ? '✅ Video eklendi!' : '✅ Video added!'),
             okText
         );
 
-        // ── Formu ve durumu sıfırla ──
-        store.set('editingVideoId', null);
-        editingVideoUpdatedAt = null;
-        setFormTagsArray([]);
-        renderFormChips();
-        document.getElementById('add-video-form').reset();
+        // Formu sıfırla
+        _resetForm();
 
-        const imgPreview = document.getElementById('image-preview');
-        if (imgPreview) imgPreview.classList.add('d-none');
+        // Store temizle
+        store.set('pendingDuration', null);
+        store.set('pendingDescription', null);
+        store.set('pendingTitle', null);
 
-        const dropAreaText = document.getElementById('drop-area-text');
-        if (dropAreaText) dropAreaText.innerText = lang.dropText;
-
-        const driveUrlContainer = document.getElementById('drive-url-container');
-        if (driveUrlContainer) driveUrlContainer.classList.add('d-none');
-
-        resetUploadedCoverUrl();
         if (callSwitchViewCallback) callSwitchViewCallback('library');
 
     } catch (err) {
-        const hataMesaji = err.message;
-        if (hataMesaji.includes('ÇAKIŞMA')) {
-            await showCustomAlert(hataMesaji, okText);
-            if (callSwitchViewCallback) callSwitchViewCallback('library');
-            if (fetchVideosCallback) await fetchVideosCallback();
-            location.reload();
-        } else {
-            const hata = `${currentLang === 'tr' ? 'İşlem hatası:' : 'Operation error:'} ${err.message}`;
-            await showCustomAlert(hata, okText);
-        }
+        console.error('Form kayıt hatası:', err);
+        await showCustomAlert(
+            currentLang === 'tr' ? `Hata: ${err.message}` : `Error: ${err.message}`,
+            okText
+        );
     }
+}
+
+function _resetForm() {
+    ['form-video-url', 'form-partner-name', 'form-drive-url'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    formTagsArray.length = 0;
+    renderFormChips();
+
+    resetUploadedCoverUrl();
+    const imgPreview = document.getElementById('image-preview');
+    if (imgPreview) { imgPreview.src = ''; imgPreview.classList.add('d-none'); }
+    const dropAreaText = document.getElementById('drop-area-text');
+    if (dropAreaText) dropAreaText.classList.remove('d-none');
+
+    const driveContainer = document.getElementById('drive-url-container');
+    if (driveContainer) driveContainer.classList.add('d-none');
+
+    const isDownloaded = document.getElementById('form-is-downloaded');
+    if (isDownloaded) isDownloaded.checked = false;
+
+    store.set('editingVideoId', null);
+    editingVideoUpdatedAt = null;
+
+    _hideMetaBox();
+
+    const currentLang = store.get('currentLang');
+    updateSmartFilenameAssistant(currentLang, []);
 }
 
 ============================================================
@@ -1671,13 +2011,16 @@ DOSYA YOLU: .\index.html
     </script>
 </head>
 <body>
-<!-- ✅ YENİ (Adım 7.4): Ekran okuyucu kullanıcıları için içeriğe atla bağlantısı -->
+
+<!-- Ekran okuyucu için içeriğe atla bağlantısı -->
 <a href="#main-content" class="skip-link">Ana içeriğe geç</a>
 
 <div class="bg-glow current-location-glow"></div>
 <div class="secondary-glow bg-glow"></div>
 
 <div class="app-container">
+
+    <!-- Sol Menü -->
     <nav class="sidebar-glass">
         <div class="sidebar-header">
             <h2 id="sidebar-title"></h2>
@@ -1692,26 +2035,45 @@ DOSYA YOLU: .\index.html
             <button id="menu-tag-manager" class="menu-btn">🏷️ Etiket Yönetimi</button>
         </div>
 
-        <!-- Playlist bölümü — menü butonlarının hemen altına gelir -->
+        <!-- Playlist bölümü -->
         <div id="playlist-section-container"></div>
 
+        <!-- ✅ YENİ: Çıkış butonu — menünün en altına itilir -->
+        <div style="margin-top: auto; padding-top: 20px;">
+            <hr style="border-color: rgba(255, 0, 127, 0.15); margin-bottom: 16px;">
+            <button id="btn-logout" style="
+                width: 100%;
+                background: transparent;
+                border: 1px solid rgba(255, 0, 127, 0.3);
+                color: rgba(255, 255, 255, 0.45);
+                border-radius: 10px;
+                padding: 9px 14px;
+                font-size: 0.8rem;
+                font-family: 'Poppins', sans-serif;
+                cursor: pointer;
+                transition: all 0.2s;
+                text-align: left;"
+                onmouseover="this.style.borderColor='rgba(255,0,127,0.7)'; this.style.color='#ff007f'; this.style.background='rgba(255,0,127,0.08)'"
+                onmouseout="this.style.borderColor='rgba(255,0,127,0.3)'; this.style.color='rgba(255,255,255,0.45)'; this.style.background='transparent'">
+                🚪 Çıkış Yap
+            </button>
+        </div>
     </nav>
 
+    <!-- Ana İçerik -->
     <main class="main-content-glass" id="main-content" aria-label="Ana içerik">
-        <!-- Tüm view'lar ve modallar buraya yüklenecek -->
         <div id="dynamic-views"></div>
     </main>
+
 </div>
 
-<!-- Loading overlay -->
+<!-- Yükleniyor göstergesi -->
 <div id="loading-overlay" class="loading-overlay d-none">
     <div class="spinner"></div>
     <div id="loading-text">İşlem yapılıyor...</div>
 </div>
 
-<!-- ✅ YENİ (Adım 7.1): Mobil Alt Navigasyon Barı
-     Masaüstünde CSS ile tamamen gizlenir.
-     Telefonda ekranın altına sabitlenir. -->
+<!-- Mobil Alt Navigasyon Barı -->
 <nav class="bottom-nav" id="bottom-nav" aria-label="Alt navigasyon">
     <button class="bottom-nav-btn active" id="bn-library">
         <span class="bn-icon">📚</span>
@@ -1734,6 +2096,137 @@ DOSYA YOLU: .\index.html
         <span class="bn-label" data-i18n="menuTags">Etiketler</span>
     </button>
 </nav>
+
+<!-- ✅ YENİ: Giriş Ekranı (Adım 1.3: data-auth-i18n öznitelikleri eklendi) -->
+<div id="login-overlay" style="
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 99999;
+    background: #07040f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Poppins', sans-serif;">
+
+    <div style="
+        width: 100%;
+        max-width: 400px;
+        margin: 1rem;
+        background: #0f0a1e;
+        border: 1px solid rgba(0, 240, 255, 0.25);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 0 40px rgba(255, 0, 127, 0.15);">
+
+        <!-- Başlık -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">💃</div>
+            <h1 data-auth-i18n="title" style="
+                color: #ffffff;
+                font-size: 1.25rem;
+                font-weight: 600;
+                margin: 0 0 0.4rem;">
+                Tango Koleksiyon
+            </h1>
+            <p data-auth-i18n="subtitle" style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin: 0;">
+                Devam etmek için giriş yapın
+            </p>
+        </div>
+
+        <!-- E-posta alanı -->
+        <div style="margin-bottom: 1rem;">
+            <label data-auth-i18n="email-label" style="
+                display: block;
+                color: rgba(255,255,255,0.55);
+                font-size: 0.8rem;
+                margin-bottom: 7px;">
+                E-posta
+            </label>
+            <input
+                id="login-email"
+                data-auth-i18n="email-input"
+                type="email"
+                placeholder="ornek@email.com"
+                autocomplete="email"
+                style="
+                    width: 100%;
+                    box-sizing: border-box;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(0,240,255,0.3);
+                    border-radius: 10px;
+                    padding: 12px 14px;
+                    color: #ffffff;
+                    font-size: 0.95rem;
+                    font-family: 'Poppins', sans-serif;
+                    outline: none;
+                    transition: border-color 0.2s;"
+                onfocus="this.style.borderColor='rgba(0,240,255,0.7)'"
+                onblur="this.style.borderColor='rgba(0,240,255,0.3)'" />
+        </div>
+
+        <!-- Şifre alanı -->
+        <div style="margin-bottom: 0.5rem;">
+            <label data-auth-i18n="pass-label" style="
+                display: block;
+                color: rgba(255,255,255,0.55);
+                font-size: 0.8rem;
+                margin-bottom: 7px;">
+                Şifre
+            </label>
+            <input
+                id="login-password"
+                data-auth-i18n="pass-input"
+                type="password"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                style="
+                    width: 100%;
+                    box-sizing: border-box;
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(0,240,255,0.3);
+                    border-radius: 10px;
+                    padding: 12px 14px;
+                    color: #ffffff;
+                    font-size: 0.95rem;
+                    font-family: 'Poppins', sans-serif;
+                    outline: none;
+                    transition: border-color 0.2s;"
+                onfocus="this.style.borderColor='rgba(0,240,255,0.7)'"
+                onblur="this.style.borderColor='rgba(0,240,255,0.3)'" />
+        </div>
+
+        <!-- Hata mesajı -->
+        <p id="login-error" style="
+            color: #ff6b6b;
+            font-size: 0.82rem;
+            min-height: 1.4rem;
+            margin: 8px 0 16px;"></p>
+
+        <!-- Giriş Yap butonu -->
+        <button
+            id="login-btn"
+            data-auth-i18n="login-btn"
+            style="
+                width: 100%;
+                padding: 13px;
+                background: linear-gradient(135deg, #ff007f, #cc0066);
+                border: none;
+                border-radius: 10px;
+                color: #ffffff;
+                font-size: 1rem;
+                font-weight: 600;
+                font-family: 'Poppins', sans-serif;
+                cursor: pointer;
+                transition: opacity 0.2s, transform 0.1s;"
+            onmouseover="this.style.opacity='0.88'"
+            onmouseout="this.style.opacity='1'"
+            onmousedown="this.style.transform='scale(0.98)'"
+            onmouseup="this.style.transform='scale(1)'">
+            Giriş Yap
+        </button>
+
+    </div>
+</div>
 
 <script type="module" src="app.js"></script>
 </body>
@@ -2238,6 +2731,259 @@ export function renderInstructorProfile(instructorId) {
 }
 
 ============================================================
+DOSYA YOLU: .\learningPathAdvisor.js
+============================================================
+
+// learningPathAdvisor.js - Kural tabanlı öğrenme yolu önerisi
+// ✅ YENİ DOSYA (Adım 4.3) — API gerektirmez, tamamen istemci taraflı
+// ✅ DÜZELTME: Tüm "Çalışıyorum" etiketleri gösteriliyor, video detayı eklendi
+
+// ─────────────────────────────────────────────────────────────
+// buildLearningProfile — Video listesinden öğrenme profili çıkar
+// ─────────────────────────────────────────────────────────────
+export function buildLearningProfile(videos) {
+    const tagStats = new Map();
+
+    videos.forEach(video => {
+        if (!video.tags) return;
+        const tags = video.tags.split(',').map(t => t.trim()).filter(Boolean);
+        const status = video.learning_status || 'new';
+        tags.forEach(tag => {
+            if (!tagStats.has(tag)) {
+                tagStats.set(tag, { total: 0, new: 0, learning: 0, mastered: 0, learningVideos: [] });
+            }
+            const s = tagStats.get(tag);
+            s.total++;
+            if (status === 'mastered') s.mastered++;
+            else if (status === 'learning') {
+                s.learning++;
+                s.learningVideos.push(video);
+            } else s.new++;
+        });
+    });
+
+    const tagList = Array.from(tagStats.entries()).map(([tag, s]) => ({
+        tag,
+        total: s.total,
+        new: s.new,
+        learning: s.learning,
+        mastered: s.mastered,
+        learningVideos: s.learningVideos,
+        masteryRate: s.total > 0 ? Math.round((s.mastered / s.total) * 100) : 0
+    }));
+
+    const totalVideos = videos.length;
+    const masteredVideos = videos.filter(v => v.learning_status === 'mastered').length;
+    const learningVideos = videos.filter(v => v.learning_status === 'learning').length;
+    const newVideos = videos.filter(v => !v.learning_status || v.learning_status === 'new').length;
+
+    return {
+        tagList,
+        totalVideos,
+        masteredVideos,
+        learningVideos,
+        newVideos,
+        masteryRate: totalVideos > 0 ? Math.round((masteredVideos / totalVideos) * 100) : 0
+    };
+}
+
+// ─────────────────────────────────────────────────────────────
+// computeLearningAdvice — Kural tabanlı öneri üret
+// ─────────────────────────────────────────────────────────────
+export function computeLearningAdvice(profile) {
+    const { tagList } = profile;
+    if (!tagList || tagList.length === 0) return null;
+
+    // ── "Hemen Devam Et" — TÜM "learning" etiketleri (sadece biri değil)
+    const continueTags = tagList
+        .filter(t => t.learning > 0)
+        .sort((a, b) => b.learning - a.learning || b.total - a.total);
+
+    // ── "Sıradaki Öğrenim" — Hiç başlanmamış, en fazla video olan
+    const nextCandidates = tagList
+        .filter(t => t.learning === 0 && t.mastered === 0 && t.new > 0)
+        .sort((a, b) => b.total - a.total);
+    const nextTag = nextCandidates[0] || null;
+
+    // ── "Ustalaşmaya Yakın" — learning var, masteryRate en yüksek
+    const almostCandidates = tagList
+        .filter(t => t.learning > 0 && t.masteryRate < 100 && t.masteryRate > 0)
+        .sort((a, b) => b.masteryRate - a.masteryRate);
+    const almostTag = almostCandidates[0] || null;
+
+    // ── "Dikkat Gerektiriyor" — çok video var ama hiç ustalaşılmamış
+    const neglectedCandidates = tagList
+        .filter(t => t.total >= 3 && t.mastered === 0 && t.learning === 0)
+        .sort((a, b) => b.total - a.total);
+    const neglectedTag = neglectedCandidates[0] || null;
+
+    return { continueTags, nextTag, almostTag, neglectedTag };
+}
+
+// ─────────────────────────────────────────────────────────────
+// renderLearningPathCard — İstatistikler sayfasına kart render et
+// ─────────────────────────────────────────────────────────────
+export function renderLearningPathCard(videos, currentLang) {
+    const container = document.getElementById('learning-path-container');
+    if (!container) return;
+
+    const profile = buildLearningProfile(videos);
+    const advice  = computeLearningAdvice(profile);
+    const isTr    = currentLang === 'tr';
+
+    if (profile.totalVideos === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    // ── Genel durum satırı
+    const overallHtml = `
+        <div class="lp-overall">
+            <span class="lp-stat">📊 ${isTr ? 'Toplam' : 'Total'}: <strong>${profile.totalVideos}</strong></span>
+            <span class="lp-stat">✅ ${isTr ? 'Ustalaştım' : 'Mastered'}: <strong>${profile.masteredVideos}</strong></span>
+            <span class="lp-stat">📚 ${isTr ? 'Çalışıyorum' : 'Learning'}: <strong>${profile.learningVideos}</strong></span>
+            <span class="lp-stat">🆕 ${isTr ? 'Yeni' : 'New'}: <strong>${profile.newVideos}</strong></span>
+            <span class="lp-stat lp-rate">🏆 %${profile.masteryRate} ${isTr ? 'tamamlandı' : 'complete'}</span>
+        </div>
+    `;
+
+    // ── Hiç çalışma yoksa
+    const hasAnyProgress = profile.learningVideos > 0 || profile.masteredVideos > 0;
+    if (!hasAnyProgress) {
+        container.innerHTML = `
+            <div class="learning-path-card">
+                <div class="lp-header">
+                    <span class="lp-icon">🤖</span>
+                    <span>${isTr ? 'Öğrenme Yolu Önerisi' : 'Learning Path Advice'}</span>
+                </div>
+                ${overallHtml}
+                <div class="lp-empty">
+                    📚 ${isTr
+                        ? 'Henüz hiç video çalışılmamış. Ana sayfada bir videoyu "Çalışıyorum" olarak işaretle ve öneri almaya başla.'
+                        : 'No videos marked as learning yet. Go to the library and mark a video as "Learning" to get advice.'}
+                </div>
+            </div>
+        `;
+        _attachRefreshBtn(videos, currentLang);
+        return;
+    }
+
+    let suggestionsHtml = '';
+
+    // ── "Hemen Devam Et" — TÜM çalışılan etiketler
+    if (advice && advice.continueTags && advice.continueTags.length > 0) {
+        const tagsHtml = advice.continueTags.map(t => {
+            // Bu etiketteki çalışılan videoların eğitmen adlarını listele
+            const instructorNames = [...new Set(
+                t.learningVideos
+                    .map(v => v.instructors?.name || v.instructor_name || null)
+                    .filter(Boolean)
+            )].slice(0, 3).join(', ');
+
+            const videoDetail = instructorNames
+                ? `${t.learning} video • ${instructorNames}`
+                : `${t.learning} video ${isTr ? 'çalışıyorsun' : 'in progress'}`;
+
+            return `
+                <div class="lp-continue-tag-row">
+                    <span class="lp-tag-badge">#${t.tag}</span>
+                    <span class="lp-tag-meta">${videoDetail}, ${t.mastered} ${isTr ? 'ustalaştın' : 'mastered'}</span>
+                </div>
+            `;
+        }).join('');
+
+        suggestionsHtml += `
+            <div class="lp-suggestion lp-continue">
+                <div class="lp-suggestion-icon">🎯</div>
+                <div class="lp-suggestion-content">
+                    <div class="lp-suggestion-title">${isTr ? 'Hemen Devam Et' : 'Keep Going'}</div>
+                    <div class="lp-continue-tags">${tagsHtml}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ── "Sıradaki Öğrenim"
+    if (advice && advice.nextTag) {
+        suggestionsHtml += `
+            <div class="lp-suggestion lp-next">
+                <div class="lp-suggestion-icon">📚</div>
+                <div class="lp-suggestion-content">
+                    <div class="lp-suggestion-title">${isTr ? 'Sıradaki Öğrenim' : 'Next to Learn'}</div>
+                    <div class="lp-suggestion-detail">
+                        <span class="lp-tag-badge">#${advice.nextTag.tag}</span>
+                        ${isTr
+                            ? `${advice.nextTag.total} videon var, henüz hiç başlamadın`
+                            : `${advice.nextTag.total} videos available, not started yet`}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ── "Ustalaşmaya Yakın"
+    if (advice && advice.almostTag) {
+        suggestionsHtml += `
+            <div class="lp-suggestion lp-almost">
+                <div class="lp-suggestion-icon">⭐</div>
+                <div class="lp-suggestion-content">
+                    <div class="lp-suggestion-title">${isTr ? 'Ustalaşmaya Yakın' : 'Almost Mastered'}</div>
+                    <div class="lp-suggestion-detail">
+                        <span class="lp-tag-badge">#${advice.almostTag.tag}</span>
+                        ${isTr
+                            ? `%${advice.almostTag.masteryRate} tamamlandı — ${advice.almostTag.mastered}/${advice.almostTag.total} video`
+                            : `${advice.almostTag.masteryRate}% complete — ${advice.almostTag.mastered}/${advice.almostTag.total} videos`}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ── "Dikkat Gerektiriyor"
+    if (advice && advice.neglectedTag) {
+        suggestionsHtml += `
+            <div class="lp-suggestion lp-neglected">
+                <div class="lp-suggestion-icon">⚠️</div>
+                <div class="lp-suggestion-content">
+                    <div class="lp-suggestion-title">${isTr ? 'Dikkat Gerektiriyor' : 'Needs Attention'}</div>
+                    <div class="lp-suggestion-detail">
+                        <span class="lp-tag-badge">#${advice.neglectedTag.tag}</span>
+                        ${isTr
+                            ? `${advice.neglectedTag.total} videon var ama henüz hiç çalışılmadı`
+                            : `${advice.neglectedTag.total} videos but none started yet`}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="learning-path-card">
+            <div class="lp-header">
+                <span class="lp-icon">🤖</span>
+                <span>${isTr ? 'Öğrenme Yolu Önerisi' : 'Learning Path Advice'}</span>
+                <button id="lp-refresh-btn" class="lp-refresh-btn" title="${isTr ? 'Yenile' : 'Refresh'}">🔄</button>
+            </div>
+            ${overallHtml}
+            <div class="lp-suggestions">${suggestionsHtml}</div>
+        </div>
+    `;
+
+    _attachRefreshBtn(videos, currentLang);
+}
+
+function _attachRefreshBtn(videos, currentLang) {
+    const btn = document.getElementById('lp-refresh-btn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        // Store'dan güncel videoları al (yenileme anındaki durum)
+        import('./store.js').then(({ store }) => {
+            renderLearningPathCard(store.get('globalVideos'), currentLang);
+        });
+    });
+}
+
+============================================================
 DOSYA YOLU: .\manifest.json
 ============================================================
 
@@ -2264,9 +3010,9 @@ DOSYA YOLU: .\navigation.js
 ============================================================
 
 // navigation.js - Sayfa geçişleri, video düzenleme, favori temizleme
-// ✅ DÜZELTİLDİ (Adım 2.4 Sorun 3):
-//    callSwitchView() içine clearActivePlaylist() eklendi.
+// ✅ DÜZELTİLDİ (Adım 2.4 Sorun 3): callSwitchView() içine clearActivePlaylist() eklendi
 // ✅ GÜNCELLEME (Adım 5.3): filterByTag() eklendi
+// ✅ GÜNCELLEME (Adım 3.2): callSwitchView URL durumunu yazıyor
 import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomConfirm } from './tangoModals.js';
@@ -2278,7 +3024,8 @@ import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
-import { renderInstructorProfile } from './instructorProfile.js'; // ✅ YENİ (Adım 6.3)
+import { renderInstructorProfile } from './instructorProfile.js';
+import { writeUrlState, clearUrlState } from './urlState.js';
 
 export function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
@@ -2311,6 +3058,10 @@ export function callSwitchView(viewName, options = {}) {
     store.set('visibleCount', 20);
     setVisibleCount(store.get('visibleCount'));
     setVideoHandlersGlobalData(store.get('currentLang'), viewName, store.get('visibleCount'));
+
+    // ✅ ADIM 3.2: View değişince URL'e yaz, filtreler sıfırlanır
+    writeUrlState({ view: viewName });
+
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch,
         renderFormChips: () => renderFormChips(),
@@ -2318,7 +3069,6 @@ export function callSwitchView(viewName, options = {}) {
             import('./storage.js').then(s => s.resetUploadedCoverUrl());
         },
         renderTagManager: renderTagManagerUI,
-        // ✅ YENİ (Adım 6.3): Eğitmen profil render callback'i
         renderProfile: options.instructorId
             ? () => renderInstructorProfile(options.instructorId)
             : null
@@ -2327,34 +3077,19 @@ export function callSwitchView(viewName, options = {}) {
     if (viewName === 'tagManager') renderTagManagerUI();
 }
 
-// ✅ YENİ (Adım 5.3): Etiket bulutu tıklamasından çağrılır
-// İstatistik sayfasındaki bir etikete tıklanınca koleksiyonu o etiketle filtreler
 export function filterByTag(tagName) {
     if (!tagName) return;
-
-    // 1) Etiket dropdown'ını seç
     const tagSelect = document.getElementById('filter-tag-select');
     if (tagSelect) {
-        // Dropdown'da bu değer var mı kontrol et
         const optionExists = Array.from(tagSelect.options).some(opt => opt.value === tagName);
-        if (optionExists) {
-            tagSelect.value = tagName;
-        }
+        if (optionExists) tagSelect.value = tagName;
     }
-
-    // 2) Kütüphane görünümüne geç (clearActivePlaylist zaten callSwitchView içinde çağrılıyor)
     callSwitchView('library');
-
-    // 3) Geçiş animasyonu bittikten sonra filtreyi uygula
-    // (switchView DOM'u yeniden oluştururken dropdown sıfırlanabilir,
-    //  bu yüzden kısa bir gecikmeyle tekrar set ediyoruz)
     setTimeout(() => {
         const tagSelectAfter = document.getElementById('filter-tag-select');
         if (tagSelectAfter) {
             const optionExists = Array.from(tagSelectAfter.options).some(opt => opt.value === tagName);
-            if (optionExists) {
-                tagSelectAfter.value = tagName;
-            }
+            if (optionExists) tagSelectAfter.value = tagName;
         }
         applyFiltersAndSearch();
     }, 50);
@@ -2363,7 +3098,7 @@ export function filterByTag(tagName) {
 export async function clearAllFavorites() {
     const currentLang = store.get('currentLang');
     const lang = translations[currentLang];
-    const okText     = currentLang === 'tr' ? 'Tamam' : 'OK';
+    const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
     const cancelText = currentLang === 'tr' ? 'İptal' : 'Cancel';
     if (!await showCustomConfirm(lang.confirmClearFavs, okText, cancelText)) return;
     try {
@@ -2407,7 +3142,7 @@ export function startVideoEditFlow(video) {
         if (dropText) dropText.style.display = 'none';
     } else {
         if (preview) { preview.src = ''; preview.classList.add('d-none'); }
-        if (dropText) dropText.style.display = '';
+        if (dropText) dropText.style.display = ''; 
     }
 }
 
@@ -2418,9 +3153,150 @@ export function getUIState() {
         editInstructorId: store.get('editInstructorId'),
         currentView: store.get('currentView'),
         visibleCount: store.get('visibleCount'),
-        resetFormTags: () => setFormTagsArray([]),   // ✅ DÜZELTME: switchView bu fonksiyonu bekliyordu
-        getFormTags: () => getFormTagsArray()         // ✅ DÜZELTME: switchView bu fonksiyonu bekliyordu
+        resetFormTags: () => setFormTagsArray([]),
+        getFormTags: () => getFormTagsArray()
     };
+}
+
+============================================================
+DOSYA YOLU: .\offlineCache.js
+============================================================
+
+// offlineCache.js - IndexedDB tabanlı offline video önbelleği
+// ✅ YENİ DOSYA (Adım 2.2)
+// Son başarılı Supabase çekimini IndexedDB'e kaydeder.
+// İnternet yokken bu önbellekten veri gösterilir.
+
+const DB_NAME = 'tango-offline';
+const DB_VERSION = 1;
+const STORE_VIDEOS = 'videos';
+const STORE_INSTRUCTORS = 'instructors';
+
+let _db = null;
+
+// ─────────────────────────────────────────────────────────────
+// initOfflineCache — Uygulama başlarken bir kez çağrılır
+// ─────────────────────────────────────────────────────────────
+export function initOfflineCache() {
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+            console.warn('[OfflineCache] IndexedDB desteklenmiyor.');
+            resolve(false);
+            return;
+        }
+
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            // videos store
+            if (!db.objectStoreNames.contains(STORE_VIDEOS)) {
+                db.createObjectStore(STORE_VIDEOS, { keyPath: 'id' });
+            }
+            // instructors store
+            if (!db.objectStoreNames.contains(STORE_INSTRUCTORS)) {
+                db.createObjectStore(STORE_INSTRUCTORS, { keyPath: 'id' });
+            }
+        };
+
+        req.onsuccess = (e) => {
+            _db = e.target.result;
+            resolve(true);
+        };
+
+        req.onerror = (e) => {
+            console.warn('[OfflineCache] IndexedDB açılamadı:', e.target.error);
+            resolve(false);
+        };
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// cacheVideos — Video listesini IndexedDB'e yaz (tam yenileme)
+// ─────────────────────────────────────────────────────────────
+export function cacheVideos(videos) {
+    if (!_db || !Array.isArray(videos)) return Promise.resolve();
+    return new Promise((resolve) => {
+        try {
+            const tx = _db.transaction(STORE_VIDEOS, 'readwrite');
+            const store = tx.objectStore(STORE_VIDEOS);
+            store.clear();
+            videos.forEach(v => store.put(v));
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => resolve(); // Hata sessizce geç
+        } catch (e) {
+            resolve();
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// cacheInstructors — Eğitmen listesini IndexedDB'e yaz
+// ─────────────────────────────────────────────────────────────
+export function cacheInstructors(instructors) {
+    if (!_db || !Array.isArray(instructors)) return Promise.resolve();
+    return new Promise((resolve) => {
+        try {
+            const tx = _db.transaction(STORE_INSTRUCTORS, 'readwrite');
+            const store = tx.objectStore(STORE_INSTRUCTORS);
+            store.clear();
+            instructors.forEach(i => store.put(i));
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => resolve();
+        } catch (e) {
+            resolve();
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// getCachedVideos — IndexedDB'den video listesini oku
+// Önbellek boşsa null döner
+// ─────────────────────────────────────────────────────────────
+export function getCachedVideos() {
+    if (!_db) return Promise.resolve(null);
+    return new Promise((resolve) => {
+        try {
+            const tx = _db.transaction(STORE_VIDEOS, 'readonly');
+            const store = tx.objectStore(STORE_VIDEOS);
+            const req = store.getAll();
+            req.onsuccess = () => {
+                const result = req.result;
+                resolve(result && result.length > 0 ? result : null);
+            };
+            req.onerror = () => resolve(null);
+        } catch (e) {
+            resolve(null);
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// getCachedInstructors — IndexedDB'den eğitmen listesini oku
+// ─────────────────────────────────────────────────────────────
+export function getCachedInstructors() {
+    if (!_db) return Promise.resolve(null);
+    return new Promise((resolve) => {
+        try {
+            const tx = _db.transaction(STORE_INSTRUCTORS, 'readonly');
+            const store = tx.objectStore(STORE_INSTRUCTORS);
+            const req = store.getAll();
+            req.onsuccess = () => {
+                const result = req.result;
+                resolve(result && result.length > 0 ? result : null);
+            };
+            req.onerror = () => resolve(null);
+        } catch (e) {
+            resolve(null);
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// isCacheAvailable — Önbellek kullanılabilir mi?
+// ─────────────────────────────────────────────────────────────
+export function isCacheAvailable() {
+    return _db !== null;
 }
 
 ============================================================
@@ -3524,19 +4400,271 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 DOSYA YOLU: .\sw.js
 ============================================================
 
-// Arka planda çalışan minimal servis yöneticisi
+// sw.js - Service Worker
+// ✅ GÜNCELLEME (Adım 2.1): Uygulama kabuğu önbelleğe alınıyor
+//    Strateji: Network First + Cache Fallback
+//    - Supabase API çağrıları → her zaman ağdan git (önbelleğe alma)
+//    - Uygulama dosyaları (HTML/CSS/JS/Font) → önce ağdan dene, ağ yoksa önbellekten sun
+
+const CACHE_NAME = 'tango-app-v2';
+
+// Önbelleğe alınacak uygulama dosyaları (uygulama kabuğu)
+const PRECACHE_URLS = [
+  '/',
+  '/index.html',
+  '/app.js',
+  '/manifest.json',
+  '/styles/base.css',
+  '/styles/buttons.css',
+  '/styles/cards.css',
+  '/styles/forms.css',
+  '/styles/modals.css',
+  '/styles/stats-tagmanager.css',
+  '/styles/practice-session.css',
+  '/styles/playlists.css',
+  // Google Fonts — bağlantı kurulabilmesi için
+  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap'
+];
+
+// ─────────────────────────────────────────────────────────────
+// INSTALL — Service Worker kurulurken uygulama kabuğunu önbelleğe al
+// ─────────────────────────────────────────────────────────────
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        // Her dosyayı tek tek dene; biri başarısız olursa diğerleri etkilenmesin
+        return Promise.allSettled(
+          PRECACHE_URLS.map(url =>
+            cache.add(url).catch(err => {
+              console.warn('[SW] Önbelleğe alınamadı:', url, err.message);
+            })
+          )
+        );
+      })
+      .then(() => {
+        console.log('[SW] Kurulum tamamlandı, önbellek hazır.');
+        // Yeni SW hemen aktif olsun, eski SW'yi bekleme
+        return self.skipWaiting();
+      })
+  );
 });
 
+// ─────────────────────────────────────────────────────────────
+// ACTIVATE — Eski önbellekleri temizle
+// ─────────────────────────────────────────────────────────────
 self.addEventListener('activate', (e) => {
-  e.waitUntil(self.clients.claim());
+  e.waitUntil(
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter(name => name !== CACHE_NAME) // Eski önbellekler
+            .map(name => {
+              console.log('[SW] Eski önbellek siliniyor:', name);
+              return caches.delete(name);
+            })
+        );
+      })
+      .then(() => {
+        console.log('[SW] Aktivasyon tamamlandı, kontrol alındı.');
+        return self.clients.claim();
+      })
+  );
 });
 
-// Supabase veri akışını engellememek için istekleri doğrudan internete bırakıyoruz
+// ─────────────────────────────────────────────────────────────
+// FETCH — Ağ isteği geldiğinde ne yapılacağını belirle
+// ─────────────────────────────────────────────────────────────
 self.addEventListener('fetch', (e) => {
-  e.respondWith(fetch(e.request));
+  const url = e.request.url;
+
+  // ── 1. Supabase API çağrıları → HER ZAMAN AĞDAN GİT ──────
+  // Veritabanı isteklerini asla önbellekten sunma; canlı veri şart.
+  if (url.includes('supabase.co') || url.includes('supabase.in')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // ── 2. YouTube / Google / CDN → HER ZAMAN AĞDAN GİT ─────
+  // Dış kaynakları önbelleğe almıyoruz (güvenlik + boyut riski).
+  if (
+    url.includes('youtube.com') ||
+    url.includes('youtu.be') ||
+    url.includes('googleapis.com/youtube') ||
+    url.includes('drive.google.com') ||
+    url.includes('cdn.jsdelivr.net') ||
+    url.includes('cdnjs.cloudflare.com') ||
+    url.includes('vis-network')
+  ) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // ── 3. Uygulama dosyaları → NETWORK FIRST + CACHE FALLBACK ─
+  // Önce ağdan taze veri almayı dene.
+  // İnternet yoksa (offline) önbellekten sun.
+  e.respondWith(
+    fetch(e.request)
+      .then((networkResponse) => {
+        // Ağdan gelen yanıtı önbelleğe de kaydet (güncel kalsın)
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type !== 'opaque' // CORS engelli kaynakları kaydetme
+        ) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // Ağ yok → önbellekten sun
+        return caches.match(e.request)
+          .then((cachedResponse) => {
+            if (cachedResponse) {
+              console.log('[SW] Önbellekten sunuluyor (offline):', url);
+              return cachedResponse;
+            }
+            // Ne ağda ne önbellekte var → index.html'i sun (SPA fallback)
+            // Böylece uygulama en azından açılır
+            if (e.request.destination === 'document') {
+              return caches.match('/index.html');
+            }
+            // Diğer kaynaklar için boş yanıt döndür
+            return new Response('', { status: 408, statusText: 'Offline' });
+          });
+      })
+  );
 });
+
+============================================================
+DOSYA YOLU: .\syncQueue.js
+============================================================
+
+// syncQueue.js - Offline işlem kuyruğu
+// ✅ YENİ DOSYA (Adım 2.3)
+// İnternet yokken yapılan değişiklikleri localStorage'da biriktirir.
+// Bağlantı gelince flushQueue() ile sunucuya gönderir.
+
+import { dbUpdateLearningStatus, dbAddFavorite, dbRemoveFavorite } from './tangoVeritabani.js';
+
+const QUEUE_KEY = 'tango_sync_queue';
+
+// ─────────────────────────────────────────────────────────────
+// enqueue(action) — Yeni bir işlemi kuyruğa ekle
+// action: { type, payload, timestamp }
+// ─────────────────────────────────────────────────────────────
+export function enqueue(action) {
+    try {
+        const queue = getQueue();
+        queue.push({
+            ...action,
+            timestamp: action.timestamp || Date.now()
+        });
+        localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    } catch (e) {
+        console.warn('[SyncQueue] Kuyruğa eklenemedi:', e.message);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// getQueue() — Bekleyen işlemleri dizi olarak döner
+// ─────────────────────────────────────────────────────────────
+export function getQueue() {
+    try {
+        const raw = localStorage.getItem(QUEUE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// clearQueue() — Tüm kuyruğu sil
+// ─────────────────────────────────────────────────────────────
+export function clearQueue() {
+    try {
+        localStorage.removeItem(QUEUE_KEY);
+    } catch (e) {}
+}
+
+// ─────────────────────────────────────────────────────────────
+// flushQueue() — Online olunca çağrılır
+// Kuyruktaki her işlemi sunucuya göndermeye çalışır.
+// Başarılı olanları çıkarır, başarısız olanlar sonraki flush'a kalır.
+// ─────────────────────────────────────────────────────────────
+export async function flushQueue() {
+    if (!navigator.onLine) return;
+
+    const queue = getQueue();
+    if (queue.length === 0) return;
+
+    const remaining = [];
+
+    for (const action of queue) {
+        try {
+            await processAction(action);
+            // Başarılı → kuyruktan çıkar (remaining'e ekleme)
+        } catch (err) {
+            console.warn('[SyncQueue] İşlem gönderilemedi, kuyrukta kalıyor:', action.type, err.message);
+            remaining.push(action); // Başarısız → tekrar dene
+        }
+    }
+
+    // Kalan işlemleri kaydet
+    if (remaining.length > 0) {
+        localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining));
+    } else {
+        clearQueue();
+    }
+
+    // Kullanıcıya bilgi ver (en az bir işlem gönderildiyse)
+    const sentCount = queue.length - remaining.length;
+    if (sentCount > 0) {
+        import('./toast.js').then(({ showToast }) => {
+            showToast(`✅ ${sentCount} bekleyen değişiklik sunucuya gönderildi`, 'success', 4000);
+        });
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// processAction(action) — Tek bir işlemi ilgili DB fonksiyonuna yönlendir
+// ─────────────────────────────────────────────────────────────
+async function processAction(action) {
+    const { type, payload } = action;
+
+    switch (type) {
+        case 'UPDATE_LEARNING_STATUS':
+            await dbUpdateLearningStatus(
+                payload.videoId,
+                payload.status,
+                payload.reviewCount || 0,
+                null // çakışma kontrolü offline senkronda atlanır
+            );
+            break;
+
+        case 'ADD_FAVORITE':
+            await dbAddFavorite(payload.videoId);
+            break;
+
+        case 'REMOVE_FAVORITE':
+            await dbRemoveFavorite(payload.videoId);
+            break;
+
+        default:
+            console.warn('[SyncQueue] Bilinmeyen işlem tipi:', type);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// hasPendingItems() — Bekleyen işlem var mı?
+// ─────────────────────────────────────────────────────────────
+export function hasPendingItems() {
+    return getQueue().length > 0;
+}
 
 ============================================================
 DOSYA YOLU: .\tagColorManager.js
@@ -3734,13 +4862,15 @@ export function getColorPalette() {
 DOSYA YOLU: .\tagManager.js
 ============================================================
 
-// tagManager.js
-// ✅ GÜNCELLEME (Adım 3.3): Renk sistemi + ikon butonlar yan yana
+// tagManager.js - Toplu etiket işlemleri
+// ✅ GÜNCELLEME (Adım 3.3): Etiket Sağlık Kontrolü butonu eklendi
+import { translations } from './i18n.js';
 import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, showModernPrompt } from './utils.js';
 import { store } from './store.js';
-import { getTagColor } from './tagColorManager.js';
+import { dbRunTagSyncCheck, dbRepairTagSync } from './db/healthCheck.js';
+import { showToast } from './toast.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -3756,9 +4886,7 @@ export function initTagManager(lang, videos, fetchVideosFn, renderUIFn) {
 }
 
 export function updateTagManagerSelection() {
-    const checked = Array.from(
-        document.querySelectorAll('#tag-manager-tbody .tag-checkbox:checked')
-    ).map(cb => cb.dataset.tag);
+    const checked = Array.from(document.querySelectorAll('#tag-manager-tbody .tag-checkbox:checked')).map(cb => cb.dataset.tag);
     selectedTagsForMerge = checked;
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
     const deleteBtn = document.getElementById('tag-manager-delete-btn');
@@ -3772,7 +4900,7 @@ export function updateTagManagerSelection() {
 }
 
 function updateAllVideosTagsLocally(updateFunction) {
-    const videos = store.get('globalVideos');
+    let videos = store.get('globalVideos');
     let changed = false;
     const newVideos = videos.map(video => {
         const newVideo = updateFunction(video);
@@ -3780,30 +4908,52 @@ function updateAllVideosTagsLocally(updateFunction) {
         return newVideo;
     });
     if (changed) store.set('globalVideos', newVideos);
+    return changed;
 }
 
 function renameTagLocally(oldTag, newTag) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
-        const tags = video.tags.split(',').map(t => t.trim()).filter(Boolean);
-        if (!tags.includes(oldTag)) return video;
-        return { ...video, tags: tags.map(t => t === oldTag ? newTag : t).join(', ') };
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        if (tags.includes(oldTag)) {
+            const newTags = tags.map(t => t === oldTag ? newTag : t);
+            return { ...video, tags: newTags.join(', ') };
+        }
+        return video;
     });
 }
 
-function mergeTagsLocally(tagsArray, targetTag) {
-    tagsArray.forEach(tag => renameTagLocally(tag, targetTag));
+function mergeTagsLocally(tagsToMerge, targetTag) {
+    updateAllVideosTagsLocally(video => {
+        if (!video.tags) return video;
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        let changed = false;
+        const newTags = tags.map(t => {
+            if (tagsToMerge.includes(t) && t !== targetTag) { changed = true; return targetTag; }
+            return t;
+        });
+        const unique = [...new Set(newTags)];
+        if (changed) return { ...video, tags: unique.join(', ') };
+        return video;
+    });
 }
 
 function deleteTagsLocally(tagsArray) {
     updateAllVideosTagsLocally(video => {
         if (!video.tags) return video;
-        let tags = video.tags.split(',').map(t => t.trim()).filter(Boolean);
-        const before = tags.length;
-        tagsArray.forEach(tag => { tags = tags.filter(t => t !== tag); });
-        if (tags.length === before) return video;
-        return { ...video, tags: tags.join(', ') };
+        let tags = video.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+        let changed = false;
+        tagsArray.forEach(tag => {
+            if (tags.includes(tag)) { tags = tags.filter(t => t !== tag); changed = true; }
+        });
+        if (changed) return { ...video, tags: tags.length ? tags.join(', ') : null };
+        return video;
     });
+}
+
+function getTagColor(tag) {
+    const tagColors = store.get('tagColors') || {};
+    return tagColors[tag] || null;
 }
 
 export async function promptRenameTagModern(tag) {
@@ -3851,6 +5001,80 @@ export async function deleteSingleTag(tag) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────
+// ✅ YENİ (Adım 3.3): Etiket Sağlık Kontrolü
+// ─────────────────────────────────────────────────────────────
+export async function runTagHealthCheck() {
+    const lang = store.get('currentLang');
+    const okText = lang === 'tr' ? 'Tamam' : 'OK';
+
+    showLoading(true);
+    try {
+        const problems = await dbRunTagSyncCheck();
+        showLoading(false);
+
+        if (!problems || problems.length === 0) {
+            showToast(
+                lang === 'tr' ? '✅ Tüm etiketler senkron' : '✅ All tags are in sync',
+                'success', 3000
+            );
+            return;
+        }
+
+        // Sorun var — kalıcı modal ile göster
+        const problemList = problems.slice(0, 10).map(p =>
+            `• ${p.video_url || 'ID:' + p.video_id}\n  videos.tags: "${p.tags_text || ''}"\n  video_tags: "${p.normalized_tags || ''}"`
+        ).join('\n\n');
+
+        const more = problems.length > 10 ? `\n\n...ve ${problems.length - 10} tane daha` : '';
+
+        const msg = lang === 'tr'
+            ? `⚠️ ${problems.length} videoda etiket senkron bozukluğu tespit edildi:\n\n${problemList}${more}\n\nOtomatik onar?`
+            : `⚠️ ${problems.length} video(s) have tag sync issues:\n\n${problemList}${more}\n\nAuto-repair?`;
+
+        const repair = await showCustomConfirm(
+            msg,
+            lang === 'tr' ? '🔧 Onar' : '🔧 Repair',
+            lang === 'tr' ? 'İptal' : 'Cancel'
+        );
+
+        if (!repair) return;
+
+        // Otomatik onar
+        showLoading(true);
+        let fixed = 0;
+        let failed = 0;
+        for (const p of problems) {
+            try {
+                await dbRepairTagSync(p.video_id);
+                fixed++;
+            } catch (err) {
+                console.warn(`Video ${p.video_id} onarılamadı:`, err.message);
+                failed++;
+            }
+        }
+        showLoading(false);
+
+        const resultMsg = lang === 'tr'
+            ? `✅ ${fixed} video onarıldı${failed > 0 ? `, ${failed} video onarılamadı` : ''}`
+            : `✅ ${fixed} video(s) repaired${failed > 0 ? `, ${failed} failed` : ''}`;
+
+        await showCustomAlert(resultMsg, okText, true);
+
+        // Veriyi yenile
+        if (fetchVideosCallback) await fetchVideosCallback();
+        renderTagManagerUICallback?.();
+
+    } catch (err) {
+        showLoading(false);
+        console.error('Sağlık kontrolü hatası:', err);
+        await showCustomAlert(
+            lang === 'tr' ? `Hata: ${err.message}` : `Error: ${err.message}`,
+            okText, true
+        );
+    }
+}
+
 export function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -3872,7 +5096,6 @@ export function renderTagManagerUI() {
         .sort((a, b) => b[1] - a[1])
         .forEach(([tag, count]) => {
             const color = getTagColor(tag);
-
             const row = tbody.insertRow();
 
             // Checkbox
@@ -3903,10 +5126,9 @@ export function renderTagManagerUI() {
             countCell.textContent = count;
             countCell.style.cssText = 'text-align:center; width:80px; font-size:0.85rem; color:#94a3b8;';
 
-            // İşlemler — YAN YANA (display:flex)
+            // İşlemler
             const actionCell = row.insertCell(3);
             actionCell.style.cssText = 'width:70px; text-align:center;';
-
             const wrapper = document.createElement('div');
             wrapper.style.cssText = 'display:flex; gap:4px; justify-content:center; align-items:center;';
 
@@ -3940,6 +5162,63 @@ export function renderTagManagerUI() {
         };
     }
     updateTagManagerSelection();
+
+    // ✅ YENİ (Adım 3.3): Sağlık Kontrolü butonu — varsa yeniden bağla
+    _attachHealthCheckButton();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Yardımcı: Sağlık Kontrolü butonunu bul ve bağla
+// ─────────────────────────────────────────────────────────────
+function _attachHealthCheckButton() {
+    const btn = document.getElementById('tag-manager-health-btn');
+    if (!btn) return;
+    // Önceki listener'ı temizle
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', runTagHealthCheck);
+}
+
+export async function deleteSelectedTags() {
+    if (selectedTagsForMerge.length === 0) return;
+    const lang = store.get('currentLang');
+    const alertOk = lang === 'tr' ? 'Tamam' : 'OK';
+    const ok = await showCustomConfirm(
+        lang === 'tr'
+            ? `${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?`
+            : `Delete ${selectedTagsForMerge.length} selected tags from all videos?`,
+        lang === 'tr' ? 'Sil' : 'Delete',
+        lang === 'tr' ? 'İptal' : 'Cancel'
+    );
+    if (!ok) return;
+    showLoading(true);
+    const deleteCount = selectedTagsForMerge.length;
+    try {
+        for (const tag of selectedTagsForMerge) {
+            await dbDeleteTagFromAllVideos(tag);
+        }
+        deleteTagsLocally(selectedTagsForMerge);
+        showLoading(false);
+        await showCustomAlert(
+            lang === 'tr' ? `${deleteCount} etiket silindi.` : `${deleteCount} tag(s) deleted.`,
+            alertOk
+        );
+        selectedTagsForMerge = [];
+        renderTagManagerUICallback?.();
+    } catch (err) {
+        showLoading(false);
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                lang === 'tr'
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
+        } else {
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
+        }
+    }
 }
 
 export async function mergeSelectedTags() {
@@ -3959,7 +5238,6 @@ export async function mergeSelectedTags() {
 
     const tagsToMerge = [...selectedTagsForMerge];
     const mergeCount = tagsToMerge.length;
-
     const ok = await showCustomConfirm(
         lang === 'tr'
             ? `${mergeCount} etiket "${targetName}" çatısı altında birleştirilsin mi?`
@@ -3971,10 +5249,8 @@ export async function mergeSelectedTags() {
 
     showLoading(true);
     try {
-        // Diziyi tek seferde RPC'ye gönder
         await dbMergeTags(tagsToMerge, targetName);
-        // Lokal store güncelle
-        tagsToMerge.forEach(tag => renameTagLocally(tag, targetName));
+        mergeTagsLocally(tagsToMerge, targetName);
         showLoading(false);
         await showCustomAlert(
             lang === 'tr'
@@ -3987,33 +5263,17 @@ export async function mergeSelectedTags() {
         renderTagManagerUICallback?.();
     } catch (err) {
         showLoading(false);
-        await showCustomAlert(`Hata: ${err.message}`, alertOk);
-        console.error(err);
-    }
-}
-
-export async function deleteSelectedTags() {
-    if (selectedTagsForMerge.length === 0) return;
-    const lang = store.get('currentLang');
-    const ok = await showCustomConfirm(
-        lang === 'tr'
-            ? `${selectedTagsForMerge.length} etiketi tüm videolardan silmek istediğinize emin misiniz?`
-            : `Delete ${selectedTagsForMerge.length} selected tags from all videos?`,
-        lang === 'tr' ? 'Sil' : 'Delete',
-        lang === 'tr' ? 'İptal' : 'Cancel'
-    );
-    if (!ok) return;
-    showLoading(true);
-    try {
-        for (const tag of selectedTagsForMerge) {
-            await dbDeleteTagFromAllVideos(tag);
+        if (err.message.includes('CONFLICT')) {
+            await showCustomAlert(
+                lang === 'tr'
+                    ? 'Çakışma: Bazı videolar başka bir kullanıcı tarafından değiştirildi. Sayfayı yenileyin.'
+                    : 'Conflict: Some videos were modified by another user. Please refresh.',
+                alertOk
+            );
+            location.reload();
+        } else {
+            await showCustomAlert(`Hata: ${err.message}`, alertOk);
         }
-        deleteTagsLocally(selectedTagsForMerge);
-        showLoading(false);
-        renderTagManagerUICallback?.();
-    } catch (err) {
-        showLoading(false);
-        console.error(err);
     }
 }
 
@@ -4284,11 +5544,12 @@ DOSYA YOLU: .\tangoModals.js
 ============================================================
 
 // tangoModals.js - DÜZELTME: store'dan globalVideos, updated_at her kayıtta güncelleniyor
+// ✅ GÜNCELLEME (Adım 1.1): showCustomAlert() artık persistent modal desteği yapıyor
 import { translations } from './i18n.js';
 import { dbUpdateTagsDirectly, dbUpdateNote } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 import { showToast } from './toast.js';
-import { store } from './store.js'; // ✅ YENİ: globalVideos store'dan alınacak
+import { store } from './store.js';
 
 // ===================== MODAL STATE'LER =====================
 export let modalTagsArray = [];
@@ -4296,7 +5557,6 @@ export let activeEditTagsVideoId = null;
 export let activeEditTagsVideoUpdatedAt = null;
 
 // ===================== CALLBACK BAŞLATMA =====================
-// ✅ YENİ: applyFiltersAndSearch parametresiz geçirmeyi önler, döngüsel bağımlılık olmaz
 let _applyFiltersAndSearch = null;
 
 export function initModalCallbacks(applyFiltersAndSearchFn) {
@@ -4347,16 +5607,13 @@ export function closeVideoModal() {
 }
 
 // ===================== ETİKET DÜZENLEME MODALI =====================
-
-// ✅ DÜZELTME 1: globalVideos ve applyFiltersAndSearch parametreleri kaldırıldı.
-// Bunlar artık store ve _applyFiltersAndSearch üzerinden yönetiliyor.
 export function openTagsEditModal(video) {
     activeEditTagsVideoId = video.id;
     activeEditTagsVideoUpdatedAt = video.updated_at;
     const modal = document.getElementById('tags-edit-modal');
     if (modal) modal.classList.remove('d-none');
 
-    modalTagsArray.length = 0; // diziyi sıfırla (referansı koru)
+    modalTagsArray.length = 0;
     if (video.tags) {
         video.tags.split(',').map(t => t.trim()).filter(t => t !== '').forEach(t => modalTagsArray.push(t));
     }
@@ -4368,14 +5625,11 @@ export function closeTagsEditModal() {
     if (modal) modal.classList.add('d-none');
     activeEditTagsVideoId = null;
     activeEditTagsVideoUpdatedAt = null;
-    // ✅ DÜZELTME 2: = [] yerine .length = 0 — referansı bozmaz,
-    // app.js'deki setupAutocomplete closure'ı hâlâ aynı diziye bakar.
     modalTagsArray.length = 0;
     const input = document.getElementById('modal-tags-input');
     if (input) input.value = '';
 }
 
-// ✅ DÜZELTME 3: parametresiz — globalVideos her çağrıda store'dan taze alınır.
 export function renderModalChips() {
     renderChips('modal-chips-area', modalTagsArray, (index) => {
         modalTagsArray.splice(index, 1);
@@ -4383,11 +5637,6 @@ export function renderModalChips() {
     });
 }
 
-// ✅ DÜZELTME 4: parametresiz.
-// - globalVideos: store.get('globalVideos') ile taze alınır → "undefined" hatası çözüldü.
-// - activeEditTagsVideoUpdatedAt: DB'den dönen yeni updated_at ile güncellenir
-//   → ikinci işlemde ÇAKIŞMA hatası çözüldü.
-// tangoModals.js - saveTagsToSupabaseDirectly güncellenmiş hali (yerel güncelleme)
 export async function saveTagsToSupabaseDirectly() {
     if (!activeEditTagsVideoId) return;
     const cleanTags = modalTagsArray.filter(t => t !== '').join(', ');
@@ -4400,7 +5649,6 @@ export async function saveTagsToSupabaseDirectly() {
         if (updatedVideo && updatedVideo.updated_at) {
             activeEditTagsVideoUpdatedAt = updatedVideo.updated_at;
         }
-        // Yerel güncelleme
         const updated = store.updateVideoLocally(activeEditTagsVideoId, {
             tags: cleanTags || null,
             updated_at: updatedVideo?.updated_at || activeEditTagsVideoUpdatedAt
@@ -4419,10 +5667,55 @@ export async function saveTagsToSupabaseDirectly() {
     }
 }
 
-// ===================== TOAST ALERT (ESKİ MODAL YERİNE) =====================
-export function showCustomAlert(message, okText = 'Tamam') {
-    showToast(message, 'info', 3000);
-    return Promise.resolve();
+// ===================== TOAST ALERT — ADIM 1.1 GÜNCELLEMESİ =====================
+// persistent = false (varsayılan) → 3 saniyelik toast (eski davranış korunur)
+// persistent = true              → "Tamam" butonuyla kapanan kalıcı modal
+export function showCustomAlert(message, okText = 'Tamam', persistent = false) {
+    // DURUM 1: Toast (geçici)
+    if (!persistent) {
+        showToast(message, 'info', 3000);
+        return Promise.resolve();
+    }
+
+    // DURUM 2: Kalıcı Modal
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-dialog-modal');
+        const msgEl = document.getElementById('custom-dialog-message');
+        const okBtn = document.getElementById('custom-dialog-ok-btn');
+        const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+
+        if (!modal || !msgEl || !okBtn || !cancelBtn) {
+            console.error("Modal öğeleri bulunamadı!");
+            resolve();
+            return;
+        }
+
+        msgEl.innerText = message;
+        okBtn.innerText = okText;
+        // Persistent modallarda sadece "Tamam" butonu görünür
+        cancelBtn.classList.add('d-none');
+        modal.classList.remove('d-none');
+
+        setTimeout(() => okBtn.focus(), 50);
+
+        const handleOk = () => {
+            modal.classList.add('d-none');
+            cleanup();
+            resolve();
+        };
+
+        const handleKeydown = (e) => {
+            if (e.key === 'Enter') handleOk();
+        };
+
+        const cleanup = () => {
+            okBtn.removeEventListener('click', handleOk);
+            document.removeEventListener('keydown', handleKeydown);
+        };
+
+        okBtn.addEventListener('click', handleOk);
+        document.addEventListener('keydown', handleKeydown);
+    });
 }
 
 // ===================== ONAY MODALI =====================
@@ -4445,18 +5738,15 @@ export function showCustomConfirm(message, okText = 'Tamam', cancelText = 'İpta
         cancelBtn.classList.remove('d-none');
         modal.classList.remove('d-none');
 
-        // ✅ YENİ (Adım 7.4): Modal açılınca onay butonuna odaklan
         setTimeout(() => okBtn.focus(), 50);
 
         const handleOk = () => { modal.classList.add('d-none'); cleanup(); resolve(true); };
         const handleCancel = () => { modal.classList.add('d-none'); cleanup(); resolve(false); };
 
-        // ✅ YENİ (Adım 7.4): Escape tuşuyla kapat + Tab focus trap
         const handleKeydown = (e) => {
             if (e.key === 'Escape') { handleCancel(); }
             if (e.key === 'Tab') {
                 e.preventDefault();
-                // Yalnızca okBtn ve cancelBtn arasında dolaş
                 if (document.activeElement === okBtn) cancelBtn.focus();
                 else okBtn.focus();
             }
@@ -4479,12 +5769,11 @@ let activeNoteVideoId = null;
 let activeNoteVideoUpdatedAt = null;
 
 export function openNoteEditModal(video, onNoteSavedCallback) {
-    // ✅ ÖNEMLİ: Store'dan en güncel video nesnesini al, updated_at taze olsun
     const globalVideos = store.get('globalVideos');
     const currentVideo = globalVideos.find(v => v.id === video.id) || video;
-
+    
     activeNoteVideoId = currentVideo.id;
-    activeNoteVideoUpdatedAt = currentVideo.updated_at;  // güncel timestamp
+    activeNoteVideoUpdatedAt = currentVideo.updated_at;
     const currentNote = currentVideo.notes || '';
 
     const modal = document.getElementById('custom-dialog-modal');
@@ -4507,26 +5796,14 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     const handleOk = async () => {
         const newNote = document.getElementById('note-textarea').value;
         try {
-            // dbUpdateNote güncellenmiş video nesnesini döndürüyor
             const updatedVideo = await dbUpdateNote(activeNoteVideoId, newNote, activeNoteVideoUpdatedAt);
-
-            // ✅ ADIM 4.1: Tüm koleksiyonu yeniden çekmek (fetchVideos) yerine
-            // SADECE bu videoyu store içinde güncelliyoruz. Bu sayede yüzlerce
-            // video varken bile not kaydetmek anında olur, ağdan tekrar veri çekilmez.
-            store.updateVideoLocally(activeNoteVideoId, {
-                notes: newNote || null,
-                updated_at: updatedVideo?.updated_at || activeNoteVideoUpdatedAt
-            });
-
-            // Aynı modaldan ikinci kez kayıt yapılırsa "ÇAKIŞMA" hatası
-            // almamak için güncel zaman damgasını sakla.
+            
             if (updatedVideo && updatedVideo.updated_at) {
                 activeNoteVideoUpdatedAt = updatedVideo.updated_at;
             }
 
             if (onNoteSavedCallback) onNoteSavedCallback(newNote);
 
-            // Ekrandaki kartları tazele (store güncellendiği için hızlı render olur)
             if (window.applyFiltersAndSearch) window.applyFiltersAndSearch();
 
             showToast('Not kaydedildi', 'success');
@@ -4545,7 +5822,6 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
 
     const handleCancel = () => { modal.classList.add('d-none'); cleanup(); };
 
-    // ✅ YENİ (Adım 7.4): Escape ile kapat, modal açılınca kaydet'e odaklan
     const handleKeydown = (e) => {
         if (e.key === 'Escape') handleCancel();
     };
@@ -4856,10 +6132,102 @@ export function cleanupSubscriptions() {
 }
 
 ============================================================
+DOSYA YOLU: .\urlState.js
+============================================================
+
+// urlState.js - URL durum senkronizasyonu
+// ✅ YENİ DOSYA (Adım 3.2)
+// Filtre durumunu URL'e yazar/okur.
+// Sayfa yenilenince veya link paylaşılınca filtreler korunur.
+
+// ─────────────────────────────────────────────────────────────
+// writeUrlState — Mevcut filtre durumunu URL'e yaz
+// Örnek: ?view=library&instructor=3&platform=youtube&tag=giro&status=learning
+// ─────────────────────────────────────────────────────────────
+export function writeUrlState(state = {}) {
+    try {
+        const params = new URLSearchParams();
+
+        if (state.view && state.view !== 'library') params.set('view', state.view);
+        if (state.instructor && state.instructor !== 'all') params.set('instructor', state.instructor);
+        if (state.platform && state.platform !== 'all') params.set('platform', state.platform);
+        if (state.tag && state.tag !== 'all') params.set('tag', state.tag);
+        if (state.status && state.status !== 'all') params.set('status', state.status);
+        if (state.role && state.role !== 'all') params.set('role', state.role);
+        if (state.date && state.date !== 'all') params.set('date', state.date);
+        if (state.search && state.search.trim()) params.set('search', state.search.trim());
+
+        const queryString = params.toString();
+        const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+        history.replaceState({}, '', newUrl);
+    } catch (e) {
+        // URL yazma başarısız olursa sessizce geç
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// readUrlState — URL'den filtre durumunu oku
+// Yoksa null döner
+// ─────────────────────────────────────────────────────────────
+export function readUrlState() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.toString()) return null;
+
+        return {
+            view:       params.get('view')       || 'library',
+            instructor: params.get('instructor') || 'all',
+            platform:   params.get('platform')   || 'all',
+            tag:        params.get('tag')         || 'all',
+            status:     params.get('status')      || 'all',
+            role:       params.get('role')        || 'all',
+            date:       params.get('date')        || 'all',
+            search:     params.get('search')      || ''
+        };
+    } catch (e) {
+        return null;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// applyUrlStateToUI — Okunan URL durumunu dropdown'lara uygula
+// ─────────────────────────────────────────────────────────────
+export function applyUrlStateToUI(state) {
+    if (!state) return;
+
+    const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && val && val !== 'all') el.value = val;
+    };
+
+    set('filter-instructor-select', state.instructor);
+    set('filter-platform-select', state.platform);
+    set('filter-tag-select', state.tag);
+    set('filter-learning-status-select', state.status);
+    set('filter-role-select', state.role);
+    set('filter-date-select', state.date);
+
+    if (state.search) {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) searchInput.value = state.search;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// clearUrlState — URL'yi temizle
+// ─────────────────────────────────────────────────────────────
+export function clearUrlState() {
+    try {
+        history.replaceState({}, '', window.location.pathname);
+    } catch (e) {}
+}
+
+============================================================
 DOSYA YOLU: .\utils.js
 ============================================================
 
 // utils.js - Ortak yardımcı fonksiyonlar (MEVCUT + YENİ)
+// ✅ GÜNCELLEME (Adım 1.1): showCustomAlert() artık persistent modal desteği yapıyor
 
 let currentLangForUtils = 'tr';
 
@@ -4933,33 +6301,125 @@ export function showModernPrompt(title, defaultValue = '', placeholder = '') {
 
 // ================= YENİ: FETCH RETRY =================
 export async function fetchWithRetry(url, options = {}, retries = 3, baseDelay = 1000) {
+    // ✅ Auth token inject: giriş yapılmışsa tüm Supabase çağrılarına
+    // otomatik olarak güncel JWT token'ı yaz.
+    const isSupabaseApi = url.includes('supabase.co');
+    if (isSupabaseApi && window.__tangoAuthToken) {
+        options.headers = options.headers || {};
+        options.headers['Authorization'] = `Bearer ${window.__tangoAuthToken}`;
+    }
+
     let lastError;
-    for (let attempt = 1; attempt <= retries; attempt++) {
+    for (let i = 0; i < retries; i++) {
         try {
             const response = await fetch(url, options);
-            // 409 Conflict - çakışma durumunda retry yapma
-            if (response.status === 409) {
-                throw new Error('ÇAKIŞMA: Kaynak başka bir cihazda değiştirildi. Sayfayı yenileyin.');
-            }
-            // Başarılı yanıt
-            if (response.ok) return response;
-            // 5xx veya ağ hatası (status 0) durumunda retry dene
-            if (response.status >= 500 || response.status === 0) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            // Diğer hatalar (4xx) retry yapma, olduğu gibi döndür
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return response;
         } catch (err) {
             lastError = err;
-            // Çakışma hatasını direkt fırlat
-            if (err.message.includes('ÇAKIŞMA')) throw err;
-            if (attempt === retries) break;
-            const delay = baseDelay * Math.pow(2, attempt - 1);
-            console.warn(`Fetch attempt ${attempt} failed. Retrying in ${delay}ms...`, err);
+            const delay = baseDelay * Math.pow(2, i);
+            console.warn(`Fetch hatası (deneme ${i + 1}/${retries}):`, err.message, `Retrying in ${delay}ms...`, err);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
     throw lastError;
+}
+
+// ================= YENİ (Adım 1.1): PERSISTENT MODAL DESTEĞI =================
+/**
+ * showCustomAlert(message, okText, persistent)
+ * 
+ * @param {string} message - Gösterilecek mesaj
+ * @param {string} okText - Tamam butonunun metni (default: 'Tamam' veya 'OK')
+ * @param {boolean} persistent - Kalıcı modal mı? (default: false)
+ *                              false → 3 saniyede kayıp olan toast
+ *                              true → "Tamam" butonuyla kapanan modal
+ * 
+ * Örnekler:
+ *   showCustomAlert('Video eklendi!', 'Tamam', false);  // Toast
+ *   showCustomAlert('5 video başarıyla içe aktarıldı!', 'Tamam', true);  // Modal
+ */
+export function showCustomAlert(message, okText = '', persistent = false) {
+    // Dil ayarı — okText boş bırakıldıysa varsayılanı kullan
+    if (!okText) {
+        okText = currentLangForUtils === 'tr' ? 'Tamam' : 'OK';
+    }
+
+    // DURUM 1: Toast (geçici, 3 saniye sonra kaybolur)
+    if (!persistent) {
+        // showToast fonksiyonunu kullan (tangoModals.js'de tanımlı)
+        if (window.showToast) {
+            window.showToast(message, 'info', 3000);
+        } else {
+            // Toast fonksiyonu yoksa konsola yaz (debug)
+            console.log('[Alert]', message);
+        }
+        return Promise.resolve();
+    }
+
+    // DURUM 2: Persistent Modal (kalıcı, "Tamam" ile kapatılır)
+    return new Promise((resolve) => {
+        const modal = document.getElementById('custom-dialog-modal');
+        const msgEl = document.getElementById('custom-dialog-message');
+        const okBtn = document.getElementById('custom-dialog-ok-btn');
+        const cancelBtn = document.getElementById('custom-dialog-cancel-btn');
+
+        // Modal elemanları yoksa hata mesajı ver
+        if (!modal || !msgEl || !okBtn || !cancelBtn) {
+            console.error("Modal öğeleri bulunamadı!");
+            resolve();
+            return;
+        }
+
+        // Modal içeriğini ayarla
+        msgEl.innerText = message;
+        okBtn.innerText = okText;
+
+        // Persistent modallarda "İptal" butonunu gizle
+        // (sadece "Tamam" butonu olsun)
+        cancelBtn.classList.add('d-none');
+
+        // Modali görünür yap
+        modal.classList.remove('d-none');
+
+        // "Tamam" butonuna odaklanmayı ayarla (UX için)
+        setTimeout(() => okBtn.focus(), 50);
+
+        // Buton tıklaması
+        const handleOk = () => {
+            modal.classList.add('d-none');
+            cleanup();
+            resolve();
+        };
+
+        // Temizlik: event listener'ları kaldır
+        const cleanup = () => {
+            okBtn.removeEventListener('click', handleOk);
+            document.removeEventListener('keydown', handleKeydown);
+        };
+
+        // Keyboard destek: Enter tuşu ile kapatma
+        const handleKeydown = (e) => {
+            if (e.key === 'Enter') {
+                handleOk();
+            }
+        };
+
+        okBtn.addEventListener('click', handleOk);
+        document.addEventListener('keydown', handleKeydown);
+    });
+}
+
+// ================= ABONELIKLERI TEMIZLEME =================
+let subscriptions = [];
+
+export function addSubscription(unsubscribeFn) {
+    subscriptions.push(unsubscribeFn);
+}
+
+export function cleanupSubscriptions() {
+    subscriptions.forEach(u => u());
+    subscriptions = [];
 }
 
 ============================================================
@@ -4968,6 +6428,8 @@ DOSYA YOLU: .\videoHandlers.js
 
 // videoHandlers.js
 // ✅ GÜNCELLEME (Adım 2.4): playlist filtre ve dropdown desteği eklendi
+// ✅ GÜNCELLEME (Adım 3.2): applyFiltersAndSearch URL durumunu yazıyor
+// ✅ GÜNCELLEME (Adım 2.3): toggleFavorite ve updateLearningStatus offline destekli
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -4976,6 +6438,8 @@ import { translations } from './i18n.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { showPlaylistDropdown } from './playlistManager.js';
+import { writeUrlState } from './urlState.js';
+import { enqueue } from './syncQueue.js';
 
 let currentLang = 'tr';
 let applyFiltersAndSearchCallback = null;
@@ -4998,9 +6462,29 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
     deleteVideoFlowCallback = deleteCb;
 }
 
+// ✅ ADIM 2.3: Online → direkt DB; Offline → lokal güncelle + kuyruğa al
 export async function toggleFavorite(videoId) {
+    const isFav = store.get('globalFavorites').includes(videoId);
+
+    if (!navigator.onLine) {
+        // OFFLINE: lokal güncelle, kuyruğa ekle
+        store.updateFavoriteLocally(videoId, !isFav);
+        enqueue({
+            type: isFav ? 'REMOVE_FAVORITE' : 'ADD_FAVORITE',
+            payload: { videoId }
+        });
+        showToast(
+            currentLang === 'tr'
+                ? '📴 Çevrimdışı — değişiklik kaydedildi, bağlantı kurulunca gönderilecek'
+                : '📴 Offline — change saved, will sync when online',
+            'info', 4000
+        );
+        applyFiltersAndSearch();
+        return;
+    }
+
+    // ONLINE: normal davranış
     try {
-        const isFav = store.get('globalFavorites').includes(videoId);
         if (isFav) {
             await dbRemoveFavorite(videoId);
             store.updateFavoriteLocally(videoId, false);
@@ -5014,9 +6498,33 @@ export async function toggleFavorite(videoId) {
     }
 }
 
+// ✅ ADIM 2.3: Online → direkt DB; Offline → lokal güncelle + kuyruğa al
 export async function updateLearningStatus(videoId, newStatus, currentReviewCount = 0) {
     const video = store.get('globalVideos').find(v => v.id === videoId);
     if (!video) return;
+
+    if (!navigator.onLine) {
+        // OFFLINE: lokal güncelle, kuyruğa ekle
+        store.updateVideoLocally(videoId, {
+            learning_status: newStatus,
+            last_reviewed_at: new Date().toISOString(),
+            review_count: (currentReviewCount || 0) + 1
+        });
+        enqueue({
+            type: 'UPDATE_LEARNING_STATUS',
+            payload: { videoId, status: newStatus, reviewCount: currentReviewCount || 0 }
+        });
+        showToast(
+            currentLang === 'tr'
+                ? '📴 Çevrimdışı — değişiklik kaydedildi, bağlantı kurulunca gönderilecek'
+                : '📴 Offline — change saved, will sync when online',
+            'info', 4000
+        );
+        applyFiltersAndSearch();
+        return;
+    }
+
+    // ONLINE: normal davranış
     try {
         const updatedVideo = await dbUpdateLearningStatus(videoId, newStatus, currentReviewCount, video.updated_at);
         if (updatedVideo) {
@@ -5070,15 +6578,26 @@ export function applyFiltersAndSearch() {
 
     const searchInput = document.getElementById('search-input');
     const aramaMetni = searchInput ? searchInput.value : '';
-    const filters = {
-        aramaMetni,
-        rol: document.getElementById('filter-role-select')?.value || 'all',
-        egitmen: document.getElementById('filter-instructor-select')?.value || 'all',
-        etiket: document.getElementById('filter-tag-select')?.value || 'all',
-        tarih: document.getElementById('filter-date-select')?.value || 'all',
-        platform: document.getElementById('filter-platform-select')?.value || 'all',
-        learningStatus: document.getElementById('filter-learning-status-select')?.value || 'all'
-    };
+    const rol = document.getElementById('filter-role-select')?.value || 'all';
+    const egitmen = document.getElementById('filter-instructor-select')?.value || 'all';
+    const etiket = document.getElementById('filter-tag-select')?.value || 'all';
+    const tarih = document.getElementById('filter-date-select')?.value || 'all';
+    const platform = document.getElementById('filter-platform-select')?.value || 'all';
+    const learningStatus = document.getElementById('filter-learning-status-select')?.value || 'all';
+
+    const filters = { aramaMetni, rol, egitmen, etiket, tarih, platform, learningStatus };
+
+    // ✅ ADIM 3.2: Filtre durumunu URL'e yaz
+    writeUrlState({
+        view: currentView,
+        instructor: egitmen,
+        platform: platform,
+        tag: etiket,
+        status: learningStatus,
+        role: rol,
+        date: tarih,
+        search: aramaMetni
+    });
 
     const filtered = getFilteredVideos(source, filters, currentLang);
     const totalElem = document.getElementById('total-video-count');
@@ -5183,24 +6702,114 @@ export function setupInfiniteScroll() {
     }
 }
 
-// ✅ YENİ (Adım 7.2): Grid/Liste görünüm geçişi
-// Toggle butonuna basılınca çağrılır. Modu değiştirir ve yeniden render eder.
 export function toggleViewMode() {
     const current = store.get('viewMode');
     const next = current === 'grid' ? 'list' : 'grid';
     store.set('viewMode', next);
-
-    // Toggle butonunun metnini güncelle
     const btn = document.getElementById('btn-view-toggle');
     if (btn) {
         const lang = store.get('currentLang');
-        // "Şu an listede → butona basınca grid'e dön" mantığı
         btn.textContent = next === 'list'
             ? (lang === 'tr' ? '⊞ Grid' : '⊞ Grid')
             : (lang === 'tr' ? '☰ Liste' : '☰ List');
     }
-
     applyFiltersAndSearch();
+}
+
+============================================================
+DOSYA YOLU: .\api\youtube-metadata.js
+============================================================
+
+// api/youtube-metadata.js
+// ✅ YENİ DOSYA (Adım 4.1) — Vercel Serverless Function
+// GET /api/youtube-metadata?videoId={id}
+// YouTube Data API v3'ten başlık, açıklama ve süre çeker.
+// YOUTUBE_API_KEY anahtarı Vercel ortam değişkeninde saklanır,
+// hiçbir zaman istemci tarafına gönderilmez.
+
+export default async function handler(req, res) {
+    // Sadece GET isteği kabul et
+    if (req.method !== 'GET') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const { videoId } = req.query;
+
+    // Video ID kontrolü
+    if (!videoId || videoId.trim() === '') {
+        return res.status(400).json({ error: 'videoId parametresi gerekli' });
+    }
+
+    // YouTube API anahtarı ortam değişkeninden al
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    if (!apiKey) {
+        return res.status(500).json({ error: 'YouTube API anahtarı yapılandırılmamış' });
+    }
+
+    try {
+        // YouTube Data API v3 isteği
+        // part=snippet → başlık ve açıklama
+        // part=contentDetails → süre (ISO 8601 formatında, örn. PT4M13S)
+        const youtubeUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${encodeURIComponent(videoId)}&key=${apiKey}`;
+
+        const response = await fetch(youtubeUrl);
+
+        if (!response.ok) {
+            throw new Error(`YouTube API hatası: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Video bulunamadıysa
+        if (!data.items || data.items.length === 0) {
+            return res.status(404).json({ error: 'Video bulunamadı' });
+        }
+
+        const video = data.items[0];
+        const snippet = video.snippet || {};
+        const contentDetails = video.contentDetails || {};
+
+        // ISO 8601 süreyi okunabilir formata çevir (PT4M13S → 4:13)
+        const duration = formatDuration(contentDetails.duration || '');
+
+        // Açıklamayı kısalt (çok uzun olabilir, AI için 500 karakter yeterli)
+        const description = (snippet.description || '').substring(0, 500);
+
+        return res.status(200).json({
+            title: snippet.title || '',
+            description: description,
+            duration: duration,
+            channelTitle: snippet.channelTitle || '',
+            publishedAt: snippet.publishedAt || ''
+        });
+
+    } catch (err) {
+        console.error('YouTube metadata hatası:', err);
+        return res.status(500).json({ error: err.message });
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ISO 8601 süre formatını "dk:sn" şekline çevir
+// Örnekler: PT4M13S → "4:13" | PT1H2M5S → "1:02:05" | PT45S → "0:45"
+// ─────────────────────────────────────────────────────────────
+function formatDuration(iso) {
+    if (!iso) return '';
+
+    const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return '';
+
+    const hours   = parseInt(match[1] || '0', 10);
+    const minutes = parseInt(match[2] || '0', 10);
+    const seconds = parseInt(match[3] || '0', 10);
+
+    if (hours > 0) {
+        // Saat varsa: 1:02:05
+        return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    } else {
+        // Saat yoksa: 4:13
+        return `${minutes}:${String(seconds).padStart(2, '0')}`;
+    }
 }
 
 ============================================================
@@ -5295,6 +6904,59 @@ export async function dbClearAllFavorites() {
     return res;
 }
 
+
+============================================================
+DOSYA YOLU: .\db\healthCheck.js
+============================================================
+
+// db/healthCheck.js - Etiket senkronizasyon sağlık kontrolü
+// ✅ YENİ DOSYA (Adım 3.3)
+
+import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
+import { fetchWithRetry } from '../utils.js';
+
+// ─────────────────────────────────────────────────────────────
+// dbRunTagSyncCheck — Senkron bozuk videoları döner
+// Boş dizi → her şey yolunda
+// ─────────────────────────────────────────────────────────────
+export async function dbRunTagSyncCheck() {
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/rpc/check_tag_sync`,
+        {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${window.__tangoAuthToken || SUPABASE_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        }
+    );
+    if (!res.ok) throw new Error(`Sağlık kontrolü başarısız: ${res.status}`);
+    return await res.json(); // [{ video_id, video_url, tags_text, normalized_tags }]
+}
+
+// ─────────────────────────────────────────────────────────────
+// dbRepairTagSync — Belirli bir video için trigger'ı yeniden tetikle
+// videos.tags değerini kendisiyle günceller → trigger çalışır → video_tags düzelir
+// ─────────────────────────────────────────────────────────────
+export async function dbRepairTagSync(videoId) {
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`,
+        {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${window.__tangoAuthToken || SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            // tags = tags: trigger'ı tetiklemek için kendisiyle güncelle
+            body: JSON.stringify({ _sync_trigger: true })
+        }
+    );
+    if (!res.ok) throw new Error(`Onarım başarısız (video ${videoId}): ${res.status}`);
+}
 
 ============================================================
 DOSYA YOLU: .\db\instructors.js
@@ -5871,21 +7533,25 @@ DOSYA YOLU: .\db\videos.js
 ============================================================
 
 // db/videos.js - Video ile ilgili tüm veritabanı işlemleri
+// ✅ GÜNCELLEME (Adım 4.1): dbSaveVideo payload'ına duration alanı eklendi
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 import { fetchWithRetry } from '../utils.js';
 
+// ─────────────────────────────────────────────────────────────
+// Tüm videoları tek seferde çek
+// ─────────────────────────────────────────────────────────────
 export async function dbFetchVideos() {
-    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/videos?select=*,instructors(name)&order=created_at.desc`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
     if (!res.ok) throw new Error("Videolar alınamadı");
     return await res.json();
 }
 
-// ✅ YENİ (Adım 4.3): Sayfa sayfa video çekme (server-side pagination)
-// page: 0'dan başlar, pageSize: bir sayfadaki kayıt sayısı.
-// Supabase'in Range header'ı kullanılır. Hem videos dizisini hem de
-// toplam kayıt sayısını (totalCount) döner.
+// ─────────────────────────────────────────────────────────────
+// Sayfa sayfa video çekme (server-side pagination)
+// ─────────────────────────────────────────────────────────────
 export async function dbFetchVideosPage(page = 0, pageSize = 100) {
     const start = page * pageSize;
     const end = start + pageSize - 1;
@@ -5898,20 +7564,16 @@ export async function dbFetchVideosPage(page = 0, pageSize = 100) {
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
                 'Range-Unit': 'items',
                 'Range': `${start}-${end}`,
-                // count=exact: Content-Range header'ında toplam kayıt sayısı döner
                 'Prefer': 'count=exact'
             }
         }
     );
 
-    // Range kullanılınca Supabase başarıda 200 veya 206 döner; ikisi de OK kabul edilir.
     if (!res.ok && res.status !== 206) {
         throw new Error('Videolar alınamadı (sayfalı)');
     }
 
     const videos = await res.json();
-
-    // Content-Range örneği: "0-99/247" → toplam 247 kayıt
     const contentRange = res.headers.get('Content-Range') || '';
     let totalCount = videos.length;
     const match = contentRange.match(/\/(\d+)\s*$/);
@@ -5920,8 +7582,9 @@ export async function dbFetchVideosPage(page = 0, pageSize = 100) {
     return { videos, totalCount };
 }
 
-// ✅ YENİ (Adım 4.3): Sadece toplam video sayısını döndürür (HEAD isteği).
-// Filtresiz toplam sayıyı hızlıca almak için kullanılabilir.
+// ─────────────────────────────────────────────────────────────
+// Sadece toplam video sayısını döndürür (HEAD isteği)
+// ─────────────────────────────────────────────────────────────
 export async function dbFetchVideosCount() {
     const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/videos?select=id`,
@@ -5941,24 +7604,41 @@ export async function dbFetchVideosCount() {
     return match ? parseInt(match[1], 10) : 0;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Video sil
+// ─────────────────────────────────────────────────────────────
 export async function dbDeleteVideo(videoId) {
-    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`, {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`,
+        {
+            method: 'DELETE',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        }
+    );
     if (!res.ok) throw new Error("Video silinemedi");
     return res;
 }
 
+// ─────────────────────────────────────────────────────────────
+// Video kaydet veya güncelle
+// ✅ GÜNCELLEME (Adım 4.1): duration alanı payload'a eklendi
+// ─────────────────────────────────────────────────────────────
 export async function dbSaveVideo(id, payload, old_updated_at = null) {
     let fixedPayload = { ...payload };
 
+    // Drive video için URL placeholder oluştur
     if (fixedPayload.is_downloaded === true && (!fixedPayload.url || fixedPayload.url === '' || fixedPayload.url.startsWith('drive_temp'))) {
         const uniqueSuffix = Date.now() + '_' + Math.random().toString(36).substring(2, 10);
         fixedPayload.url = `drive_video_${uniqueSuffix}`;
     }
 
+    // duration alanı yoksa (eski kayıtlar için) undefined bırakma, null yap
+    if (fixedPayload.duration === undefined) {
+        delete fixedPayload.duration; // Supabase'e gönderme, mevcut değeri koru
+    }
+
     if (id) {
+        // ── GÜNCELLEME ──
         let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${id}`;
         if (old_updated_at) {
             url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
@@ -5988,75 +7668,40 @@ export async function dbSaveVideo(id, payload, old_updated_at = null) {
         if (affectedRows === 0) {
             throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
         }
-        if (!res.ok) {
-            throw new Error(`Veritabanı hatası (${res.status}): ${responseText}`);
-        }
-        return updatedVideo;
-    }
 
-    // Yeni ekleme
-    const checkRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?url=eq.${encodeURIComponent(fixedPayload.url)}&select=id`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    if (!checkRes.ok) {
-        let errorText = await checkRes.text();
-        throw new Error(`Kontrol hatası: ${errorText}`);
-    }
-    const existing = await checkRes.json();
-
-    if (existing && existing.length > 0) {
-        const existingId = existing[0].id;
-        const updateRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos?id=eq.${existingId}`, {
-            method: 'PATCH',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(fixedPayload)
-        });
-        if (!updateRes.ok) {
-            let errorText = await updateRes.text();
-            throw new Error(`Güncelleme hatası (${updateRes.status}): ${errorText}`);
-        }
-        const responseText = await updateRes.text();
-        let updatedVideo = null;
-        try {
-            const json = JSON.parse(responseText);
-            if (Array.isArray(json) && json.length > 0) updatedVideo = json[0];
-        } catch(e) {}
         return updatedVideo;
+
     } else {
-        const insertRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/videos`, {
-            method: 'POST',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(fixedPayload)
-        });
-        if (!insertRes.ok) {
-            let errorText = await insertRes.text();
-            throw new Error(`Ekleme hatası (${insertRes.status}): ${errorText}`);
-        }
-        const responseText = await insertRes.text();
-        let newVideo = null;
-        try {
-            const json = JSON.parse(responseText);
-            if (Array.isArray(json) && json.length > 0) newVideo = json[0];
-        } catch(e) {}
-        return newVideo;
+        // ── YENİ KAYIT ──
+        const res = await fetchWithRetry(
+            `${SUPABASE_URL}/rest/v1/videos`,
+            {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify(fixedPayload)
+            }
+        );
+
+        if (!res.ok) throw new Error("Video eklenemedi");
+        const json = await res.json();
+        return Array.isArray(json) ? json[0] : json;
     }
 }
 
-export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = null) {
+// ─────────────────────────────────────────────────────────────
+// Etiketleri doğrudan güncelle (çakışma korumalı)
+// ─────────────────────────────────────────────────────────────
+export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
         url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
     }
+
     const res = await fetchWithRetry(url, {
         method: 'PATCH',
         headers: {
@@ -6067,6 +7712,7 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
         },
         body: JSON.stringify({ tags: cleanTags || null })
     });
+
     const responseText = await res.text();
     let affectedRows = 0;
     let updatedVideo = null;
@@ -6077,20 +7723,23 @@ export async function dbUpdateTagsDirectly(videoId, cleanTags, old_updated_at = 
             if (json.length > 0) updatedVideo = json[0];
         }
     } catch(e) {}
+
     if (affectedRows === 0) {
         throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
     }
-    if (!res.ok) {
-        throw new Error(`Etiket güncellenemedi: ${responseText}`);
-    }
+
     return updatedVideo;
 }
 
-export async function dbUpdateNote(videoId, note, old_updated_at = null) {
+// ─────────────────────────────────────────────────────────────
+// Notu güncelle
+// ─────────────────────────────────────────────────────────────
+export async function dbUpdateNote(videoId, newNote, old_updated_at) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
         url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
     }
+
     const res = await fetchWithRetry(url, {
         method: 'PATCH',
         headers: {
@@ -6099,8 +7748,9 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'
         },
-        body: JSON.stringify({ notes: note || null })
+        body: JSON.stringify({ notes: newNote || null })
     });
+
     const responseText = await res.text();
     let affectedRows = 0;
     let updatedVideo = null;
@@ -6111,31 +7761,24 @@ export async function dbUpdateNote(videoId, note, old_updated_at = null) {
             if (json.length > 0) updatedVideo = json[0];
         }
     } catch(e) {}
+
     if (affectedRows === 0) {
         throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
     }
-    if (!res.ok) {
-        throw new Error(`Not kaydedilemedi: ${responseText}`);
-    }
+
     return updatedVideo;
 }
 
-// ✅ DÜZELTİLDİ: Öğrenme durumu güncelleme
-// Değişiklik: review_count artık sabit 0 veya 1 yazmak yerine,
-// mevcut değerin üzerine +1 ekliyor. Bu, Adım 2.2'deki
-// Spaced Repetition algoritmasının doğru çalışması için kritiktir.
-// Parametre olarak currentReviewCount eklendi.
-export async function dbUpdateLearningStatus(videoId, status, currentReviewCount = 0, old_updated_at = null) {
+// ─────────────────────────────────────────────────────────────
+// Öğrenme durumunu güncelle
+// ─────────────────────────────────────────────────────────────
+export async function dbUpdateLearningStatus(videoId, newStatus, reviewCount, old_updated_at) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
         url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
     }
+
     const now = new Date().toISOString();
-
-    // review_count: her tıklamada mevcut sayının üzerine +1 eklenir.
-    // Yol haritasının şartı: "mevcut + 1"
-    const newReviewCount = (currentReviewCount || 0) + 1;
-
     const res = await fetchWithRetry(url, {
         method: 'PATCH',
         headers: {
@@ -6145,9 +7788,9 @@ export async function dbUpdateLearningStatus(videoId, status, currentReviewCount
             'Prefer': 'return=representation'
         },
         body: JSON.stringify({
-            learning_status: status,
+            learning_status: newStatus,
             last_reviewed_at: now,
-            review_count: newReviewCount
+            review_count: (reviewCount || 0) + 1
         })
     });
 
@@ -6165,9 +7808,7 @@ export async function dbUpdateLearningStatus(videoId, status, currentReviewCount
     if (affectedRows === 0) {
         throw new Error('ÇAKIŞMA: Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.');
     }
-    if (!res.ok) {
-        throw new Error(`Öğrenme durumu güncellenemedi: ${responseText}`);
-    }
+
     return updatedVideo;
 }
 
@@ -10726,6 +12367,147 @@ canvas { max-height: 350px; width: 100%; }
     filter: brightness(1.2);
 }
 
+/* ============================================
+   ✅ YENİ (Adım 4.3): Öğrenme Yolu Önerisi Kartı
+   ✅ DÜZELTME: lp-continue-tags, lp-tag-meta stilleri eklendi
+   ============================================ */
+
+.learning-path-card {
+    background: rgba(11, 8, 19, 0.7);
+    border: 1px solid rgba(192, 132, 252, 0.3);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.lp-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #c084fc;
+    margin-bottom: 16px;
+    text-shadow: 0 0 8px rgba(192,132,252,0.4);
+}
+
+.lp-icon { font-size: 1.3rem; }
+
+.lp-refresh-btn {
+    margin-left: auto;
+    background: rgba(192,132,252,0.15);
+    border: 1px solid rgba(192,132,252,0.4);
+    color: #c084fc;
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+.lp-refresh-btn:hover { background: rgba(192,132,252,0.3); }
+
+.lp-overall {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+}
+
+.lp-stat { font-size: 0.82rem; color: #94a3b8; }
+.lp-stat strong { color: #f1f5f9; }
+.lp-rate { color: #c084fc !important; font-weight: 600; }
+
+.lp-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lp-suggestion {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border-left: 3px solid;
+}
+
+.lp-continue  { background: rgba(0, 240, 255, 0.06); border-color: #00f0ff; }
+.lp-next      { background: rgba(255, 0, 127, 0.06); border-color: #ff007f; }
+.lp-almost    { background: rgba(250, 204, 21, 0.06); border-color: #facc21; }
+.lp-neglected { background: rgba(239, 68, 68, 0.06);  border-color: #ef4444; }
+
+.lp-suggestion-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.lp-suggestion-content { flex: 1; }
+
+.lp-suggestion-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 6px;
+}
+
+.lp-suggestion-detail {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ── Hemen Devam Et — birden fazla etiket satırı ── */
+.lp-continue-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lp-continue-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.lp-tag-meta {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.lp-tag-badge {
+    background: rgba(192,132,252,0.15);
+    color: #c084fc;
+    border: 1px solid rgba(192,132,252,0.4);
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.lp-empty {
+    font-size: 0.88rem;
+    color: #64748b;
+    padding: 12px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .lp-overall { gap: 8px; }
+    .lp-stat { font-size: 0.78rem; }
+    .lp-continue-tag-row { flex-direction: column; align-items: flex-start; }
+}
+
 ============================================================
 DOSYA YOLU: .\ui\autocomplete.js
 ============================================================
@@ -11642,6 +13424,7 @@ DOSYA YOLU: .\views\add-video.html
 ============================================================
 
 <!-- views/add-video.html - Yeni video ekleme/düzenleme formu -->
+<!-- ✅ GÜNCELLEME (Adım 4.1): YouTube metadata bilgi kutusu eklendi -->
 <div id="view-add-container" class="view-panel d-none">
     <form id="add-video-form" class="glass-form" style="max-width:900px; margin:0 auto;">
         <h2 id="form-title">➕ Yeni Video Kaydet</h2>
@@ -11666,6 +13449,34 @@ DOSYA YOLU: .\views\add-video.html
                 <div class="form-group">
                     <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
                     <input type="url" id="form-video-url" placeholder="https://... (Drive için boş bırakabilirsiniz)">
+                    <!-- ✅ YENİ (Adım 4.1): YouTube metadata bilgi kutusu -->
+                    <div id="yt-meta-box" class="d-none" style="
+                        margin-top: 8px;
+                        padding: 10px 14px;
+                        background: rgba(0, 240, 255, 0.06);
+                        border: 1px solid rgba(0, 240, 255, 0.25);
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    ">
+                        <span style="font-size: 1.2rem;">📹</span>
+                        <div style="flex:1; min-width:0;">
+                            <div id="yt-meta-title" style="
+                                font-size: 0.85rem;
+                                font-weight: 600;
+                                color: #f1f5f9;
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            "></div>
+                            <div id="yt-meta-duration" style="
+                                font-size: 0.75rem;
+                                color: #00f0ff;
+                                margin-top: 2px;
+                            "></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="atkk-inline-row">
                     <div class="form-group">
@@ -11699,7 +13510,6 @@ DOSYA YOLU: .\views\add-video.html
                         <span id="drop-area-text">📸 Tıklayıp Ctrl + V ile ekran görüntüsü yapıştırın</span>
                         <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
                     </div>
-                    <!-- 🔥 YENİ: Dosya seçici butonu ve gizli input -->
                     <div style="display: flex; gap: 8px; margin-top: 8px;">
                         <button type="button" id="select-file-btn" class="lang-btn" style="flex:1;">📁 Dosya Seç</button>
                         <input type="file" id="cover-file-input" accept="image/*" style="display: none;">
@@ -11944,13 +13754,16 @@ DOSYA YOLU: .\views\stats.html
 ============================================================
 
 <!-- views/stats.html - İstatistik görünümü -->
-<!-- ✅ GÜNCELLEME (Adım 5.1): learning-heatmap-container eklendi (statsUI.js tarafından doldurulur) -->
+<!-- ✅ GÜNCELLEME (Adım 5.1): learning-heatmap-container eklendi -->
+<!-- ✅ GÜNCELLEME (Adım 4.3): learning-path-container eklendi -->
 <div id="view-stats-container" class="view-panel d-none">
     <div style="display: flex; gap: 15px; justify-content: flex-end; margin-bottom: 20px;">
         <button id="btn-export-backup" class="btn-primary">💾 Yedekle (Dışa Aktar)</button>
         <button id="btn-import-backup" class="btn-primary">📂 Yedekten Geri Yükle</button>
     </div>
     <div id="stats-container" class="stats-container"></div>
+    <!-- ✅ YENİ (Adım 4.3): Öğrenme Yolu Önerisi kartı buraya render edilir -->
+    <div id="learning-path-container" style="margin-top: 24px;"></div>
 </div>
 
 ============================================================
@@ -11958,13 +13771,18 @@ DOSYA YOLU: .\views\tag-manager.html
 ============================================================
 
 <!-- views/tag-manager.html - Etiket Yönetimi görünümü -->
+<!-- ✅ GÜNCELLEME (Adım 3.3): Sağlık Kontrolü butonu eklendi -->
 <div id="view-tag-manager-container" class="view-panel d-none">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
         <h2 id="tag-manager-title" style="color:#f1f5f9; text-shadow:0 0 4px #ff007f;">🏷️ Etiket Yönetimi</h2>
-        <div>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <button id="tag-manager-merge-btn" class="tag-action-btn">🔗 Birleştir</button>
             <button id="tag-manager-delete-btn" class="tag-action-btn tag-danger-btn">🗑️ Seçilenleri Sil</button>
             <button id="tag-manager-cleanup-btn" class="tag-action-btn">🧹 Kullanılmayanları Temizle</button>
+            <!-- ✅ YENİ (Adım 3.3): Sağlık Kontrolü butonu -->
+            <button id="tag-manager-health-btn" class="tag-action-btn" style="background:rgba(0,240,255,0.1); border-color:rgba(0,240,255,0.4); color:#00f0ff;">
+                🔍 Sağlık Kontrolü
+            </button>
         </div>
     </div>
     <div style="background:rgba(11,8,19,0.4); border-radius:20px; padding:15px;">
