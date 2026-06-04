@@ -49,6 +49,7 @@ import { initChainManager, loadAllVideoLinks } from './chainManager.js';
 import { initInstructorProfile } from './instructorProfile.js';
 import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './export/listExport.js';
 import { readUrlState, applyUrlStateToUI } from './urlState.js'; // ✅ ADIM 3.2
+import { flushQueue, hasPendingItems } from './syncQueue.js'; // ✅ ADIM 2.3
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -275,6 +276,15 @@ async function initializeApp() {
             applyUrlStateToUI(urlState);
             applyFiltersAndSearch();
         }, 100);
+    }
+
+    // ✅ ADIM 2.3: Online olunca bekleyen offline işlemleri gönder
+    window.addEventListener('online', () => {
+        flushQueue();
+    });
+    // Sayfa açılışında online ve bekleyen işlem varsa hemen gönder
+    if (navigator.onLine && hasPendingItems()) {
+        flushQueue();
     }
 
     setupStoreSubscriptions();

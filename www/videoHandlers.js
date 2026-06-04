@@ -1,6 +1,7 @@
 // videoHandlers.js
 // ✅ GÜNCELLEME (Adım 2.4): playlist filtre ve dropdown desteği eklendi
 // ✅ GÜNCELLEME (Adım 3.2): applyFiltersAndSearch URL durumunu yazıyor
+// ✅ GÜNCELLEME (Adım 2.3): toggleFavorite ve updateLearningStatus offline destekli
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
@@ -10,6 +11,7 @@ import { store } from './store.js';
 import { showToast } from './toast.js';
 import { showPlaylistDropdown } from './playlistManager.js';
 import { writeUrlState } from './urlState.js';
+import { enqueue } from './syncQueue.js';
 
 let currentLang = 'tr';
 let applyFiltersAndSearchCallback = null;
@@ -32,9 +34,29 @@ export function initVideoHandlers(applyCb, fetchCb, openModalCb, openTagsCb, sta
     deleteVideoFlowCallback = deleteCb;
 }
 
+// ✅ ADIM 2.3: Online → direkt DB; Offline → lokal güncelle + kuyruğa al
 export async function toggleFavorite(videoId) {
+    const isFav = store.get('globalFavorites').includes(videoId);
+
+    if (!navigator.onLine) {
+        // OFFLINE: lokal güncelle, kuyruğa ekle
+        store.updateFavoriteLocally(videoId, !isFav);
+        enqueue({
+            type: isFav ? 'REMOVE_FAVORITE' : 'ADD_FAVORITE',
+            payload: { videoId }
+        });
+        showToast(
+            currentLang === 'tr'
+                ? '📴 Çevrimdışı — değişiklik kaydedildi, bağlantı kurulunca gönderilecek'
+                : '📴 Offline — change saved, will sync when online',
+            'info', 4000
+        );
+        applyFiltersAndSearch();
+        return;
+    }
+
+    // ONLINE: normal davranış
     try {
-        const isFav = store.get('globalFavorites').includes(videoId);
         if (isFav) {
             await dbRemoveFavorite(videoId);
             store.updateFavoriteLocally(videoId, false);
@@ -48,9 +70,33 @@ export async function toggleFavorite(videoId) {
     }
 }
 
+// ✅ ADIM 2.3: Online → direkt DB; Offline → lokal güncelle + kuyruğa al
 export async function updateLearningStatus(videoId, newStatus, currentReviewCount = 0) {
     const video = store.get('globalVideos').find(v => v.id === videoId);
     if (!video) return;
+
+    if (!navigator.onLine) {
+        // OFFLINE: lokal güncelle, kuyruğa ekle
+        store.updateVideoLocally(videoId, {
+            learning_status: newStatus,
+            last_reviewed_at: new Date().toISOString(),
+            review_count: (currentReviewCount || 0) + 1
+        });
+        enqueue({
+            type: 'UPDATE_LEARNING_STATUS',
+            payload: { videoId, status: newStatus, reviewCount: currentReviewCount || 0 }
+        });
+        showToast(
+            currentLang === 'tr'
+                ? '📴 Çevrimdışı — değişiklik kaydedildi, bağlantı kurulunca gönderilecek'
+                : '📴 Offline — change saved, will sync when online',
+            'info', 4000
+        );
+        applyFiltersAndSearch();
+        return;
+    }
+
+    // ONLINE: normal davranış
     try {
         const updatedVideo = await dbUpdateLearningStatus(videoId, newStatus, currentReviewCount, video.updated_at);
         if (updatedVideo) {
