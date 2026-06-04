@@ -1,16 +1,12 @@
 // backup.js - Yedekleme ve geri yükleme modülü
 // ✅ v2.0 — Kapsamlı yedekleme sistemi
-//    Yedeklenen tablolar: videos, instructors, favorites,
-//    annotations, playlists, playlist_videos, video_links, tag_colors
-//    İçe aktarma: 2 aşamalı
-//      AŞAMA 1 (atomik RPC): videos + instructors + favorites
-//      AŞAMA 2 (REST): annotations + playlists + playlist_videos + video_links + tag_colors
-//    Favori kaybı hatası düzeltildi (p_favorites eksikliği)
-//    Eski v1.0 yedekler için uyarı sistemi eklendi
+// ✅ v2.1 — tag_colors store'dan export edilir (DB yazma hatalarına karşı)
+//         — video_links teker teker insert edilir (toplu batch hatası düzeltildi)
 
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, fetchWithRetry } from './utils.js';
+import { store } from './store.js';
 import { dbFetchAllAnnotations } from './db/annotations.js';
 import { dbFetchPlaylists, dbFetchAllPlaylistVideos } from './db/playlists.js';
 import { dbFetchAllVideoLinks } from './db/videoLinks.js';
@@ -23,28 +19,38 @@ export function setBackupLang(lang) {
 }
 
 // ================================================================
-// 1. DIŞA AKTAR (Export) — v2.0
-//    Artık async: ek tabloları DB'den çekip dosyaya yazar.
+// 1. DIŞA AKTAR (Export) — v2.1
 // ================================================================
 export async function exportToJSON(videos, instructors, favorites) {
     const okText = currentLang === 'tr' ? 'Tamam' : 'OK';
 
     try {
-        // Tüm ek verileri paralel olarak çek (biri başarısız olsa bile devam et)
-        const [annotations, playlists, playlistVideos, videoLinks, tagColors] =
+        // Ek verileri paralel olarak çek
+        const [annotations, playlists, playlistVideos, videoLinks, tagColorsFromDB] =
             await Promise.all([
                 dbFetchAllAnnotations().catch(e => { console.warn('Notlar çekilemedi:', e); return []; }),
                 dbFetchPlaylists().catch(e => { console.warn('Listeler çekilemedi:', e); return []; }),
                 dbFetchAllPlaylistVideos().catch(e => { console.warn('Liste-video ilişkileri çekilemedi:', e); return []; }),
                 dbFetchAllVideoLinks().catch(e => { console.warn('Bağlantılar çekilemedi:', e); return []; }),
-                dbFetchTagColors().catch(e => { console.warn('Etiket renkleri çekilemedi:', e); return []; })
+                dbFetchTagColors().catch(e => { console.warn('DB etiket renkleri çekilemedi:', e); return []; })
             ]);
+
+        // ── tag_colors: store'dan al (DB yazma hatalarına karşı güvenli) ──────
+        // DB'nin boş gelmesi renklerin hiç olmadığı anlamına gelmez;
+        // store her zaman güncel kaynaktır.
+        const storeTagColors = store.get('tagColors') || {};
+        const storeTagColorsArray = Object.entries(storeTagColors)
+            .map(([tag_name, color_code]) => ({ tag_name, color_code }));
+
+        // Store doluysa store'u kullan, boşsa DB'den geleni kullan
+        const finalTagColors = storeTagColorsArray.length > 0
+            ? storeTagColorsArray
+            : tagColorsFromDB;
 
         const exportData = {
             version: '2.0',
             exportDate: new Date().toISOString(),
             data: {
-                // ── Temel tablolar ────────────────────────────────
                 videos: videos.map(v => ({
                     id: v.id,
                     url: v.url,
@@ -64,12 +70,11 @@ export async function exportToJSON(videos, instructors, favorites) {
                     name: i.name
                 })),
                 favorites: favorites,
-                // ── Ek tablolar (v2.0) ────────────────────────────
                 annotations: annotations,
                 playlists: playlists,
                 playlist_videos: playlistVideos,
                 video_links: videoLinks,
-                tag_colors: tagColors
+                tag_colors: finalTagColors
             }
         };
 
@@ -96,11 +101,7 @@ export async function exportToJSON(videos, instructors, favorites) {
 }
 
 // ================================================================
-// 2. İÇE AKTARMA (Import) — v2.0 (2 Aşamalı)
-//
-//  AŞAMA 1 (atomik): import_backup RPC → videos + instructors + favorites
-//  AŞAMA 2 (bireysel REST): annotations + playlists + playlist_videos
-//                            + video_links + tag_colors
+// 2. İÇE AKTARMA (Import) — v2.1 (2 Aşamalı)
 // ================================================================
 export async function importFromJSON(
     file,
@@ -115,8 +116,8 @@ export async function importFromJSON(
 
     // ── 1. Kullanıcıdan onay ────────────────────────────────────
     const confirmMsg = currentLang === 'tr'
-        ? 'Bu yedek mevcut koleksiyonunuzla birleştirilecek.\n\n• Aynı URL\'li videolar tekrar eklenmez.\n• Notlar, listeler, bağlantılar ve etiket renkleri ayrı ayrı geri yüklenir.\n• İşlem 2 aşamada yapılır; 1. aşama başarısız olursa hiçbir şey eklenmez.\n\nDevam edilsin mi?'
-        : 'This backup will be merged with your current collection.\n\n• Duplicate videos (same URL) are skipped.\n• Notes, playlists, links, and tag colors are restored separately.\n• The process runs in 2 phases; if phase 1 fails, nothing is added.\n\nContinue?';
+        ? 'Bu yedek mevcut koleksiyonunuzla birleştirilecek.\n\n• Aynı URL\'li videolar tekrar eklenmez.\n• Notlar, listeler, bağlantılar ve etiket renkleri ayrı ayrı geri yüklenir.\n\nDevam edilsin mi?'
+        : 'This backup will be merged with your current collection.\n\n• Duplicate videos (same URL) are skipped.\n• Notes, playlists, links, and tag colors are restored separately.\n\nContinue?';
 
     if (!await showCustomConfirm(confirmMsg, okText, cancelText)) return;
 
@@ -142,8 +143,8 @@ export async function importFromJSON(
     const backupVersion = backup.version || '1.0';
     if (backupVersion === '1.0') {
         const warnMsg = currentLang === 'tr'
-            ? '⚠️ Bu eski format (v1.0) bir yedek dosyası!\n\nNotlar, oynatma listeleri, bağlantılar ve etiket renkleri bu dosyada YOK (v2.0\'dan itibaren yedekleniyor).\n\nYalnızca videolar, eğitmenler ve favoriler içe aktarılacak.\n\nDevam edilsin mi?'
-            : '⚠️ This is an old format (v1.0) backup!\n\nNotes, playlists, links, and tag colors are NOT included (available from v2.0).\n\nOnly videos, instructors, and favorites will be imported.\n\nContinue?';
+            ? '⚠️ Bu eski format (v1.0) bir yedek dosyası!\n\nNotlar, oynatma listeleri, bağlantılar ve etiket renkleri bu dosyada YOK.\n\nYalnızca videolar, eğitmenler ve favoriler içe aktarılacak.\n\nDevam edilsin mi?'
+            : '⚠️ This is an old format (v1.0) backup!\n\nNotes, playlists, links, and tag colors are NOT included.\n\nOnly videos, instructors, and favorites will be imported.\n\nContinue?';
         if (!await showCustomConfirm(warnMsg, okText, cancelText)) return;
     }
 
@@ -186,16 +187,11 @@ export async function importFromJSON(
         const insertedFavorites = rpcResult?.insertedFavorites ?? 0;
 
         // ────────────────────────────────────────────────────────
-        // AŞAMA 2: EK TABLOLAR — bireysel REST çağrıları
-        // (biri başarısız olsa bile diğerleri çalışmaya devam eder)
+        // AŞAMA 2: EK TABLOLAR
         // ────────────────────────────────────────────────────────
         let phase2Results = {
-            annotations:    0,
-            playlists:      0,
-            playlistVideos: 0,
-            videoLinks:     0,
-            tagColors:      0,
-            errors:         []
+            annotations: 0, playlists: 0, playlistVideos: 0,
+            videoLinks: 0, videoLinksSkipped: 0, tagColors: 0, errors: []
         };
 
         if (backupVersion !== '1.0') {
@@ -219,7 +215,7 @@ export async function importFromJSON(
         showLoading(false);
         await showCustomAlert(
             currentLang === 'tr'
-                ? `❌ İçe aktarma başarısız!\n\nHata: ${err.message}\n\nVideolar, eğitmenler ve favoriler eklenmedi (atomik işlem geri alındı).`
+                ? `❌ İçe aktarma başarısız!\n\nHata: ${err.message}\n\nVideolar, eğitmenler ve favoriler eklenmedi (işlem geri alındı).`
                 : `❌ Import failed!\n\nError: ${err.message}\n\nNo videos, instructors, or favorites were added (transaction rolled back).`,
             okText, true
         );
@@ -228,16 +224,16 @@ export async function importFromJSON(
 
 // ================================================================
 // 3. İKİNCİL VERİ İÇE AKTARMA (Aşama 2)
-//    annotations, playlists, playlist_videos, video_links, tag_colors
 // ================================================================
 async function importSecondaryData(data) {
     const results = {
-        annotations:    0,
-        playlists:      0,
-        playlistVideos: 0,
-        videoLinks:     0,
-        tagColors:      0,
-        errors:         []
+        annotations:       0,
+        playlists:         0,
+        playlistVideos:    0,
+        videoLinks:        0,
+        videoLinksSkipped: 0,
+        tagColors:         0,
+        errors:            []
     };
 
     const BASE_HEADERS = {
@@ -247,7 +243,6 @@ async function importSecondaryData(data) {
     };
 
     // ── TAG COLORS ────────────────────────────────────────────
-    // Etiket rengi varsa üzerine yaz (kullanıcı son rengi tercih eder)
     if (Array.isArray(data.tag_colors) && data.tag_colors.length > 0) {
         try {
             const payload = data.tag_colors
@@ -260,8 +255,13 @@ async function importSecondaryData(data) {
                     headers: { ...BASE_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
                     body: JSON.stringify(payload)
                 });
-                if (res.ok) results.tagColors = payload.length;
-                else results.errors.push('tag_colors');
+                if (res.ok) {
+                    results.tagColors = payload.length;
+                } else {
+                    const errText = await res.text();
+                    console.warn(`tag_colors batch insert başarısız (HTTP ${res.status}): ${errText}`);
+                    results.errors.push('tag_colors');
+                }
             }
         } catch (e) {
             console.warn('tag_colors içe aktarma hatası:', e);
@@ -269,34 +269,61 @@ async function importSecondaryData(data) {
         }
     }
 
-    // ── VIDEO LINKS ───────────────────────────────────────────
-    // Aynı bağlantı zaten varsa atla (UNIQUE constraint: source+target)
+    // ── VIDEO LINKS — TEK TEK INSERT (toplu batch güvenilmez) ─
+    // Her bağlantı ayrı ayrı gönderilir:
+    //   - 201/200 → başarıyla eklendi
+    //   - 409     → zaten vardı, atla (bu bir hata değil)
+    //   - diğer   → gerçek hata, logla
     if (Array.isArray(data.video_links) && data.video_links.length > 0) {
-        try {
-            const payload = data.video_links
-                .filter(vl => vl.source_video_id && vl.target_video_id)
-                .map(vl => ({
-                    source_video_id: vl.source_video_id,
-                    target_video_id: vl.target_video_id
-                }));
+        const payload = data.video_links
+            .filter(vl => vl.source_video_id && vl.target_video_id)
+            .map(vl => ({
+                source_video_id: vl.source_video_id,
+                target_video_id: vl.target_video_id
+            }));
 
-            if (payload.length > 0) {
-                const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/video_links`, {
-                    method: 'POST',
-                    headers: { ...BASE_HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) results.videoLinks = payload.length;
-                else results.errors.push('video_links');
+        if (payload.length > 0) {
+            let insertedCount = 0;
+            let skippedCount  = 0;
+            let failedCount   = 0;
+
+            for (const link of payload) {
+                try {
+                    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/video_links`, {
+                        method: 'POST',
+                        headers: { ...BASE_HEADERS, 'Prefer': 'return=minimal' },
+                        body: JSON.stringify(link)
+                    });
+
+                    if (res.ok) {
+                        insertedCount++;
+                    } else if (res.status === 409) {
+                        // Zaten var — bu normal, atla
+                        skippedCount++;
+                    } else {
+                        const errText = await res.text();
+                        console.warn(
+                            `video_link eklenemedi (${link.source_video_id}→${link.target_video_id}): ` +
+                            `HTTP ${res.status}: ${errText}`
+                        );
+                        failedCount++;
+                    }
+                } catch (singleErr) {
+                    console.warn('video_link tekil insert hatası:', link, singleErr);
+                    failedCount++;
+                }
             }
-        } catch (e) {
-            console.warn('video_links içe aktarma hatası:', e);
-            results.errors.push('video_links');
+
+            results.videoLinks        = insertedCount;
+            results.videoLinksSkipped = skippedCount;
+
+            if (failedCount > 0) {
+                results.errors.push(`video_links (${failedCount} eklenemedi)`);
+            }
         }
     }
 
     // ── ANNOTATIONS ───────────────────────────────────────────
-    // ID dahil gönderilir; aynı ID varsa atla
     if (Array.isArray(data.annotations) && data.annotations.length > 0) {
         try {
             const payload = data.annotations
@@ -315,8 +342,13 @@ async function importSecondaryData(data) {
                     headers: { ...BASE_HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
                     body: JSON.stringify(payload)
                 });
-                if (res.ok) results.annotations = payload.length;
-                else results.errors.push('annotations');
+                if (res.ok) {
+                    results.annotations = payload.length;
+                } else {
+                    const errText = await res.text();
+                    console.warn(`annotations batch insert başarısız (HTTP ${res.status}): ${errText}`);
+                    results.errors.push('annotations');
+                }
             }
         } catch (e) {
             console.warn('annotations içe aktarma hatası:', e);
@@ -325,17 +357,13 @@ async function importSecondaryData(data) {
     }
 
     // ── PLAYLISTS + PLAYLIST_VIDEOS ───────────────────────────
-    // Playlist'ler ID olmadan eklenir (DB otomatik atar).
-    // Aynı adlı playlist varsa yeni ekleme yapılmaz, var olan kullanılır.
-    // Sonra eski ID → yeni ID haritası kurulup playlist_videos eklenir.
     if (Array.isArray(data.playlists) && data.playlists.length > 0) {
         try {
-            const playlistIdMap = {}; // { eskiId: yeniId }
+            const playlistIdMap = {};
 
             for (const pl of data.playlists) {
                 if (!pl.name) continue;
 
-                // Aynı adlı playlist var mı?
                 let existingId = null;
                 try {
                     const checkRes = await fetchWithRetry(
@@ -349,18 +377,13 @@ async function importSecondaryData(data) {
                 } catch (e) { /* kontrol başarısız, eklemeye devam */ }
 
                 if (existingId !== null) {
-                    // Zaten var: sadece haritaya ekle, yeni ekleme yapma
                     playlistIdMap[pl.id] = existingId;
                 } else {
-                    // Yeni playlist oluştur (ID olmadan — DB atar)
                     try {
                         const insRes = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/playlists`, {
                             method: 'POST',
                             headers: { ...BASE_HEADERS, 'Prefer': 'return=representation' },
-                            body: JSON.stringify({
-                                name:  pl.name,
-                                color: pl.color || '#ff007f'
-                            })
+                            body: JSON.stringify({ name: pl.name, color: pl.color || '#ff007f' })
                         });
                         if (insRes.ok) {
                             const rows = await insRes.json();
@@ -379,7 +402,6 @@ async function importSecondaryData(data) {
                 }
             }
 
-            // Playlist Videos: yeni ID'lerle eşleştirerek ekle
             if (Array.isArray(data.playlist_videos) && data.playlist_videos.length > 0) {
                 const pvPayload = data.playlist_videos
                     .filter(pv => pv.playlist_id && pv.video_id && playlistIdMap[pv.playlist_id])
@@ -395,8 +417,13 @@ async function importSecondaryData(data) {
                             headers: { ...BASE_HEADERS, 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
                             body: JSON.stringify(pvPayload)
                         });
-                        if (pvRes.ok) results.playlistVideos = pvPayload.length;
-                        else results.errors.push('playlist_videos');
+                        if (pvRes.ok) {
+                            results.playlistVideos = pvPayload.length;
+                        } else {
+                            const errText = await pvRes.text();
+                            console.warn(`playlist_videos insert başarısız: ${errText}`);
+                            results.errors.push('playlist_videos');
+                        }
                     } catch (e) {
                         console.warn('playlist_videos içe aktarma hatası:', e);
                         results.errors.push('playlist_videos');
@@ -425,12 +452,22 @@ function buildSuccessMessage(insertedVideos, skippedVideos, insertedFavorites, p
         msg += `📹 Video: ${insertedVideos} eklendi, ${skippedVideos} zaten vardı\n`;
         msg += `⭐ Favori: ${insertedFavorites} eklendi\n`;
         if (!isOld) {
-            if (phase2.tagColors > 0)      msg += `🎨 Etiket rengi: ${phase2.tagColors} güncellendi\n`;
-            if (phase2.videoLinks > 0)     msg += `🔗 Kombinasyon bağlantısı: ${phase2.videoLinks} eklendi\n`;
-            if (phase2.annotations > 0)    msg += `📝 Video notu: ${phase2.annotations} eklendi\n`;
-            if (phase2.playlists > 0)      msg += `🎵 Oynatma listesi: ${phase2.playlists} oluşturuldu\n`;
-            if (phase2.playlistVideos > 0) msg += `   └─ ${phase2.playlistVideos} video listeye bağlandı\n`;
-            if (phase2.errors.length > 0)  msg += `\n⚠️ Bazı ek veriler eklenemedi: ${phase2.errors.join(', ')}`;
+            if (phase2.tagColors > 0)
+                msg += `🎨 Etiket rengi: ${phase2.tagColors} güncellendi\n`;
+            if (phase2.videoLinks > 0 || phase2.videoLinksSkipped > 0) {
+                const total = phase2.videoLinks + phase2.videoLinksSkipped;
+                msg += `🔗 Kombinasyon bağlantısı: ${phase2.videoLinks} eklendi`;
+                if (phase2.videoLinksSkipped > 0) msg += `, ${phase2.videoLinksSkipped} zaten vardı`;
+                msg += `\n`;
+            }
+            if (phase2.annotations > 0)
+                msg += `📝 Video notu: ${phase2.annotations} eklendi\n`;
+            if (phase2.playlists > 0)
+                msg += `🎵 Oynatma listesi: ${phase2.playlists} oluşturuldu\n`;
+            if (phase2.playlistVideos > 0)
+                msg += `   └─ ${phase2.playlistVideos} video listeye bağlandı\n`;
+            if (phase2.errors.length > 0)
+                msg += `\n⚠️ Bazı ek veriler eklenemedi: ${phase2.errors.join(', ')}`;
         }
         return msg;
     } else {
@@ -440,12 +477,21 @@ function buildSuccessMessage(insertedVideos, skippedVideos, insertedFavorites, p
         msg += `📹 Videos: ${insertedVideos} added, ${skippedVideos} already existed\n`;
         msg += `⭐ Favorites: ${insertedFavorites} added\n`;
         if (!isOld) {
-            if (phase2.tagColors > 0)      msg += `🎨 Tag colors: ${phase2.tagColors} updated\n`;
-            if (phase2.videoLinks > 0)     msg += `🔗 Combination links: ${phase2.videoLinks} added\n`;
-            if (phase2.annotations > 0)    msg += `📝 Video notes: ${phase2.annotations} added\n`;
-            if (phase2.playlists > 0)      msg += `🎵 Playlists: ${phase2.playlists} created\n`;
-            if (phase2.playlistVideos > 0) msg += `   └─ ${phase2.playlistVideos} videos linked\n`;
-            if (phase2.errors.length > 0)  msg += `\n⚠️ Some secondary data could not be imported: ${phase2.errors.join(', ')}`;
+            if (phase2.tagColors > 0)
+                msg += `🎨 Tag colors: ${phase2.tagColors} updated\n`;
+            if (phase2.videoLinks > 0 || phase2.videoLinksSkipped > 0) {
+                msg += `🔗 Combination links: ${phase2.videoLinks} added`;
+                if (phase2.videoLinksSkipped > 0) msg += `, ${phase2.videoLinksSkipped} already existed`;
+                msg += `\n`;
+            }
+            if (phase2.annotations > 0)
+                msg += `📝 Video notes: ${phase2.annotations} added\n`;
+            if (phase2.playlists > 0)
+                msg += `🎵 Playlists: ${phase2.playlists} created\n`;
+            if (phase2.playlistVideos > 0)
+                msg += `   └─ ${phase2.playlistVideos} videos linked\n`;
+            if (phase2.errors.length > 0)
+                msg += `\n⚠️ Some secondary data could not be imported: ${phase2.errors.join(', ')}`;
         }
         return msg;
     }
