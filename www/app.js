@@ -3,8 +3,8 @@
 // ✅ GÜNCELLEME (Adım 2.4): Playlist sistemi
 // ✅ GÜNCELLEME (Adım 3.3): loadTagColors çağrısı
 // ✅ GÜNCELLEME (Adım 3.2): URL durum senkronizasyonu
-// ✅ DÜZELTME: Eksik sidebar menü butonları, initFormHandlers, initVideoHandlers geri eklendi
-//   Instructor butonları initFormHandlers aracılığıyla (onclick) ayarlanır — çift-handler yok
+// ✅ DÜZELTME: Instructor butonları initFormHandlers SONRASINDA doğrudan
+//   onclick ile kurulur — hangi koşulda olursa olsun çalışması garanti
 import { translations } from './i18n.js';
 import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
@@ -132,9 +132,8 @@ async function initializeApp() {
     document.getElementById('btn-start-practice')?.addEventListener('click', () => {
         const dueVideos = getDueVideos(store.get('globalVideos'));
         if (dueVideos.length === 0) {
-            const lang = store.get('currentLang');
             showCustomAlert(
-                lang === 'tr'
+                store.get('currentLang') === 'tr'
                     ? '🎉 Bugün için tüm kombinasyonları çalıştın! Harika iş.'
                     : '🎉 You\'ve practiced all combinations for today! Great job.'
             );
@@ -143,14 +142,60 @@ async function initializeApp() {
         startPracticeSession(dueVideos);
     });
 
-    // ── Form, video, eğitmen, etiket, modal başlatıcıları ───────
-    // initFormHandlers; instructor butonlarını (toggle/edit/delete/save) dahil
-    // tüm form handler'larını onclick ataması ile kurar.
+    // ── Tüm modül başlatıcıları ─────────────────────────────────
     initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
     initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
     initInstructorHandlers(fetchInstructors, fetchVideos);
     initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
     initModalCallbacks(applyFiltersAndSearch);
+
+    // ── EĞİTMEN BUTONLARI — Kesin çözüm ────────────────────────
+    // initFormHandlers çağrısı SONRASINDA tekrar atanır.
+    // onclick ataması her zaman son atananı korur — çift-handler YOK,
+    // çift-toggle YOK. Bu satırlar hangi koşulda olursa olsun çalışır.
+
+    // ➕ Yeni eğitmen formu aç/kapat
+    const _btnToggle = document.getElementById('btn-toggle-new-instructor');
+    if (_btnToggle) {
+        _btnToggle.onclick = () => {
+            const cont  = document.getElementById('new-instructor-container');
+            const input = document.getElementById('form-new-instructor-input');
+            const sBtn  = document.getElementById('btn-save-instructor');
+            const lang  = translations[store.get('currentLang')];
+            store.set('editInstructorId', null);
+            if (cont)  cont.classList.toggle('d-none');
+            if (input) input.value = '';
+            if (sBtn)  sBtn.innerText = lang.btnAddIns || 'Ekle';
+        };
+    }
+
+    // ✏️ Seçili eğitmeni düzenle
+    const _btnEdit = document.getElementById('btn-edit-instructor');
+    if (_btnEdit) {
+        _btnEdit.onclick = () => {
+            const sel  = document.getElementById('form-instructor-select');
+            if (!sel || !sel.value) return;
+            const insList = store.get('globalInstructors') || [];
+            const ins = insList.find(i => String(i.id) === String(sel.value));
+            if (!ins) return;
+            const cont  = document.getElementById('new-instructor-container');
+            const input = document.getElementById('form-new-instructor-input');
+            const sBtn  = document.getElementById('btn-save-instructor');
+            const lang  = translations[store.get('currentLang')];
+            store.set('editInstructorId', sel.value);
+            if (input) input.value = ins.name;
+            if (sBtn)  sBtn.innerText = lang.btnUpdateIns || 'Güncelle';
+            if (cont)  cont.classList.remove('d-none');
+        };
+    }
+
+    // 🗑️ Seçili eğitmeni sil
+    const _btnDelete = document.getElementById('btn-delete-instructor');
+    if (_btnDelete) _btnDelete.onclick = () => deleteInstructor();
+
+    // 💾 Yeni/düzenlenen eğitmeni kaydet
+    const _btnSave = document.getElementById('btn-save-instructor');
+    if (_btnSave) _btnSave.onclick = () => handleInstructorSubmit();
 
     // ── Çıkış butonu ────────────────────────────────────────────
     document.getElementById('btn-logout')?.addEventListener('click', async () => {
@@ -233,7 +278,7 @@ async function initializeApp() {
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
 
-    // ── Etiket yönetimi butonları ───────────────────────────────
+    // ── Etiket yönetimi ─────────────────────────────────────────
     document.getElementById('tag-manager-merge-btn')?.addEventListener('click',   () => mergeSelectedTags());
     document.getElementById('tag-manager-delete-btn')?.addEventListener('click',  () => deleteSelectedTags());
     document.getElementById('tag-manager-cleanup-btn')?.addEventListener('click', () => cleanupUnusedTags());
@@ -276,13 +321,8 @@ async function initializeApp() {
     // ── URL durumu ──────────────────────────────────────────────
     const urlState = readUrlState();
     if (urlState) {
-        if (urlState.view && urlState.view !== 'library') {
-            callSwitchView(urlState.view);
-        }
-        setTimeout(() => {
-            applyUrlStateToUI(urlState);
-            applyFiltersAndSearch();
-        }, 100);
+        if (urlState.view && urlState.view !== 'library') callSwitchView(urlState.view);
+        setTimeout(() => { applyUrlStateToUI(urlState); applyFiltersAndSearch(); }, 100);
     }
 
     // ── Offline senkronizasyon ──────────────────────────────────

@@ -1,15 +1,14 @@
 <!-- views/add-video.html - Yeni video ekleme/düzenleme formu -->
 <!-- ✅ GÜNCELLEME (Adım 4.1): YouTube metadata bilgi kutusu eklendi -->
-<!-- ✅ GÜNCELLEME (Button Unification): buton sınıfları güncellendi -->
-<!-- ✅ GÜNCELLEME (Layout Fix v2): Dosya Seç + Resmi Sıfırla → ikon butonlar,
-     drop-area'nın sağ yanına üst üste yerleştirildi. İki sütun simetrisi korundu. -->
+<!-- ✅ GÜNCELLEME (Button Unification + Layout Fix v3):
+     📁 ve 🗑️ ikonları — SADECE emoji, kesinlikle yazı yok -->
 <div id="view-add-container" class="view-panel d-none">
     <form id="add-video-form" class="glass-form" style="max-width:900px; margin:0 auto;">
         <h2 id="form-title">➕ Yeni Video Kaydet</h2>
 
         <div class="atkk-form-grid">
 
-            <!-- ── SOL KOLON ─────────────────────────────────── -->
+            <!-- ── SOL KOLON ────────────────────────────── -->
             <div class="atkk-form-column">
 
                 <div class="form-group">
@@ -17,12 +16,13 @@
                     <div style="display:flex; gap:8px;">
                         <select id="form-instructor-select" style="flex:1;"></select>
                         <button type="button" id="btn-toggle-new-instructor" class="lang-btn">➕</button>
-                        <button type="button" id="btn-edit-instructor" class="lang-btn">✏️</button>
-                        <button type="button" id="btn-delete-instructor" class="lang-btn" style="background:rgba(239,68,68,0.2);">🗑️</button>
+                        <button type="button" id="btn-edit-instructor"       class="lang-btn">✏️</button>
+                        <button type="button" id="btn-delete-instructor"     class="lang-btn" style="background:rgba(239,68,68,0.2);">🗑️</button>
                     </div>
                 </div>
 
-                <div id="new-instructor-container" class="form-group d-none" style="background:rgba(0,240,255,0.05); padding:10px; border-radius:10px;">
+                <div id="new-instructor-container" class="form-group d-none"
+                     style="background:rgba(0,240,255,0.05); padding:10px; border-radius:10px;">
                     <label id="lbl-new-instructor-name">Eğitmen Adı:</label>
                     <div style="display:flex; gap:8px;">
                         <input type="text" id="form-new-instructor-input">
@@ -32,7 +32,8 @@
 
                 <div class="form-group">
                     <label id="lbl-video-url">Video URL (Instagram Reels / YouTube Shorts vb.):</label>
-                    <input type="url" id="form-video-url" placeholder="https://... (Drive için boş bırakabilirsiniz)">
+                    <input type="url" id="form-video-url"
+                           placeholder="https://... (Drive için boş bırakabilirsiniz)">
                 </div>
 
                 <div class="atkk-inline-row">
@@ -56,98 +57,69 @@
                         <div id="chips-area" style="display:inline-flex; flex-wrap:wrap; gap:6px;"></div>
                         <div class="autocomplete-wrapper" style="flex:1; min-width:140px; position:relative;">
                             <input type="text" id="form-tags-input"
-                                placeholder="Yazın ve virgül koyun..."
-                                style="border:none; padding:4px; background:transparent; width:100%; outline:none; color:#f1f5f9;">
+                                   placeholder="Yazın ve virgül koyun..."
+                                   style="border:none; padding:4px; background:transparent; width:100%; outline:none; color:#f1f5f9;">
                             <div id="autocomplete-list" class="autocomplete-suggestions d-none"></div>
                         </div>
                     </div>
                 </div>
 
             </div>
-            <!-- ── SOL KOLON SONU ─────────────────────────────── -->
+            <!-- ── SOL KOLON SONU ────────────────────────── -->
 
-            <!-- ── SAĞ KOLON ──────────────────────────────────── -->
+            <!-- ── SAĞ KOLON ─────────────────────────────── -->
             <div class="atkk-form-column">
 
                 <div class="form-group">
                     <label id="lbl-cover-upload">Kapak Resmi:</label>
 
-                    <!-- ✅ DROP-AREA + İKON BUTONLARI YAN YANA -->
-                    <!-- drop-area biraz daraltıldı (calc(100% - 44px)),
-                         yanında üst üste 2 ikon butonu: 📁 ve 🗑️  -->
+                    <!-- Drop area + ikon butonlar yan yana -->
                     <div style="display:flex; gap:6px; align-items:stretch;">
 
-                        <!-- Kapak önizleme alanı -->
+                        <!-- Kapak önizleme -->
                         <div id="drop-area" tabindex="0" style="flex:1;">
                             <span id="drop-area-text">📸 Tıklayıp Ctrl + V ile ekran görüntüsü yapıştırın</span>
                             <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
                         </div>
 
-                        <!-- Üst üste ikon butonları -->
-                        <div style="display:flex; flex-direction:column; gap:4px; flex-shrink:0;">
+                        <!-- 📁 ve 🗑️ — SADECE EMOJİ, YAZISIZ, üst üste -->
+                        <div style="display:flex; flex-direction:column; gap:4px; flex-shrink:0; width:38px;">
 
-                            <!-- 📁 Dosya Seç -->
-                            <button
-                                type="button"
-                                id="select-file-btn"
-                                title="Dosya Seç"
-                                style="
-                                    flex:1;
-                                    width:38px;
-                                    background:rgba(0,240,255,0.08);
-                                    border:1px solid rgba(0,240,255,0.38);
-                                    color:#00f0ff;
-                                    border-radius:10px;
-                                    cursor:pointer;
-                                    font-size:1.1rem;
-                                    display:flex;
-                                    align-items:center;
-                                    justify-content:center;
-                                    transition:all 0.2s ease;
-                                    padding:0;
-                                "
-                                onmouseover="this.style.background='rgba(0,240,255,0.2)'; this.style.boxShadow='0 0 10px rgba(0,240,255,0.3)'"
-                                onmouseout="this.style.background='rgba(0,240,255,0.08)'; this.style.boxShadow='none'"
-                            >📁</button>
+                            <!-- Dosya seç — sadece ikon -->
+                            <button type="button" id="select-file-btn"
+                                    title="Dosya Seç"
+                                    style="flex:1; min-height:0; padding:0; font-size:1.15rem; line-height:1;
+                                           background:rgba(0,240,255,0.08);
+                                           border:1px solid rgba(0,240,255,0.38);
+                                           color:#00f0ff; border-radius:10px; cursor:pointer;
+                                           display:flex; align-items:center; justify-content:center;
+                                           transition:background 0.2s, box-shadow 0.2s;">&#128193;</button>
                             <input type="file" id="cover-file-input" accept="image/*" style="display:none;">
 
-                            <!-- 🗑️ Resmi Sıfırla -->
-                            <button
-                                type="button"
-                                id="btn-reset-cover"
-                                title="Resmi Sıfırla"
-                                style="
-                                    flex:1;
-                                    width:38px;
-                                    background:rgba(239,68,68,0.1);
-                                    border:1px solid rgba(239,68,68,0.4);
-                                    color:#ef4444;
-                                    border-radius:10px;
-                                    cursor:pointer;
-                                    font-size:1.1rem;
-                                    display:flex;
-                                    align-items:center;
-                                    justify-content:center;
-                                    transition:all 0.2s ease;
-                                    padding:0;
-                                "
-                                onmouseover="this.style.background='rgba(239,68,68,0.22)'; this.style.boxShadow='0 0 10px rgba(239,68,68,0.25)'"
-                                onmouseout="this.style.background='rgba(239,68,68,0.1)'; this.style.boxShadow='none'"
-                            >🗑️</button>
+                            <!-- Resmi sıfırla — sadece ikon -->
+                            <button type="button" id="btn-reset-cover"
+                                    title="Resmi Sıfırla"
+                                    style="flex:1; min-height:0; padding:0; font-size:1.15rem; line-height:1;
+                                           background:rgba(239,68,68,0.10);
+                                           border:1px solid rgba(239,68,68,0.40);
+                                           color:#ef4444; border-radius:10px; cursor:pointer;
+                                           display:flex; align-items:center; justify-content:center;
+                                           transition:background 0.2s, box-shadow 0.2s;">&#128465;</button>
 
                         </div>
                     </div>
-                    <!-- ── ikon butonlar sonu ── -->
                 </div>
 
-                <div class="form-group" style="background:rgba(255,0,127,0.05); padding:10px; border-radius:10px;">
+                <div class="form-group"
+                     style="background:rgba(255,0,127,0.05); padding:10px; border-radius:10px;">
                     <label class="checkbox-group">
                         <input type="checkbox" id="form-is-downloaded">
                         <span id="lbl-downloaded">Google Drive'a Yedeklendi mi?</span>
                     </label>
                     <div id="drive-url-container" class="d-none" style="margin-top:8px;">
                         <label id="lbl-drive-url" style="font-size:0.75rem;">Drive Paylaşım Linki:</label>
-                        <input type="url" id="form-drive-url" placeholder="https://drive.google.com/file/d/...">
+                        <input type="url" id="form-drive-url"
+                               placeholder="https://drive.google.com/file/d/...">
                     </div>
                 </div>
 
@@ -158,11 +130,10 @@
                 </div>
 
             </div>
-            <!-- ── SAĞ KOLON SONU ─────────────────────────────── -->
+            <!-- ── SAĞ KOLON SONU ─────────────────────────── -->
 
         </div>
 
-        <!-- Tam genişlik kaydet butonu — grid dışında -->
         <button type="submit" id="btn-submit-video" class="btn-action-save">💾 Veritabanına Kaydet</button>
 
     </form>
