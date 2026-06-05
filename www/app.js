@@ -2,7 +2,10 @@
 // ✅ GÜNCELLEME (Adım 2.3): Practice Session modu
 // ✅ GÜNCELLEME (Adım 2.4): Playlist sistemi
 // ✅ GÜNCELLEME (Adım 3.3): loadTagColors çağrısı
-// ✅ GÜNCELLEME (Adım 3.2): URL durum senkronizasyonu — sayfa açılınca URL'den filtreler yükleniyor
+// ✅ GÜNCELLEME (Adım 3.2): URL durum senkronizasyonu
+// ✅ DÜZELTME: Instructor buton çakışması — addEventListener yerine onclick atama kullanıldı,
+//   böylece formHandlers.js'in onclick atamasıyla çift-tetikleme sorunu ortadan kalktı.
+//   btn-add-instructor → btn-save-instructor ID düzeltildi.
 import { translations } from './i18n.js';
 import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
@@ -48,8 +51,8 @@ import { initRealtimeSync } from './realtime.js';
 import { initChainManager, loadAllVideoLinks } from './chainManager.js';
 import { initInstructorProfile } from './instructorProfile.js';
 import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './export/listExport.js';
-import { readUrlState, applyUrlStateToUI } from './urlState.js'; // ✅ ADIM 3.2
-import { flushQueue, hasPendingItems } from './syncQueue.js'; // ✅ ADIM 2.3
+import { readUrlState, applyUrlStateToUI } from './urlState.js';
+import { flushQueue, hasPendingItems } from './syncQueue.js';
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -73,10 +76,12 @@ async function loadTemplates() {
 
         const modalContainer = document.createElement('div');
         modalContainer.id = 'modals-container';
-        modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal + annotationModal + linkManagerModal;
+        modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal +
+                                   annotationModal + linkManagerModal;
         document.body.appendChild(modalContainer);
 
-        container.innerHTML = library + stats + addVideo + tagManager + practiceSession + instructorProfile;
+        container.innerHTML = library + stats + addVideo + tagManager +
+                              practiceSession + instructorProfile;
 
         await initializeApp();
     } catch (err) {
@@ -99,6 +104,7 @@ async function initializeApp() {
     initInstructorProfile(callSwitchView);
     initPracticeSession(callSwitchView);
 
+    // ── Dil butonu ──────────────────────────────────────────────
     const langBtn = document.getElementById('lang-toggle-btn');
     if (langBtn) {
         const savedLang = localStorage.getItem('tango_lang') || 'tr';
@@ -110,68 +116,43 @@ async function initializeApp() {
             localStorage.setItem('tango_lang', newLang);
             langBtn.textContent = newLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
             updateAllLanguages();
-            callUpdateInterfaceLanguage();
-            if (store.get('currentView') === 'stats') renderStatsPanel();
-            if (store.get('currentView') === 'tagManager') renderTagManagerUI();
+            applyFiltersAndSearch();
         };
     }
 
-    // Sidebar menü butonları
-    document.getElementById('menu-library')?.addEventListener('click', () => { callSwitchView('library'); syncBottomNavActiveState('library'); });
-    document.getElementById('menu-favorites')?.addEventListener('click', () => { callSwitchView('favorites'); syncBottomNavActiveState('favorites'); });
-    document.getElementById('menu-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
-    document.getElementById('menu-add-video')?.addEventListener('click', () => { callSwitchView('add'); syncBottomNavActiveState('add'); });
-    document.getElementById('menu-tag-manager')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
+    // ── Çıkış Yap ───────────────────────────────────────────────
+    const signOutBtn = document.getElementById('btn-sign-out');
+    if (signOutBtn) {
+        signOutBtn.onclick = async () => {
+            const ok = await showCustomConfirm(
+                store.get('currentLang') === 'tr'
+                    ? 'Çıkış yapmak istediğinize emin misiniz?'
+                    : 'Are you sure you want to sign out?',
+                store.get('currentLang') === 'tr' ? 'Çıkış Yap' : 'Sign Out',
+                store.get('currentLang') === 'tr' ? 'İptal' : 'Cancel'
+            );
+            if (ok) await signOut();
+        };
+    }
 
-    // Pratik Başlat
-    document.getElementById('btn-start-practice')?.addEventListener('click', () => {
-        const dueVideos = getDueVideos(store.get('globalVideos'));
-        if (dueVideos.length === 0) {
-            const lang = store.get('currentLang');
-            alert(lang === 'tr'
-                ? '🎉 Bugün için tüm kombinasyonları çalıştın! Harika iş.'
-                : '🎉 You\'ve practiced all combinations for today! Great job.');
-            return;
-        }
-        startPracticeSession(dueVideos);
-    });
-
-    initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
-    initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
-    initInstructorHandlers(fetchInstructors, fetchVideos);
-    initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
-    initModalCallbacks(applyFiltersAndSearch);
-
-    // Çıkış butonu
-    document.getElementById('btn-logout')?.addEventListener('click', async () => {
-        const ok = await showCustomConfirm(
-            store.get('currentLang') === 'tr'
-                ? 'Çıkış yapmak istediğinize emin misiniz?'
-                : 'Are you sure you want to sign out?',
-            store.get('currentLang') === 'tr' ? 'Çıkış Yap' : 'Sign Out',
-            store.get('currentLang') === 'tr' ? 'İptal' : 'Cancel'
-        );
-        if (ok) await signOut();
-    });
-
-    // Paylaşım butonları
+    // ── Paylaşım butonları ──────────────────────────────────────
     document.getElementById('btn-share-whatsapp')?.addEventListener('click', shareToWhatsApp);
     document.getElementById('btn-share-clipboard')?.addEventListener('click', copyListToClipboard);
     document.getElementById('btn-share-print')?.addEventListener('click', exportToPrintView);
 
-    // Dosya seçici
+    // ── Dosya seçici ────────────────────────────────────────────
     const selectFileBtn = document.getElementById('select-file-btn');
-    const fileInputEl = document.getElementById('cover-file-input');
+    const fileInputEl   = document.getElementById('cover-file-input');
     if (selectFileBtn && fileInputEl) {
         selectFileBtn.onclick = () => fileInputEl.click();
-        fileInputEl.onchange = async (e) => {
+        fileInputEl.onchange  = async (e) => {
             const file = e.target.files[0];
             if (file) await handleFileSelect(file, store.get('currentLang'));
             fileInputEl.value = '';
         };
     }
 
-    // Video URL input → thumbnail + metadata otomatik çek
+    // ── Video URL → thumbnail ───────────────────────────────────
     const videoUrlInput = document.getElementById('form-video-url');
     if (videoUrlInput) {
         videoUrlInput.addEventListener('input', async (e) => {
@@ -180,36 +161,43 @@ async function initializeApp() {
         });
     }
 
-    // Kapak resmi
+    // ── Kapak resmi paste + sıfırla ─────────────────────────────
     document.getElementById('drop-area')?.addEventListener('paste', (e) =>
         handlePasteEvent(e, store.get('currentLang'))
     );
-    document.getElementById('btn-reset-cover')?.addEventListener('click', () => {
-        resetUploadedCoverUrl();
-        const imgPreview = document.getElementById('image-preview');
-        if (imgPreview) imgPreview.classList.add('d-none');
-        const dropAreaText = document.getElementById('drop-area-text');
-        if (dropAreaText) dropAreaText.classList.remove('d-none');
-    });
+    const resetCoverBtn = document.getElementById('btn-reset-cover');
+    if (resetCoverBtn) {
+        resetCoverBtn.onclick = () => {
+            resetUploadedCoverUrl();
+            const imgPreview  = document.getElementById('image-preview');
+            const dropAreaTxt = document.getElementById('drop-area-text');
+            if (imgPreview)  imgPreview.classList.add('d-none');
+            if (dropAreaTxt) dropAreaTxt.classList.remove('d-none');
+        };
+    }
 
-    // Arama
+    // ── Arama ───────────────────────────────────────────────────
     const searchBtn = document.getElementById('search-btn');
     if (searchBtn) searchBtn.onclick = () => applyFiltersAndSearch();
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) searchInput.addEventListener('input', () => applyFiltersAndSearch());
+    document.getElementById('search-input')?.addEventListener('input', () => {
+        setVisibleCount(20);
+        applyFiltersAndSearch();
+    });
 
-    // Filtreler
+    // ── Filtreler ───────────────────────────────────────────────
     ['filter-role-select', 'filter-instructor-select', 'filter-tag-select',
      'filter-date-select', 'filter-platform-select', 'filter-learning-status-select']
-    .forEach(id => document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSearch()));
+    .forEach(id =>
+        document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSearch())
+    );
 
-    // Load more
+    // ── Load more ───────────────────────────────────────────────
     document.getElementById('btn-load-more')?.addEventListener('click', () => {
         incrementVisibleCount(20);
         applyFiltersAndSearch();
     });
 
-    // Modaller
+    // ── Modaller ────────────────────────────────────────────────
     document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
     document.getElementById('video-modal')?.addEventListener('click', (e) => {
         if (e.target.id === 'video-modal') closeVideoModal();
@@ -219,14 +207,66 @@ async function initializeApp() {
         if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
     });
 
-    // Form submit
+    // ── Form submit ─────────────────────────────────────────────
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
-    document.getElementById('btn-add-instructor')?.addEventListener('click', handleInstructorSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
 
-    // Etiket yönetimi butonları
-    document.getElementById('tag-manager-merge-btn')?.addEventListener('click', () => mergeSelectedTags());
-    document.getElementById('tag-manager-delete-btn')?.addEventListener('click', () => deleteSelectedTags());
+    // ── EĞİTMEN YÖNETİM BUTONLARI ──────────────────────────────
+    // ✅ DÜZELTME: addEventListener yerine onclick atama kullanılıyor.
+    //    Böylece formHandlers.js'in de aynı butona onclick atadığı
+    //    durumda çift-tetikleme (toggle x2 = görünmez değişim) olmaz.
+    //    app.js'in ataması her zaman kazanır (daha sonra çalışır).
+
+    // ➕ Yeni eğitmen formu aç/kapat
+    const btnToggleIns = document.getElementById('btn-toggle-new-instructor');
+    if (btnToggleIns) {
+        btnToggleIns.onclick = () => {
+            const container = document.getElementById('new-instructor-container');
+            if (container) container.classList.toggle('d-none');
+            store.set('editInstructorId', null);
+            const input   = document.getElementById('form-new-instructor-input');
+            const saveBtn = document.getElementById('btn-save-instructor');
+            const lang    = translations[store.get('currentLang')];
+            if (input)   input.value = '';
+            if (saveBtn) saveBtn.innerText = lang.btnAddIns || 'Ekle';
+        };
+    }
+
+    // ✏️ Seçili eğitmeni düzenle
+    const btnEditIns = document.getElementById('btn-edit-instructor');
+    if (btnEditIns) {
+        btnEditIns.onclick = () => {
+            const select = document.getElementById('form-instructor-select');
+            if (!select || !select.value) return;
+            const instructors = store.get('globalInstructors') || [];
+            const instructor  = instructors.find(i => String(i.id) === String(select.value));
+            if (!instructor) return;
+            store.set('editInstructorId', select.value);
+            const input      = document.getElementById('form-new-instructor-input');
+            const saveBtn    = document.getElementById('btn-save-instructor');
+            const container  = document.getElementById('new-instructor-container');
+            const lang       = translations[store.get('currentLang')];
+            if (input)     input.value = instructor.name;
+            if (saveBtn)   saveBtn.innerText = lang.btnUpdateIns || 'Güncelle';
+            if (container) container.classList.remove('d-none');
+        };
+    }
+
+    // 🗑️ Seçili eğitmeni sil
+    const btnDeleteIns = document.getElementById('btn-delete-instructor');
+    if (btnDeleteIns) {
+        btnDeleteIns.onclick = () => deleteInstructor();
+    }
+
+    // ✅ Eğitmen kaydet — btn-save-instructor (eski yanlış ID: btn-add-instructor)
+    const btnSaveIns = document.getElementById('btn-save-instructor');
+    if (btnSaveIns) {
+        btnSaveIns.onclick = () => handleInstructorSubmit();
+    }
+
+    // ── Etiket yönetimi butonları ───────────────────────────────
+    document.getElementById('tag-manager-merge-btn')?.addEventListener('click',   () => mergeSelectedTags());
+    document.getElementById('tag-manager-delete-btn')?.addEventListener('click',  () => deleteSelectedTags());
     document.getElementById('tag-manager-cleanup-btn')?.addEventListener('click', () => cleanupUnusedTags());
     document.getElementById('tag-merge-cancel-btn')?.addEventListener('click', () => {
         document.getElementById('tag-merge-panel')?.classList.add('d-none');
@@ -234,7 +274,7 @@ async function initializeApp() {
     });
     document.getElementById('tag-merge-confirm-btn')?.addEventListener('click', () => mergeSelectedTags());
 
-    // Etiket autocomplete
+    // ── Etiket autocomplete ─────────────────────────────────────
     setupAutocomplete(
         'form-tags-input', 'autocomplete-list', formTagsArray, renderFormChips,
         (tag) => {
@@ -258,20 +298,35 @@ async function initializeApp() {
         callGetUniqueTagsPool
     );
 
-    // Drive URL checkbox
+    // ── Drive URL checkbox ──────────────────────────────────────
     document.getElementById('form-is-downloaded')?.addEventListener('change', (e) => {
         const driveContainer = document.getElementById('drive-url-container');
         if (driveContainer) driveContainer.classList.toggle('d-none', !e.target.checked);
     });
 
-    // ✅ ADIM 3.2: Sayfa yüklenince URL'den filtre durumunu oku ve uygula
+    // ── Pratik Başlat ───────────────────────────────────────────
+    const startPracticeBtn = document.getElementById('btn-start-practice');
+    if (startPracticeBtn) {
+        startPracticeBtn.addEventListener('click', () => {
+            const dueVideos = getDueVideos(store.get('globalVideos'));
+            if (dueVideos.length === 0) {
+                showCustomAlert(
+                    store.get('currentLang') === 'tr'
+                        ? '🎉 Bugün için tüm kombinasyonları çalıştın! Harika iş.'
+                        : '🎉 You\'ve practiced all combinations for today! Great job.'
+                );
+                return;
+            }
+            startPracticeSession(dueVideos);
+        });
+    }
+
+    // ✅ ADIM 3.2: URL'den filtre durumunu oku ve uygula
     const urlState = readUrlState();
     if (urlState) {
-        // View değiştirilmesi gerekiyorsa
         if (urlState.view && urlState.view !== 'library') {
             callSwitchView(urlState.view);
         }
-        // Dropdown'lara filtre değerlerini uygula (kısa gecikmeyle — DOM'un hazır olması için)
         setTimeout(() => {
             applyUrlStateToUI(urlState);
             applyFiltersAndSearch();
@@ -279,26 +334,21 @@ async function initializeApp() {
     }
 
     // ✅ ADIM 2.3: Online olunca bekleyen offline işlemleri gönder
-    window.addEventListener('online', () => {
-        flushQueue();
-    });
-    // Sayfa açılışında online ve bekleyen işlem varsa hemen gönder
-    if (navigator.onLine && hasPendingItems()) {
-        flushQueue();
-    }
+    window.addEventListener('online', () => { flushQueue(); });
+    if (navigator.onLine && hasPendingItems()) { flushQueue(); }
 
     setupStoreSubscriptions();
     window.applyFiltersAndSearch = applyFiltersAndSearch;
     setupInfiniteScroll();
 
-    // Bottom Nav
-    document.getElementById('bn-library')?.addEventListener('click', () => { callSwitchView('library'); syncBottomNavActiveState('library'); });
-    document.getElementById('bn-favorites')?.addEventListener('click', () => { callSwitchView('favorites'); syncBottomNavActiveState('favorites'); });
-    document.getElementById('bn-stats')?.addEventListener('click', () => { callSwitchView('stats'); syncBottomNavActiveState('stats'); });
-    document.getElementById('bn-add')?.addEventListener('click', () => { callSwitchView('add'); syncBottomNavActiveState('add'); });
-    document.getElementById('bn-tags')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
+    // ── Bottom Nav ──────────────────────────────────────────────
+    document.getElementById('bn-library')?.addEventListener('click',   () => { callSwitchView('library');    syncBottomNavActiveState('library');    });
+    document.getElementById('bn-favorites')?.addEventListener('click', () => { callSwitchView('favorites');  syncBottomNavActiveState('favorites');  });
+    document.getElementById('bn-stats')?.addEventListener('click',     () => { callSwitchView('stats');      syncBottomNavActiveState('stats');      });
+    document.getElementById('bn-add')?.addEventListener('click',       () => { callSwitchView('add');        syncBottomNavActiveState('add');        });
+    document.getElementById('bn-tags')?.addEventListener('click',      () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
 
-    // Grid/Liste toggle
+    // ── Grid/Liste toggle ───────────────────────────────────────
     document.getElementById('btn-view-toggle')?.addEventListener('click', toggleViewMode);
 
     callUpdateInterfaceLanguage();
