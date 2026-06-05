@@ -117,8 +117,8 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const btnClearFavs = document.getElementById('btn-clear-favorites');
     if (btnClearFavs) btnClearFavs.innerText = lang.btnClearFavorites;
 
-    const btnResetCover = document.getElementById('btn-reset-cover');
-    if (btnResetCover) btnResetCover.innerText = lang.resetCoverBtn || (currentLang === 'tr' ? '🗑️ Resmi Sıfırla' : '🗑️ Reset Image');
+    // ✅ DÜZELTME: btn-reset-cover artık ikon-sadece buton olduğu için
+    // buradan metin atanmıyor — HTML'deki 🗑️ emojisi korunuyor.
 
     const editTagsTitle = document.getElementById('edit-tags-title');
     if (editTagsTitle) editTagsTitle.innerText = lang.editTagsTitle;
