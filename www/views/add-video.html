@@ -1,7 +1,8 @@
 <!-- views/add-video.html - Yeni video ekleme/düzenleme formu -->
 <!-- ✅ GÜNCELLEME (Adım 4.1): YouTube metadata bilgi kutusu eklendi -->
 <!-- ✅ GÜNCELLEME (Button Unification): buton sınıfları güncellendi -->
-<!-- ✅ GÜNCELLEME (Layout Fix): orijinal drop-area yapısı korundu, layout dengesi sağlandı -->
+<!-- ✅ GÜNCELLEME (Layout Fix v2): Dosya Seç + Resmi Sıfırla → ikon butonlar,
+     drop-area'nın sağ yanına üst üste yerleştirildi. İki sütun simetrisi korundu. -->
 <div id="view-add-container" class="view-panel d-none">
     <form id="add-video-form" class="glass-form" style="max-width:900px; margin:0 auto;">
         <h2 id="form-title">➕ Yeni Video Kaydet</h2>
@@ -38,8 +39,8 @@
                     <div class="form-group">
                         <label id="lbl-role">Rol Tipi:</label>
                         <select id="form-role-select">
-                            <option value="Both" id="opt-both-role">Çift</option>
-                            <option value="Leader" id="opt-leader-role">Lider</option>
+                            <option value="Both"     id="opt-both-role">Çift</option>
+                            <option value="Leader"   id="opt-leader-role">Lider</option>
                             <option value="Follower" id="opt-follower-role">Takipçi</option>
                         </select>
                     </div>
@@ -70,18 +71,73 @@
 
                 <div class="form-group">
                     <label id="lbl-cover-upload">Kapak Resmi:</label>
-                    <!-- Orijinal drop-area yapısı korundu — sağ kolonu dengeli tutar -->
-                    <div id="drop-area" tabindex="0">
-                        <span id="drop-area-text">📸 Tıklayıp Ctrl + V ile ekran görüntüsü yapıştırın</span>
-                        <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
+
+                    <!-- ✅ DROP-AREA + İKON BUTONLARI YAN YANA -->
+                    <!-- drop-area biraz daraltıldı (calc(100% - 44px)),
+                         yanında üst üste 2 ikon butonu: 📁 ve 🗑️  -->
+                    <div style="display:flex; gap:6px; align-items:stretch;">
+
+                        <!-- Kapak önizleme alanı -->
+                        <div id="drop-area" tabindex="0" style="flex:1;">
+                            <span id="drop-area-text">📸 Tıklayıp Ctrl + V ile ekran görüntüsü yapıştırın</span>
+                            <img id="image-preview" class="preview-img d-none" alt="Kapak Önizleme">
+                        </div>
+
+                        <!-- Üst üste ikon butonları -->
+                        <div style="display:flex; flex-direction:column; gap:4px; flex-shrink:0;">
+
+                            <!-- 📁 Dosya Seç -->
+                            <button
+                                type="button"
+                                id="select-file-btn"
+                                title="Dosya Seç"
+                                style="
+                                    flex:1;
+                                    width:38px;
+                                    background:rgba(0,240,255,0.08);
+                                    border:1px solid rgba(0,240,255,0.38);
+                                    color:#00f0ff;
+                                    border-radius:10px;
+                                    cursor:pointer;
+                                    font-size:1.1rem;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    transition:all 0.2s ease;
+                                    padding:0;
+                                "
+                                onmouseover="this.style.background='rgba(0,240,255,0.2)'; this.style.boxShadow='0 0 10px rgba(0,240,255,0.3)'"
+                                onmouseout="this.style.background='rgba(0,240,255,0.08)'; this.style.boxShadow='none'"
+                            >📁</button>
+                            <input type="file" id="cover-file-input" accept="image/*" style="display:none;">
+
+                            <!-- 🗑️ Resmi Sıfırla -->
+                            <button
+                                type="button"
+                                id="btn-reset-cover"
+                                title="Resmi Sıfırla"
+                                style="
+                                    flex:1;
+                                    width:38px;
+                                    background:rgba(239,68,68,0.1);
+                                    border:1px solid rgba(239,68,68,0.4);
+                                    color:#ef4444;
+                                    border-radius:10px;
+                                    cursor:pointer;
+                                    font-size:1.1rem;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    transition:all 0.2s ease;
+                                    padding:0;
+                                "
+                                onmouseover="this.style.background='rgba(239,68,68,0.22)'; this.style.boxShadow='0 0 10px rgba(239,68,68,0.25)'"
+                                onmouseout="this.style.background='rgba(239,68,68,0.1)'; this.style.boxShadow='none'"
+                            >🗑️</button>
+
+                        </div>
                     </div>
-                    <!-- ✅ Dosya Seç → btn-action-file -->
-                    <div style="display:flex; gap:8px; margin-top:8px;">
-                        <button type="button" id="select-file-btn" class="btn-action-file">📁 Dosya Seç</button>
-                        <input type="file" id="cover-file-input" accept="image/*" style="display:none;">
-                    </div>
-                    <!-- ✅ Resmi Sıfırla → btn-action-reset -->
-                    <button type="button" id="btn-reset-cover" class="btn-action-reset">🗑️ Resmi Sıfırla</button>
+                    <!-- ── ikon butonlar sonu ── -->
                 </div>
 
                 <div class="form-group" style="background:rgba(255,0,127,0.05); padding:10px; border-radius:10px;">
@@ -106,7 +162,7 @@
 
         </div>
 
-        <!-- ✅ Veritabanına Kaydet → btn-action-save (grid dışında, tam genişlik) -->
+        <!-- Tam genişlik kaydet butonu — grid dışında -->
         <button type="submit" id="btn-submit-video" class="btn-action-save">💾 Veritabanına Kaydet</button>
 
     </form>

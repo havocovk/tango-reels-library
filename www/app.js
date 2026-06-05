@@ -3,8 +3,9 @@
 // ✅ GÜNCELLEME (Adım 2.4): Playlist sistemi
 // ✅ GÜNCELLEME (Adım 3.3): loadTagColors çağrısı
 // ✅ GÜNCELLEME (Adım 3.2): URL durum senkronizasyonu
-// ✅ DÜZELTME: Eksik sidebar menü butonları, initFormHandlers, initVideoHandlers geri eklendi
-//   Instructor butonları initFormHandlers aracılığıyla (onclick) ayarlanır — çift-handler yok
+// ✅ DÜZELTME: Instructor buton çakışması — addEventListener yerine onclick atama kullanıldı,
+//   böylece formHandlers.js'in onclick atamasıyla çift-tetikleme sorunu ortadan kalktı.
+//   btn-add-instructor → btn-save-instructor ID düzeltildi.
 import { translations } from './i18n.js';
 import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
@@ -115,54 +116,24 @@ async function initializeApp() {
             localStorage.setItem('tango_lang', newLang);
             langBtn.textContent = newLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
             updateAllLanguages();
-            callUpdateInterfaceLanguage();
-            if (store.get('currentView') === 'stats') renderStatsPanel();
-            if (store.get('currentView') === 'tagManager') renderTagManagerUI();
+            applyFiltersAndSearch();
         };
     }
 
-    // ── Sidebar menü butonları ──────────────────────────────────
-    document.getElementById('menu-library')?.addEventListener('click',     () => { callSwitchView('library');    syncBottomNavActiveState('library');    });
-    document.getElementById('menu-favorites')?.addEventListener('click',   () => { callSwitchView('favorites');  syncBottomNavActiveState('favorites');  });
-    document.getElementById('menu-stats')?.addEventListener('click',       () => { callSwitchView('stats');      syncBottomNavActiveState('stats');      });
-    document.getElementById('menu-add-video')?.addEventListener('click',   () => { callSwitchView('add');        syncBottomNavActiveState('add');        });
-    document.getElementById('menu-tag-manager')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
-
-    // ── Pratik Başlat ───────────────────────────────────────────
-    document.getElementById('btn-start-practice')?.addEventListener('click', () => {
-        const dueVideos = getDueVideos(store.get('globalVideos'));
-        if (dueVideos.length === 0) {
-            const lang = store.get('currentLang');
-            showCustomAlert(
-                lang === 'tr'
-                    ? '🎉 Bugün için tüm kombinasyonları çalıştın! Harika iş.'
-                    : '🎉 You\'ve practiced all combinations for today! Great job.'
+    // ── Çıkış Yap ───────────────────────────────────────────────
+    const signOutBtn = document.getElementById('btn-sign-out');
+    if (signOutBtn) {
+        signOutBtn.onclick = async () => {
+            const ok = await showCustomConfirm(
+                store.get('currentLang') === 'tr'
+                    ? 'Çıkış yapmak istediğinize emin misiniz?'
+                    : 'Are you sure you want to sign out?',
+                store.get('currentLang') === 'tr' ? 'Çıkış Yap' : 'Sign Out',
+                store.get('currentLang') === 'tr' ? 'İptal' : 'Cancel'
             );
-            return;
-        }
-        startPracticeSession(dueVideos);
-    });
-
-    // ── Form, video, eğitmen, etiket, modal başlatıcıları ───────
-    // initFormHandlers; instructor butonlarını (toggle/edit/delete/save) dahil
-    // tüm form handler'larını onclick ataması ile kurar.
-    initFormHandlers(formTagsArray, store.get('globalVideos'), fetchVideos, callSwitchView);
-    initVideoHandlers(applyFiltersAndSearch, fetchVideos, openVideoModal, openTagsEditModal, startVideoEditFlow, deleteVideoFlow);
-    initInstructorHandlers(fetchInstructors, fetchVideos);
-    initTagManager(store.get('currentLang'), store.get('globalVideos'), fetchVideos, renderTagManagerUI);
-    initModalCallbacks(applyFiltersAndSearch);
-
-    // ── Çıkış butonu ────────────────────────────────────────────
-    document.getElementById('btn-logout')?.addEventListener('click', async () => {
-        const ok = await showCustomConfirm(
-            store.get('currentLang') === 'tr'
-                ? 'Çıkış yapmak istediğinize emin misiniz?'
-                : 'Are you sure you want to sign out?',
-            store.get('currentLang') === 'tr' ? 'Çıkış Yap' : 'Sign Out',
-            store.get('currentLang') === 'tr' ? 'İptal'     : 'Cancel'
-        );
-        if (ok) await signOut();
-    });
+            if (ok) await signOut();
+        };
+    }
 
     // ── Paylaşım butonları ──────────────────────────────────────
     document.getElementById('btn-share-whatsapp')?.addEventListener('click', shareToWhatsApp);
@@ -182,25 +153,32 @@ async function initializeApp() {
     }
 
     // ── Video URL → thumbnail ───────────────────────────────────
-    document.getElementById('form-video-url')?.addEventListener('input', async (e) => {
-        const url = e.target.value.trim();
-        if (url) await autoFetchThumbnail(url);
-    });
+    const videoUrlInput = document.getElementById('form-video-url');
+    if (videoUrlInput) {
+        videoUrlInput.addEventListener('input', async (e) => {
+            const url = e.target.value.trim();
+            if (url) await autoFetchThumbnail(url);
+        });
+    }
 
     // ── Kapak resmi paste + sıfırla ─────────────────────────────
     document.getElementById('drop-area')?.addEventListener('paste', (e) =>
         handlePasteEvent(e, store.get('currentLang'))
     );
-    document.getElementById('btn-reset-cover')?.addEventListener('click', () => {
-        resetUploadedCoverUrl();
-        const imgPreview  = document.getElementById('image-preview');
-        const dropAreaTxt = document.getElementById('drop-area-text');
-        if (imgPreview)  imgPreview.classList.add('d-none');
-        if (dropAreaTxt) dropAreaTxt.classList.remove('d-none');
-    });
+    const resetCoverBtn = document.getElementById('btn-reset-cover');
+    if (resetCoverBtn) {
+        resetCoverBtn.onclick = () => {
+            resetUploadedCoverUrl();
+            const imgPreview  = document.getElementById('image-preview');
+            const dropAreaTxt = document.getElementById('drop-area-text');
+            if (imgPreview)  imgPreview.classList.add('d-none');
+            if (dropAreaTxt) dropAreaTxt.classList.remove('d-none');
+        };
+    }
 
     // ── Arama ───────────────────────────────────────────────────
-    document.getElementById('search-btn')?.addEventListener('click', () => applyFiltersAndSearch());
+    const searchBtn = document.getElementById('search-btn');
+    if (searchBtn) searchBtn.onclick = () => applyFiltersAndSearch();
     document.getElementById('search-input')?.addEventListener('input', () => {
         setVisibleCount(20);
         applyFiltersAndSearch();
@@ -229,9 +207,62 @@ async function initializeApp() {
         if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
     });
 
-    // ── Form submit + favori temizle ────────────────────────────
+    // ── Form submit ─────────────────────────────────────────────
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
+
+    // ── EĞİTMEN YÖNETİM BUTONLARI ──────────────────────────────
+    // ✅ DÜZELTME: addEventListener yerine onclick atama kullanılıyor.
+    //    Böylece formHandlers.js'in de aynı butona onclick atadığı
+    //    durumda çift-tetikleme (toggle x2 = görünmez değişim) olmaz.
+    //    app.js'in ataması her zaman kazanır (daha sonra çalışır).
+
+    // ➕ Yeni eğitmen formu aç/kapat
+    const btnToggleIns = document.getElementById('btn-toggle-new-instructor');
+    if (btnToggleIns) {
+        btnToggleIns.onclick = () => {
+            const container = document.getElementById('new-instructor-container');
+            if (container) container.classList.toggle('d-none');
+            store.set('editInstructorId', null);
+            const input   = document.getElementById('form-new-instructor-input');
+            const saveBtn = document.getElementById('btn-save-instructor');
+            const lang    = translations[store.get('currentLang')];
+            if (input)   input.value = '';
+            if (saveBtn) saveBtn.innerText = lang.btnAddIns || 'Ekle';
+        };
+    }
+
+    // ✏️ Seçili eğitmeni düzenle
+    const btnEditIns = document.getElementById('btn-edit-instructor');
+    if (btnEditIns) {
+        btnEditIns.onclick = () => {
+            const select = document.getElementById('form-instructor-select');
+            if (!select || !select.value) return;
+            const instructors = store.get('globalInstructors') || [];
+            const instructor  = instructors.find(i => String(i.id) === String(select.value));
+            if (!instructor) return;
+            store.set('editInstructorId', select.value);
+            const input      = document.getElementById('form-new-instructor-input');
+            const saveBtn    = document.getElementById('btn-save-instructor');
+            const container  = document.getElementById('new-instructor-container');
+            const lang       = translations[store.get('currentLang')];
+            if (input)     input.value = instructor.name;
+            if (saveBtn)   saveBtn.innerText = lang.btnUpdateIns || 'Güncelle';
+            if (container) container.classList.remove('d-none');
+        };
+    }
+
+    // 🗑️ Seçili eğitmeni sil
+    const btnDeleteIns = document.getElementById('btn-delete-instructor');
+    if (btnDeleteIns) {
+        btnDeleteIns.onclick = () => deleteInstructor();
+    }
+
+    // ✅ Eğitmen kaydet — btn-save-instructor (eski yanlış ID: btn-add-instructor)
+    const btnSaveIns = document.getElementById('btn-save-instructor');
+    if (btnSaveIns) {
+        btnSaveIns.onclick = () => handleInstructorSubmit();
+    }
 
     // ── Etiket yönetimi butonları ───────────────────────────────
     document.getElementById('tag-manager-merge-btn')?.addEventListener('click',   () => mergeSelectedTags());
@@ -273,7 +304,24 @@ async function initializeApp() {
         if (driveContainer) driveContainer.classList.toggle('d-none', !e.target.checked);
     });
 
-    // ── URL durumu ──────────────────────────────────────────────
+    // ── Pratik Başlat ───────────────────────────────────────────
+    const startPracticeBtn = document.getElementById('btn-start-practice');
+    if (startPracticeBtn) {
+        startPracticeBtn.addEventListener('click', () => {
+            const dueVideos = getDueVideos(store.get('globalVideos'));
+            if (dueVideos.length === 0) {
+                showCustomAlert(
+                    store.get('currentLang') === 'tr'
+                        ? '🎉 Bugün için tüm kombinasyonları çalıştın! Harika iş.'
+                        : '🎉 You\'ve practiced all combinations for today! Great job.'
+                );
+                return;
+            }
+            startPracticeSession(dueVideos);
+        });
+    }
+
+    // ✅ ADIM 3.2: URL'den filtre durumunu oku ve uygula
     const urlState = readUrlState();
     if (urlState) {
         if (urlState.view && urlState.view !== 'library') {
@@ -285,7 +333,7 @@ async function initializeApp() {
         }, 100);
     }
 
-    // ── Offline senkronizasyon ──────────────────────────────────
+    // ✅ ADIM 2.3: Online olunca bekleyen offline işlemleri gönder
     window.addEventListener('online', () => { flushQueue(); });
     if (navigator.onLine && hasPendingItems()) { flushQueue(); }
 
