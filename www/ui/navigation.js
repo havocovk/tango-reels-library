@@ -1,5 +1,6 @@
 // ui/navigation.js - Görünüm geçişi (view switch)
 // ✅ GÜNCELLEME (Adım 2.3): practiceSession view case eklendi
+// ✅ GÜNCELLEME: instructorsList view case eklendi
 import { translations } from '../i18n.js';
 import { updateSmartFilenameAssistant } from './language.js';
 
@@ -13,14 +14,16 @@ export function switchView(viewName, state, functions) {
     document.getElementById('menu-add-video').classList.remove('active');
     const tagManagerBtn = document.getElementById('menu-tag-manager');
     if (tagManagerBtn) tagManagerBtn.classList.remove('active');
+    const instructorsMenuBtn = document.getElementById('menu-instructors');
+    if (instructorsMenuBtn) instructorsMenuBtn.classList.remove('active');
 
     const clearFavBtnContainer    = document.getElementById('clear-favorites-container');
     const libraryView             = document.getElementById('view-library-container');
     const statsView               = document.getElementById('view-stats-container');
     const addView                 = document.getElementById('view-add-container');
     const tagView                 = document.getElementById('view-tag-manager-container');
-    const practiceSessionView     = document.getElementById('view-practice-session-container'); // ✅ YENİ
-    const instructorProfileView   = document.getElementById('view-instructor-profile-container'); // ✅ YENİ (Adım 6.3)
+    const practiceSessionView     = document.getElementById('view-practice-session-container');
+    const instructorProfileView   = document.getElementById('view-instructor-profile-container');
 
     // ── Tüm view'ları gizle (ortak başlangıç) ──
     const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView];
@@ -74,13 +77,18 @@ export function switchView(viewName, state, functions) {
         if (functions.renderTagManager) functions.renderTagManager();
 
     } else if (viewName === 'practiceSession') {
-        // ✅ YENİ (Adım 2.3): Pratik modu view'ı
-        // Sidebar'da hiçbir menü butonu aktif değil (intentional)
         if (practiceSessionView) practiceSessionView.classList.remove('d-none');
         if (clearFavBtnContainer) clearFavBtnContainer.classList.add('d-none');
 
+    } else if (viewName === 'instructorsList') {
+        // ✅ YENİ: Eğitmenler listesi — instructor-profile-container'ı kullanır
+        // (ayrı bir HTML şablonu gerektirmez, aynı container paylaşılır)
+        if (instructorProfileView) instructorProfileView.classList.remove('d-none');
+        if (clearFavBtnContainer) clearFavBtnContainer.classList.add('d-none');
+        if (instructorsMenuBtn) instructorsMenuBtn.classList.add('active');
+        if (functions.renderInstructorsList) functions.renderInstructorsList();
+
     } else if (viewName === 'instructorProfile') {
-        // ✅ YENİ (Adım 6.3): Eğitmen Profil sayfası
         if (instructorProfileView) instructorProfileView.classList.remove('d-none');
         if (clearFavBtnContainer) clearFavBtnContainer.classList.add('d-none');
         if (functions.renderProfile) functions.renderProfile();

@@ -1,5 +1,6 @@
 // ui/language.js - Güvenli element kontrolleriyle
 // ✅ GÜNCELLEME (Lucide Icons): innerText → innerHTML, ikon entegrasyonu
+// ✅ GÜNCELLEME: menu-instructors butonu eklendi
 import { translations } from '../i18n.js';
 import { icon } from '../icons.js';
 
@@ -52,6 +53,10 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
 
     const tagManagerBtn = document.getElementById('menu-tag-manager');
     if (tagManagerBtn) tagManagerBtn.innerHTML = `${icon('tag', { size: 18 })} ${currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management'}`;
+
+    // ✅ YENİ: Eğitmenler menü butonu
+    const instructorsBtn = document.getElementById('menu-instructors');
+    if (instructorsBtn) instructorsBtn.innerHTML = `${icon('users', { size: 18 })} ${currentLang === 'tr' ? 'Eğitmenler' : 'Instructors'}`;
 
     // ── Arama & Pratik Başlat ─────────────────────────────────
     const searchInput = document.getElementById('search-input');

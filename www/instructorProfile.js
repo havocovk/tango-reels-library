@@ -1,6 +1,6 @@
-// instructorProfile.js - Eğitmen Profil Sayfası
-// ✅ YENİ (Adım 6.3)
-// Eğitmen başlık fotoğrafı, biyografisi, istatistikleri ve video listesi.
+// instructorProfile.js - Eğitmen Profil Sayfası + Eğitmenler Listesi
+// ✅ GÜNCELLEME: instagram_url, facebook_url alanları eklendi
+// ✅ GÜNCELLEME: renderInstructorsList() — sol menüdeki "Eğitmenler" sayfası
 
 import { dbUpdateInstructorProfile } from './db/instructors.js';
 import { store } from './store.js';
@@ -11,19 +11,10 @@ import { icon } from './icons.js';
 // ── Modül düzeyi durum ────────────────────────────────────────
 let callSwitchViewFn = null;   // app.js'ten enjekte edilir (callSwitchView)
 
-// ─────────────────────────────────────────────────────────────
-// initInstructorProfile — app.js başlangıcında bir kez çağrılır.
-// callSwitchView fonksiyonunu saklar; circular import olmadan
-// view geçişine olanak tanır.
-// ─────────────────────────────────────────────────────────────
 export function initInstructorProfile(callSwitchViewCallback) {
     callSwitchViewFn = callSwitchViewCallback;
 }
 
-// ─────────────────────────────────────────────────────────────
-// openInstructorProfile — karttan veya herhangi bir yerden çağrılır.
-// navigation.js'e döngüsel bağımlılık olmadan view geçişi yapar.
-// ─────────────────────────────────────────────────────────────
 export function openInstructorProfile(instructorId) {
     if (!instructorId) return;
     if (callSwitchViewFn) {
@@ -48,7 +39,6 @@ function convertYoutubeUrlToEmbed(url) {
     return url;
 }
 
-// Etiket sıklığını hesaplar — profil istatistikleri için
 function computeTagFrequency(videos, topN = 10) {
     const map = new Map();
     videos.forEach(v => {
@@ -64,7 +54,6 @@ function computeTagFrequency(videos, topN = 10) {
         .map(([tag, count]) => ({ tag, count }));
 }
 
-// Eğitmenin baş harflerinden avatar oluşturur (fotoğraf yoksa)
 function buildInitialsAvatar(name) {
     const parts = (name || '?').trim().split(/\s+/);
     const initials = parts.length >= 2
@@ -74,8 +63,148 @@ function buildInitialsAvatar(name) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// renderInstructorsList — Sol menüden "Eğitmenler" tıklanınca açılan
+// Facebook arkadaşlar stili eğitmen kartları sayfası.
+// ─────────────────────────────────────────────────────────────
+export function renderInstructorsList() {
+    const container = document.getElementById('instructor-profile-content');
+    if (!container) return;
+
+    const lang        = store.get('currentLang');
+    const instructors = store.get('globalInstructors') || [];
+    const allVideos   = store.get('globalVideos')    || [];
+
+    const title       = lang === 'tr' ? 'Eğitmenler' : 'Instructors';
+    const noIns       = lang === 'tr' ? 'Henüz eğitmen eklenmemiş.' : 'No instructors added yet.';
+    const videoLabel  = lang === 'tr' ? 'video' : 'video';
+    const viewLabel   = lang === 'tr' ? 'Profili Görüntüle' : 'View Profile';
+
+    const cardsHtml = instructors.length === 0
+        ? `<div style="text-align:center;color:#475569;padding:48px;font-size:0.9rem;">${noIns}</div>`
+        : instructors.map(ins => {
+            const videoCount = allVideos.filter(v => v.instructor_id === ins.id).length;
+            const avatarHtml = ins.photo_url
+                ? `<img src="${escapeHtml(ins.photo_url)}"
+                        alt="${escapeHtml(ins.name)}"
+                        style="width:80px;height:80px;border-radius:50%;object-fit:cover;
+                               border:2px solid rgba(255,0,127,0.5);
+                               box-shadow:0 0 16px rgba(255,0,127,0.25);"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                   <div class="ins-list-avatar-fallback" style="display:none;">${escapeHtml(buildInitialsAvatar(ins.name))}</div>`
+                : `<div class="ins-list-avatar-fallback">${escapeHtml(buildInitialsAvatar(ins.name))}</div>`;
+
+            // Sosyal medya ikonları
+            const igIcon = ins.instagram_url
+                ? `<a href="${escapeHtml(ins.instagram_url)}" target="_blank" rel="noopener"
+                      style="color:#e1306c;opacity:0.85;transition:opacity 0.15s;"
+                      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"
+                      title="Instagram">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                   </a>` : '';
+            const fbIcon = ins.facebook_url
+                ? `<a href="${escapeHtml(ins.facebook_url)}" target="_blank" rel="noopener"
+                      style="color:#1877f2;opacity:0.85;transition:opacity 0.15s;"
+                      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"
+                      title="Facebook">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                   </a>` : '';
+
+            return `
+                <div class="ins-list-card" data-ins-id="${ins.id}">
+                    <div class="ins-list-avatar-wrap">${avatarHtml}</div>
+                    <div class="ins-list-name">${escapeHtml(ins.name)}</div>
+                    <div class="ins-list-count">${videoCount} ${videoLabel}</div>
+                    ${(igIcon || fbIcon) ? `<div class="ins-list-socials">${igIcon}${fbIcon}</div>` : ''}
+                    <button class="ins-list-view-btn" data-ins-id="${ins.id}">${viewLabel}</button>
+                </div>`;
+        }).join('');
+
+    container.innerHTML = `
+        <style>
+            .ins-list-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 20px;
+                padding: 8px 0 48px;
+            }
+            .ins-list-card {
+                background: rgba(255,255,255,0.03);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 18px;
+                padding: 24px 16px 20px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                cursor: pointer;
+                transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+            }
+            .ins-list-card:hover {
+                border-color: rgba(255,0,127,0.4);
+                box-shadow: 0 0 24px rgba(255,0,127,0.12);
+                transform: translateY(-2px);
+            }
+            .ins-list-avatar-wrap { flex-shrink: 0; }
+            .ins-list-avatar-fallback {
+                width: 80px; height: 80px; border-radius: 50%;
+                background: linear-gradient(135deg, #ff007f, #00f0ff);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 1.6rem; font-weight: 700; color: #0b0813;
+                border: 2px solid rgba(255,0,127,0.5);
+                box-shadow: 0 0 16px rgba(255,0,127,0.25);
+            }
+            .ins-list-name {
+                font-size: 0.9rem; font-weight: 700; color: #e2e8f0;
+                text-align: center; line-height: 1.3; word-break: break-word;
+            }
+            .ins-list-count {
+                font-size: 0.72rem; color: #64748b;
+            }
+            .ins-list-socials {
+                display: flex; gap: 10px; align-items: center;
+            }
+            .ins-list-view-btn {
+                margin-top: 4px;
+                padding: 6px 16px;
+                background: rgba(255,0,127,0.1);
+                border: 1px solid rgba(255,0,127,0.35);
+                border-radius: 999px;
+                color: #ff6fae;
+                font-size: 0.75rem;
+                font-weight: 600;
+                cursor: pointer;
+                font-family: 'Poppins', sans-serif;
+                transition: background 0.15s;
+                width: 100%;
+            }
+            .ins-list-view-btn:hover {
+                background: rgba(255,0,127,0.22);
+            }
+        </style>
+
+        <h2 style="
+            font-size: 1.3rem; font-weight: 700; margin: 0 0 24px;
+            background: linear-gradient(135deg, #ff007f, #00f0ff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        ">${title}</h2>
+
+        <div class="ins-list-grid">${cardsHtml}</div>
+    `;
+
+    // Kart tıklamaları — tüm kart alanına ve butona
+    container.querySelectorAll('.ins-list-card, .ins-list-view-btn').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const insId = parseInt(el.dataset.insId, 10);
+            if (insId && callSwitchViewFn) {
+                callSwitchViewFn('instructorProfile', { instructorId: insId });
+            }
+        });
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
 // renderInstructorProfile — profilin tüm HTML'ini üretip ekrana yazar.
-// navigation.js'den ve initializeApp sonrasında doğrudan çağrılır.
 // ─────────────────────────────────────────────────────────────
 export function renderInstructorProfile(instructorId) {
     const container = document.getElementById('instructor-profile-content');
@@ -109,25 +238,29 @@ export function renderInstructorProfile(instructorId) {
 
     // ── Metinler ──────────────────────────────────────────────
     const T = {
-        backBtn:         lang === 'tr' ? '← Koleksiyona Dön' : '← Back to Collection',
-        editBtn:         lang === 'tr' ? `${icon('pencil', { size: 14, color: '#c026d3' })} Düzenle` : `${icon('pencil', { size: 14, color: '#c026d3' })} Edit`,
-        saveBtn:         lang === 'tr' ? `${icon('save', { size: 14, color: '#4ade80' })} Kaydet` : `${icon('save', { size: 14, color: '#4ade80' })} Save`,
-        cancelBtn:       lang === 'tr' ? 'İptal' : 'Cancel',
-        photoUrlLabel:   lang === 'tr' ? 'Fotoğraf URL:' : 'Photo URL:',
-        bioLabel:        lang === 'tr' ? 'Biyografi:' : 'Biography:',
-        bioPlaceholder:  lang === 'tr' ? 'Eğitmen hakkında kısa bir not...' : 'A short note about the instructor...',
-        photoPlaceholder:lang === 'tr' ? 'https://... fotoğraf linki' : 'https://... photo link',
-        totalVideos:     lang === 'tr' ? 'Toplam Video' : 'Total Videos',
-        roleTitle:       lang === 'tr' ? 'Rol Dağılımı' : 'Role Distribution',
-        leader:          lang === 'tr' ? 'Lider' : 'Leader',
-        follower:        lang === 'tr' ? 'Takipçi' : 'Follower',
-        both:            lang === 'tr' ? 'Çift' : 'Both',
-        topTagsTitle:    lang === 'tr' ? 'Sık Kullanılan Etiketler' : 'Top Tags',
-        videosTitle:     lang === 'tr' ? `${icon('video', { size: 18, color: '#ff007f' })} Videolar` : `${icon('video', { size: 18, color: '#ff007f' })} Videos`,
-        noVideos:        lang === 'tr' ? 'Bu eğitmene ait henüz video yok.' : 'No videos for this instructor yet.',
-        noBio:           lang === 'tr' ? 'Biyografi eklenmemiş.' : 'No biography added.',
-        platformLabels:  { drive: 'Google Drive', youtube: 'YouTube', instagram: 'Instagram', facebook: 'Facebook', other: lang === 'tr' ? 'Diğer' : 'Other' },
-        watchBtn:        lang === 'tr' ? 'İzle' : 'Watch',
+        backBtn:              lang === 'tr' ? '← Eğitmenlere Dön' : '← Back to Instructors',
+        editBtn:              lang === 'tr' ? `${icon('pencil', { size: 14, color: '#c026d3' })} Düzenle` : `${icon('pencil', { size: 14, color: '#c026d3' })} Edit`,
+        saveBtn:              lang === 'tr' ? `${icon('save', { size: 14, color: '#4ade80' })} Kaydet` : `${icon('save', { size: 14, color: '#4ade80' })} Save`,
+        cancelBtn:            lang === 'tr' ? 'İptal' : 'Cancel',
+        photoUrlLabel:        lang === 'tr' ? 'Fotoğraf URL:' : 'Photo URL:',
+        instagramLabel:       lang === 'tr' ? 'Instagram Profil URL:' : 'Instagram Profile URL:',
+        facebookLabel:        lang === 'tr' ? 'Facebook Profil URL:' : 'Facebook Profile URL:',
+        bioLabel:             lang === 'tr' ? 'Biyografi:' : 'Biography:',
+        bioPlaceholder:       lang === 'tr' ? 'Eğitmen hakkında kısa bir not...' : 'A short note about the instructor...',
+        photoPlaceholder:     lang === 'tr' ? 'https://... fotoğraf linki' : 'https://... photo link',
+        igPlaceholder:        'https://www.instagram.com/kullaniciadi',
+        fbPlaceholder:        'https://www.facebook.com/kullaniciadi',
+        totalVideos:          lang === 'tr' ? 'Toplam Video' : 'Total Videos',
+        roleTitle:            lang === 'tr' ? 'Rol Dağılımı' : 'Role Distribution',
+        leader:               lang === 'tr' ? 'Lider' : 'Leader',
+        follower:             lang === 'tr' ? 'Takipçi' : 'Follower',
+        both:                 lang === 'tr' ? 'Çift' : 'Both',
+        topTagsTitle:         lang === 'tr' ? 'Sık Kullanılan Etiketler' : 'Top Tags',
+        videosTitle:          lang === 'tr' ? `${icon('video', { size: 18, color: '#ff007f' })} Videolar` : `${icon('video', { size: 18, color: '#ff007f' })} Videos`,
+        noVideos:             lang === 'tr' ? 'Bu eğitmene ait henüz video yok.' : 'No videos for this instructor yet.',
+        noBio:                lang === 'tr' ? 'Biyografi eklenmemiş.' : 'No biography added.',
+        platformLabels:       { drive: 'Google Drive', youtube: 'YouTube', instagram: 'Instagram', facebook: 'Facebook', other: lang === 'tr' ? 'Diğer' : 'Other' },
+        watchBtn:             lang === 'tr' ? 'İzle' : 'Watch',
     };
 
     // ── Fotoğraf / Avatar ─────────────────────────────────────
@@ -186,10 +319,31 @@ export function renderInstructorProfile(instructorId) {
             </div>`;
         }).join('');
 
+    // ── Sosyal medya ikonları (profil başlığında görünür) ──────
+    const igLink = instructor.instagram_url
+        ? `<a href="${escapeHtml(instructor.instagram_url)}" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;color:#e1306c;
+                     opacity:0.85;transition:opacity 0.15s;text-decoration:none;"
+              onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"
+              title="Instagram">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+           </a>` : '';
+    const fbLink = instructor.facebook_url
+        ? `<a href="${escapeHtml(instructor.facebook_url)}" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;color:#1877f2;
+                     opacity:0.85;transition:opacity 0.15s;text-decoration:none;"
+              onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"
+              title="Facebook">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+           </a>` : '';
+    const socialLinksHtml = (igLink || fbLink)
+        ? `<div style="display:flex;align-items:center;gap:10px;margin-top:8px;">${igLink}${fbLink}</div>`
+        : '';
+
     // ── Ana HTML ─────────────────────────────────────────────
     container.innerHTML = `
         <style>
-            /* ─────── Adım 6.3: Eğitmen Profil Stilleri ─────── */
+            /* ─────── Eğitmen Profil Stilleri ─────── */
             .prof-avatar-fallback {
                 width:100px;height:100px;border-radius:50%;
                 background:linear-gradient(135deg,#ff007f,#00f0ff);
@@ -268,6 +422,7 @@ export function renderInstructorProfile(instructorId) {
             .prof-edit-btn {
                 padding:6px 14px;border-radius:8px;font-size:0.82rem;
                 font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;
+                display:inline-flex;align-items:center;gap:6px;
                 transition:opacity 0.15s;
             }
         </style>
@@ -294,8 +449,9 @@ export function renderInstructorProfile(instructorId) {
                     background:linear-gradient(135deg,#ff007f,#00f0ff);
                     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
                 ">${escapeHtml(instructor.name)}</h2>
+                ${socialLinksHtml}
                 <p id="prof-bio-display" style="
-                    font-size:0.85rem;color:#94a3b8;margin:0;line-height:1.6;
+                    font-size:0.85rem;color:#94a3b8;margin:${socialLinksHtml ? '8px' : '0'} 0 0;line-height:1.6;
                     ${!instructor.bio ? 'font-style:italic;color:#475569;' : ''}
                 ">${escapeHtml(instructor.bio) || T.noBio}</p>
             </div>
@@ -318,6 +474,24 @@ export function renderInstructorProfile(instructorId) {
                 <input id="prof-photo-input" type="url" class="prof-edit-field"
                     placeholder="${T.photoPlaceholder}"
                     value="${escapeHtml(instructor.photo_url || '')}">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.75rem;color:#e1306c;display:block;margin-bottom:6px;">
+                    <svg style="vertical-align:middle;margin-right:4px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    ${T.instagramLabel}
+                </label>
+                <input id="prof-instagram-input" type="url" class="prof-edit-field"
+                    placeholder="${T.igPlaceholder}"
+                    value="${escapeHtml(instructor.instagram_url || '')}">
+            </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.75rem;color:#1877f2;display:block;margin-bottom:6px;">
+                    <svg style="vertical-align:middle;margin-right:4px;" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    ${T.facebookLabel}
+                </label>
+                <input id="prof-facebook-input" type="url" class="prof-edit-field"
+                    placeholder="${T.fbPlaceholder}"
+                    value="${escapeHtml(instructor.facebook_url || '')}">
             </div>
             <div style="margin-bottom:16px;">
                 <label style="font-size:0.75rem;color:#94a3b8;display:block;margin-bottom:6px;">${T.bioLabel}</label>
@@ -370,9 +544,9 @@ export function renderInstructorProfile(instructorId) {
 
     // ── Olay bağlayıcıları ────────────────────────────────────
 
-    // Geri butonu
+    // Geri butonu → Eğitmenler listesine dön
     document.getElementById('prof-back-btn')?.addEventListener('click', () => {
-        if (callSwitchViewFn) callSwitchViewFn('library');
+        if (callSwitchViewFn) callSwitchViewFn('instructorsList');
     });
 
     // Düzenle / İptal toggle
@@ -391,23 +565,30 @@ export function renderInstructorProfile(instructorId) {
 
     // Kaydet
     document.getElementById('prof-save-btn')?.addEventListener('click', async () => {
-        const photoVal = (document.getElementById('prof-photo-input')?.value || '').trim();
-        const bioVal   = (document.getElementById('prof-bio-input')?.value   || '').trim();
-        const saveBtn  = document.getElementById('prof-save-btn');
-        const errEl    = document.getElementById('prof-edit-error');
+        const photoVal     = (document.getElementById('prof-photo-input')?.value     || '').trim();
+        const igVal        = (document.getElementById('prof-instagram-input')?.value  || '').trim();
+        const fbVal        = (document.getElementById('prof-facebook-input')?.value   || '').trim();
+        const bioVal       = (document.getElementById('prof-bio-input')?.value        || '').trim();
+        const saveBtn      = document.getElementById('prof-save-btn');
+        const errEl        = document.getElementById('prof-edit-error');
         if (errEl) errEl.style.display = 'none';
         if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.5'; }
         try {
-            await dbUpdateInstructorProfile(instructorId, photoVal, bioVal);
-            // Store'u local olarak güncelle (API çağrısından kaçın)
+            await dbUpdateInstructorProfile(instructorId, photoVal, bioVal, igVal, fbVal);
+            // Store'u local olarak güncelle
             const instructors = store.get('globalInstructors');
             const idx = instructors.findIndex(i => i.id === instructorId);
             if (idx !== -1) {
-                instructors[idx] = { ...instructors[idx], photo_url: photoVal || null, bio: bioVal || null };
+                instructors[idx] = {
+                    ...instructors[idx],
+                    photo_url:     photoVal || null,
+                    bio:           bioVal   || null,
+                    instagram_url: igVal    || null,
+                    facebook_url:  fbVal    || null
+                };
                 store.set('globalInstructors', [...instructors]);
             }
             showToast(lang === 'tr' ? 'Profil kaydedildi ✓' : 'Profile saved ✓', 'success');
-            // Sayfayı taze verilerle yeniden çiz
             renderInstructorProfile(instructorId);
         } catch (err) {
             if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }

@@ -34,8 +34,8 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
-// ✅ YENİ (Adım 6.3): Eğitmen profil fotoğrafı ve biyografisi güncelleme
-export async function dbUpdateInstructorProfile(id, photoUrl, bio) {
+// ✅ GÜNCELLEME: instagram_url ve facebook_url alanları eklendi
+export async function dbUpdateInstructorProfile(id, photoUrl, bio, instagramUrl, facebookUrl) {
     const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
         method: 'PATCH',
         headers: {
@@ -45,8 +45,10 @@ export async function dbUpdateInstructorProfile(id, photoUrl, bio) {
             'Prefer': 'return=minimal'
         },
         body: JSON.stringify({
-            photo_url: photoUrl || null,
-            bio: bio || null
+            photo_url:      photoUrl      || null,
+            bio:            bio           || null,
+            instagram_url:  instagramUrl  || null,
+            facebook_url:   facebookUrl   || null
         })
     });
     if (!res.ok) {

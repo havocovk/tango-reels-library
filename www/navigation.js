@@ -2,6 +2,7 @@
 // ✅ DÜZELTİLDİ (Adım 2.4 Sorun 3): callSwitchView() içine clearActivePlaylist() eklendi
 // ✅ GÜNCELLEME (Adım 5.3): filterByTag() eklendi
 // ✅ GÜNCELLEME (Adım 3.2): callSwitchView URL durumunu yazıyor
+// ✅ GÜNCELLEME: instructorsList view'ı eklendi
 import { translations } from './i18n.js';
 import { dbClearAllFavorites } from './tangoVeritabani.js';
 import { showCustomConfirm } from './tangoModals.js';
@@ -13,7 +14,7 @@ import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
 import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
-import { renderInstructorProfile } from './instructorProfile.js';
+import { renderInstructorProfile, renderInstructorsList } from './instructorProfile.js';
 import { writeUrlState, clearUrlState } from './urlState.js';
 
 export function callUpdateSmartAssistant() {
@@ -60,6 +61,9 @@ export function callSwitchView(viewName, options = {}) {
         renderTagManager: renderTagManagerUI,
         renderProfile: options.instructorId
             ? () => renderInstructorProfile(options.instructorId)
+            : null,
+        renderInstructorsList: viewName === 'instructorsList'
+            ? () => renderInstructorsList()
             : null
     });
     if (viewName === 'stats') renderStatsPanel();

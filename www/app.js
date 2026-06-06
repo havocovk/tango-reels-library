@@ -5,6 +5,7 @@
 // ✅ GÜNCELLEME (Adım 3.2): URL durum senkronizasyonu
 // ✅ DÜZELTME: Instructor butonları initFormHandlers SONRASINDA doğrudan
 //   onclick ile kurulur — hangi koşulda olursa olsun çalışması garanti
+// ✅ GÜNCELLEME: menu-instructors butonu (Eğitmenler sayfası) eklendi
 import { translations } from './i18n.js';
 import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
@@ -122,11 +123,13 @@ async function initializeApp() {
     }
 
     // ── Sidebar menü butonları ──────────────────────────────────
-    document.getElementById('menu-library')?.addEventListener('click',     () => { callSwitchView('library');    syncBottomNavActiveState('library');    });
-    document.getElementById('menu-favorites')?.addEventListener('click',   () => { callSwitchView('favorites');  syncBottomNavActiveState('favorites');  });
-    document.getElementById('menu-stats')?.addEventListener('click',       () => { callSwitchView('stats');      syncBottomNavActiveState('stats');      });
-    document.getElementById('menu-add-video')?.addEventListener('click',   () => { callSwitchView('add');        syncBottomNavActiveState('add');        });
-    document.getElementById('menu-tag-manager')?.addEventListener('click', () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
+    document.getElementById('menu-library')?.addEventListener('click',     () => { callSwitchView('library');         syncBottomNavActiveState('library');    });
+    document.getElementById('menu-favorites')?.addEventListener('click',   () => { callSwitchView('favorites');       syncBottomNavActiveState('favorites');  });
+    document.getElementById('menu-stats')?.addEventListener('click',       () => { callSwitchView('stats');           syncBottomNavActiveState('stats');      });
+    document.getElementById('menu-add-video')?.addEventListener('click',   () => { callSwitchView('add');             syncBottomNavActiveState('add');        });
+    document.getElementById('menu-tag-manager')?.addEventListener('click', () => { callSwitchView('tagManager');      syncBottomNavActiveState('tagManager'); });
+    // ✅ YENİ: Eğitmenler sayfası
+    document.getElementById('menu-instructors')?.addEventListener('click', () => { callSwitchView('instructorsList'); });
 
     // ── Pratik Başlat ───────────────────────────────────────────
     document.getElementById('btn-start-practice')?.addEventListener('click', () => {
