@@ -510,3 +510,99 @@
         min-height: 44px;
     }
 }
+/* ════════════════════════════════════════════════════════════
+   LUCIDE İKON STİLLERİ
+   Tokyo Cyber-Synthwave ile uyumlu ikon düzenlemeleri
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Genel ikon hizalama ─────────────────────────────────── */
+.lucide-icon {
+    display: inline-block;
+    vertical-align: middle;
+    flex-shrink: 0;
+    transition: filter 0.2s ease;
+}
+
+/* ── Bottom nav: SVG boyutu ve renk geçişi ───────────────── */
+.bottom-nav-btn .bn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+}
+
+.bottom-nav-btn.active .bn-icon .lucide-icon {
+    filter: drop-shadow(0 0 5px rgba(255, 0, 127, 0.8));
+}
+
+/* ── Fav star: aktif durumda dolu yıldız ─────────────────── */
+.fav-star-btn.active .lucide-icon {
+    fill: #fbbf24;
+    stroke: #fbbf24;
+}
+
+.fav-star-btn:hover .lucide-icon {
+    stroke: #fbbf24;
+}
+
+/* ── Liste görünümü: fav star aktif ─────────────────────── */
+.vl-fav-btn.active .lucide-icon {
+    fill: #fbbf24;
+    stroke: #fbbf24;
+}
+
+/* ── Practice buton ikonları: merkezi hizalama ──────────── */
+.practice-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.practice-btn-icon .lucide-icon {
+    display: block;
+}
+
+/* ── Pratik play overlay ────────────────────────────────── */
+.practice-play-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* ── Kart crud butonları: ikon blok ─────────────────────── */
+.card-crud-btn .lucide-icon {
+    display: block;
+}
+
+/* ── Liste buton ikonları hizalama ──────────────────────── */
+.vl-btn .lucide-icon {
+    display: block;
+}
+
+/* ── Neon butonlarda ikon-metin boşluğu ─────────────────── */
+.btn-search,
+.btn-start-practice,
+.btn-view-toggle,
+.btn-action-export,
+.btn-action-import,
+.btn-action-save,
+.btn-clear-danger,
+.btn-share-whatsapp,
+.btn-share-clipboard,
+.btn-share-print {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── Menü butonları: ikon rengi geçişleri ───────────────── */
+.menu-btn .lucide-icon {
+    transition: all 0.3s ease;
+}
+
+.menu-btn.active .lucide-icon {
+    filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.6));
+}

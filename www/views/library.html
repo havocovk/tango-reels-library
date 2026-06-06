@@ -1,8 +1,4 @@
 <!-- views/library.html -->
-<!-- ✅ GÜNCELLEME (Adım 2.3): "Pratik Başlat" butonu eklendi -->
-<!-- ✅ GÜNCELLEME (Adım 7.2): Grid/Liste toggle butonu eklendi -->
-<!-- ✅ GÜNCELLEME (Button Unification): search-btn → btn-search -->
-<!-- ✅ GÜNCELLEME (Share Fix): share bar ID'leri ve CSS sınıfları düzeltildi -->
 <div id="view-library-container" class="view-panel">
 
     <div class="search-header" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px; align-items:center;" role="search" aria-label="Koleksiyon araması">
@@ -10,9 +6,20 @@
             placeholder="Eğitmen, etiket, platform veya not ara..."
             aria-label="Koleksiyonda ara"
             style="flex:3; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px 16px; border-radius:12px; color:#f1f5f9; outline:none;">
-        <button id="search-btn" class="btn-search" aria-label="Ara">🔍 Ara</button>
-        <button id="btn-start-practice" class="btn-start-practice" aria-label="Pratik modunu başlat">🎯 Pratik Başlat</button>
-        <button id="btn-view-toggle" class="btn-view-toggle" title="Görünümü değiştir" aria-label="Liste veya grid görünümüne geç">☰ Liste</button>
+        <!-- language.js innerHTML ile doldurur -->
+        <button id="search-btn" class="btn-search" aria-label="Ara">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Ara
+        </button>
+        <button id="btn-start-practice" class="btn-start-practice" aria-label="Pratik modunu başlat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Pratik Başlat
+        </button>
+        <!-- videoHandlers.js innerHTML ile günceller -->
+        <button id="btn-view-toggle" class="btn-view-toggle" title="Görünümü değiştir" aria-label="Liste veya grid görünümüne geç">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Liste
+        </button>
     </div>
 
     <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px; margin-bottom:12px;" role="group" aria-label="Filtreler">
@@ -46,9 +53,9 @@
             </select>
             <select id="filter-learning-status-select" aria-label="Öğrenme durumuna göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
                 <option value="all">Tüm Öğrenme Durumları</option>
-                <option value="new">🆕 Yeni</option>
-                <option value="learning">📚 Çalışıyorum</option>
-                <option value="mastered">✅ Ustalaştım</option>
+                <option value="new">Yeni</option>
+                <option value="learning">Çalışıyorum</option>
+                <option value="mastered">Ustalaştım</option>
             </select>
         </div>
     </div>
@@ -56,15 +63,31 @@
     <div id="total-video-count" style="text-align:right; margin:10px 0 5px 0; color:#00f0ff; font-size:1.1rem;"></div>
 
     <div id="clear-favorites-container" class="d-none" style="margin:10px 0;">
-        <button id="btn-clear-favorites" class="btn-clear-danger">🗑️ Bu Haftaki Pratik Listesini Temizle</button>
+        <!-- language.js innerHTML ile doldurur -->
+        <button id="btn-clear-favorites" class="btn-clear-danger">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            Bu Haftaki Pratik Listesini Temizle
+        </button>
     </div>
 
-    <!-- ✅ Share bar: doğru ID'ler + CSS sınıfları -->
+    <!-- Share bar -->
     <div id="share-bar" style="display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 12px; align-items:center;">
-        <span style="font-size:0.78rem; color:#475569; flex-shrink:0;">📤 Paylaş:</span>
-        <button id="btn-share-whatsapp" class="btn-share-whatsapp" title="WhatsApp'ta paylaş">📱 WhatsApp</button>
-        <button id="btn-share-clipboard" class="btn-share-clipboard" title="Panoya kopyala">📋 Kopyala</button>
-        <button id="btn-share-print" class="btn-share-print" title="Yazdır / PDF olarak kaydet">🖨️ PDF / Yazdır</button>
+        <span style="font-size:0.78rem; color:#475569; flex-shrink:0; display:flex; align-items:center; gap:5px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Paylaş:
+        </span>
+        <button id="btn-share-whatsapp" class="btn-share-whatsapp" title="WhatsApp'ta paylaş">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            WhatsApp
+        </button>
+        <button id="btn-share-clipboard" class="btn-share-clipboard" title="Panoya kopyala">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Kopyala
+        </button>
+        <button id="btn-share-print" class="btn-share-print" title="Yazdır / PDF olarak kaydet">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            PDF / Yazdır
+        </button>
     </div>
 
     <div id="video-grid" class="video-grid">
@@ -74,7 +97,11 @@
     <div id="scroll-sentinel" style="height:1px;"></div>
 
     <div id="load-more-container" class="d-none" style="text-align:center; margin:25px 0 10px 0;">
-        <button id="btn-load-more" class="btn-primary" style="padding:12px 35px;">➕ Daha Fazla Video Yükle</button>
+        <!-- language.js innerHTML ile doldurur -->
+        <button id="btn-load-more" class="btn-primary" style="padding:12px 35px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Daha Fazla Video Yükle
+        </button>
     </div>
 
 </div>

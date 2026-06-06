@@ -2,6 +2,7 @@
 // ✅ YENİ (Adım 6.1)
 import { dbFetchAnnotations, dbAddAnnotation, dbDeleteAnnotation } from './db/annotations.js';
 import { showToast } from './toast.js';
+import { icon } from './icons.js';
 
 // Şu an hangi video için modal açık — modül düzeyinde saklıyoruz
 let activeVideoId   = null;
@@ -151,7 +152,7 @@ function renderAnnotationList(annotations, videoUrl, platform, videoId) {
                     line-height: 1;
                     transition: color 0.15s;
                 "
-            >🗑️</button>
+            >${icon('trash-2', { size: 13, color: '#ef4444' })}</button>
         </div>
     `).join('');
 

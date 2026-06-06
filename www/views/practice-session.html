@@ -6,7 +6,10 @@
 
         <!-- Üst bar: ilerleme + çıkış -->
         <div class="practice-topbar">
-            <button id="practice-exit-btn" class="practice-exit-btn" title="Çık">✕ Çık</button>
+            <button id="practice-exit-btn" class="practice-exit-btn" title="Çık" style="display:flex; align-items:center; gap:5px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Çık
+            </button>
             <div class="practice-progress-wrap">
                 <div class="practice-progress-bar-bg">
                     <div id="practice-progress-bar" class="practice-progress-bar-fill" style="width: 0%"></div>
@@ -19,7 +22,9 @@
         <div class="practice-cover-wrap">
             <div id="practice-cover-img" class="practice-cover-img">
                 <div id="practice-play-btn" class="practice-play-overlay">
-                    <span class="practice-play-icon">▶</span>
+                    <span class="practice-play-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#4ade80" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    </span>
                     <span id="practice-watch-label" class="practice-watch-label">İzle</span>
                 </div>
             </div>
@@ -29,36 +34,36 @@
         <div class="practice-info-block">
             <div class="practice-instructor" id="practice-instructor-name">—</div>
             <div class="practice-partner" id="practice-partner-name"></div>
-
-            <!-- Statü badge -->
             <div class="practice-badges-row" id="practice-badges-row"></div>
-
-            <!-- Etiketler -->
             <div class="practice-tags-row" id="practice-tags-row"></div>
-
-            <!-- Not -->
             <div class="practice-note" id="practice-note-text"></div>
         </div>
 
         <!-- Aksiyon butonları -->
         <div class="practice-actions">
             <button id="btn-practice-skip" class="practice-btn practice-btn-skip">
-                <span class="practice-btn-icon">⏭</span>
+                <span class="practice-btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                </span>
                 <span id="skip-label">Geç</span>
             </button>
             <button id="btn-practice-watch" class="practice-btn practice-btn-watch">
-                <span class="practice-btn-icon">▶</span>
+                <span class="practice-btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </span>
                 <span id="watch-label">İzle</span>
             </button>
             <button id="btn-practice-done" class="practice-btn practice-btn-done">
-                <span class="practice-btn-icon">✓</span>
+                <span class="practice-btn-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
                 <span id="done-label">Çalıştım</span>
             </button>
         </div>
 
     </div>
 
-    <!-- ── ÖZET EKRANI (oturum bitince gösterilir) ── -->
+    <!-- ── ÖZET EKRANI ── -->
     <div id="practice-summary-screen" class="d-none">
         <div class="practice-summary-card">
             <div class="practice-summary-emoji">🎉</div>
@@ -80,8 +85,9 @@
                 </div>
             </div>
             <p class="practice-summary-message" id="summary-message"></p>
-            <button id="btn-practice-return" class="practice-return-btn">
-                📚 Koleksiyona Dön
+            <button id="btn-practice-return" class="practice-return-btn" style="display:inline-flex; align-items:center; gap:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Koleksiyona Dön
             </button>
         </div>
     </div>

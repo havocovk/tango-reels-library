@@ -6,6 +6,7 @@ import { dbUpdateInstructorProfile } from './db/instructors.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { openVideoModal } from './tangoModals.js';
+import { icon } from './icons.js';
 
 // ── Modül düzeyi durum ────────────────────────────────────────
 let callSwitchViewFn = null;   // app.js'ten enjekte edilir (callSwitchView)
@@ -109,8 +110,8 @@ export function renderInstructorProfile(instructorId) {
     // ── Metinler ──────────────────────────────────────────────
     const T = {
         backBtn:         lang === 'tr' ? '← Koleksiyona Dön' : '← Back to Collection',
-        editBtn:         lang === 'tr' ? '✏️ Düzenle' : '✏️ Edit',
-        saveBtn:         lang === 'tr' ? '💾 Kaydet' : '💾 Save',
+        editBtn:         lang === 'tr' ? `${icon('pencil', { size: 14, color: '#c026d3' })} Düzenle` : `${icon('pencil', { size: 14, color: '#c026d3' })} Edit`,
+        saveBtn:         lang === 'tr' ? `${icon('save', { size: 14, color: '#4ade80' })} Kaydet` : `${icon('save', { size: 14, color: '#4ade80' })} Save`,
         cancelBtn:       lang === 'tr' ? 'İptal' : 'Cancel',
         photoUrlLabel:   lang === 'tr' ? 'Fotoğraf URL:' : 'Photo URL:',
         bioLabel:        lang === 'tr' ? 'Biyografi:' : 'Biography:',
@@ -122,7 +123,7 @@ export function renderInstructorProfile(instructorId) {
         follower:        lang === 'tr' ? 'Takipçi' : 'Follower',
         both:            lang === 'tr' ? 'Çift' : 'Both',
         topTagsTitle:    lang === 'tr' ? 'Sık Kullanılan Etiketler' : 'Top Tags',
-        videosTitle:     lang === 'tr' ? '🎬 Videolar' : '🎬 Videos',
+        videosTitle:     lang === 'tr' ? `${icon('video', { size: 18, color: '#ff007f' })} Videolar` : `${icon('video', { size: 18, color: '#ff007f' })} Videos`,
         noVideos:        lang === 'tr' ? 'Bu eğitmene ait henüz video yok.' : 'No videos for this instructor yet.',
         noBio:           lang === 'tr' ? 'Biyografi eklenmemiş.' : 'No biography added.',
         platformLabels:  { drive: 'Google Drive', youtube: 'YouTube', instagram: 'Instagram', facebook: 'Facebook', other: lang === 'tr' ? 'Diğer' : 'Other' },
@@ -380,12 +381,12 @@ export function renderInstructorProfile(instructorId) {
     editToggleBtn?.addEventListener('click', () => {
         const isOpen = editForm.style.display !== 'none';
         editForm.style.display = isOpen ? 'none' : 'block';
-        editToggleBtn.textContent = isOpen ? T.editBtn : T.cancelBtn;
+        editToggleBtn.innerHTML = isOpen ? T.editBtn : T.cancelBtn;
     });
 
     document.getElementById('prof-cancel-btn')?.addEventListener('click', () => {
         editForm.style.display = 'none';
-        editToggleBtn.textContent = T.editBtn;
+        editToggleBtn.innerHTML = T.editBtn;
     });
 
     // Kaydet

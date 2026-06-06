@@ -8,6 +8,7 @@ import { store } from './store.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';
 import { showModernPrompt } from './utils.js';
+import { icon } from './icons.js';
 import {
     dbFetchPlaylists,
     dbCreatePlaylist,
@@ -175,7 +176,7 @@ export function renderPlaylistsInSidebar() {
     const header = document.createElement('div');
     header.className = 'playlist-sidebar-header';
     header.innerHTML = `
-        <span class="playlist-sidebar-title">📋 ${lang === 'tr' ? 'Listelerim' : 'My Lists'}</span>
+        <span class="playlist-sidebar-title">${icon('clipboard-list', { size: 15, color: '#f59e0b' })} ${lang === 'tr' ? 'Listelerim' : 'My Lists'}</span>
         <button id="btn-new-playlist" class="playlist-new-btn" title="${lang === 'tr' ? 'Yeni Liste' : 'New List'}">＋</button>
     `;
     container.appendChild(header);
@@ -197,8 +198,8 @@ export function renderPlaylistsInSidebar() {
             <span class="playlist-color-dot" style="background:${pl.color || '#ff007f'};"></span>
             <span class="playlist-btn-name">${escapeHtml(pl.name)}</span>
             <span class="playlist-btn-actions">
-                <button class="playlist-edit-btn" data-id="${pl.id}" title="${lang === 'tr' ? 'Düzenle' : 'Edit'}">✏️</button>
-                <button class="playlist-delete-btn" data-id="${pl.id}" title="${lang === 'tr' ? 'Sil' : 'Delete'}">🗑️</button>
+                <button class="playlist-edit-btn" data-id="${pl.id}" title="${lang === 'tr' ? 'Düzenle' : 'Edit'}">${icon('pencil', { size: 13, color: '#c026d3' })}</button>
+                <button class="playlist-delete-btn" data-id="${pl.id}" title="${lang === 'tr' ? 'Sil' : 'Delete'}">${icon('trash-2', { size: 13, color: '#ef4444' })}</button>
             </span>
         `;
 
@@ -258,7 +259,7 @@ export function clearActivePlaylist() {
 // ─────────────────────────────────────────────────────────────
 export async function promptCreatePlaylist() {
     const lang = store.get('currentLang');
-    const title = lang === 'tr' ? '➕ Yeni Liste Oluştur' : '➕ Create New List';
+    const title = lang === 'tr' ? `${icon('plus-circle', { size: 16, color: '#00f0ff' })} Yeni Liste Oluştur` : `${icon('plus-circle', { size: 16, color: '#00f0ff' })} Create New List`;
     const result = await showPlaylistFormModal(title, '', '#ff007f');
     if (!result) return;
     await createNewPlaylist(result.name, result.color);
@@ -283,7 +284,7 @@ export async function createNewPlaylist(name, color = '#ff007f') {
 // ─────────────────────────────────────────────────────────────
 export async function promptEditPlaylist(playlist) {
     const lang = store.get('currentLang');
-    const title = lang === 'tr' ? '✏️ Listeyi Düzenle' : '✏️ Edit List';
+    const title = lang === 'tr' ? `${icon('pencil', { size: 16, color: '#c026d3' })} Listeyi Düzenle` : `${icon('pencil', { size: 16, color: '#c026d3' })} Edit List`;
     const result = await showPlaylistFormModal(title, playlist.name, playlist.color || '#ff007f');
     if (!result) return;
     await editPlaylist(playlist.id, result.name, result.color);

@@ -1,14 +1,12 @@
 // ui/videoCardRenderer.js
-// ✅ GÜNCELLEME (Adım 2.4): Her karta 📋 playlist butonu eklendi.
-// ✅ GÜNCELLEME (Adım 3.2): Benzer kombinasyonlar bölümü eklendi.
-// ✅ GÜNCELLEME (Adım 7.2): Liste görünümü (renderVideoList) eklendi.
-// ✅ GÜNCELLEME (Adım 3.3): Etiket badge'lerine renk sistemi eklendi.
+// ✅ GÜNCELLEME (Lucide Icons): Tüm emoji ikonlar Lucide SVG ile değiştirildi
 import { openNoteEditModal } from '../tangoModals.js';
 import { store } from '../store.js';
-import { getTagColor } from '../tagColorManager.js'; // ✅ YENİ (Adım 3.3)
+import { getTagColor } from '../tagColorManager.js';
 import { openAnnotationModal } from '../annotationManager.js';
-import { openLinkManager, buildChainNavHtml } from '../chainManager.js'; // ✅ YENİ (Adım 6.2)
-import { openInstructorProfile } from '../instructorProfile.js'; // ✅ YENİ (Adım 6.3)
+import { openLinkManager, buildChainNavHtml } from '../chainManager.js';
+import { openInstructorProfile } from '../instructorProfile.js';
+import { icon } from '../icons.js';
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -17,26 +15,40 @@ export function getLearningStatusBadgeHtml(video, currentLang) {
     const learningStatus = video.learning_status || 'new';
     let learningBadgeClass = '';
     let learningText = '';
+
     if (currentLang === 'tr') {
-        if (learningStatus === 'new')           { learningText = '🆕 Yeni';        learningBadgeClass = 'badge-learning-new'; }
-        else if (learningStatus === 'learning') { learningText = '📚 Çalışıyorum'; learningBadgeClass = 'badge-learning-active'; }
-        else                                    { learningText = '✅ Ustalaştım';   learningBadgeClass = 'badge-learning-mastered'; }
+        if (learningStatus === 'new') {
+            learningText = `${icon('zap', { size: 12, color: '#f59e0b' })} Yeni`;
+            learningBadgeClass = 'badge-learning-new';
+        } else if (learningStatus === 'learning') {
+            learningText = `${icon('bookmark', { size: 12, color: '#00f0ff' })} Çalışıyorum`;
+            learningBadgeClass = 'badge-learning-active';
+        } else {
+            learningText = `${icon('check-circle', { size: 12, color: '#4ade80' })} Ustalaştım`;
+            learningBadgeClass = 'badge-learning-mastered';
+        }
     } else {
-        if (learningStatus === 'new')           { learningText = '🆕 New';      learningBadgeClass = 'badge-learning-new'; }
-        else if (learningStatus === 'learning') { learningText = '📚 Learning'; learningBadgeClass = 'badge-learning-active'; }
-        else                                    { learningText = '✅ Mastered'; learningBadgeClass = 'badge-learning-mastered'; }
+        if (learningStatus === 'new') {
+            learningText = `${icon('zap', { size: 12, color: '#f59e0b' })} New`;
+            learningBadgeClass = 'badge-learning-new';
+        } else if (learningStatus === 'learning') {
+            learningText = `${icon('bookmark', { size: 12, color: '#00f0ff' })} Learning`;
+            learningBadgeClass = 'badge-learning-active';
+        } else {
+            learningText = `${icon('check-circle', { size: 12, color: '#4ade80' })} Mastered`;
+            learningBadgeClass = 'badge-learning-mastered';
+        }
     }
+
     return `<span class="badge learning-badge ${learningBadgeClass}" data-video-id="${video.id}" data-status="${learningStatus}" data-review-count="${video.review_count || 0}" style="cursor:pointer;" title="Öğrenme durumunu değiştirmek için tıkla">${learningText}</span>`;
 }
 
 // ─────────────────────────────────────────────────────────────
-// getTagBadgeHtml  ✅ YENİ (Adım 3.3)
-// Bir etiket için renkli veya varsayılan badge HTML'i döner.
+// getTagBadgeHtml
 // ─────────────────────────────────────────────────────────────
 function getTagBadgeHtml(tag) {
     const customColor = getTagColor(tag);
     if (customColor) {
-        // Renk atanmışsa: o rengi bg/border/text olarak kullan
         return `<span class="badge tag-colored-badge" style="
             background: ${customColor}22;
             color: ${customColor};
@@ -45,12 +57,11 @@ function getTagBadgeHtml(tag) {
             padding: 2px 6px;
         ">#${tag}</span>`;
     }
-    // Renk atanmamışsa: varsayılan stil
     return `<span class="badge" style="background:rgba(255,255,255,0.05);color:#cbd5e1;border:1px solid rgba(255,255,255,0.1);font-size:0.7rem;padding:2px 6px;">#${tag}</span>`;
 }
 
 // ─────────────────────────────────────────────────────────────
-// findSimilarVideos  (Adım 3.2)
+// findSimilarVideos
 // ─────────────────────────────────────────────────────────────
 function findSimilarVideos(video, allVideos, limit = 3) {
     if (!video.tags || !video.tags.trim()) return [];
@@ -88,7 +99,7 @@ function convertYoutubeUrlToEmbed(url) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// renderVideoList  ✅ YENİ (Adım 7.2)
+// renderVideoList  (Liste görünümü)
 // ─────────────────────────────────────────────────────────────
 export function renderVideoList(videos, config) {
     const {
@@ -118,7 +129,6 @@ export function renderVideoList(videos, config) {
         const isFav = favs.includes(video.id);
         const instructorName = video.instructors ? video.instructors.name : (video.instructor_name || 'Bilinmeyen');
 
-        // ✅ Adım 3.3: Liste görünümünde de renkli etiketler
         const tagsArray = video.tags ? video.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
         const tagsHtml = tagsArray.slice(0, 3).map(t => {
             const color = getTagColor(t);
@@ -150,11 +160,11 @@ export function renderVideoList(videos, config) {
                 ${learningBadgeHtml}
             </div>
             <div class="vl-actions">
-                <button class="vl-btn vl-fav-btn ${isFav ? 'active' : ''}" title="${currentLang === 'tr' ? 'Pratik listesi' : 'Favorites'}">★</button>
-                <button class="vl-btn vl-watch-btn" title="${currentLang === 'tr' ? 'İzle' : 'Watch'}">▶</button>
-                <button class="vl-btn vl-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}">🔗</button>
-                <button class="vl-btn vl-edit-btn" title="${lang.btnCardEdit}">✏️</button>
-                <button class="vl-btn vl-delete-btn" title="${lang.btnCardDelete}">🗑️</button>
+                <button class="vl-btn vl-fav-btn ${isFav ? 'active' : ''}" title="${currentLang === 'tr' ? 'Pratik listesi' : 'Favorites'}">${icon('star', { size: 15 })}</button>
+                <button class="vl-btn vl-watch-btn" title="${currentLang === 'tr' ? 'İzle' : 'Watch'}">${icon('play', { size: 15 })}</button>
+                <button class="vl-btn vl-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}">${icon('link-2', { size: 15 })}</button>
+                <button class="vl-btn vl-edit-btn" title="${lang.btnCardEdit}">${icon('pencil', { size: 15 })}</button>
+                <button class="vl-btn vl-delete-btn" title="${lang.btnCardDelete}">${icon('trash-2', { size: 15 })}</button>
             </div>`;
 
         row.querySelector('.vl-fav-btn').addEventListener('click', (e) => {
@@ -162,7 +172,6 @@ export function renderVideoList(videos, config) {
             toggleFavorite(video.id);
         });
 
-        // ✅ YENİ (Adım 6.3): Liste görünümünde eğitmen adına tıklama
         const vlInstructorBtn = row.querySelector('.instructor-profile-link');
         if (vlInstructorBtn) {
             vlInstructorBtn.addEventListener('click', (e) => {
@@ -270,7 +279,6 @@ export function renderVideoCards(videos, config) {
 
         const card = document.createElement('div');
         card.className = 'video-card';
-        // ✅ YENİ (Adım 7.4): ARIA rol, etiket ve klavye odağı
         const instructorNameForAria = video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen';
         card.setAttribute('role', 'article');
         card.setAttribute('aria-label', `${instructorNameForAria} videosu`);
@@ -283,19 +291,19 @@ export function renderVideoCards(videos, config) {
         else                                 { roleDisplay = lang.both;     roleBadgeClass = 'badge-both'; }
 
         const learningBadgeHtml = getLearningStatusBadgeHtml(video, currentLang);
+
         const partnerDisplay = video.partner_name
-            ? `<span class="card-partner">👥 ${video.partner_name}</span>`
+            ? `<span class="card-partner">${icon('users', { size: 13, color: '#c026d3' })} ${video.partner_name}</span>`
             : '';
 
-        // ✅ Adım 3.3: getTagBadgeHtml ile renkli etiket badge'leri
         let tagsHtml = '';
         if (video.tags && video.tags.trim() !== '') {
             video.tags.split(',').map(t => t.trim()).filter(Boolean).forEach(tag => {
                 tagsHtml += getTagBadgeHtml(tag);
             });
-            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">✏️</button>`;
+            tagsHtml += `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">${icon('pencil', { size: 12, color: '#c026d3' })}</button>`;
         } else {
-            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">➕ ${lang.editTagsTitle}</button>`;
+            tagsHtml = `<button class="inline-edit-tags-btn" title="${lang.editTagsTitle}">${icon('plus', { size: 12, color: '#c026d3' })} ${lang.editTagsTitle}</button>`;
         }
 
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
@@ -307,7 +315,7 @@ export function renderVideoCards(videos, config) {
 
         const noteHtml = `
             <div class="card-note-area" style="margin-top:8px;font-size:0.75rem;color:#94a3b8;display:flex;align-items:center;gap:6px;">
-                <button class="note-edit-btn" style="background:transparent;border:none;color:#00f0ff;cursor:pointer;" title="${lang.editNote}">📝</button>
+                <button class="note-edit-btn" style="background:transparent;border:none;color:#00f0ff;cursor:pointer;" title="${lang.editNote}">${icon('file-text', { size: 14, color: '#94a3b8' })}</button>
                 <span class="note-preview">${escapeHtml(noteText)}</span>
             </div>`;
 
@@ -342,21 +350,20 @@ export function renderVideoCards(videos, config) {
                 </div>`;
         }
 
-        // ✅ YENİ (Adım 6.2): Kombinasyon zinciri navigasyon şeridi
         const chainNavHtml = buildChainNavHtml(video, currentLang);
 
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image:url('${coverImg}');">
-                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}" aria-label="${isFav ? (currentLang === 'tr' ? 'Pratik listesinden çıkar' : 'Remove from practice list') : (currentLang === 'tr' ? 'Pratik listesine ekle' : 'Add to practice list')}" aria-pressed="${isFav}">★</button>
-                    <button class="playlist-add-btn" data-video-id="${video.id}" title="${currentLang === 'tr' ? 'Listeye Ekle' : 'Add to List'}" aria-label="${currentLang === 'tr' ? 'Playlist\'e ekle' : 'Add to playlist'}">📋</button>
+                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}" aria-label="${isFav ? (currentLang === 'tr' ? 'Pratik listesinden çıkar' : 'Remove from practice list') : (currentLang === 'tr' ? 'Pratik listesine ekle' : 'Add to practice list')}" aria-pressed="${isFav}">${icon('star', { size: 18 })}</button>
+                    <button class="playlist-add-btn" data-video-id="${video.id}" title="${currentLang === 'tr' ? 'Listeye Ekle' : 'Add to List'}" aria-label="${currentLang === 'tr' ? 'Playlist\'e ekle' : 'Add to playlist'}">${icon('clipboard-list', { size: 15, color: '#f59e0b' })}</button>
                     <a ${actionClickAttr}>
-                        <div class="play-overlay"><span class="play-icon">▶</span></div>
+                        <div class="play-overlay"><span class="play-icon">${icon('play', { size: 28, color: '#4ade80', fill: '#4ade80' })}</span></div>
                     </a>
                 </div>
             </div>
             <div class="card-info-content">
-                <strong class="card-instructor">👤 <button class="instructor-profile-link" data-instructor-id="${video.instructor_id}" style="background:transparent;border:none;color:inherit;font:inherit;font-weight:700;cursor:pointer;padding:0;text-align:left;">${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</button></strong>
+                <strong class="card-instructor">${icon('user', { size: 14, color: '#00f0ff' })} <button class="instructor-profile-link" data-instructor-id="${video.instructor_id}" style="background:transparent;border:none;color:inherit;font:inherit;font-weight:700;cursor:pointer;padding:0;text-align:left;">${video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen'}</button></strong>
                 ${partnerDisplay}
                 <div class="card-badges">
                     <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
@@ -370,10 +377,10 @@ export function renderVideoCards(videos, config) {
                 <div style="display:flex;justify-content:space-between;width:100%;align-items:center;margin-top:4px;">
                     <a ${actionLinkClickAttr}>${watchText}</a>
                     <div style="display:flex;gap:8px;">
-                        <button class="card-crud-btn card-annotate-btn" title="${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}" aria-label="${currentLang === 'tr' ? 'Zaman notlarını aç' : 'Open time notes'}">📍</button>
-                        <button class="card-crud-btn card-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}" aria-label="${currentLang === 'tr' ? 'Zincir bağlantılarını yönet' : 'Manage chain links'}">🔗</button>
-                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}" aria-label="${currentLang === 'tr' ? 'Videoyu düzenle' : 'Edit video'}">✏️</button>
-                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}" aria-label="${currentLang === 'tr' ? 'Videoyu sil' : 'Delete video'}">🗑️</button>
+                        <button class="card-crud-btn card-annotate-btn" title="${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}" aria-label="${currentLang === 'tr' ? 'Zaman notlarını aç' : 'Open time notes'}">${icon('map-pin', { size: 14, color: '#ff007f' })}</button>
+                        <button class="card-crud-btn card-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}" aria-label="${currentLang === 'tr' ? 'Zincir bağlantılarını yönet' : 'Manage chain links'}">${icon('link-2', { size: 14, color: '#00f0ff' })}</button>
+                        <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}" aria-label="${currentLang === 'tr' ? 'Videoyu düzenle' : 'Edit video'}">${icon('pencil', { size: 14, color: '#c026d3' })}</button>
+                        <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}" aria-label="${currentLang === 'tr' ? 'Videoyu sil' : 'Delete video'}">${icon('trash-2', { size: 14, color: '#ef4444' })}</button>
                     </div>
                 </div>
             </div>`;
@@ -383,7 +390,6 @@ export function renderVideoCards(videos, config) {
             toggleFavorite(video.id);
         });
 
-        // ✅ YENİ (Adım 6.3): Eğitmen adına tıklayınca profil sayfasına git
         const instructorLinkBtn = card.querySelector('.instructor-profile-link');
         if (instructorLinkBtn) {
             instructorLinkBtn.addEventListener('click', (e) => {
@@ -413,7 +419,6 @@ export function renderVideoCards(videos, config) {
             });
         }
 
-        // ✅ YENİ (Adım 6.2): Zincir yönetim butonu
         const chainBtn = card.querySelector('.card-chain-btn');
         if (chainBtn) {
             chainBtn.addEventListener('click', (e) => {
@@ -421,24 +426,6 @@ export function renderVideoCards(videos, config) {
                 openLinkManager(video);
             });
         }
-
-        // ✅ YENİ (Adım 6.2): Zincir chip'lerine tıklayınca bağlı videoyu aç
-        card.querySelectorAll('.chain-chip').forEach(chip => {
-            chip.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const p = chip.dataset.chainPlatform;
-                const u = chip.dataset.chainUrl;
-                const d = chip.dataset.chainDrive;
-                const embeddable = (p === 'drive' || p === 'youtube');
-                if (embeddable && openVideoModal) {
-                    let targetUrl = p === 'drive' ? d : u;
-                    if (p === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
-                    openVideoModal(targetUrl);
-                } else if (u) {
-                    window.open(u, '_blank');
-                }
-            });
-        });
 
         card.querySelector('.card-edit-btn').addEventListener('click', (e) => { e.stopPropagation(); startVideoEditFlow(video); });
         card.querySelector('.card-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); deleteVideoFlow(video.id); });
@@ -463,7 +450,6 @@ export function renderVideoCards(videos, config) {
             });
         }
 
-        // Benzer video tıklama
         card.querySelectorAll('.similar-video-mini').forEach(mini => {
             mini.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -477,6 +463,23 @@ export function renderVideoCards(videos, config) {
                     openVideoModal(targetUrl);
                 } else if (miniUrl) {
                     window.open(miniUrl, '_blank');
+                }
+            });
+        });
+
+        card.querySelectorAll('.chain-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const p = chip.dataset.chainPlatform;
+                const u = chip.dataset.chainUrl;
+                const d = chip.dataset.chainDrive;
+                const embeddable = (p === 'drive' || p === 'youtube');
+                if (embeddable && openVideoModal) {
+                    let targetUrl = p === 'drive' ? d : u;
+                    if (p === 'youtube') targetUrl = convertYoutubeUrlToEmbed(targetUrl);
+                    openVideoModal(targetUrl);
+                } else if (u) {
+                    window.open(u, '_blank');
                 }
             });
         });

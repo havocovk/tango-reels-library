@@ -1,6 +1,7 @@
 // ui/language.js - Güvenli element kontrolleriyle
-// ✅ DÜZELTİLDİ (Adım 2.4): btn-start-practice metni dil değişiminde güncelleniyor
+// ✅ GÜNCELLEME (Lucide Icons): innerText → innerHTML, ikon entegrasyonu
 import { translations } from '../i18n.js';
+import { icon } from '../icons.js';
 
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     const lang = translations[currentLang];
@@ -27,39 +28,44 @@ export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     if (outputDiv) outputDiv.innerText = finalFilename;
 }
 
+function setHTML(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+}
+
+function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = text;
+}
+
 export function updateInterfaceLanguage(currentLang, editingVideoId, editInstructorId, formTagsArray, applyFiltersAndSearch, populateFilterDropdowns) {
     const lang = translations[currentLang];
 
-    const setText = (id, text) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = text;
-    };
-
-    // ── Sidebar ──
+    // ── Sidebar ──────────────────────────────────────────────
     setText('sidebar-title', lang.brandTitle);
     setText('lang-toggle-btn', lang.langBtn);
-    setText('menu-library', lang.menuLibrary);
-    setText('menu-favorites', lang.menuFavorites);
-    setText('menu-stats', '📊 ' + (currentLang === 'tr' ? 'İstatistikler' : 'Statistics'));
-    setText('menu-add-video', lang.menuAddVideo);
+
+    setHTML('menu-library',     `${icon('book-open',   { size: 18 })} ${lang.menuLibrary}`);
+    setHTML('menu-favorites',   `${icon('star',        { size: 18 })} ${lang.menuFavorites}`);
+    setHTML('menu-stats',       `${icon('bar-chart-2', { size: 18 })} ${lang.menuStats}`);
+    setHTML('menu-add-video',   `${icon('plus-circle', { size: 18 })} ${lang.menuAddVideo}`);
 
     const tagManagerBtn = document.getElementById('menu-tag-manager');
-    if (tagManagerBtn) tagManagerBtn.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
+    if (tagManagerBtn) tagManagerBtn.innerHTML = `${icon('tag', { size: 18 })} ${currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management'}`;
 
-    // ── Arama & Pratik Başlat butonu ──
+    // ── Arama & Pratik Başlat ─────────────────────────────────
     const searchInput = document.getElementById('search-input');
     if (searchInput) searchInput.placeholder = lang.searchPlaceholder;
 
     const searchBtn = document.getElementById('search-btn');
-    if (searchBtn) searchBtn.innerText = lang.searchBtn;
+    if (searchBtn) searchBtn.innerHTML = `${icon('search', { size: 15 })} ${lang.searchBtn}`;
 
-    // ✅ YENİ: "Pratik Başlat" butonu dil değişiminde güncelleniyor
     const startPracticeBtn = document.getElementById('btn-start-practice');
     if (startPracticeBtn) {
-        startPracticeBtn.textContent = currentLang === 'tr' ? '🎯 Pratik Başlat' : '🎯 Start Practice';
+        startPracticeBtn.innerHTML = `${icon('target', { size: 15 })} ${currentLang === 'tr' ? 'Pratik Başlat' : 'Start Practice'}`;
     }
 
-    // ── Filtre dropdown seçenekleri ──
+    // ── Filtre dropdown seçenekleri ───────────────────────────
     const allRolesOpt = document.getElementById('opt-all-roles');
     if (allRolesOpt) allRolesOpt.innerText = lang.allRoles;
     const optLeader = document.getElementById('opt-leader');
@@ -83,56 +89,53 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         if (facebookOpt) facebookOpt.innerText = lang.platformLabels.facebook;
     }
 
-    // ── Video ekleme formu ──
+    // ── Video ekleme formu ────────────────────────────────────
     const formTitle = document.getElementById('form-title');
-    if (formTitle) formTitle.innerText = editingVideoId ? lang.formTitleEdit : lang.formTitle;
+    if (formTitle) {
+        formTitle.innerHTML = editingVideoId
+            ? `${icon('pencil', { size: 20, color: '#c026d3' })} ${lang.formTitleEdit}`
+            : `${icon('plus-circle', { size: 20, color: '#00f0ff' })} ${lang.formTitle}`;
+    }
 
-    const lblInstructor = document.getElementById('lbl-instructor');
-    if (lblInstructor) lblInstructor.innerText = lang.lblInstructor;
-    const lblVideoUrl = document.getElementById('lbl-video-url');
-    if (lblVideoUrl) lblVideoUrl.innerText = lang.lblVideoUrl;
-    const lblRole = document.getElementById('lbl-role');
-    if (lblRole) lblRole.innerText = lang.lblRole;
-    const lblPartner = document.getElementById('lbl-partner');
-    if (lblPartner) lblPartner.innerText = lang.lblPartner;
-    const lblTags = document.getElementById('lbl-tags');
-    if (lblTags) lblTags.innerText = lang.lblTags;
+    setText('lbl-instructor',       lang.lblInstructor);
+    setText('lbl-video-url',        lang.lblVideoUrl);
+    setText('lbl-role',             lang.lblRole);
+    setText('lbl-partner',          lang.lblPartner);
+    setText('lbl-tags',             lang.lblTags);
 
     const tagsInput = document.getElementById('form-tags-input');
     if (tagsInput) tagsInput.placeholder = lang.tagsPlaceholder;
 
-    const lblDownloaded = document.getElementById('lbl-downloaded');
-    if (lblDownloaded) lblDownloaded.innerText = lang.lblDownloaded;
-    const lblDriveUrl = document.getElementById('lbl-drive-url');
-    if (lblDriveUrl) lblDriveUrl.innerText = lang.lblDriveUrl;
+    setText('lbl-downloaded',  lang.lblDownloaded);
+    setText('lbl-drive-url',   lang.lblDriveUrl);
 
     const btnSubmit = document.getElementById('btn-submit-video');
-    if (btnSubmit) btnSubmit.innerText = editingVideoId ? lang.btnUpdateVideo : lang.btnSubmitVideo;
+    if (btnSubmit) {
+        btnSubmit.innerHTML = editingVideoId
+            ? `${icon('save', { size: 16, color: '#4ade80' })} ${lang.btnUpdateVideo}`
+            : `${icon('save', { size: 16, color: '#4ade80' })} ${lang.btnSubmitVideo}`;
+    }
 
-    const lblNewInstructorName = document.getElementById('lbl-new-instructor-name');
-    if (lblNewInstructorName) lblNewInstructorName.innerText = lang.lblNewInstructorName;
-    const lblCoverUpload = document.getElementById('lbl-cover-upload');
-    if (lblCoverUpload) lblCoverUpload.innerText = lang.lblCoverUpload;
+    setText('lbl-new-instructor-name', lang.lblNewInstructorName);
+    setText('lbl-cover-upload',        lang.lblCoverUpload);
 
     const btnClearFavs = document.getElementById('btn-clear-favorites');
-    if (btnClearFavs) btnClearFavs.innerText = lang.btnClearFavorites;
-
-    // ✅ DÜZELTME: btn-reset-cover artık ikon-sadece buton olduğu için
-    // buradan metin atanmıyor — HTML'deki 🗑️ emojisi korunuyor.
+    if (btnClearFavs) btnClearFavs.innerHTML = `${icon('trash-2', { size: 15, color: '#ef4444' })} ${lang.btnClearFavorites}`;
 
     const editTagsTitle = document.getElementById('edit-tags-title');
-    if (editTagsTitle) editTagsTitle.innerText = lang.editTagsTitle;
+    if (editTagsTitle) editTagsTitle.innerHTML = `${icon('pencil', { size: 16, color: '#c026d3' })} ${lang.editTagsTitle}`;
+
     const modalTagsInput = document.getElementById('modal-tags-input');
     if (modalTagsInput) modalTagsInput.placeholder = lang.addTagPlaceholder;
 
     const assistantTitle = document.getElementById('assistant-title');
-    if (assistantTitle) assistantTitle.innerText = lang.assistantTitle;
-    const assistantText = document.getElementById('assistant-text');
-    if (assistantText) assistantText.innerText = lang.assistantText;
+    if (assistantTitle) assistantTitle.innerHTML = `${icon('lightbulb', { size: 16, color: '#f59e0b' })} ${lang.assistantTitle}`;
+
+    setText('assistant-text', lang.assistantText);
 
     const dropAreaText = document.getElementById('drop-area-text');
     if (dropAreaText && !dropAreaText.classList.contains('d-none')) {
-        dropAreaText.innerText = lang.dropText;
+        dropAreaText.innerHTML = `${icon('camera', { size: 18, color: '#64748b' })} ${lang.dropText}`;
     }
 
     const saveInsBtn = document.getElementById('btn-save-instructor');
@@ -141,7 +144,7 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     }
 
     const loadMoreBtn = document.getElementById('btn-load-more');
-    if (loadMoreBtn) loadMoreBtn.innerText = lang.loadMore;
+    if (loadMoreBtn) loadMoreBtn.innerHTML = `${icon('plus', { size: 14 })} ${lang.loadMore}`;
 
     const roleSelect = document.getElementById('form-role-select');
     if (roleSelect) {
@@ -158,10 +161,10 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         partnerInput.placeholder = currentLang === 'tr' ? 'Örn: Maria' : 'Ex: Maria';
     }
 
-    // ── Etiket yönetimi ──
+    // ── Etiket yönetimi ───────────────────────────────────────
     const tagManagerTitle = document.getElementById('tag-manager-title');
     if (tagManagerTitle) {
-        tagManagerTitle.innerText = '🏷️ ' + (currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management');
+        tagManagerTitle.innerHTML = `${icon('tag', { size: 20, color: '#ff007f' })} ${currentLang === 'tr' ? 'Etiket Yönetimi' : 'Tag Management'}`;
     }
 
     const tableHeaders = document.querySelectorAll('#tag-manager-table th');
@@ -172,15 +175,19 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     }
 
     const mergeBtn = document.getElementById('tag-manager-merge-btn');
-    if (mergeBtn) mergeBtn.innerText = currentLang === 'tr' ? '🔗 Birleştir' : '🔗 Merge';
+    if (mergeBtn) mergeBtn.innerHTML = `${icon('git-merge', { size: 14 })} ${currentLang === 'tr' ? 'Birleştir' : 'Merge'}`;
+
     const deleteBtn = document.getElementById('tag-manager-delete-btn');
-    if (deleteBtn) deleteBtn.innerText = currentLang === 'tr' ? '🗑️ Seçilenleri Sil' : '🗑️ Delete Selected';
+    if (deleteBtn) deleteBtn.innerHTML = `${icon('trash-2', { size: 14, color: '#ef4444' })} ${currentLang === 'tr' ? 'Seçilenleri Sil' : 'Delete Selected'}`;
+
     const cleanupBtn = document.getElementById('tag-manager-cleanup-btn');
-    if (cleanupBtn) cleanupBtn.innerText = currentLang === 'tr' ? '🧹 Kullanılmayanları Temizle' : '🧹 Clean Unused';
+    if (cleanupBtn) cleanupBtn.innerHTML = `${icon('wind', { size: 14, color: '#f59e0b' })} ${currentLang === 'tr' ? 'Kullanılmayanları Temizle' : 'Clean Unused'}`;
+
     const mergeConfirmBtn = document.getElementById('tag-merge-confirm-btn');
-    if (mergeConfirmBtn) mergeConfirmBtn.innerText = currentLang === 'tr' ? '✅ Birleştir' : '✅ Merge';
+    if (mergeConfirmBtn) mergeConfirmBtn.innerHTML = `${icon('check', { size: 14, color: '#4ade80' })} ${currentLang === 'tr' ? 'Birleştir' : 'Merge'}`;
+
     const mergeCancelBtn = document.getElementById('tag-merge-cancel-btn');
-    if (mergeCancelBtn) mergeCancelBtn.innerText = currentLang === 'tr' ? '❌ İptal' : '❌ Cancel';
+    if (mergeCancelBtn) mergeCancelBtn.innerHTML = `${icon('x', { size: 14, color: '#ef4444' })} ${currentLang === 'tr' ? 'İptal' : 'Cancel'}`;
 
     const mergePanelLabel = document.querySelector('#tag-merge-panel label');
     if (mergePanelLabel) {

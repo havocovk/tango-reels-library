@@ -8,6 +8,7 @@ import { renderVideoCards } from './uiRenderer.js';
 import { getFilteredVideos } from './tangoFilters.js';
 import { translations } from './i18n.js';
 import { store } from './store.js';
+import { icon } from './icons.js';
 import { showToast } from './toast.js';
 import { showPlaylistDropdown } from './playlistManager.js';
 import { writeUrlState } from './urlState.js';
@@ -281,9 +282,9 @@ export function toggleViewMode() {
     const btn = document.getElementById('btn-view-toggle');
     if (btn) {
         const lang = store.get('currentLang');
-        btn.textContent = next === 'list'
-            ? (lang === 'tr' ? '⊞ Grid' : '⊞ Grid')
-            : (lang === 'tr' ? '☰ Liste' : '☰ List');
+        btn.innerHTML = next === 'list'
+            ? `${icon('grid', { size: 15 })} Grid`
+            : `${icon('list', { size: 15 })} ${lang === 'tr' ? 'Liste' : 'List'}`;
     }
     applyFiltersAndSearch();
 }

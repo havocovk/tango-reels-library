@@ -7,6 +7,7 @@ import { showLoading, showModernPrompt } from './utils.js';
 import { store } from './store.js';
 import { dbRunTagSyncCheck, dbRepairTagSync } from './db/healthCheck.js';
 import { showToast } from './toast.js';
+import { icon } from './icons.js';
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -269,14 +270,14 @@ export function renderTagManagerUI() {
             wrapper.style.cssText = 'display:flex; gap:4px; justify-content:center; align-items:center;';
 
             const renameBtn = document.createElement('button');
-            renameBtn.textContent = '✏️';
+            renameBtn.innerHTML = icon('pencil', { size: 13, color: '#c026d3' });
             renameBtn.className = 'tag-action-btn';
             renameBtn.title = currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename';
             renameBtn.style.cssText = 'padding:3px 6px; margin:0;';
             renameBtn.onclick = () => promptRenameTagModern(tag);
 
             const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
+            deleteBtn.innerHTML = icon('trash-2', { size: 13, color: '#ef4444' });
             deleteBtn.className = 'tag-action-btn tag-danger-btn';
             deleteBtn.title = currentLang === 'tr' ? 'Sil' : 'Delete';
             deleteBtn.style.cssText = 'padding:3px 6px; margin:0;';
