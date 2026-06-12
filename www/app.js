@@ -88,7 +88,39 @@ export async function ensureModalLoaded(modalKey) {
         'link-manager-modal':'modals/link-manager-modal.html',
     };
     const url = modalMap[modalKey];
-    if (url) await _loadTemplate(modalKey, url, container);
+    if (!url) return;
+
+    const isNew = !_loadedTemplates.has(modalKey);
+    await _loadTemplate(modalKey, url, container);
+
+    // Modal ilk kez yüklendiyse event listener'larini hemen bagla
+    if (!isNew) return;
+
+    if (modalKey === 'video-modal') {
+        document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
+        document.getElementById('video-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'video-modal') closeVideoModal();
+        });
+    }
+
+    if (modalKey === 'tags-edit-modal') {
+        document.getElementById('tags-modal-close-btn')?.addEventListener('click', closeTagsEditModal);
+        document.getElementById('tags-edit-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
+        });
+        // Etiket input autocomplete'i de burada bagla
+        setupAutocomplete(
+            'modal-tags-input', 'modal-autocomplete-list', modalTagsArray, renderModalChips,
+            (tag) => {
+                if (!modalTagsArray.includes(tag)) {
+                    modalTagsArray.push(tag);
+                    renderModalChips();
+                    saveTagsToSupabaseDirectly();
+                }
+            },
+            callGetUniqueTagsPool
+        );
+    }
 }
 
 async function loadTemplates() {
@@ -310,14 +342,8 @@ async function initializeApp() {
     });
 
     // ── Modaller ────────────────────────────────────────────────
-    document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
-    document.getElementById('video-modal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'video-modal') closeVideoModal();
-    });
-    document.getElementById('tags-modal-close-btn')?.addEventListener('click', closeTagsEditModal);
-    document.getElementById('tags-edit-modal')?.addEventListener('click', (e) => {
-        if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
-    });
+    // NOT: video-modal ve tags-edit-modal listener'lari ensureModalLoaded içinde bağlanıyor
+    // (lazy loading — modal DOM'a eklendikten sonra)
 
     // ── Form submit + favori temizle ────────────────────────────
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
@@ -345,17 +371,7 @@ async function initializeApp() {
         },
         callGetUniqueTagsPool
     );
-    setupAutocomplete(
-        'modal-tags-input', 'modal-autocomplete-list', modalTagsArray, renderModalChips,
-        (tag) => {
-            if (!modalTagsArray.includes(tag)) {
-                modalTagsArray.push(tag);
-                renderModalChips();
-                saveTagsToSupabaseDirectly();
-            }
-        },
-        callGetUniqueTagsPool
-    );
+    // modal-tags-input autocomplete: ensureModalLoaded('tags-edit-modal') içinde bağlanıyor
 
     // ── Drive URL checkbox ──────────────────────────────────────
     document.getElementById('form-is-downloaded')?.addEventListener('change', (e) => {
