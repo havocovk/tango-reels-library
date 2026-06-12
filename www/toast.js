@@ -1,3 +1,5 @@
+import { escapeHtml } from './utils.js'; // Adim 1.2
+
 // toast.js - Otomatik kaybolan bildirimler
 let activeToasts = [];
 
@@ -54,12 +56,4 @@ function getIconForType(type) {
     }
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
+// escapeHtml -> utils.js (Adim 1.2)

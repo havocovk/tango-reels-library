@@ -11,6 +11,7 @@ import {
 } from './db/videoLinks.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
+import { escapeHtml } from './utils.js'; // Adim 1.2
 
 // ── Modül düzeyi durum ────────────────────────────────────────
 let openVideoModalCb = null;   // Bir videoyu modalda açmak için (app.js'ten gelir)
@@ -74,15 +75,7 @@ export function getLinksForVideo(videoId) {
     return { next, prev };
 }
 
-// ── Yardımcılar ───────────────────────────────────────────────
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
+// escapeHtml -> utils.js (Adim 1.2)
 
 function instructorNameOf(video) {
     if (!video) return '?';

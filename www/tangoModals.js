@@ -5,6 +5,7 @@ import { dbUpdateTagsDirectly, dbUpdateNote } from './tangoVeritabani.js';
 import { renderChips } from './uiRenderer.js';
 import { showToast } from './toast.js';
 import { store } from './store.js';
+import { escapeHtml } from './utils.js'; // Adim 1.2
 
 // ===================== MODAL STATE'LER =====================
 export let modalTagsArray = [];
@@ -293,12 +294,4 @@ export function openNoteEditModal(video, onNoteSavedCallback) {
     document.addEventListener('keydown', handleKeydown);
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
+// escapeHtml -> utils.js (Adim 1.2)

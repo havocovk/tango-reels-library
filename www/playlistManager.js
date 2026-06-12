@@ -9,6 +9,7 @@ import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';
 import { showModernPrompt } from './utils.js';
 import { icon } from './icons.js';
+import { escapeHtml } from './utils.js'; // Adim 1.2
 import {
     dbFetchPlaylists,
     dbFetchAllPlaylistVideos,
@@ -472,9 +473,4 @@ function getVideoPlaylistIds(videoId) {
     return map[videoId] || [];
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[m]));
-}
+// escapeHtml -> utils.js (Adim 1.2)

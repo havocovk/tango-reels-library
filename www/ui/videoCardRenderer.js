@@ -7,6 +7,7 @@ import { openAnnotationModal } from '../annotationManager.js';
 import { openLinkManager, buildChainNavHtml } from '../chainManager.js';
 import { openInstructorProfile } from '../instructorProfile.js';
 import { icon } from '../icons.js';
+import { escapeHtml } from '../utils.js'; // Adim 1.2
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -82,14 +83,7 @@ function findSimilarVideos(video, allVideos, limit = 3) {
     return scored.slice(0, limit).map(s => s.video);
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
+// escapeHtml -> utils.js (Adim 1.2)
 
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return url;

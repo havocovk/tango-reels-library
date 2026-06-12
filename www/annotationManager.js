@@ -1,6 +1,7 @@
 // annotationManager.js - Zaman damgasına bağlı not yönetimi
 // ✅ YENİ (Adım 6.1)
 import { dbFetchAnnotations, dbAddAnnotation, dbDeleteAnnotation } from './db/annotations.js';
+import { escapeHtml } from './utils.js'; // Adim 1.2
 import { showToast } from './toast.js';
 import { icon } from './icons.js';
 
@@ -64,17 +65,7 @@ function jumpToTimestamp(videoUrl, platform, timestampSec) {
     window.open(videoUrl, '_blank');
 }
 
-// ─────────────────────────────────────────────────────────────
-// escapeHtml — not içeriğini güvenle HTML'e gömer
-// ─────────────────────────────────────────────────────────────
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-}
+// escapeHtml -> utils.js (Adim 1.2)
 
 // ─────────────────────────────────────────────────────────────
 // renderAnnotationList — annotation listesini modal içine çizer

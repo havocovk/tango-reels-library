@@ -7,6 +7,7 @@ import { store } from './store.js';
 import { showToast } from './toast.js';
 import { openVideoModal } from './tangoModals.js';
 import { icon } from './icons.js';
+import { escapeHtml } from './utils.js'; // Adim 1.2
 
 // ── Modül düzeyi durum ────────────────────────────────────────
 let callSwitchViewFn = null;   // app.js'ten enjekte edilir (callSwitchView)
@@ -22,14 +23,7 @@ export function openInstructorProfile(instructorId) {
     }
 }
 
-// ── Yardımcılar ───────────────────────────────────────────────
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+// escapeHtml -> utils.js (Adim 1.2)
 }
 
 function convertYoutubeUrlToEmbed(url) {
