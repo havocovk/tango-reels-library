@@ -308,7 +308,18 @@ export function renderStats(stats, currentLang) {
             </div>
         </div>
 
-        <div id="learning-heatmap-container"></div>
+        <div class="heatmap-year-wrapper">
+            <div class="heatmap-year-header">
+                <div class="year-dropdown-wrapper">
+                    <button id="heatmap-year-dropdown-trigger" class="year-dropdown-trigger">
+                        <span id="heatmap-year-dropdown-label">${defaultYear}</span>
+                        <span class="year-dropdown-arrow">▾</span>
+                    </button>
+                    <div id="heatmap-year-dropdown-menu" class="year-dropdown-menu"></div>
+                </div>
+            </div>
+            <div id="learning-heatmap-container"></div>
+        </div>
 
         <div class="stats-tag-network" style="margin-top:30px;">
             <div class="stat-label stat-label-centered">
@@ -338,8 +349,9 @@ export function renderStats(stats, currentLang) {
     renderPlatformBarChart(stats, lang, currentLang);
     renderMonthlyChart(stats.monthlyData);
 
-    const heatmapData = computeLearningHeatmap(videos, new Date().getFullYear());
+    const heatmapData = computeLearningHeatmap(videos, defaultYear);
     renderLearningHeatmap(heatmapData, currentLang);
+    setupHeatmapYearDropdown(availableYears, defaultYear, videos, currentLang);
 
     const tagNetworkData = computeTagNetwork(videos);
     renderTagNetwork(tagNetworkData, currentLang);
@@ -470,6 +482,46 @@ function setupCustomYearDropdown(availableYears, defaultYear, videos) {
         trigger.classList.remove('open');
         const newMonthlyData = computeMonthlyData(videos, year);
         renderMonthlyChart(newMonthlyData);
+    });
+
+    document.addEventListener('click', () => {
+        menu.classList.remove('open');
+        trigger.classList.remove('open');
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+// setupHeatmapYearDropdown — Adim 2.1
+// Isi haritasi icin yil secici kurar. Monthly chart dropdown ile ayni pattern.
+// ─────────────────────────────────────────────────────────────
+function setupHeatmapYearDropdown(availableYears, defaultYear, videos, currentLang) {
+    const trigger = document.getElementById('heatmap-year-dropdown-trigger');
+    const menu    = document.getElementById('heatmap-year-dropdown-menu');
+    const label   = document.getElementById('heatmap-year-dropdown-label');
+    if (!trigger || !menu || !label) return;
+
+    menu.innerHTML = availableYears.map(y =>
+        `<div class="year-dropdown-item ${y === defaultYear ? 'active' : ''}" data-year="${y}">${y}</div>`
+    ).join('');
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = menu.classList.contains('open');
+        menu.classList.toggle('open', !isOpen);
+        trigger.classList.toggle('open', !isOpen);
+    });
+
+    menu.addEventListener('click', (e) => {
+        const item = e.target.closest('.year-dropdown-item');
+        if (!item) return;
+        const year = parseInt(item.dataset.year);
+        label.textContent = year;
+        menu.querySelectorAll('.year-dropdown-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+        menu.classList.remove('open');
+        trigger.classList.remove('open');
+        const newHeatmapData = computeLearningHeatmap(videos, year);
+        renderLearningHeatmap(newHeatmapData, currentLang);
     });
 
     document.addEventListener('click', () => {
