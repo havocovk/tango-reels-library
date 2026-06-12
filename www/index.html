@@ -260,6 +260,64 @@
             Giriş Yap
         </button>
 
+        <!-- Şifremi Unuttum bağlantısı -->
+        <p style="text-align:center; margin-top:16px; margin-bottom:0;">
+            <a id="forgot-password-link"
+               href="#"
+               data-auth-i18n="forgot-link"
+               style="color:rgba(0,240,255,0.6); font-size:0.82rem; text-decoration:none;"
+               onmouseover="this.style.color='rgba(0,240,255,1)'"
+               onmouseout="this.style.color='rgba(0,240,255,0.6)'">
+                Şifremi unuttum
+            </a>
+        </p>
+
+        <!-- Şifre sıfırlama formu (başlangıçta gizli) -->
+        <div id="reset-form" style="display:none; margin-top:20px; border-top:1px solid rgba(0,240,255,0.15); padding-top:20px;">
+            <p data-auth-i18n="reset-info"
+               style="color:rgba(255,255,255,0.5); font-size:0.82rem; margin:0 0 12px;">
+                E-posta adresinizi girin, şifre sıfırlama bağlantısı göndereceğiz.
+            </p>
+            <input
+                id="reset-email"
+                type="email"
+                placeholder="ornek@email.com"
+                autocomplete="email"
+                style="
+                    width:100%; box-sizing:border-box;
+                    background:rgba(255,255,255,0.05);
+                    border:1px solid rgba(0,240,255,0.3);
+                    border-radius:10px;
+                    padding:12px 14px;
+                    color:#ffffff;
+                    font-size:0.9rem;
+                    font-family:'Poppins',sans-serif;
+                    outline:none;
+                    margin-bottom:10px;"
+                onfocus="this.style.borderColor='rgba(0,240,255,0.7)'"
+                onblur="this.style.borderColor='rgba(0,240,255,0.3)'" />
+            <button
+                id="reset-btn"
+                data-auth-i18n="reset-btn"
+                style="
+                    width:100%; padding:12px;
+                    background:linear-gradient(135deg,#00f0ff22,#00f0ff44);
+                    border:1px solid rgba(0,240,255,0.5);
+                    border-radius:10px;
+                    color:#00f0ff;
+                    font-size:0.9rem;
+                    font-weight:600;
+                    font-family:'Poppins',sans-serif;
+                    cursor:pointer;">
+                Sıfırlama Bağlantısı Gönder
+            </button>
+            <p id="reset-message" style="
+                font-size:0.82rem;
+                min-height:1.2rem;
+                margin:10px 0 0;
+                text-align:center;"></p>
+        </div>
+
     </div>
 </div>
 

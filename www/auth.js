@@ -44,6 +44,18 @@ export function initAuth(onReady) {
         ?.addEventListener('click', _handleLogin);
     document.getElementById('login-password')
         ?.addEventListener('keypress', (e) => { if (e.key === 'Enter') _handleLogin(); });
+
+    // Adim 2.2: Sifremi unuttum
+    document.getElementById('forgot-password-link')
+        ?.addEventListener('click', (e) => {
+            e.preventDefault();
+            const resetForm = document.getElementById('reset-form');
+            if (resetForm) resetForm.style.display = 'block';
+            document.getElementById('reset-email')?.focus();
+        });
+
+    document.getElementById('reset-btn')
+        ?.addEventListener('click', _handlePasswordReset);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -52,6 +64,52 @@ export function initAuth(onReady) {
 export async function signOut() {
     await supabase.auth.signOut();
     window.__tangoAuthToken = null;
+}
+
+// ─────────────────────────────────────────────────────────
+// _handlePasswordReset — şifre sıfırlama e-postası gönderir (Adim 2.2)
+// ─────────────────────────────────────────────────────────
+async function _handlePasswordReset() {
+    const emailEl   = document.getElementById('reset-email');
+    const msgEl     = document.getElementById('reset-message');
+    const btnEl     = document.getElementById('reset-btn');
+    const lang      = localStorage.getItem('tango_lang') ||
+        (navigator.language.startsWith('en') ? 'en' : 'tr');
+
+    const email = emailEl?.value?.trim();
+    if (!email) {
+        if (msgEl) {
+            msgEl.style.color = '#ff6b6b';
+            msgEl.textContent = lang === 'en'
+                ? 'Please enter your email address.'
+                : 'Lütfen e-posta adresinizi girin.';
+        }
+        return;
+    }
+
+    if (btnEl) { btnEl.disabled = true; }
+    if (msgEl) { msgEl.textContent = ''; }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/'
+    });
+
+    if (btnEl) { btnEl.disabled = false; }
+
+    if (error) {
+        if (msgEl) {
+            msgEl.style.color = '#ff6b6b';
+            msgEl.textContent = (lang === 'en' ? 'Failed: ' : 'Gönderilemedi: ') + error.message;
+        }
+    } else {
+        if (msgEl) {
+            msgEl.style.color = '#4ade80';
+            msgEl.textContent = lang === 'en'
+                ? '✅ Link sent! Please check your email.'
+                : '✅ Bağlantı gönderildi! E-postanızı kontrol edin.';
+        }
+        if (btnEl) { btnEl.disabled = true; } // Tekrar gönderimi engelle
+    }
 }
 
 // ─────────────────────────────────────────────────────────
@@ -126,7 +184,12 @@ function _applyAuthLang(lang) {
             emailPh:     'ornek@email.com',
             passLabel:   'Şifre',
             passPh:      '••••••••',
-            btnText:     'Giriş Yap'
+            btnText:     'Giriş Yap',
+            forgotLink:  'Şifremi unuttum',
+            resetInfo:   'E-posta adresinizi girin, şifre sıfırlama bağlantısı göndereceğiz.',
+            resetBtn:    'Sıfırlama Bağlantısı Gönder',
+            resetOk:     '✅ Bağlantı gönderildi! E-postanızı kontrol edin.',
+            resetErr:    'Gönderilemedi: '
         },
         en: {
             title:       'Welcome Back',
@@ -135,7 +198,12 @@ function _applyAuthLang(lang) {
             emailPh:     'example@email.com',
             passLabel:   'Password',
             passPh:      '••••••••',
-            btnText:     'Sign In'
+            btnText:     'Sign In',
+            forgotLink:  'Forgot password',
+            resetInfo:   'Enter your email and we will send a password reset link.',
+            resetBtn:    'Send Reset Link',
+            resetOk:     '✅ Link sent! Please check your email.',
+            resetErr:    'Failed: '
         }
     };
 
@@ -159,6 +227,9 @@ function _applyAuthLang(lang) {
     set('pass-label',  t.passLabel);
     set('pass-input',  t.passPh);
     set('login-btn',   t.btnText);
+    set('forgot-link', t.forgotLink);
+    set('reset-info',  t.resetInfo);
+    set('reset-btn',   t.resetBtn);
 
     // Buton element ID'si farklı olabilir — doğrudan da set et
     const btn = document.getElementById('login-btn');
