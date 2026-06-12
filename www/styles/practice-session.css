@@ -258,6 +258,61 @@
     box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
 }
 
+/* ── SM-2 ZORLUK BUTONLARI (Adim 2.3) ── */
+.practice-difficulty-row {
+    padding: 0 24px 20px 24px;
+    max-width: 520px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.practice-difficulty-label {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.82rem;
+    margin: 0 0 10px;
+    letter-spacing: 0.3px;
+}
+
+.practice-difficulty-btns {
+    display: flex;
+    gap: 10px;
+}
+
+/* Zor (kırmızı) */
+.practice-btn-hard {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+}
+.practice-btn-hard:hover {
+    background: rgba(239, 68, 68, 0.25);
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.25);
+}
+
+/* Orta (amber) */
+.practice-btn-medium {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+}
+.practice-btn-medium:hover {
+    background: rgba(245, 158, 11, 0.25);
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+}
+
+/* Kolay (yeşil) */
+.practice-btn-easy {
+    background: rgba(74, 222, 128, 0.12);
+    border-color: rgba(74, 222, 128, 0.4);
+    color: #4ade80;
+}
+.practice-btn-easy:hover {
+    background: rgba(74, 222, 128, 0.25);
+    box-shadow: 0 0 14px rgba(74, 222, 128, 0.25);
+}
+
 /* ── ÖZET EKRANI ── */
 #practice-summary-screen {
     display: flex;

@@ -238,7 +238,7 @@ export async function dbUpdateNote(videoId, newNote, old_updated_at) {
 // ─────────────────────────────────────────────────────────────
 // Öğrenme durumunu güncelle
 // ─────────────────────────────────────────────────────────────
-export async function dbUpdateLearningStatus(videoId, newStatus, reviewCount, old_updated_at) {
+export async function dbUpdateLearningStatus(videoId, newStatus, reviewCount, old_updated_at, reviewCountDelta = 1) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {
         url += `&updated_at=eq.${encodeURIComponent(old_updated_at)}`;
@@ -256,7 +256,7 @@ export async function dbUpdateLearningStatus(videoId, newStatus, reviewCount, ol
         body: JSON.stringify({
             learning_status: newStatus,
             last_reviewed_at: now,
-            review_count: (reviewCount || 0) + 1
+            review_count: (reviewCount || 0) + reviewCountDelta
         })
     });
 

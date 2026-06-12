@@ -65,6 +65,12 @@ function showCurrentCard() {
     const video = sessionQueue[currentIndex];
     if (!video) { endSession(); return; }
 
+    // Adim 2.3: Yeni karta gecince zorluk satirini sifirla
+    const mainActions   = document.getElementById('practice-actions-main');
+    const difficultyRow = document.getElementById('practice-difficulty-row');
+    if (mainActions)   mainActions.classList.remove('d-none');
+    if (difficultyRow) difficultyRow.classList.add('d-none');
+
     const lang = currentLang;
     const total = sessionQueue.length;
     const current = currentIndex + 1;
@@ -170,7 +176,28 @@ function showCurrentCard() {
 
     if (skipBtn) skipBtn.onclick = () => skipCard();
     if (watchBtn) watchBtn.onclick = () => watchVideo(video);
-    if (doneBtn) doneBtn.onclick = () => markPracticed(video);
+    if (doneBtn) doneBtn.onclick = () => {
+        // Adim 2.3: "Çalıştım" butonu artık zorluk satırını açıyor
+        const mainActions   = document.getElementById('practice-actions-main');
+        const difficultyRow = document.getElementById('practice-difficulty-row');
+        if (mainActions)   mainActions.classList.add('d-none');
+        if (difficultyRow) difficultyRow.classList.remove('d-none');
+
+        // Zorluk butonlarına dil etiketleri yaz
+        const h = document.getElementById('hard-label');
+        const m = document.getElementById('medium-label');
+        const e = document.getElementById('easy-label');
+        const d = document.getElementById('difficulty-label');
+        if (d) d.textContent  = lang === 'tr' ? 'Ne kadar zordu?'  : 'How difficult was it?';
+        if (h) h.textContent  = lang === 'tr' ? 'Zor'   : 'Hard';
+        if (m) m.textContent  = lang === 'tr' ? 'Orta'  : 'Medium';
+        if (e) e.textContent  = lang === 'tr' ? 'Kolay' : 'Easy';
+
+        // Zorluk butonlarına tıklanınca markPracticed çağır
+        document.getElementById('btn-difficulty-hard')  .onclick = () => markPracticed(video, 0);
+        document.getElementById('btn-difficulty-medium').onclick = () => markPracticed(video, 1);
+        document.getElementById('btn-difficulty-easy')  .onclick = () => markPracticed(video, 2);
+    };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -189,14 +216,21 @@ function watchVideo(video) {
 // 2. Store lokalde güncellenir
 // 3. Sonraki karta geçilir
 // ─────────────────────────────────────────────────────────────
-async function markPracticed(video) {
+async function markPracticed(video, reviewCountDelta = 1) {
+    // Adim 2.3: Zorluk satırını gizle, ana butonları tekrar göster
+    const mainActions   = document.getElementById('practice-actions-main');
+    const difficultyRow = document.getElementById('practice-difficulty-row');
+    if (mainActions)   mainActions.classList.remove('d-none');
+    if (difficultyRow) difficultyRow.classList.add('d-none');
+
     try {
         const currentReviewCount = video.review_count || 0;
         const updatedVideo = await dbUpdateLearningStatus(
             video.id,
             video.learning_status || 'learning',
             currentReviewCount,
-            video.updated_at
+            video.updated_at,
+            reviewCountDelta
         );
         if (updatedVideo) {
             store.updateVideoLocally(video.id, {

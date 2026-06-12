@@ -40,7 +40,7 @@
         </div>
 
         <!-- Aksiyon butonları -->
-        <div class="practice-actions">
+        <div class="practice-actions" id="practice-actions-main">
             <button id="btn-practice-skip" class="practice-btn practice-btn-skip">
                 <span class="practice-btn-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
@@ -59,6 +59,25 @@
                 </span>
                 <span id="done-label">Çalıştım</span>
             </button>
+        </div>
+
+        <!-- SM-2 Zorluk butonları (Adim 2.3) — başta gizli, "Çalıştım"a basılınca görünür -->
+        <div class="practice-difficulty-row d-none" id="practice-difficulty-row">
+            <p class="practice-difficulty-label" id="difficulty-label">Ne kadar zordu?</p>
+            <div class="practice-difficulty-btns">
+                <button id="btn-difficulty-hard" class="practice-btn practice-btn-hard">
+                    <span class="practice-btn-icon">😓</span>
+                    <span id="hard-label">Zor</span>
+                </button>
+                <button id="btn-difficulty-medium" class="practice-btn practice-btn-medium">
+                    <span class="practice-btn-icon">🙂</span>
+                    <span id="medium-label">Orta</span>
+                </button>
+                <button id="btn-difficulty-easy" class="practice-btn practice-btn-easy">
+                    <span class="practice-btn-icon">😄</span>
+                    <span id="easy-label">Kolay</span>
+                </button>
+            </div>
         </div>
 
     </div>
