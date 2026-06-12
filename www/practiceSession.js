@@ -8,6 +8,7 @@ import { store } from './store.js';
 import { dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { getDueTodayCount } from './learning/spacedRepetition.js';
 import { showToast } from './toast.js';
+import { showCustomConfirm } from './tangoModals.js'; // Adim 1.3
 
 // ─────────────────────────────────────────────────────────────
 // OTURUM STATE'İ
@@ -313,8 +314,16 @@ function endSession() {
 
 // ─────────────────────────────────────────────────────────────
 // exitSession()
-// "Çıkış" butonuna basıldı: onaysız koleksiyona dön
+// "Çıkış" butonuna basıldı: onay alınarak koleksiyona dön (Adim 1.3)
 // ─────────────────────────────────────────────────────────────
 function exitSession() {
-    if (_callSwitchView) _callSwitchView('library');
+    const lang = store.get('currentLang');
+    const msg  = lang === 'tr'
+        ? 'Seansı bitirmek istiyor musunuz? İlerlemeniz kaydedilecek.'
+        : 'Do you want to end the session? Your progress will be saved.';
+    const okTxt     = lang === 'tr' ? 'Evet, Çık' : 'Yes, Exit';
+    const cancelTxt = lang === 'tr' ? 'Devam Et' : 'Keep Going';
+    showCustomConfirm(msg, okTxt, cancelTxt).then(confirmed => {
+        if (confirmed && _callSwitchView) _callSwitchView('library');
+    });
 }
