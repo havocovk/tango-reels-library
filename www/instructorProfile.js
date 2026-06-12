@@ -24,7 +24,6 @@ export function openInstructorProfile(instructorId) {
 }
 
 // escapeHtml -> utils.js (Adim 1.2)
-}
 
 function convertYoutubeUrlToEmbed(url) {
     if (!url) return url;
