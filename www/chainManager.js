@@ -134,6 +134,34 @@ export function buildChainNavHtml(video, currentLang) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// _wouldCreateCycle — Adim 1.4
+// sourceId → targetId baglantisi eklenirse dongü olusur mu kontrol eder.
+// Mevcut linklerden targetId'den baslayin, BFS/DFS ile sourceId'ye
+// ulasilabilir mi bakın. Ulasilabiliyorsa eklemek döngü yaratır.
+// ─────────────────────────────────────────────────────────────
+function _wouldCreateCycle(sourceId, targetId) {
+    const allLinks = store.get('globalVideoLinks') || [];
+
+    // targetId'den erisilebilen tüm node'lari bul (BFS)
+    const visited = new Set();
+    const queue   = [targetId];
+
+    while (queue.length > 0) {
+        const current = queue.shift();
+        if (current === sourceId) return true; // sourceId'ye ulastik = döngü
+        if (visited.has(current)) continue;
+        visited.add(current);
+
+        // current'tan çikan tüm baglantilari bul
+        for (const link of allLinks) {
+            if (link.source_video_id === current && !visited.has(link.target_video_id)) {
+                queue.push(link.target_video_id);
+            }
+        }
+    }
+    return false;
+}
+
 // addLink — yeni bağlantı ekler, store'u günceller, UI'ı tazeler
 // ─────────────────────────────────────────────────────────────
 export async function addLink(sourceId, targetId) {
@@ -143,6 +171,15 @@ export async function addLink(sourceId, targetId) {
             : 'A video cannot link to itself.', 'error');
         return;
     }
+
+    // Adim 1.4: Döngü kontrolü
+    if (_wouldCreateCycle(sourceId, targetId)) {
+        showToast(store.get('currentLang') === 'tr'
+            ? 'Bu bağlantı bir döngü oluşturur (A→B→A). Eklenemedi.'
+            : 'This link would create a loop (A→B→A). Not allowed.', 'error');
+        return;
+    }
+
     try {
         const row = await dbAddVideoLink(sourceId, targetId);
         if (row) {
