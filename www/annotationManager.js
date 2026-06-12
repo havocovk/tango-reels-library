@@ -2,6 +2,7 @@
 // ✅ YENİ (Adım 6.1)
 import { dbFetchAnnotations, dbAddAnnotation, dbDeleteAnnotation } from './db/annotations.js';
 import { escapeHtml } from './utils.js'; // Adim 1.2
+import { ensureModalLoaded } from './app.js'; // Adim 3.3
 import { showToast } from './toast.js';
 import { icon } from './icons.js';
 
@@ -206,6 +207,7 @@ async function loadAnnotations(videoId, videoUrl, platform) {
 // openAnnotationModal — karttan çağrılır; modalı hazırlar ve açar
 // ─────────────────────────────────────────────────────────────
 export async function openAnnotationModal(video) {
+    await ensureModalLoaded('annotation-modal'); // Adim 3.3
     const modal = document.getElementById('annotation-modal');
     if (!modal) {
         console.error('annotation-modal DOM\'da bulunamadı');

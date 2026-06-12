@@ -16,6 +16,7 @@ import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
 import { renderInstructorProfile, renderInstructorsList } from './instructorProfile.js';
 import { writeUrlState, clearUrlState } from './urlState.js';
+import { ensureViewLoaded, ensureModalLoaded } from './app.js'; // Adim 3.3: lazy loading
 
 export function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);
@@ -42,7 +43,10 @@ export function callUpdateInterfaceLanguage() {
     if (store.get('currentView') === 'stats') renderStatsPanel();
 }
 
-export function callSwitchView(viewName, options = {}) {
+export async function callSwitchView(viewName, options = {}) {
+    // Adim 3.3: View DOM'da yoksa önce yükle
+    await ensureViewLoaded(viewName);
+
     clearActivePlaylist();
     store.set('currentView', viewName);
     store.set('visibleCount', 20);

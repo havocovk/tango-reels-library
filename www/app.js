@@ -54,34 +54,77 @@ import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './expor
 import { readUrlState, applyUrlStateToUI } from './urlState.js';
 import { flushQueue, hasPendingItems } from './syncQueue.js';
 
+// ─────────────────────────────────────────────────────────────
+// Adim 3.3: Template Lazy Loading
+// Hangi view/modal dosyalarinin zaten DOM'a eklendigi burada izlenir.
+// ─────────────────────────────────────────────────────────────
+const _loadedTemplates = new Set();
+
+// Bir template'i yükle ve container'a ekle (bir kez)
+async function _loadTemplate(key, url, container) {
+    if (_loadedTemplates.has(key)) return; // zaten yüklü
+    const html = await fetch(url).then(r => r.text());
+    container.insertAdjacentHTML('beforeend', html);
+    _loadedTemplates.add(key);
+}
+
+// Dışarıdan çağrılabilir — view geçişinde lazy yükleme için
+export async function ensureViewLoaded(viewName) {
+    const container = document.getElementById('dynamic-views');
+    if (!container) return;
+    const viewMap = {
+        stats:            'views/stats.html',
+        add:              'views/add-video.html',
+        tagManager:       'views/tag-manager.html',
+        practiceSession:  'views/practice-session.html',
+        instructorsList:  'views/instructor-profile.html',
+        instructorProfile:'views/instructor-profile.html',
+    };
+    const url = viewMap[viewName];
+    if (url) await _loadTemplate(viewName, url, container);
+}
+
+// Dışarıdan çağrılabilir — modal açılmadan önce lazy yükleme için
+export async function ensureModalLoaded(modalKey) {
+    let container = document.getElementById('modals-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'modals-container';
+        document.body.appendChild(container);
+    }
+    const modalMap = {
+        'video-modal':       'modals/video-modal.html',
+        'tags-edit-modal':   'modals/tags-edit-modal.html',
+        'annotation-modal':  'modals/annotation-modal.html',
+        'link-manager-modal':'modals/link-manager-modal.html',
+    };
+    const url = modalMap[modalKey];
+    if (url) await _loadTemplate(modalKey, url, container);
+}
+
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
     if (!container) return;
     try {
-        const [library, stats, addVideo, tagManager, practiceSession, instructorProfile,
-               videoModal, tagsEditModal, customDialogModal, annotationModal,
-               linkManagerModal] = await Promise.all([
+        // Kritik: custom-dialog-modal hemen gerekli (showCustomAlert/Confirm her yerde kullanılır)
+        // library view de hemen gösterileceği için baştan yüklenir
+        let modalContainer = document.getElementById('modals-container');
+        if (!modalContainer) {
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'modals-container';
+            document.body.appendChild(modalContainer);
+        }
+
+        const [library, customDialogModal] = await Promise.all([
             fetch('views/library.html').then(r => r.text()),
-            fetch('views/stats.html').then(r => r.text()),
-            fetch('views/add-video.html').then(r => r.text()),
-            fetch('views/tag-manager.html').then(r => r.text()),
-            fetch('views/practice-session.html').then(r => r.text()),
-            fetch('views/instructor-profile.html').then(r => r.text()),
-            fetch('modals/video-modal.html').then(r => r.text()),
-            fetch('modals/tags-edit-modal.html').then(r => r.text()),
             fetch('modals/custom-dialog-modal.html').then(r => r.text()),
-            fetch('modals/annotation-modal.html').then(r => r.text()),
-            fetch('modals/link-manager-modal.html').then(r => r.text()),
         ]);
 
-        const modalContainer = document.createElement('div');
-        modalContainer.id = 'modals-container';
-        modalContainer.innerHTML = videoModal + tagsEditModal + customDialogModal +
-                                   annotationModal + linkManagerModal;
-        document.body.appendChild(modalContainer);
+        container.insertAdjacentHTML('beforeend', library);
+        _loadedTemplates.add('library');
 
-        container.innerHTML = library + stats + addVideo + tagManager +
-                              practiceSession + instructorProfile;
+        modalContainer.insertAdjacentHTML('beforeend', customDialogModal);
+        _loadedTemplates.add('custom-dialog-modal');
 
         await initializeApp();
     } catch (err) {

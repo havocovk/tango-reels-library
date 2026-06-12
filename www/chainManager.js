@@ -12,6 +12,7 @@ import {
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { escapeHtml } from './utils.js'; // Adim 1.2
+import { ensureModalLoaded } from './app.js'; // Adim 3.3
 
 // ── Modül düzeyi durum ────────────────────────────────────────
 let openVideoModalCb = null;   // Bir videoyu modalda açmak için (app.js'ten gelir)
@@ -336,7 +337,8 @@ function renderSearchResults(term) {
 // ─────────────────────────────────────────────────────────────
 // openLinkManager — karttaki 🔗 butonundan çağrılır; modalı açar
 // ─────────────────────────────────────────────────────────────
-export function openLinkManager(video) {
+export async function openLinkManager(video) {
+    await ensureModalLoaded('link-manager-modal'); // Adim 3.3
     const modal = document.getElementById('link-manager-modal');
     if (!modal) {
         console.error('link-manager-modal DOM\'da bulunamadı');

@@ -6,6 +6,7 @@ import { renderChips } from './uiRenderer.js';
 import { showToast } from './toast.js';
 import { store } from './store.js';
 import { escapeHtml } from './utils.js'; // Adim 1.2
+import { ensureModalLoaded } from './app.js'; // Adim 3.3: lazy modal loading
 
 // ===================== MODAL STATE'LER =====================
 export let modalTagsArray = [];
@@ -47,7 +48,8 @@ export function convertDriveUrlToEmbed(url) {
     return url;
 }
 
-export function openVideoModal(url) {
+export async function openVideoModal(url) {
+    await ensureModalLoaded('video-modal'); // Adim 3.3
     const embedUrl = convertDriveUrlToEmbed(url);
     const iframe = document.getElementById('modal-iframe');
     if (iframe) iframe.src = embedUrl;
@@ -63,7 +65,8 @@ export function closeVideoModal() {
 }
 
 // ===================== ETİKET DÜZENLEME MODALI =====================
-export function openTagsEditModal(video) {
+export async function openTagsEditModal(video) {
+    await ensureModalLoaded('tags-edit-modal'); // Adim 3.3
     activeEditTagsVideoId = video.id;
     activeEditTagsVideoUpdatedAt = video.updated_at;
     const modal = document.getElementById('tags-edit-modal');
