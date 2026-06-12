@@ -331,9 +331,8 @@ export async function deleteSelectedTags() {
     showLoading(true);
     const deleteCount = selectedTagsForMerge.length;
     try {
-        for (const tag of selectedTagsForMerge) {
-            await dbDeleteTagFromAllVideos(tag);
-        }
+        // Adim 3.1: Döngü yerine tek toplu istek
+        await dbDeleteTagFromAllVideos(selectedTagsForMerge);
         deleteTagsLocally(selectedTagsForMerge);
         showLoading(false);
         await showCustomAlert(
