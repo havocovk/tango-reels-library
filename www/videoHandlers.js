@@ -85,7 +85,13 @@ export async function updateLearningStatus(videoId, newStatus, currentReviewCoun
         });
         enqueue({
             type: 'UPDATE_LEARNING_STATUS',
-            payload: { videoId, status: newStatus, reviewCount: currentReviewCount || 0 }
+            // Adim 3.2: Çakışma koruması için videonun o anki updated_at'i de saklanır
+            payload: {
+                videoId,
+                status: newStatus,
+                reviewCount: currentReviewCount || 0,
+                baseUpdatedAt: video.updated_at || null
+            }
         });
         showToast(
             currentLang === 'tr'

@@ -57,14 +57,24 @@ export async function flushQueue() {
     if (queue.length === 0) return;
 
     const remaining = [];
+    let conflictCount = 0; // Adim 3.2: çakışma sayacı
 
     for (const action of queue) {
         try {
             await processAction(action);
             // Başarılı → kuyruktan çıkar (remaining'e ekleme)
         } catch (err) {
-            console.warn('[SyncQueue] İşlem gönderilemedi, kuyrukta kalıyor:', action.type, err.message);
-            remaining.push(action); // Başarısız → tekrar dene
+            // Adim 3.2: Çakışma hatası kalıcıdır — tekrar denemek anlamsız.
+            // Sunucudaki kayıt daha yeni; offline değişikliği bilerek atlıyoruz.
+            const isConflict = err.message && err.message.includes('ÇAKIŞMA');
+            if (isConflict) {
+                console.warn('[SyncQueue] Çakışma — işlem atlanıyor:', action.type, action.payload?.videoId);
+                conflictCount++;
+                // remaining'e EKLEMİYORUZ → kuyruktan kalıcı olarak çıkar
+            } else {
+                console.warn('[SyncQueue] İşlem gönderilemedi, kuyrukta kalıyor:', action.type, err.message);
+                remaining.push(action); // Geçici hata → tekrar dene
+            }
         }
     }
 
@@ -76,11 +86,24 @@ export async function flushQueue() {
     }
 
     // Kullanıcıya bilgi ver (en az bir işlem gönderildiyse)
-    const sentCount = queue.length - remaining.length;
+    const sentCount = queue.length - remaining.length - conflictCount;
     if (sentCount > 0) {
         import('./toast.js').then(({ showToast }) => {
             showToast(`✅ ${sentCount} bekleyen değişiklik sunucuya gönderildi`, 'success', 4000);
         });
+    }
+
+    // Adim 3.2: Çakışma olduysa kullanıcıyı uyar (veri kaybını sessizce yapma)
+    if (conflictCount > 0) {
+        import('./toast.js').then(({ showToast }) => {
+            const lang = localStorage.getItem('tango_lang') || 'tr';
+            const msg = lang === 'en'
+                ? `⚠️ ${conflictCount} offline change(s) skipped — the item was updated elsewhere. The server version was kept.`
+                : `⚠️ ${conflictCount} çevrimdışı değişiklik atlandı — kayıt başka bir yerde güncellenmişti. Sunucudaki sürüm korundu.`;
+            showToast(msg, 'info', 7000);
+        });
+        // Çakışma sonrası sunucudaki güncel veriyi çekmek için sinyal gönder
+        window.dispatchEvent(new CustomEvent('tango:sync-conflict'));
     }
 }
 
@@ -92,11 +115,15 @@ async function processAction(action) {
 
     switch (type) {
         case 'UPDATE_LEARNING_STATUS':
+            // Adim 3.2: Çakışma kontrolü ARTIK yapılıyor.
+            // baseUpdatedAt = offline iken videonun gördüğümüz son hali.
+            // Sunucudaki kayıt bu tarihten farklıysa dbUpdateLearningStatus
+            // "ÇAKIŞMA" hatası fırlatır; bu hatayı flushQueue özel olarak yakalar.
             await dbUpdateLearningStatus(
                 payload.videoId,
                 payload.status,
                 payload.reviewCount || 0,
-                null // çakışma kontrolü offline senkronda atlanır
+                payload.baseUpdatedAt || null
             );
             break;
 

@@ -332,6 +332,11 @@ async function initializeApp() {
     window.addEventListener('online', () => { flushQueue(); });
     if (navigator.onLine && hasPendingItems()) { flushQueue(); }
 
+    // Adim 3.2: Senkron sirasinda cakisma olursa sunucudaki guncel veriyi cek
+    window.addEventListener('tango:sync-conflict', async () => {
+        try { await fetchVideos(); applyFiltersAndSearch(); } catch (e) {}
+    });
+
     setupStoreSubscriptions();
     window.applyFiltersAndSearch = applyFiltersAndSearch;
     setupInfiniteScroll();
