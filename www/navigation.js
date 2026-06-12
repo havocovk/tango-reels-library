@@ -43,10 +43,7 @@ export function callUpdateInterfaceLanguage() {
     if (store.get('currentView') === 'stats') renderStatsPanel();
 }
 
-export async function callSwitchView(viewName, options = {}) {
-    // Adim 3.3: View DOM'da yoksa önce yükle
-    await ensureViewLoaded(viewName);
-
+export function callSwitchView(viewName, options = {}) {
     clearActivePlaylist();
     store.set('currentView', viewName);
     store.set('visibleCount', 20);

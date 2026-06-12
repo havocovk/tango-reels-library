@@ -55,36 +55,25 @@ import { readUrlState, applyUrlStateToUI } from './urlState.js';
 import { flushQueue, hasPendingItems } from './syncQueue.js';
 
 // ─────────────────────────────────────────────────────────────
-// Adim 3.3: Template Lazy Loading
-// Hangi view/modal dosyalarinin zaten DOM'a eklendigi burada izlenir.
+// Adim 3.3: Modal Lazy Loading
+// View'lar baştan yüklenir (init fonksiyonları DOM gerektiriyor).
+// Modallar ise ilk kullanımda yüklenir — performans kazancı burada.
 // ─────────────────────────────────────────────────────────────
 const _loadedTemplates = new Set();
 
-// Bir template'i yükle ve container'a ekle (bir kez)
 async function _loadTemplate(key, url, container) {
-    if (_loadedTemplates.has(key)) return; // zaten yüklü
+    if (_loadedTemplates.has(key)) return;
     const html = await fetch(url).then(r => r.text());
     container.insertAdjacentHTML('beforeend', html);
     _loadedTemplates.add(key);
 }
 
-// Dışarıdan çağrılabilir — view geçişinde lazy yükleme için
+// Dışarıdan çağrılabilir — modal açılmadan önce lazy yükleme için
 export async function ensureViewLoaded(viewName) {
-    const container = document.getElementById('dynamic-views');
-    if (!container) return;
-    const viewMap = {
-        stats:            'views/stats.html',
-        add:              'views/add-video.html',
-        tagManager:       'views/tag-manager.html',
-        practiceSession:  'views/practice-session.html',
-        instructorsList:  'views/instructor-profile.html',
-        instructorProfile:'views/instructor-profile.html',
-    };
-    const url = viewMap[viewName];
-    if (url) await _loadTemplate(viewName, url, container);
+    // View'lar baştan DOM'da — bu fonksiyon artık no-op
+    // Geriye dönük uyumluluk için bırakıldı
 }
 
-// Dışarıdan çağrılabilir — modal açılmadan önce lazy yükleme için
 export async function ensureModalLoaded(modalKey) {
     let container = document.getElementById('modals-container');
     if (!container) {
@@ -106,25 +95,35 @@ async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
     if (!container) return;
     try {
-        // Kritik: custom-dialog-modal hemen gerekli (showCustomAlert/Confirm her yerde kullanılır)
-        // library view de hemen gösterileceği için baştan yüklenir
+        const [library, stats, addVideo, tagManager, practiceSession, instructorProfile,
+               customDialogModal] = await Promise.all([
+            fetch('views/library.html').then(r => r.text()),
+            fetch('views/stats.html').then(r => r.text()),
+            fetch('views/add-video.html').then(r => r.text()),
+            fetch('views/tag-manager.html').then(r => r.text()),
+            fetch('views/practice-session.html').then(r => r.text()),
+            fetch('views/instructor-profile.html').then(r => r.text()),
+            fetch('modals/custom-dialog-modal.html').then(r => r.text()),
+        ]);
+
+        // Tüm view'lar baştan DOM'a eklenir
+        container.innerHTML = library + stats + addVideo + tagManager +
+                              practiceSession + instructorProfile;
+
+        // custom-dialog-modal kritik — hemen ekle
         let modalContainer = document.getElementById('modals-container');
         if (!modalContainer) {
             modalContainer = document.createElement('div');
             modalContainer.id = 'modals-container';
             document.body.appendChild(modalContainer);
         }
-
-        const [library, customDialogModal] = await Promise.all([
-            fetch('views/library.html').then(r => r.text()),
-            fetch('modals/custom-dialog-modal.html').then(r => r.text()),
-        ]);
-
-        container.insertAdjacentHTML('beforeend', library);
-        _loadedTemplates.add('library');
-
         modalContainer.insertAdjacentHTML('beforeend', customDialogModal);
         _loadedTemplates.add('custom-dialog-modal');
+
+        // Diğer modallar lazy — ilk kullanımda yüklenecek
+        ['video-modal', 'tags-edit-modal', 'annotation-modal', 'link-manager-modal'].forEach(k => {
+            // Henüz yüklü değil — ensureModalLoaded ile yüklenecek
+        });
 
         await initializeApp();
     } catch (err) {
