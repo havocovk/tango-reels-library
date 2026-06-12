@@ -11,6 +11,7 @@ import { showModernPrompt } from './utils.js';
 import { icon } from './icons.js';
 import {
     dbFetchPlaylists,
+    dbFetchAllPlaylistVideos,
     dbCreatePlaylist,
     dbUpdatePlaylist,
     dbDeletePlaylist,
@@ -151,11 +152,24 @@ function showPlaylistFormModal(title, defaultName = '', defaultColor = '#ff007f'
 // ─────────────────────────────────────────────────────────────
 export async function initPlaylists() {
     try {
-        const playlists = await dbFetchPlaylists();
+        const [playlists, allRelations] = await Promise.all([
+            dbFetchPlaylists(),
+            dbFetchAllPlaylistVideos()
+        ]);
         store.set('globalPlaylists', playlists);
+
+        // GÜNCELLEME (Adim 1.1): Tum playlist-video iliskilerini haritaya donustur
+        // Sonuc formati: { videoId: [playlistId1, playlistId2, ...] }
+        const map = {};
+        for (const row of allRelations) {
+            if (!map[row.video_id]) map[row.video_id] = [];
+            map[row.video_id].push(row.playlist_id);
+        }
+        store.set('playlistVideoMap', map);
+
         renderPlaylistsInSidebar();
     } catch (err) {
-        console.error('Playlist yükleme hatası:', err);
+        console.error('Playlist yukleme hatasi:', err);
     }
 }
 
@@ -350,6 +364,11 @@ export async function addToPlaylist(videoId, playlistId) {
             const ids = store.get('activePlaylistVideoIds') || [];
             if (!ids.includes(videoId)) store.set('activePlaylistVideoIds', [...ids, videoId]);
         }
+        // GUNCELLEME (Adim 1.1): playlistVideoMap'i de guncelle
+        const map = { ...(store.get('playlistVideoMap') || {}) };
+        if (!map[videoId]) map[videoId] = [];
+        if (!map[videoId].includes(playlistId)) map[videoId] = [...map[videoId], playlistId];
+        store.set('playlistVideoMap', map);
         showToast(lang === 'tr' ? '✅ Listeye eklendi' : '✅ Added to list', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Eklenemedi' : 'Failed to add', 'error');
@@ -365,6 +384,13 @@ export async function removeFromPlaylist(videoId, playlistId) {
             const ids = (store.get('activePlaylistVideoIds') || []).filter(id => id !== videoId);
             store.set('activePlaylistVideoIds', ids);
         }
+        // GUNCELLEME (Adim 1.1): playlistVideoMap'i de guncelle
+        const map = { ...(store.get('playlistVideoMap') || {}) };
+        if (map[videoId]) {
+            map[videoId] = map[videoId].filter(pid => pid !== playlistId);
+            if (map[videoId].length === 0) delete map[videoId];
+        }
+        store.set('playlistVideoMap', map);
         showToast(lang === 'tr' ? '🗑️ Listeden çıkarıldı' : '🗑️ Removed from list', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Çıkarılamadı' : 'Failed to remove', 'error');
@@ -440,10 +466,10 @@ export function closeAllPlaylistDropdowns() {
 }
 
 function getVideoPlaylistIds(videoId) {
-    const activeId  = store.get('activePlaylistId');
-    const activeIds = store.get('activePlaylistVideoIds') || [];
-    if (activeId && activeIds.includes(videoId)) return [activeId];
-    return [];
+    // GUNCELLEME (Adim 1.1): Artik sadece aktif listeye degil,
+    // tum playlist-video iliskilerine bakiyoruz.
+    const map = store.get('playlistVideoMap') || {};
+    return map[videoId] || [];
 }
 
 function escapeHtml(str) {

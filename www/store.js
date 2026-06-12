@@ -115,6 +115,7 @@ const initialState = {
   globalPlaylists: [],
   activePlaylistId: null,
   activePlaylistVideoIds: [],
+  playlistVideoMap: {},   // ✅ GÜNCELLEME (Adım 1.1): { videoId: [playlistId, ...] } haritası
   viewMode: 'grid',
   tagColors: {},   // ✅ YENİ (Adım 3.3): { tagName: colorCode } formatında
   globalVideoLinks: [],   // ✅ YENİ (Adım 6.2): kombinasyon zinciri bağlantıları
