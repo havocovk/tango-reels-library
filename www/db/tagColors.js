@@ -4,6 +4,7 @@
 //    bazen 409 ile reddediyor ama dizi formatını kabul ediyor.
 
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
+import { fetchWithRetry } from '../utils.js';
 
 // ─────────────────────────────────────────────────────────────
 // dbFetchTagColors()
@@ -11,7 +12,7 @@ import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 // Döner: [{ tag_name, color_code }, ...]
 // ─────────────────────────────────────────────────────────────
 export async function dbFetchTagColors() {
-    const res = await fetch(
+    const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/tag_colors?select=tag_name,color_code`,
         {
             headers: {
@@ -34,7 +35,7 @@ export async function dbFetchTagColors() {
 // Dizi formatı her zaman güvenilir şekilde çalışıyor.
 // ─────────────────────────────────────────────────────────────
 export async function dbSetTagColor(tagName, colorCode) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/tag_colors`, {
+    const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/tag_colors`, {
         method: 'POST',
         headers: {
             'apikey':        SUPABASE_KEY,
@@ -57,7 +58,7 @@ export async function dbSetTagColor(tagName, colorCode) {
 // Bir etiketin renk kaydını siler.
 // ─────────────────────────────────────────────────────────────
 export async function dbDeleteTagColor(tagName) {
-    const res = await fetch(
+    const res = await fetchWithRetry(
         `${SUPABASE_URL}/rest/v1/tag_colors?tag_name=eq.${encodeURIComponent(tagName)}`,
         {
             method: 'DELETE',
