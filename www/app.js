@@ -401,6 +401,19 @@ async function initializeApp() {
         setTimeout(() => { applyUrlStateToUI(urlState); applyFiltersAndSearch(); }, 100);
     }
 
+    // ── Adim 5.2: Tarayıcı geri/ileri butonları ────────────────
+    window.addEventListener('popstate', () => {
+        const st = readUrlState();
+        const targetView = (st && st.view) ? st.view : 'dashboard';
+        // fromPopstate:true → callSwitchView yeni geçmiş eklemez (döngü önlenir)
+        callSwitchView(targetView, { fromPopstate: true });
+        syncBottomNavActiveState(targetView);
+        // Filtreleri de geri yükle
+        if (st) {
+            setTimeout(() => { applyUrlStateToUI(st); applyFiltersAndSearch(); }, 100);
+        }
+    });
+
     // ── Offline senkronizasyon ──────────────────────────────────
     // Adim 4.5: Çevrimdışı kuyruk simgesi
     function updateOfflineBadge() {

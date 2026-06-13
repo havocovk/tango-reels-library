@@ -51,7 +51,9 @@ export function callSwitchView(viewName, options = {}) {
     setVideoHandlersGlobalData(store.get('currentLang'), viewName, store.get('visibleCount'));
 
     // ✅ ADIM 3.2: View değişince URL'e yaz, filtreler sıfırlanır
-    writeUrlState({ view: viewName });
+    // Adim 5.2: popstate (geri/ileri) ile gelmediyse geçmişe ekle
+    const pushHistory = options.fromPopstate !== true;
+    writeUrlState({ view: viewName }, pushHistory);
 
     switchView(viewName, getUIState(), {
         applyFiltersAndSearch,

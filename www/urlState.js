@@ -7,7 +7,7 @@
 // writeUrlState — Mevcut filtre durumunu URL'e yaz
 // Örnek: ?view=library&instructor=3&platform=youtube&tag=giro&status=learning
 // ─────────────────────────────────────────────────────────────
-export function writeUrlState(state = {}) {
+export function writeUrlState(state = {}, pushHistory = false) {
     try {
         const params = new URLSearchParams();
 
@@ -22,7 +22,14 @@ export function writeUrlState(state = {}) {
 
         const queryString = params.toString();
         const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
-        history.replaceState({}, '', newUrl);
+
+        // Adim 5.2: View geçişlerinde pushState (geçmişe ekler, geri/ileri çalışır)
+        // Filtre değişikliklerinde replaceState (her filtreye yeni geçmiş eklenmez)
+        if (pushHistory) {
+            history.pushState({ view: state.view || 'library' }, '', newUrl);
+        } else {
+            history.replaceState({ view: state.view || 'library' }, '', newUrl);
+        }
     } catch (e) {
         // URL yazma başarısız olursa sessizce geç
     }
