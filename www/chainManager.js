@@ -419,10 +419,10 @@ function _renderChainMap(videoId, canvas, emptyEl, lang) {
     const findVideo = (id) => allVideos.find(v => v.id === id);
 
     // Bu videoyla bağlantılı tüm video ID'lerini topla (BFS ile 2 derece)
-    const nodeIds  = new Set([videoId]);
-    const edges    = [];
-    const visited  = new Set();
-    const queue    = [videoId];
+    const nodeIds   = new Set([videoId]);
+    const edgeMap   = new Map(); // id -> edge (duplicate önleme)
+    const visited   = new Set();
+    const queue     = [videoId];
 
     while (queue.length > 0) {
         const current = queue.shift();
@@ -432,15 +432,20 @@ function _renderChainMap(videoId, canvas, emptyEl, lang) {
         for (const link of allLinks) {
             if (link.source_video_id === current) {
                 nodeIds.add(link.target_video_id);
-                edges.push({ from: link.source_video_id, to: link.target_video_id, id: link.id });
+                if (!edgeMap.has(link.id)) {
+                    edgeMap.set(link.id, { from: link.source_video_id, to: link.target_video_id, id: link.id });
+                }
                 if (!visited.has(link.target_video_id)) queue.push(link.target_video_id);
             } else if (link.target_video_id === current) {
                 nodeIds.add(link.source_video_id);
-                edges.push({ from: link.source_video_id, to: link.target_video_id, id: link.id });
+                if (!edgeMap.has(link.id)) {
+                    edgeMap.set(link.id, { from: link.source_video_id, to: link.target_video_id, id: link.id });
+                }
                 if (!visited.has(link.source_video_id)) queue.push(link.source_video_id);
             }
         }
     }
+    const edges = Array.from(edgeMap.values());
 
     console.log('[ChainMap] nodeIds:', nodeIds.size, 'edges:', edges.length, 'allLinks:', allLinks.length);
 
