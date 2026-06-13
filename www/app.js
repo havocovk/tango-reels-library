@@ -314,6 +314,14 @@ async function initializeApp() {
     const partnerInput = document.getElementById('form-partner-name');
     const partnerList  = document.getElementById('partner-autocomplete-list');
     if (partnerInput && partnerList) {
+        // Dropdown stilleri — aşağı açılır, arka planlı
+        partnerList.style.cssText = `
+            position:absolute; top:100%; left:0; right:0; z-index:9999;
+            background:#1a1a2e; border:1px solid rgba(0,240,255,0.3);
+            border-radius:8px; overflow:hidden; margin-top:2px;
+            box-shadow:0 8px 24px rgba(0,0,0,0.6);
+        `;
+
         partnerInput.addEventListener('input', () => {
             const val = partnerInput.value.trim().toLowerCase();
             partnerList.innerHTML = '';
@@ -325,17 +333,24 @@ async function initializeApp() {
             )].slice(0, 6);
             partners.forEach(name => {
                 const item = document.createElement('div');
-                item.className = 'autocomplete-item';
+                item.style.cssText = `
+                    padding:9px 14px; cursor:pointer; font-size:0.85rem;
+                    color:rgba(255,255,255,0.85); border-bottom:1px solid rgba(255,255,255,0.06);
+                    transition:background 0.15s;
+                `;
                 item.textContent = name;
-                item.addEventListener('click', () => {
+                item.addEventListener('mouseenter', () => item.style.background = 'rgba(0,240,255,0.1)');
+                item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // blur'u engelle
                     partnerInput.value = name;
                     partnerList.innerHTML = '';
                 });
                 partnerList.appendChild(item);
             });
         });
-        document.addEventListener('click', (e) => {
-            if (!partnerInput.contains(e.target)) partnerList.innerHTML = '';
+        partnerInput.addEventListener('blur', () => {
+            setTimeout(() => { partnerList.innerHTML = ''; }, 150);
         });
     }
 
