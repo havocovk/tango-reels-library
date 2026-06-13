@@ -367,6 +367,16 @@ function exitSession() {
     const okTxt     = lang === 'tr' ? 'Evet, Çık' : 'Yes, Exit';
     const cancelTxt = lang === 'tr' ? 'Devam Et' : 'Keep Going';
     showCustomConfirm(msg, okTxt, cancelTxt).then(confirmed => {
-        if (confirmed && _callSwitchView) _callSwitchView('library');
+        if (confirmed) {
+            // Adim 4.3: Erken çıkışta da seans kaydedilir
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            dbSavePracticeSession({
+                practiced_count:  practicedIds.length,
+                skipped_count:    skippedIds.length,
+                duration_seconds: elapsed
+            }).catch(err => console.warn('[PracticeSession] Seans kaydedilemedi:', err));
+
+            if (_callSwitchView) _callSwitchView('library');
+        }
     });
 }
