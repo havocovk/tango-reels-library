@@ -219,6 +219,11 @@ export function renderVideoList(videos, config) {
     });
 }
 
+// Adim 4.4: Dışarı tıklanınca tüm üç nokta menülerini kapat (bir kez bağlanır)
+document.addEventListener('click', () => {
+    document.querySelectorAll('.card-more-menu:not(.d-none)').forEach(m => m.classList.add('d-none'));
+});
+
 // ─────────────────────────────────────────────────────────────
 // renderVideoCards  (Grid görünümü — ana fonksiyon)
 // ─────────────────────────────────────────────────────────────
@@ -370,11 +375,20 @@ export function renderVideoCards(videos, config) {
                 ${chainNavHtml}
                 <div style="display:flex;justify-content:space-between;width:100%;align-items:center;margin-top:4px;">
                     <a ${actionLinkClickAttr}>${watchText}</a>
-                    <div style="display:flex;gap:8px;">
-                        <button class="card-crud-btn card-annotate-btn" title="${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}" aria-label="${currentLang === 'tr' ? 'Zaman notlarını aç' : 'Open time notes'}">${icon('map-pin', { size: 14, color: '#ff007f' })}</button>
-                        <button class="card-crud-btn card-chain-btn" title="${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Combination Chain'}" aria-label="${currentLang === 'tr' ? 'Zincir bağlantılarını yönet' : 'Manage chain links'}">${icon('link-2', { size: 14, color: '#00f0ff' })}</button>
+                    <div style="display:flex;gap:6px;align-items:center;position:relative;">
                         <button class="card-crud-btn card-edit-btn" title="${lang.btnCardEdit}" aria-label="${currentLang === 'tr' ? 'Videoyu düzenle' : 'Edit video'}">${icon('pencil', { size: 14, color: '#c026d3' })}</button>
                         <button class="card-crud-btn card-delete-btn" title="${lang.btnCardDelete}" aria-label="${currentLang === 'tr' ? 'Videoyu sil' : 'Delete video'}">${icon('trash-2', { size: 14, color: '#ef4444' })}</button>
+                        <button class="card-crud-btn card-more-btn" title="${currentLang === 'tr' ? 'Daha Fazla' : 'More'}" aria-label="Daha fazla seçenek" aria-haspopup="true">${icon('list', { size: 14, color: '#64748b' })}</button>
+                        <div class="card-more-menu d-none">
+                            <button class="card-more-item card-annotate-btn">
+                                ${icon('map-pin', { size: 13, color: '#ff007f' })}
+                                <span>${currentLang === 'tr' ? 'Zaman Notları' : 'Time Notes'}</span>
+                            </button>
+                            <button class="card-more-item card-chain-btn">
+                                ${icon('link-2', { size: 13, color: '#00f0ff' })}
+                                <span>${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Chain Links'}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>`;
@@ -409,7 +423,22 @@ export function renderVideoCards(videos, config) {
         if (annotateBtn) {
             annotateBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (moreMenu) moreMenu.classList.add('d-none');
                 openAnnotationModal(video);
+            });
+        }
+
+        // Adim 4.4: Üç nokta menüsü
+        const moreBtn  = card.querySelector('.card-more-btn');
+        const moreMenu = card.querySelector('.card-more-menu');
+        if (moreBtn && moreMenu) {
+            moreBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Diğer açık menüleri kapat
+                document.querySelectorAll('.card-more-menu:not(.d-none)').forEach(m => {
+                    if (m !== moreMenu) m.classList.add('d-none');
+                });
+                moreMenu.classList.toggle('d-none');
             });
         }
 
@@ -417,6 +446,7 @@ export function renderVideoCards(videos, config) {
         if (chainBtn) {
             chainBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (moreMenu) moreMenu.classList.add('d-none');
                 openLinkManager(video);
             });
         }
