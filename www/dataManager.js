@@ -264,11 +264,8 @@ export function renderDashboard() {
         if (freshBtn) {
             freshBtn.style.display = dueVideos.length > 0 ? 'flex' : 'none';
             freshBtn.addEventListener('click', () => {
-                import('./navigation.js').then(({ callSwitchView }) => {
-                    callSwitchView('practiceSession');
-                    import('./practiceSession.js').then(({ startPracticeSession }) => {
-                        startPracticeSession();
-                    });
+                import('./practiceSession.js').then(({ startPracticeSession }) => {
+                    startPracticeSession(dueVideos);
                 });
             });
         }
