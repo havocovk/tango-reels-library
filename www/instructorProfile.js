@@ -3,6 +3,7 @@
 // ✅ GÜNCELLEME: renderInstructorsList() — sol menüdeki "Eğitmenler" sayfası
 
 import { dbUpdateInstructorProfile } from './db/instructors.js';
+import { uploadInstructorPhoto } from './storage.js'; // Ek ozellik
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { openVideoModal } from './tangoModals.js';
@@ -236,7 +237,9 @@ export function renderInstructorProfile(instructorId) {
         editBtn:              lang === 'tr' ? `${icon('pencil', { size: 14, color: '#c026d3' })} Düzenle` : `${icon('pencil', { size: 14, color: '#c026d3' })} Edit`,
         saveBtn:              lang === 'tr' ? `${icon('save', { size: 14, color: '#4ade80' })} Kaydet` : `${icon('save', { size: 14, color: '#4ade80' })} Save`,
         cancelBtn:            lang === 'tr' ? 'İptal' : 'Cancel',
-        photoUrlLabel:        lang === 'tr' ? 'Fotoğraf URL:' : 'Photo URL:',
+        photoUrlLabel:        lang === 'tr' ? 'Fotoğraf URL veya Yükle:' : 'Photo URL or Upload:',
+        photoUploadBtn:       lang === 'tr' ? '📁 Dosya Seç' : '📁 Choose File',
+        photoUploading:       lang === 'tr' ? 'Yükleniyor...' : 'Uploading...',
         instagramLabel:       lang === 'tr' ? 'Instagram Profil URL:' : 'Instagram Profile URL:',
         facebookLabel:        lang === 'tr' ? 'Facebook Profil URL:' : 'Facebook Profile URL:',
         bioLabel:             lang === 'tr' ? 'Biyografi:' : 'Biography:',
@@ -475,9 +478,21 @@ export function renderInstructorProfile(instructorId) {
         ">
             <div style="margin-bottom:14px;">
                 <label style="font-size:0.75rem;color:#94a3b8;display:block;margin-bottom:6px;">${T.photoUrlLabel}</label>
-                <input id="prof-photo-input" type="url" class="prof-edit-field"
-                    placeholder="${T.photoPlaceholder}"
-                    value="${escapeHtml(instructor.photo_url || '')}">
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input id="prof-photo-input" type="url" class="prof-edit-field" style="flex:1;"
+                        placeholder="${T.photoPlaceholder}"
+                        value="${escapeHtml(instructor.photo_url || '')}">
+                    <button id="prof-photo-upload-btn" type="button" style="
+                        padding:8px 12px; background:rgba(0,240,255,0.1);
+                        border:1px solid rgba(0,240,255,0.35); border-radius:8px;
+                        color:#00f0ff; font-size:0.75rem; font-weight:600;
+                        font-family:'Plus Jakarta Sans',sans-serif;
+                        cursor:pointer; white-space:nowrap; flex-shrink:0;
+                        transition:background 0.2s;
+                    ">${T.photoUploadBtn}</button>
+                </div>
+                <input id="prof-photo-file-input" type="file" accept="image/*" style="display:none;">
+                <div id="prof-photo-upload-status" style="font-size:0.72rem;color:#94a3b8;margin-top:4px;"></div>
             </div>
             <div style="margin-bottom:14px;">
                 <label style="font-size:0.75rem;color:#e1306c;display:block;margin-bottom:6px;">
@@ -568,6 +583,45 @@ export function renderInstructorProfile(instructorId) {
     });
 
     // Kaydet
+    // Eğitmen fotoğrafı yükleme butonu
+    const photoUploadBtn   = document.getElementById('prof-photo-upload-btn');
+    const photoFileInput   = document.getElementById('prof-photo-file-input');
+    const photoStatusEl    = document.getElementById('prof-photo-upload-status');
+
+    if (photoUploadBtn && photoFileInput) {
+        photoUploadBtn.addEventListener('click', () => photoFileInput.click());
+
+        photoFileInput.addEventListener('change', async () => {
+            const file = photoFileInput.files?.[0];
+            if (!file) return;
+
+            const lang = store.get('currentLang');
+            photoUploadBtn.disabled = true;
+            photoUploadBtn.style.opacity = '0.5';
+            if (photoStatusEl) photoStatusEl.textContent = lang === 'tr' ? 'Yükleniyor...' : 'Uploading...';
+
+            try {
+                const url = await uploadInstructorPhoto(file);
+                const photoInput = document.getElementById('prof-photo-input');
+                if (photoInput) photoInput.value = url;
+                if (photoStatusEl) {
+                    photoStatusEl.style.color = '#4ade80';
+                    photoStatusEl.textContent = lang === 'tr' ? '✅ Fotoğraf yüklendi.' : '✅ Photo uploaded.';
+                }
+            } catch (err) {
+                console.error('[InstructorPhoto]', err);
+                if (photoStatusEl) {
+                    photoStatusEl.style.color = '#ef4444';
+                    photoStatusEl.textContent = lang === 'tr' ? '❌ Yükleme başarısız.' : '❌ Upload failed.';
+                }
+            } finally {
+                photoUploadBtn.disabled = false;
+                photoUploadBtn.style.opacity = '1';
+                photoFileInput.value = '';
+            }
+        });
+    }
+
     document.getElementById('prof-save-btn')?.addEventListener('click', async () => {
         const photoVal     = (document.getElementById('prof-photo-input')?.value     || '').trim();
         const igVal        = (document.getElementById('prof-instagram-input')?.value  || '').trim();
