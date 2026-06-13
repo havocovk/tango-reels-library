@@ -232,19 +232,20 @@ function setupBackupButtons() {
 export { renderTagManagerUI };
 
 // ─────────────────────────────────────────────────────────────
-// renderDashboard — Adim 4.1
-// Dashboard view'ını güncel verilerle doldurur.
+// renderDashboard — Adim 4.1 (duzeltilmis)
 // ─────────────────────────────────────────────────────────────
 export function renderDashboard() {
-    const videos      = store.get('globalVideos') || [];
-    const lang        = store.get('currentLang');
-    const t           = lang === 'tr';
+    const videos = store.get('globalVideos') || [];
+    const lang   = store.get('currentLang');
+    const t      = lang === 'tr';
 
     // ── Başlık ────────────────────────────────────────────────
     const titleEl    = document.getElementById('dash-title');
     const subtitleEl = document.getElementById('dash-subtitle');
-    if (titleEl)    titleEl.textContent    = t ? '📊 Genel Bakış' : '📊 Overview';
-    if (subtitleEl) subtitleEl.textContent = t ? 'Tango arşivinin özeti' : 'Summary of your tango archive';
+    if (titleEl)    titleEl.textContent    = t ? 'Genel Bakış' : 'Overview';
+    if (subtitleEl) subtitleEl.textContent = t
+        ? 'Kombinasyon koleksiyonunun özeti'
+        : 'Summary of your combination collection';
 
     // ── Bugün tekrar edilecek ──────────────────────────────────
     const dueVideos = getDueVideos(videos);
@@ -257,12 +258,20 @@ export function renderDashboard() {
     const practiceBtnText = document.getElementById('dash-practice-btn-text');
     if (practiceBtnText) practiceBtnText.textContent = t ? 'Pratik Başlat' : 'Start Practice';
     if (practiceBtnEl) {
-        practiceBtnEl.onclick = () => {
-            import('./practiceSession.js').then(({ startPracticeSession }) => {
-                startPracticeSession();
+        // Butonu her renderda yeniden bağla
+        practiceBtnEl.replaceWith(practiceBtnEl.cloneNode(true));
+        const freshBtn = document.getElementById('dash-start-practice');
+        if (freshBtn) {
+            freshBtn.style.display = dueVideos.length > 0 ? 'flex' : 'none';
+            freshBtn.addEventListener('click', () => {
+                import('./navigation.js').then(({ callSwitchView }) => {
+                    callSwitchView('practiceSession');
+                    import('./practiceSession.js').then(({ startPracticeSession }) => {
+                        startPracticeSession();
+                    });
+                });
             });
-        };
-        practiceBtnEl.style.display = dueVideos.length > 0 ? 'flex' : 'none';
+        }
     }
 
     // ── Öğreniliyor ───────────────────────────────────────────
@@ -290,74 +299,76 @@ export function renderDashboard() {
     const now       = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - now.getDay());
-    weekStart.setHours(0,0,0,0);
-    const weekCount = videos.filter(v => {
-        if (!v.last_reviewed_at) return false;
-        return new Date(v.last_reviewed_at) >= weekStart;
-    }).length;
+    weekStart.setHours(0, 0, 0, 0);
+    const weekCount = videos.filter(v =>
+        v.last_reviewed_at && new Date(v.last_reviewed_at) >= weekStart
+    ).length;
     const weekEl  = document.getElementById('dash-week-count');
     const weekLbl = document.getElementById('dash-week-label');
     if (weekEl)  weekEl.textContent  = weekCount;
     if (weekLbl) weekLbl.textContent = t ? 'Bu Hafta Çalışıldı' : 'Practiced This Week';
 
-    // ── En çok çalışılan teknikler (top tags by review_count) ──
-    const tagTitle = document.getElementById('dash-toptags-title');
-    if (tagTitle) tagTitle.textContent = t ? 'En Çok Çalışılan Teknikler' : 'Most Practiced Techniques';
+    // ── En çok çalışılan teknikler ────────────────────────────
+    const tagTitleEl = document.getElementById('dash-toptags-title');
+    if (tagTitleEl) tagTitleEl.textContent = t ? 'En Çok Çalışılan Teknikler' : 'Most Practiced Techniques';
 
     const tagMap = new Map();
     videos.forEach(v => {
         if (!v.tags) return;
         const count = v.review_count || 0;
-        v.tags.split(',').forEach(tag => {
-            tag = tag.trim();
+        v.tags.split(',').forEach(raw => {
+            const tag = raw.trim();
             if (!tag) return;
             tagMap.set(tag, (tagMap.get(tag) || 0) + count);
         });
     });
     const topTags = Array.from(tagMap.entries())
-        .filter(([, c]) => c > 0)
+        .filter(([, cnt]) => cnt > 0)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
 
     const tagsListEl = document.getElementById('dash-toptags-list');
-    const tagsEmptyEl = document.getElementById('dash-toptags-empty');
     if (tagsListEl) {
-        if (topTags.length === 0) {
-            tagsListEl.innerHTML = `<span class="dash-toptags-empty">${t ? 'Henüz veri yok' : 'No data yet'}</span>`;
-        } else {
-            tagsListEl.innerHTML = topTags.map(([tag, cnt]) =>
-                `<span class="dash-tag-chip">
-                    #${tag}
-                    <span class="dash-tag-chip-count">${cnt}</span>
-                </span>`
+        tagsListEl.innerHTML = topTags.length === 0
+            ? `<span class="dash-toptags-empty">${t ? 'Henüz pratik yapılmamış' : 'No practice data yet'}</span>`
+            : topTags.map(([tag, cnt]) =>
+                `<span class="dash-tag-chip">#${tag}<span class="dash-tag-chip-count">${cnt}</span></span>`
             ).join('');
-        }
     }
 
     // ── Son eklenen 5 video ───────────────────────────────────
-    const recentTitle = document.getElementById('dash-recent-title');
-    if (recentTitle) recentTitle.textContent = t ? 'Son Eklenen Videolar' : 'Recently Added Videos';
+    const recentTitleEl = document.getElementById('dash-recent-title');
+    if (recentTitleEl) recentTitleEl.textContent = t ? 'Son Eklenen Videolar' : 'Recently Added Videos';
 
     const recentVideos = [...videos]
-        .sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0))
+        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
         .slice(0, 5);
 
     const recentListEl = document.getElementById('dash-recent-list');
     if (recentListEl) {
         recentListEl.innerHTML = recentVideos.map(v => {
-            const thumb = v.cover_image_url
-                ? `<img class="dash-recent-thumb" src="${v.cover_image_url}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                : '';
-            const placeholder = `<div class="dash-recent-thumb-placeholder" style="${v.cover_image_url ? 'display:none' : ''}">🎬</div>`;
+            // Kapak resmi: cover_url alanı kullanılıyor (videoCardRenderer ile tutarlı)
+            const coverUrl    = v.cover_url || '';
+            const thumbHtml   = coverUrl
+                ? `<img class="dash-recent-thumb" src="${coverUrl}" alt="">`
+                : `<div class="dash-recent-thumb-placeholder"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff007f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>`;
+
+            // Video başlığı: eğitmen adı + ilk 2 etiket
+            const instructorName = v.instructors ? v.instructors.name : (v.instructor_name || '');
+            const tags = v.tags ? v.tags.split(',').map(s => s.trim()).filter(Boolean).slice(0, 2) : [];
+            const displayName = instructorName || (t ? 'Bilinmeyen Eğitmen' : 'Unknown Instructor');
+            const tagStr      = tags.length ? tags.map(tg => '#' + tg).join(' ') : '';
+
             const platform = v.platform || 'other';
-            const dateStr  = v.created_at ? new Date(v.created_at).toLocaleDateString(t ? 'tr-TR' : 'en-US', { day:'numeric', month:'short' }) : '';
-            const instructor = v.instructor_name || '';
-            const meta = [instructor, dateStr].filter(Boolean).join(' · ');
+            const dateStr   = v.created_at
+                ? new Date(v.created_at).toLocaleDateString(t ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short' })
+                : '';
+
             return `<div class="dash-recent-item">
-                ${thumb}${placeholder}
+                ${thumbHtml}
                 <div class="dash-recent-info">
-                    <div class="dash-recent-name">${v.combination_name || (t ? 'İsimsiz' : 'Unnamed')}</div>
-                    <div class="dash-recent-meta">${meta}</div>
+                    <div class="dash-recent-name">${displayName}</div>
+                    <div class="dash-recent-meta">${[tagStr, dateStr].filter(Boolean).join(' · ')}</div>
                 </div>
                 <span class="dash-recent-platform ${platform}">${platform}</span>
             </div>`;

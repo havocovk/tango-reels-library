@@ -133,6 +133,7 @@ async function initializeApp() {
             callUpdateInterfaceLanguage();
             if (store.get('currentView') === 'stats') renderStatsPanel();
             if (store.get('currentView') === 'tagManager') renderTagManagerUI();
+            if (store.get('currentView') === 'dashboard') renderDashboard();
         };
     }
 

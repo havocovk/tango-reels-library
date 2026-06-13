@@ -58,11 +58,20 @@
 .dash-card-total    { border-color: rgba(192,38,211,0.2); }
 .dash-card-week     { border-color: rgba(255,0,127,0.2);  }
 
-.dash-card-icon {
-    font-size: 2rem;
+.dash-card-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    line-height: 1;
 }
+.dash-icon-cyan   { background: rgba(0,240,255,0.1);   border: 1px solid rgba(0,240,255,0.2);   }
+.dash-icon-amber  { background: rgba(245,158,11,0.1);  border: 1px solid rgba(245,158,11,0.2);  }
+.dash-icon-green  { background: rgba(74,222,128,0.1);  border: 1px solid rgba(74,222,128,0.2);  }
+.dash-icon-purple { background: rgba(192,38,211,0.1);  border: 1px solid rgba(192,38,211,0.2);  }
+.dash-icon-pink   { background: rgba(255,0,127,0.1);   border: 1px solid rgba(255,0,127,0.2);   }
 .dash-card-body {
     flex: 1;
     min-width: 0;
