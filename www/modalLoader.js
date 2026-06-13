@@ -48,3 +48,6 @@ export function onModalLoaded(modalKey, callback) {
 
 // Geriye dönük uyumluluk — view'lar baştan DOM'da, no-op
 export async function ensureViewLoaded(_viewName) {}
+
+// app.js'in baştan yüklediği modalları kayıt etmesi için
+export function registerLoaded(key) { _loadedTemplates.add(key); }

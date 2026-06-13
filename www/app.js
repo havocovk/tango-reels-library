@@ -15,7 +15,7 @@ import {
     renderModalChips, initModalCallbacks
 } from './tangoModals.js';
 import { setupAutocomplete } from './uiRenderer.js';
-import { ensureModalLoaded, ensureViewLoaded, onModalLoaded } from './modalLoader.js'; // Adim 3.4
+import { ensureModalLoaded, ensureViewLoaded, onModalLoaded, registerLoaded } from './modalLoader.js'; // Adim 3.4
 import { renderFormChips } from './formHandlers.js';
 import {
     initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount,
@@ -89,7 +89,7 @@ async function loadTemplates() {
             document.body.appendChild(modalContainer);
         }
         modalContainer.insertAdjacentHTML('beforeend', customDialogModal);
-        _loadedTemplates.add('custom-dialog-modal');
+        registerLoaded('custom-dialog-modal');
 
         // Diğer modallar lazy — ilk kullanımda yüklenecek
         ['video-modal', 'tags-edit-modal', 'annotation-modal', 'link-manager-modal'].forEach(k => {
