@@ -1,4 +1,5 @@
-// stats/statsUI.js - İstatistikleri HTML olarak render etme ve grafik çizme
+// stats/statsUI.js
+import { dbFetchPracticeSessions } from '../db/practiceSessions.js'; // Adim 4.3 - İstatistikleri HTML olarak render etme ve grafik çizme
 // ✅ GÜNCELLEME (Adım 5.1): renderLearningHeatmap eklendi
 // ✅ GÜNCELLEME (Adım 5.3): renderTagCloud eklendi
 // ✅ GÜNCELLEME (Adım 5.4): Yıl seçici ve renderMonthlyChart eklendi
@@ -355,6 +356,82 @@ export function renderStats(stats, currentLang) {
 
     const tagNetworkData = computeTagNetwork(videos);
     renderTagNetwork(tagNetworkData, currentLang);
+
+    // Adim 4.3: Seans geçmişi bölümünü ekle ve doldur
+    const sessionSection = document.createElement('div');
+    sessionSection.id = 'session-history-section';
+    sessionSection.style.marginTop = '30px';
+    container.appendChild(sessionSection);
+    renderSessionHistory(sessionSection, currentLang);
+}
+
+// ─────────────────────────────────────────────────────────────
+// renderSessionHistory — Adim 4.3
+// Son 12 haftanın pratik seans geçmişini gösterir.
+// ─────────────────────────────────────────────────────────────
+async function renderSessionHistory(container, currentLang) {
+    const t = currentLang === 'tr';
+
+    container.innerHTML = `
+        <div class="stats-section-title" style="
+            font-size:1rem; font-weight:700; color:rgba(255,255,255,0.8);
+            margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${t ? 'Pratik Seans Geçmişi' : 'Practice Session History'}
+        </div>
+        <div id="session-history-list" style="display:flex;flex-direction:column;gap:8px;">
+            <p style="color:rgba(255,255,255,0.3);font-size:0.82rem;">${t ? 'Yükleniyor...' : 'Loading...'}</p>
+        </div>`;
+
+    try {
+        const sessions = await dbFetchPracticeSessions();
+        const listEl   = document.getElementById('session-history-list');
+        if (!listEl) return;
+
+        if (sessions.length === 0) {
+            listEl.innerHTML = `<p style="color:rgba(255,255,255,0.3);font-size:0.82rem;">${t ? 'Henüz kayıtlı seans yok.' : 'No sessions recorded yet.'}</p>`;
+            return;
+        }
+
+        listEl.innerHTML = sessions.map(s => {
+            const date     = new Date(s.session_date);
+            const dateStr  = date.toLocaleDateString(t ? 'tr-TR' : 'en-US', { weekday:'short', day:'numeric', month:'short' });
+            const mins     = Math.floor((s.duration_seconds || 0) / 60);
+            const secs     = (s.duration_seconds || 0) % 60;
+            const durStr   = `${mins}:${secs.toString().padStart(2,'0')}`;
+            const total    = (s.practiced_count || 0) + (s.skipped_count || 0);
+            const pct      = total > 0 ? Math.round((s.practiced_count / total) * 100) : 0;
+            const barColor = pct >= 80 ? '#4ade80' : pct >= 50 ? '#f59e0b' : '#ff007f';
+
+            return `<div style="
+                background:rgba(255,255,255,0.03);
+                border:1px solid rgba(255,255,255,0.07);
+                border-radius:12px;
+                padding:12px 16px;
+                display:flex;
+                align-items:center;
+                gap:16px;
+                flex-wrap:wrap;">
+                    <span style="color:rgba(255,255,255,0.5);font-size:0.8rem;min-width:100px;">${dateStr}</span>
+                    <div style="flex:1;min-width:120px;">
+                        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
+                            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.4s;"></div>
+                        </div>
+                    </div>
+                    <span style="color:rgba(255,255,255,0.7);font-size:0.82rem;white-space:nowrap;">
+                        ${s.practiced_count || 0} ${t ? 'video' : 'videos'}
+                    </span>
+                    <span style="color:rgba(255,255,255,0.4);font-size:0.78rem;white-space:nowrap;">
+                        ⏱ ${durStr}
+                    </span>
+            </div>`;
+        }).join('');
+
+    } catch (err) {
+        console.warn('[SessionHistory] Yüklenemedi:', err);
+        const listEl = document.getElementById('session-history-list');
+        if (listEl) listEl.innerHTML = `<p style="color:rgba(239,68,68,0.7);font-size:0.82rem;">${t ? 'Seanslar yüklenemedi.' : 'Could not load sessions.'}</p>`;
+    }
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@
 
 import { store } from './store.js';
 import { dbUpdateLearningStatus } from './tangoVeritabani.js';
+import { dbSavePracticeSession } from './db/practiceSessions.js'; // Adim 4.3
 import { getDueTodayCount } from './learning/spacedRepetition.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js'; // Adim 1.3
@@ -335,6 +336,14 @@ function endSession() {
         }
         msgEl.textContent = msg;
     }
+
+    // Adim 4.3: Seans bitti — DB'ye kaydet (sessiz, hata olursa uyarı verilmez)
+    const elapsedSecForSave = Math.floor((Date.now() - startTime) / 1000);
+    dbSavePracticeSession({
+        practiced_count:  practicedIds.length,
+        skipped_count:    skippedIds.length,
+        duration_seconds: elapsedSecForSave
+    }).catch(err => console.warn('[PracticeSession] Seans kaydedilemedi:', err));
 
     // "Koleksiyona Dön" butonu
     const returnBtn = document.getElementById('btn-practice-return');
