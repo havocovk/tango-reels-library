@@ -16,6 +16,8 @@ export function switchView(viewName, state, functions) {
     if (tagManagerBtn) tagManagerBtn.classList.remove('active');
     const instructorsMenuBtn = document.getElementById('menu-instructors');
     if (instructorsMenuBtn) instructorsMenuBtn.classList.remove('active');
+    const dashboardMenuBtn = document.getElementById('menu-dashboard');
+    if (dashboardMenuBtn) dashboardMenuBtn.classList.remove('active');
 
     const clearFavBtnContainer    = document.getElementById('clear-favorites-container');
     const libraryView             = document.getElementById('view-library-container');
@@ -24,12 +26,18 @@ export function switchView(viewName, state, functions) {
     const tagView                 = document.getElementById('view-tag-manager-container');
     const practiceSessionView     = document.getElementById('view-practice-session-container');
     const instructorProfileView   = document.getElementById('view-instructor-profile-container');
+    const dashboardView           = document.getElementById('view-dashboard-container'); // Adim 4.1
 
     // ── Tüm view'ları gizle (ortak başlangıç) ──
-    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView];
+    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView, dashboardView];
     allViews.forEach(v => { if (v) v.classList.add('d-none'); });
 
-    if (viewName === 'library' || viewName === 'favorites') {
+    if (viewName === 'dashboard') {
+        if (dashboardView) dashboardView.classList.remove('d-none');
+        if (dashboardMenuBtn) dashboardMenuBtn.classList.add('active');
+        if (functions.renderDashboard) functions.renderDashboard();
+
+    } else if (viewName === 'library' || viewName === 'favorites') {
         if (libraryView) libraryView.classList.remove('d-none');
         document.getElementById(`menu-${viewName}`)?.classList.add('active');
 

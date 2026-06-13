@@ -1,0 +1,91 @@
+<!-- views/dashboard.html — Adim 4.1: Dashboard / Ana Özet Ekranı -->
+<div id="view-dashboard-container" class="d-none">
+    <div class="dashboard-wrapper">
+
+        <!-- Başlık -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title" id="dash-title">📊 Genel Bakış</h1>
+            <p class="dashboard-subtitle" id="dash-subtitle">Tango arşivinin özeti</p>
+        </div>
+
+        <!-- Üst satır: 3 ana kart -->
+        <div class="dashboard-row dashboard-row-top">
+
+            <!-- Bugün tekrar edilecek -->
+            <div class="dash-card dash-card-due">
+                <div class="dash-card-icon">🎯</div>
+                <div class="dash-card-body">
+                    <div class="dash-card-value" id="dash-due-count">—</div>
+                    <div class="dash-card-label" id="dash-due-label">Bugün Tekrar</div>
+                </div>
+                <button class="dash-card-action" id="dash-start-practice">
+                    <span id="dash-practice-btn-text">Pratik Başlat</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </button>
+            </div>
+
+            <!-- Öğrenme aşamasında -->
+            <div class="dash-card dash-card-learning">
+                <div class="dash-card-icon">📚</div>
+                <div class="dash-card-body">
+                    <div class="dash-card-value" id="dash-learning-count">—</div>
+                    <div class="dash-card-label" id="dash-learning-label">Öğreniliyor</div>
+                </div>
+            </div>
+
+            <!-- Ustalaşılan -->
+            <div class="dash-card dash-card-mastered">
+                <div class="dash-card-icon">⭐</div>
+                <div class="dash-card-body">
+                    <div class="dash-card-value" id="dash-mastered-count">—</div>
+                    <div class="dash-card-label" id="dash-mastered-label">Ustalaşıldı</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Orta satır: 2 kart -->
+        <div class="dashboard-row dashboard-row-mid">
+
+            <!-- Toplam koleksiyon -->
+            <div class="dash-card dash-card-total">
+                <div class="dash-card-icon">🎬</div>
+                <div class="dash-card-body">
+                    <div class="dash-card-value" id="dash-total-count">—</div>
+                    <div class="dash-card-label" id="dash-total-label">Toplam Video</div>
+                </div>
+            </div>
+
+            <!-- Bu hafta çalışılan -->
+            <div class="dash-card dash-card-week">
+                <div class="dash-card-icon">🗓️</div>
+                <div class="dash-card-body">
+                    <div class="dash-card-value" id="dash-week-count">—</div>
+                    <div class="dash-card-label" id="dash-week-label">Bu Hafta Çalışıldı</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Alt satır: En çok çalışılan teknikler -->
+        <div class="dash-card dash-card-toptags">
+            <div class="dash-toptags-header">
+                <span class="dash-card-icon">🏆</span>
+                <span class="dash-toptags-title" id="dash-toptags-title">En Çok Çalışılan Teknikler</span>
+            </div>
+            <div class="dash-toptags-list" id="dash-toptags-list">
+                <span class="dash-toptags-empty" id="dash-toptags-empty">Henüz veri yok</span>
+            </div>
+        </div>
+
+        <!-- Yeni eklenenler -->
+        <div class="dash-card dash-card-recent">
+            <div class="dash-toptags-header">
+                <span class="dash-card-icon">🆕</span>
+                <span class="dash-toptags-title" id="dash-recent-title">Son Eklenen Videolar</span>
+            </div>
+            <div class="dash-recent-list" id="dash-recent-list"></div>
+        </div>
+
+    </div>
+</div>

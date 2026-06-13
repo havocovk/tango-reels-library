@@ -11,7 +11,7 @@ import { setVisibleCount, setVideoHandlersGlobalData, applyFiltersAndSearch } fr
 import { switchView, updateInterfaceLanguage, updateSmartFilenameAssistant } from './tangoUI.js';
 import { setEditingVideoId, setEditingVideoUpdatedAt, setFormTagsArray, renderFormChips, getFormTagsArray, formTagsArray, setFormHandlersGlobalData } from './formHandlers.js';
 import { getAllUniqueTagsPool } from './tangoFilters.js';
-import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
+import { renderStatsPanel, renderTagManagerUI, fetchVideos, renderDashboard } from './dataManager.js'; // Adim 4.1
 import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
 import { renderInstructorProfile, renderInstructorsList } from './instructorProfile.js';
@@ -60,6 +60,7 @@ export function callSwitchView(viewName, options = {}) {
             import('./storage.js').then(s => s.resetUploadedCoverUrl());
         },
         renderTagManager: renderTagManagerUI,
+        renderDashboard: renderDashboard,    // Adim 4.1
         renderProfile: options.instructorId
             ? () => renderInstructorProfile(options.instructorId)
             : null,

@@ -19,7 +19,7 @@ import { setInstructorHandlersGlobalData } from './instructorHandlers.js';
 import { setFormHandlersGlobalData, formTagsArray } from './formHandlers.js';
 import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
-import { getDueTodayCount } from './learning/spacedRepetition.js';
+import { getDueTodayCount, getDueVideos } from './learning/spacedRepetition.js';
 import { ensureAllTagsHaveColors } from './tagColorManager.js';
 import { renderLearningPathCard } from './learningPathAdvisor.js';
 import {
@@ -230,6 +230,140 @@ function setupBackupButtons() {
 }
 
 export { renderTagManagerUI };
+
+// ─────────────────────────────────────────────────────────────
+// renderDashboard — Adim 4.1
+// Dashboard view'ını güncel verilerle doldurur.
+// ─────────────────────────────────────────────────────────────
+export function renderDashboard() {
+    const videos      = store.get('globalVideos') || [];
+    const lang        = store.get('currentLang');
+    const t           = lang === 'tr';
+
+    // ── Başlık ────────────────────────────────────────────────
+    const titleEl    = document.getElementById('dash-title');
+    const subtitleEl = document.getElementById('dash-subtitle');
+    if (titleEl)    titleEl.textContent    = t ? '📊 Genel Bakış' : '📊 Overview';
+    if (subtitleEl) subtitleEl.textContent = t ? 'Tango arşivinin özeti' : 'Summary of your tango archive';
+
+    // ── Bugün tekrar edilecek ──────────────────────────────────
+    const dueVideos = getDueVideos(videos);
+    const dueEl     = document.getElementById('dash-due-count');
+    const dueLblEl  = document.getElementById('dash-due-label');
+    if (dueEl)    dueEl.textContent    = dueVideos.length;
+    if (dueLblEl) dueLblEl.textContent = t ? 'Bugün Tekrar' : 'Due Today';
+
+    const practiceBtnEl   = document.getElementById('dash-start-practice');
+    const practiceBtnText = document.getElementById('dash-practice-btn-text');
+    if (practiceBtnText) practiceBtnText.textContent = t ? 'Pratik Başlat' : 'Start Practice';
+    if (practiceBtnEl) {
+        practiceBtnEl.onclick = () => {
+            import('./practiceSession.js').then(({ startPracticeSession }) => {
+                startPracticeSession();
+            });
+        };
+        practiceBtnEl.style.display = dueVideos.length > 0 ? 'flex' : 'none';
+    }
+
+    // ── Öğreniliyor ───────────────────────────────────────────
+    const learningCount = videos.filter(v => v.learning_status === 'learning').length;
+    const newCount      = videos.filter(v => !v.learning_status || v.learning_status === 'new').length;
+    const learningEl    = document.getElementById('dash-learning-count');
+    const learningLbl   = document.getElementById('dash-learning-label');
+    if (learningEl)  learningEl.textContent  = learningCount + newCount;
+    if (learningLbl) learningLbl.textContent = t ? 'Öğreniliyor' : 'In Progress';
+
+    // ── Ustalaşıldı ───────────────────────────────────────────
+    const masteredCount = videos.filter(v => v.learning_status === 'mastered').length;
+    const masteredEl    = document.getElementById('dash-mastered-count');
+    const masteredLbl   = document.getElementById('dash-mastered-label');
+    if (masteredEl)  masteredEl.textContent  = masteredCount;
+    if (masteredLbl) masteredLbl.textContent = t ? 'Ustalaşıldı' : 'Mastered';
+
+    // ── Toplam video ──────────────────────────────────────────
+    const totalEl  = document.getElementById('dash-total-count');
+    const totalLbl = document.getElementById('dash-total-label');
+    if (totalEl)  totalEl.textContent  = videos.length;
+    if (totalLbl) totalLbl.textContent = t ? 'Toplam Video' : 'Total Videos';
+
+    // ── Bu hafta çalışılan ────────────────────────────────────
+    const now       = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0,0,0,0);
+    const weekCount = videos.filter(v => {
+        if (!v.last_reviewed_at) return false;
+        return new Date(v.last_reviewed_at) >= weekStart;
+    }).length;
+    const weekEl  = document.getElementById('dash-week-count');
+    const weekLbl = document.getElementById('dash-week-label');
+    if (weekEl)  weekEl.textContent  = weekCount;
+    if (weekLbl) weekLbl.textContent = t ? 'Bu Hafta Çalışıldı' : 'Practiced This Week';
+
+    // ── En çok çalışılan teknikler (top tags by review_count) ──
+    const tagTitle = document.getElementById('dash-toptags-title');
+    if (tagTitle) tagTitle.textContent = t ? 'En Çok Çalışılan Teknikler' : 'Most Practiced Techniques';
+
+    const tagMap = new Map();
+    videos.forEach(v => {
+        if (!v.tags) return;
+        const count = v.review_count || 0;
+        v.tags.split(',').forEach(tag => {
+            tag = tag.trim();
+            if (!tag) return;
+            tagMap.set(tag, (tagMap.get(tag) || 0) + count);
+        });
+    });
+    const topTags = Array.from(tagMap.entries())
+        .filter(([, c]) => c > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+    const tagsListEl = document.getElementById('dash-toptags-list');
+    const tagsEmptyEl = document.getElementById('dash-toptags-empty');
+    if (tagsListEl) {
+        if (topTags.length === 0) {
+            tagsListEl.innerHTML = `<span class="dash-toptags-empty">${t ? 'Henüz veri yok' : 'No data yet'}</span>`;
+        } else {
+            tagsListEl.innerHTML = topTags.map(([tag, cnt]) =>
+                `<span class="dash-tag-chip">
+                    #${tag}
+                    <span class="dash-tag-chip-count">${cnt}</span>
+                </span>`
+            ).join('');
+        }
+    }
+
+    // ── Son eklenen 5 video ───────────────────────────────────
+    const recentTitle = document.getElementById('dash-recent-title');
+    if (recentTitle) recentTitle.textContent = t ? 'Son Eklenen Videolar' : 'Recently Added Videos';
+
+    const recentVideos = [...videos]
+        .sort((a, b) => new Date(b.created_at||0) - new Date(a.created_at||0))
+        .slice(0, 5);
+
+    const recentListEl = document.getElementById('dash-recent-list');
+    if (recentListEl) {
+        recentListEl.innerHTML = recentVideos.map(v => {
+            const thumb = v.cover_image_url
+                ? `<img class="dash-recent-thumb" src="${v.cover_image_url}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                : '';
+            const placeholder = `<div class="dash-recent-thumb-placeholder" style="${v.cover_image_url ? 'display:none' : ''}">🎬</div>`;
+            const platform = v.platform || 'other';
+            const dateStr  = v.created_at ? new Date(v.created_at).toLocaleDateString(t ? 'tr-TR' : 'en-US', { day:'numeric', month:'short' }) : '';
+            const instructor = v.instructor_name || '';
+            const meta = [instructor, dateStr].filter(Boolean).join(' · ');
+            return `<div class="dash-recent-item">
+                ${thumb}${placeholder}
+                <div class="dash-recent-info">
+                    <div class="dash-recent-name">${v.combination_name || (t ? 'İsimsiz' : 'Unnamed')}</div>
+                    <div class="dash-recent-meta">${meta}</div>
+                </div>
+                <span class="dash-recent-platform ${platform}">${platform}</span>
+            </div>`;
+        }).join('');
+    }
+}
 
 export function updateAllLanguages() {
     const currentLang = store.get('currentLang');

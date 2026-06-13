@@ -36,7 +36,7 @@ import {
 } from './tagManager.js';
 import { store } from './store.js';
 import {
-    fetchInstructors, fetchVideos, renderStatsPanel, renderTagManagerUI,
+    fetchInstructors, fetchVideos, renderStatsPanel, renderTagManagerUI, renderDashboard,
     updateAllLanguages
 } from './dataManager.js';
 import {
@@ -67,19 +67,20 @@ async function loadTemplates() {
     if (!container) return;
     try {
         const [library, stats, addVideo, tagManager, practiceSession, instructorProfile,
-               customDialogModal] = await Promise.all([
+               dashboard, customDialogModal] = await Promise.all([
             fetch('views/library.html').then(r => r.text()),
             fetch('views/stats.html').then(r => r.text()),
             fetch('views/add-video.html').then(r => r.text()),
             fetch('views/tag-manager.html').then(r => r.text()),
             fetch('views/practice-session.html').then(r => r.text()),
             fetch('views/instructor-profile.html').then(r => r.text()),
+            fetch('views/dashboard.html').then(r => r.text()),    // Adim 4.1
             fetch('modals/custom-dialog-modal.html').then(r => r.text()),
         ]);
 
         // Tüm view'lar baştan DOM'a eklenir
         container.innerHTML = library + stats + addVideo + tagManager +
-                              practiceSession + instructorProfile;
+                              practiceSession + instructorProfile + dashboard;
 
         // custom-dialog-modal kritik — hemen ekle
         let modalContainer = document.getElementById('modals-container');
@@ -142,6 +143,7 @@ async function initializeApp() {
     document.getElementById('menu-add-video')?.addEventListener('click',   () => { callSwitchView('add');             syncBottomNavActiveState('add');        });
     document.getElementById('menu-tag-manager')?.addEventListener('click', () => { callSwitchView('tagManager');      syncBottomNavActiveState('tagManager'); });
     // ✅ YENİ: Eğitmenler sayfası
+    document.getElementById('menu-dashboard')?.addEventListener('click',    () => { callSwitchView('dashboard');        syncBottomNavActiveState('dashboard'); });
     document.getElementById('menu-instructors')?.addEventListener('click', () => { callSwitchView('instructorsList'); });
 
     // ── Pratik Başlat ───────────────────────────────────────────
@@ -344,7 +346,13 @@ async function initializeApp() {
     // ── URL durumu ──────────────────────────────────────────────
     const urlState = readUrlState();
     if (urlState) {
-        if (urlState.view && urlState.view !== 'library') callSwitchView(urlState.view);
+        // Adim 4.1: URL'de özel view yoksa dashboard ile başla
+    if (urlState.view && urlState.view !== 'library') {
+        callSwitchView(urlState.view);
+    } else if (!urlState.view) {
+        callSwitchView('dashboard');
+        syncBottomNavActiveState('dashboard');
+    }
         setTimeout(() => { applyUrlStateToUI(urlState); applyFiltersAndSearch(); }, 100);
     }
 
