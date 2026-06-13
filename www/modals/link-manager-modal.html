@@ -38,6 +38,45 @@
             </div>
         </div>
 
+        <!-- Zincir Haritası toggle butonu (Adim 4.2) -->
+        <div style="margin-bottom:16px;">
+            <button id="chain-map-toggle-btn" style="
+                display:flex; align-items:center; gap:8px;
+                padding:8px 16px;
+                background:rgba(0,240,255,0.08);
+                border:1px solid rgba(0,240,255,0.3);
+                border-radius:10px;
+                color:#00f0ff;
+                font-size:0.82rem;
+                font-weight:600;
+                font-family:'Plus Jakarta Sans',sans-serif;
+                cursor:pointer;
+                transition:background 0.2s;
+            ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+                <span id="chain-map-toggle-label">Zincir Haritasını Göster</span>
+            </button>
+        </div>
+
+        <!-- Zincir Haritası container (Adim 4.2, başlangıçta gizli) -->
+        <div id="chain-map-container" style="display:none; margin-bottom:16px;">
+            <div id="chain-map-canvas" style="
+                width:100%;
+                height:320px;
+                background:rgba(0,0,0,0.3);
+                border:1px solid rgba(0,240,255,0.2);
+                border-radius:12px;
+                overflow:hidden;
+            "></div>
+            <p id="chain-map-empty" style="
+                display:none;
+                text-align:center;
+                color:rgba(255,255,255,0.3);
+                font-size:0.82rem;
+                margin-top:12px;
+            ">Bu video için henüz zincir bağlantısı yok</p>
+        </div>
+
         <!-- Yeni bağlantı ekleme: arama -->
         <div class="link-add-box">
             <input id="link-search-input" type="text" class="link-search-input"

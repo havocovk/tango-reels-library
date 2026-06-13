@@ -369,10 +369,134 @@ export async function openLinkManager(video) {
     renderLinkManagerLists();
     renderSearchResults('');
 
+    // Adim 4.2: Zincir haritası toggle
+    let chainMapVisible = false;
+    const toggleBtn       = document.getElementById('chain-map-toggle-btn');
+    const toggleLabel     = document.getElementById('chain-map-toggle-label');
+    const mapContainer    = document.getElementById('chain-map-container');
+    const mapCanvas       = document.getElementById('chain-map-canvas');
+    const mapEmpty        = document.getElementById('chain-map-empty');
+
+    if (toggleBtn) {
+        toggleBtn.onclick = () => {
+            chainMapVisible = !chainMapVisible;
+            mapContainer.style.display = chainMapVisible ? 'block' : 'none';
+            toggleLabel.textContent = chainMapVisible
+                ? (lang === 'tr' ? 'Haritayı Gizle' : 'Hide Map')
+                : (lang === 'tr' ? 'Zincir Haritasını Göster' : 'Show Chain Map');
+
+            if (chainMapVisible) _renderChainMap(video.id, mapCanvas, mapEmpty, lang);
+        };
+    }
+
     const closeBtn = document.getElementById('link-manager-close-btn');
-    if (closeBtn) closeBtn.onclick = () => modal.classList.add('d-none');
+    if (closeBtn) closeBtn.onclick = () => {
+        modal.classList.add('d-none');
+        // Haritayı sıfırla
+        chainMapVisible = false;
+        if (mapContainer) mapContainer.style.display = 'none';
+        if (toggleLabel)  toggleLabel.textContent = lang === 'tr' ? 'Zincir Haritasını Göster' : 'Show Chain Map';
+        if (mapCanvas)    mapCanvas.innerHTML = '';
+    };
 
     modal.onclick = (e) => {
-        if (e.target === modal) modal.classList.add('d-none');
+        if (e.target === modal) {
+            modal.classList.add('d-none');
+            chainMapVisible = false;
+            if (mapContainer) mapContainer.style.display = 'none';
+            if (mapCanvas)    mapCanvas.innerHTML = '';
+        }
     };
+}
+
+// ─────────────────────────────────────────────────────────────
+// _renderChainMap — Adim 4.2
+// vis-network ile seçilen videonun zincir haritasını çizer.
+// ─────────────────────────────────────────────────────────────
+function _renderChainMap(videoId, canvas, emptyEl, lang) {
+    const allLinks  = store.get('globalVideoLinks') || [];
+    const allVideos = store.get('globalVideos') || [];
+    const findVideo = (id) => allVideos.find(v => v.id === id);
+
+    // Bu videoyla bağlantılı tüm video ID'lerini topla (BFS ile 2 derece)
+    const nodeIds  = new Set([videoId]);
+    const edges    = [];
+    const visited  = new Set();
+    const queue    = [videoId];
+
+    while (queue.length > 0) {
+        const current = queue.shift();
+        if (visited.has(current)) continue;
+        visited.add(current);
+
+        for (const link of allLinks) {
+            if (link.source_video_id === current) {
+                nodeIds.add(link.target_video_id);
+                edges.push({ from: link.source_video_id, to: link.target_video_id, id: link.id });
+                if (!visited.has(link.target_video_id)) queue.push(link.target_video_id);
+            } else if (link.target_video_id === current) {
+                nodeIds.add(link.source_video_id);
+                edges.push({ from: link.source_video_id, to: link.target_video_id, id: link.id });
+                if (!visited.has(link.source_video_id)) queue.push(link.source_video_id);
+            }
+        }
+    }
+
+    if (edges.length === 0) {
+        canvas.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'block';
+        return;
+    }
+    canvas.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    // Node listesi oluştur
+    const nodes = Array.from(nodeIds).map(id => {
+        const v    = findVideo(id);
+        const name = v ? instructorNameOf(v) : id;
+        const tags = v ? shortTags(v, 2) : '';
+        const label = tags ? name + '\n' + tags : name;
+        const isCenter = id === videoId;
+        return {
+            id,
+            label,
+            shape: 'box',
+            color: {
+                background: isCenter ? 'rgba(0,240,255,0.18)' : 'rgba(255,255,255,0.05)',
+                border:     isCenter ? '#00f0ff'              : 'rgba(255,255,255,0.2)',
+                highlight:  { background: 'rgba(255,0,127,0.2)', border: '#ff007f' }
+            },
+            font:  { color: isCenter ? '#00f0ff' : '#e2e8f0', size: 12, face: 'Plus Jakarta Sans' },
+            borderWidth: isCenter ? 2 : 1,
+            margin: 8
+        };
+    });
+
+    const visEdges = edges.map(e => ({
+        from: e.from,
+        to:   e.to,
+        id:   e.id,
+        arrows: 'to',
+        color:  { color: 'rgba(0,240,255,0.35)', highlight: '#ff007f' },
+        smooth: { type: 'curvedCW', roundness: 0.15 }
+    }));
+
+    // vis-network'ü temizle ve yeniden çiz
+    canvas.innerHTML = '';
+
+    const network = new vis.Network(
+        canvas,
+        { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(visEdges) },
+        {
+            layout:  { improvedLayout: true },
+            physics: { enabled: true, stabilization: { iterations: 100 } },
+            interaction: { hover: true, tooltipDelay: 200, zoomView: true, dragView: true },
+            nodes: { widthConstraint: { maximum: 140 } }
+        }
+    );
+
+    // Merkez nodu odakla
+    network.once('stabilized', () => {
+        network.focus(videoId, { scale: 1, animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+    });
 }
