@@ -6,7 +6,7 @@ import { renderChips } from './uiRenderer.js';
 import { showToast } from './toast.js';
 import { store } from './store.js';
 import { escapeHtml } from './utils.js'; // Adim 1.2
-import { ensureModalLoaded } from './app.js'; // Adim 3.3: lazy modal loading
+import { ensureModalLoaded } from './modalLoader.js'; // Adim 3.4
 
 // ===================== MODAL STATE'LER =====================
 export let modalTagsArray = [];

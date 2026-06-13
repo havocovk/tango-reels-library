@@ -16,7 +16,7 @@ import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
 import { renderInstructorProfile, renderInstructorsList } from './instructorProfile.js';
 import { writeUrlState, clearUrlState } from './urlState.js';
-import { ensureViewLoaded, ensureModalLoaded } from './app.js'; // Adim 3.3: lazy loading
+import { ensureViewLoaded, ensureModalLoaded } from './modalLoader.js'; // Adim 3.4
 
 export function callUpdateSmartAssistant() {
     updateSmartFilenameAssistant(store.get('currentLang'), formTagsArray);

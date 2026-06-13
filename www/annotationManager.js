@@ -2,7 +2,7 @@
 // ✅ YENİ (Adım 6.1)
 import { dbFetchAnnotations, dbAddAnnotation, dbDeleteAnnotation } from './db/annotations.js';
 import { escapeHtml } from './utils.js'; // Adim 1.2
-import { ensureModalLoaded } from './app.js'; // Adim 3.3
+import { ensureModalLoaded } from './modalLoader.js'; // Adim 3.4
 import { showToast } from './toast.js';
 import { icon } from './icons.js';
 

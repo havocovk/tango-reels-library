@@ -12,7 +12,7 @@ import {
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { escapeHtml } from './utils.js'; // Adim 1.2
-import { ensureModalLoaded } from './app.js'; // Adim 3.3
+import { ensureModalLoaded } from './modalLoader.js'; // Adim 3.4
 
 // ── Modül düzeyi durum ────────────────────────────────────────
 let openVideoModalCb = null;   // Bir videoyu modalda açmak için (app.js'ten gelir)

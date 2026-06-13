@@ -15,6 +15,7 @@ import {
     renderModalChips, initModalCallbacks
 } from './tangoModals.js';
 import { setupAutocomplete } from './uiRenderer.js';
+import { ensureModalLoaded, ensureViewLoaded, onModalLoaded } from './modalLoader.js'; // Adim 3.4
 import { renderFormChips } from './formHandlers.js';
 import {
     initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount,
@@ -55,73 +56,11 @@ import { readUrlState, applyUrlStateToUI } from './urlState.js';
 import { flushQueue, hasPendingItems } from './syncQueue.js';
 
 // ─────────────────────────────────────────────────────────────
-// Adim 3.3: Modal Lazy Loading
-// View'lar baştan yüklenir (init fonksiyonları DOM gerektiriyor).
-// Modallar ise ilk kullanımda yüklenir — performans kazancı burada.
+// Adim 3.4 (Seçenek B): modalLoader.js kullanılıyor
+// Döngüsel import sorununu çözmek için ensureModalLoaded/ensureViewLoaded
+// artık bu dosyada değil — modalLoader.js'te.
+// Event listener callback'leri buradan onModalLoaded ile kaydedilir.
 // ─────────────────────────────────────────────────────────────
-const _loadedTemplates = new Set();
-
-async function _loadTemplate(key, url, container) {
-    if (_loadedTemplates.has(key)) return;
-    const html = await fetch(url).then(r => r.text());
-    container.insertAdjacentHTML('beforeend', html);
-    _loadedTemplates.add(key);
-}
-
-// Dışarıdan çağrılabilir — modal açılmadan önce lazy yükleme için
-export async function ensureViewLoaded(viewName) {
-    // View'lar baştan DOM'da — bu fonksiyon artık no-op
-    // Geriye dönük uyumluluk için bırakıldı
-}
-
-export async function ensureModalLoaded(modalKey) {
-    let container = document.getElementById('modals-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'modals-container';
-        document.body.appendChild(container);
-    }
-    const modalMap = {
-        'video-modal':       'modals/video-modal.html',
-        'tags-edit-modal':   'modals/tags-edit-modal.html',
-        'annotation-modal':  'modals/annotation-modal.html',
-        'link-manager-modal':'modals/link-manager-modal.html',
-    };
-    const url = modalMap[modalKey];
-    if (!url) return;
-
-    const isNew = !_loadedTemplates.has(modalKey);
-    await _loadTemplate(modalKey, url, container);
-
-    // Modal ilk kez yüklendiyse event listener'larini hemen bagla
-    if (!isNew) return;
-
-    if (modalKey === 'video-modal') {
-        document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
-        document.getElementById('video-modal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'video-modal') closeVideoModal();
-        });
-    }
-
-    if (modalKey === 'tags-edit-modal') {
-        document.getElementById('tags-modal-close-btn')?.addEventListener('click', closeTagsEditModal);
-        document.getElementById('tags-edit-modal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
-        });
-        // Etiket input autocomplete'i de burada bagla
-        setupAutocomplete(
-            'modal-tags-input', 'modal-autocomplete-list', modalTagsArray, renderModalChips,
-            (tag) => {
-                if (!modalTagsArray.includes(tag)) {
-                    modalTagsArray.push(tag);
-                    renderModalChips();
-                    saveTagsToSupabaseDirectly();
-                }
-            },
-            callGetUniqueTagsPool
-        );
-    }
-}
 
 async function loadTemplates() {
     const container = document.getElementById('dynamic-views');
@@ -342,8 +281,31 @@ async function initializeApp() {
     });
 
     // ── Modaller ────────────────────────────────────────────────
-    // NOT: video-modal ve tags-edit-modal listener'lari ensureModalLoaded içinde bağlanıyor
-    // (lazy loading — modal DOM'a eklendikten sonra)
+    // Adim 3.4: Event listener'lar modalLoader callback sistemiyle bağlanıyor
+    onModalLoaded('video-modal', () => {
+        document.getElementById('modal-close-btn')?.addEventListener('click', closeVideoModal);
+        document.getElementById('video-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'video-modal') closeVideoModal();
+        });
+    });
+
+    onModalLoaded('tags-edit-modal', () => {
+        document.getElementById('tags-modal-close-btn')?.addEventListener('click', closeTagsEditModal);
+        document.getElementById('tags-edit-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'tags-edit-modal') closeTagsEditModal();
+        });
+        setupAutocomplete(
+            'modal-tags-input', 'modal-autocomplete-list', modalTagsArray, renderModalChips,
+            (tag) => {
+                if (!modalTagsArray.includes(tag)) {
+                    modalTagsArray.push(tag);
+                    renderModalChips();
+                    saveTagsToSupabaseDirectly();
+                }
+            },
+            callGetUniqueTagsPool
+        );
+    });
 
     // ── Form submit + favori temizle ────────────────────────────
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
