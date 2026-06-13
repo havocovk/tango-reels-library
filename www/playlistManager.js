@@ -209,9 +209,13 @@ export function renderPlaylistsInSidebar() {
         const btn = document.createElement('button');
         btn.className = 'playlist-sidebar-btn' + (pl.id === activeId ? ' active' : '');
         btn.dataset.playlistId = pl.id;
+        const map = store.get('playlistVideoMap') || {};
+        const videoCount = Object.values(map).filter(ids => ids.includes(pl.id)).length;
+
         btn.innerHTML = `
             <span class="playlist-color-dot" style="background:${pl.color || '#ff007f'};"></span>
             <span class="playlist-btn-name">${escapeHtml(pl.name)}</span>
+            <span class="playlist-btn-count" style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-left:2px;">(${videoCount})</span>
             <span class="playlist-btn-actions">
                 <button class="playlist-edit-btn" data-id="${pl.id}" title="${lang === 'tr' ? 'Düzenle' : 'Edit'}">${icon('pencil', { size: 13, color: '#c026d3' })}</button>
                 <button class="playlist-delete-btn" data-id="${pl.id}" title="${lang === 'tr' ? 'Sil' : 'Delete'}">${icon('trash-2', { size: 13, color: '#ef4444' })}</button>

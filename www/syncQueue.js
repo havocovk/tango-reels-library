@@ -146,3 +146,8 @@ async function processAction(action) {
 export function hasPendingItems() {
     return getQueue().length > 0;
 }
+
+// getPendingCount() — Bekleyen işlem sayısını döner (Adim 4.5)
+export function getPendingCount() {
+    return getQueue().length;
+}

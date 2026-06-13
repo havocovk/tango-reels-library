@@ -53,7 +53,7 @@ import { initChainManager, loadAllVideoLinks } from './chainManager.js';
 import { initInstructorProfile } from './instructorProfile.js';
 import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './export/listExport.js';
 import { readUrlState, applyUrlStateToUI } from './urlState.js';
-import { flushQueue, hasPendingItems } from './syncQueue.js';
+import { flushQueue, hasPendingItems, getPendingCount } from './syncQueue.js'; // Adim 4.5
 
 // ─────────────────────────────────────────────────────────────
 // Adim 3.4 (Seçenek B): modalLoader.js kullanılıyor
@@ -310,6 +310,35 @@ async function initializeApp() {
         );
     });
 
+    // Adim 4.5: Partner adı autocomplete
+    const partnerInput = document.getElementById('form-partner-name');
+    const partnerList  = document.getElementById('partner-autocomplete-list');
+    if (partnerInput && partnerList) {
+        partnerInput.addEventListener('input', () => {
+            const val = partnerInput.value.trim().toLowerCase();
+            partnerList.innerHTML = '';
+            if (!val) return;
+            const partners = [...new Set(
+                (store.get('globalVideos') || [])
+                    .map(v => v.partner_name)
+                    .filter(n => n && n.toLowerCase().startsWith(val))
+            )].slice(0, 6);
+            partners.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = name;
+                item.addEventListener('click', () => {
+                    partnerInput.value = name;
+                    partnerList.innerHTML = '';
+                });
+                partnerList.appendChild(item);
+            });
+        });
+        document.addEventListener('click', (e) => {
+            if (!partnerInput.contains(e.target)) partnerList.innerHTML = '';
+        });
+    }
+
     // ── Form submit + favori temizle ────────────────────────────
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
@@ -358,8 +387,49 @@ async function initializeApp() {
     }
 
     // ── Offline senkronizasyon ──────────────────────────────────
-    window.addEventListener('online', () => { flushQueue(); });
+    // Adim 4.5: Çevrimdışı kuyruk simgesi
+    function updateOfflineBadge() {
+        const badge    = document.getElementById('offline-queue-badge');
+        const countEl  = document.getElementById('offline-queue-count');
+        if (!badge) return;
+        const count = getPendingCount();
+        if (count > 0 && !navigator.onLine) {
+            badge.style.display = 'inline-flex';
+            if (countEl) countEl.textContent = count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    window.addEventListener('online',  () => { flushQueue(); updateOfflineBadge(); });
+    window.addEventListener('offline', () => { updateOfflineBadge(); });
     if (navigator.onLine && hasPendingItems()) { flushQueue(); }
+    updateOfflineBadge();
+
+    // Adim 4.5: Global Escape kısayolu — açık modalları kapat
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        // Video modal
+        const videoModal = document.getElementById('video-modal');
+        if (videoModal && !videoModal.classList.contains('d-none')) {
+            closeVideoModal(); return;
+        }
+        // Tags edit modal
+        const tagsModal = document.getElementById('tags-edit-modal');
+        if (tagsModal && !tagsModal.classList.contains('d-none')) {
+            closeTagsEditModal(); return;
+        }
+        // Annotation modal
+        const annotModal = document.getElementById('annotation-modal');
+        if (annotModal && !annotModal.classList.contains('d-none')) {
+            annotModal.classList.add('d-none'); return;
+        }
+        // Link manager modal
+        const linkModal = document.getElementById('link-manager-modal');
+        if (linkModal && !linkModal.classList.contains('d-none')) {
+            linkModal.classList.add('d-none'); return;
+        }
+    });
 
     // Adim 3.2: Senkron sirasinda cakisma olursa sunucudaki guncel veriyi cek
     window.addEventListener('tango:sync-conflict', async () => {

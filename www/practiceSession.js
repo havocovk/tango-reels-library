@@ -10,6 +10,7 @@ import { dbSavePracticeSession } from './db/practiceSessions.js'; // Adim 4.3
 import { getDueTodayCount } from './learning/spacedRepetition.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js'; // Adim 1.3
+import { dbFetchAnnotations } from './db/annotations.js'; // Adim 4.5
 
 // ─────────────────────────────────────────────────────────────
 // OTURUM STATE'İ
@@ -44,6 +45,9 @@ export function startPracticeSession(videoQueue) {
 
     // Pratik ekranına geç
     if (_callSwitchView) _callSwitchView('practiceSession');
+
+    // Adim 4.5: Klavye kısayolları
+    document.addEventListener('keydown', _practiceKeyHandler);
 
     // Özet gizle, aktif ekranı göster
     const activeScreen  = document.getElementById('practice-active-screen');
@@ -160,6 +164,28 @@ function showCurrentCard() {
     const noteEl = document.getElementById('practice-note-text');
     if (noteEl) {
         noteEl.textContent = video.notes ? ('📝 ' + video.notes) : '';
+    }
+
+    // Adim 4.5: Annotation notları
+    const annotEl = document.getElementById('practice-annotations');
+    if (annotEl) {
+        annotEl.innerHTML = '';
+        dbFetchAnnotations(video.id).then(annotations => {
+            if (!annotations || annotations.length === 0) return;
+            annotEl.innerHTML = annotations.map(a => {
+                const timeStr = a.timestamp_seconds != null
+                    ? `<span style="color:#00f0ff;font-size:0.72rem;margin-right:6px;">⏱ ${Math.floor(a.timestamp_seconds/60)}:${String(a.timestamp_seconds%60).padStart(2,'0')}</span>`
+                    : '';
+                return `<div style="
+                    font-size:0.78rem; color:#94a3b8;
+                    padding:6px 10px; margin-bottom:4px;
+                    background:rgba(255,0,127,0.06);
+                    border-left:2px solid #ff007f;
+                    border-radius:0 6px 6px 0;">
+                    ${timeStr}${a.note || ''}
+                </div>`;
+            }).join('');
+        }).catch(() => {});
     }
 
     // ── Aksiyon butonları ──
@@ -345,6 +371,9 @@ function endSession() {
         duration_seconds: elapsedSecForSave
     }).catch(err => console.warn('[PracticeSession] Seans kaydedilemedi:', err));
 
+    // Adim 4.5: Klavye kısayollarını kaldır
+    document.removeEventListener('keydown', _practiceKeyHandler);
+
     // "Koleksiyona Dön" butonu
     const returnBtn = document.getElementById('btn-practice-return');
     if (returnBtn) {
@@ -352,6 +381,32 @@ function endSession() {
         returnBtn.onclick = () => {
             if (_callSwitchView) _callSwitchView('library');
         };
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+// _practiceKeyHandler — Adim 4.5
+// Pratik modunda klavye kısayolları:
+//   → veya Space : bir sonraki kart (geç)
+//   ← : bir önceki karta dön (mevcut kartı yeniden göster)
+//   Escape : çıkış
+// ─────────────────────────────────────────────────────────────
+function _practiceKeyHandler(e) {
+    // Input alanı odaklanmışsa kısayollar çalışmasın
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        skipCard();
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (currentIndex > 0) {
+            currentIndex = Math.max(0, currentIndex - 1);
+            showCurrentCard();
+        }
+    } else if (e.key === 'Escape') {
+        exitSession();
     }
 }
 
@@ -368,6 +423,8 @@ function exitSession() {
     const cancelTxt = lang === 'tr' ? 'Devam Et' : 'Keep Going';
     showCustomConfirm(msg, okTxt, cancelTxt).then(confirmed => {
         if (confirmed) {
+            // Adim 4.5: Klavye kısayollarını kaldır
+            document.removeEventListener('keydown', _practiceKeyHandler);
             // Adim 4.3: Erken çıkışta da seans kaydedilir
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             dbSavePracticeSession({

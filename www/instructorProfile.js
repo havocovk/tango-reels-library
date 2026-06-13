@@ -227,7 +227,8 @@ export function renderInstructorProfile(instructorId) {
         else platformCounts.other++;
     });
 
-    const topTags = computeTagFrequency(videos, 12);
+    const topTags      = computeTagFrequency(videos, 12);
+    const masteredCount = videos.filter(v => v.learning_status === 'mastered').length; // Adim 4.5
 
     // ── Metinler ──────────────────────────────────────────────
     const T = {
@@ -437,11 +438,21 @@ export function renderInstructorProfile(instructorId) {
                 ${photoHtml}
             </div>
             <div style="flex:1;min-width:180px;">
-                <h2 style="
-                    font-size:1.4rem;font-weight:700;margin:0 0 6px;
-                    background:linear-gradient(135deg,#ff007f,#00f0ff);
-                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-                ">${escapeHtml(instructor.name)}</h2>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <h2 style="
+                        font-size:1.4rem;font-weight:700;margin:0 0 6px;
+                        background:linear-gradient(135deg,#ff007f,#00f0ff);
+                        -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                    ">${escapeHtml(instructor.name)}</h2>
+                    ${masteredCount > 0 ? `<span title="${lang === 'tr' ? masteredCount + ' video ustalaşıldı' : masteredCount + ' videos mastered'}" style="
+                        display:inline-flex;align-items:center;gap:4px;
+                        background:rgba(245,158,11,0.15);
+                        border:1px solid rgba(245,158,11,0.35);
+                        border-radius:20px;padding:2px 10px;
+                        font-size:0.75rem;color:#f59e0b;font-weight:600;margin-bottom:6px;">
+                        ⭐ ${masteredCount}
+                    </span>` : ''}
+                </div>
                 ${socialLinksHtml}
                 <p id="prof-bio-display" style="
                     font-size:0.85rem;color:#94a3b8;margin:${socialLinksHtml ? '8px' : '0'} 0 0;line-height:1.6;

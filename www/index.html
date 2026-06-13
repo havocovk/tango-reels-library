@@ -44,7 +44,21 @@
     <nav class="sidebar-glass">
         <div class="sidebar-header">
             <h2 id="sidebar-title"></h2>
-            <button id="lang-toggle-btn" class="lang-btn">🇬🇧 EN</button>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span id="offline-queue-badge" title="Çevrimdışı bekleyen değişiklikler" style="
+                    display:none;
+                    background:rgba(245,158,11,0.2);
+                    border:1px solid rgba(245,158,11,0.5);
+                    color:#f59e0b;
+                    border-radius:20px;
+                    padding:2px 8px;
+                    font-size:0.68rem;
+                    font-weight:700;
+                    align-items:center;
+                    gap:4px;
+                ">⏳ <span id="offline-queue-count">0</span></span>
+                <button id="lang-toggle-btn" class="lang-btn">🇬🇧 EN</button>
+            </div>
         </div>
         <hr style="border-color: rgba(0, 240, 255, 0.2); margin: 15px 0;">
         <div class="menu-items">

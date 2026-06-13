@@ -8,6 +8,8 @@ import { store } from './store.js';
 import { dbRunTagSyncCheck, dbRepairTagSync } from './db/healthCheck.js';
 import { showToast } from './toast.js';
 import { icon } from './icons.js';
+import { getColorPalette } from './tagColorManager.js'; // Adim 4.5
+import { dbSetTagColor } from './db/tagColors.js'; // Adim 4.5
 
 let currentLang = 'tr';
 let globalVideos = [];
@@ -212,6 +214,63 @@ export async function runTagHealthCheck() {
     }
 }
 
+// ─────────────────────────────────────────────────────────────
+// openColorPickerForTag — Adim 4.5
+// Renk noktasına tıklanınca küçük palet popup'ı açar.
+// ─────────────────────────────────────────────────────────────
+function openColorPickerForTag(tagName, anchorEl) {
+    // Varsa önceki picker'ı kapat
+    document.querySelectorAll('.tag-color-picker-popup').forEach(el => el.remove());
+
+    const palette = getColorPalette();
+    const popup   = document.createElement('div');
+    popup.className = 'tag-color-picker-popup';
+    popup.style.cssText = `
+        position:fixed; z-index:9999;
+        background:#1a1a2e; border:1px solid rgba(255,255,255,0.15);
+        border-radius:12px; padding:10px; display:flex; flex-wrap:wrap;
+        gap:6px; width:200px;
+        box-shadow:0 8px 24px rgba(0,0,0,0.6);
+    `;
+
+    palette.forEach(color => {
+        const dot = document.createElement('button');
+        dot.style.cssText = `
+            width:22px; height:22px; border-radius:50%; border:2px solid transparent;
+            background:${color}; cursor:pointer; transition:transform 0.15s, border-color 0.15s;
+            flex-shrink:0;
+        `;
+        dot.title = color;
+        dot.addEventListener('mouseenter', () => { dot.style.transform = 'scale(1.25)'; dot.style.borderColor = '#fff'; });
+        dot.addEventListener('mouseleave', () => { dot.style.transform = 'scale(1)';    dot.style.borderColor = 'transparent'; });
+        dot.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            popup.remove();
+            try {
+                await dbSetTagColor(tagName, color);
+                const map = store.get('tagColors') || {};
+                map[tagName] = color;
+                store.set('tagColors', { ...map });
+                renderTagManagerUI();
+            } catch (err) {
+                console.warn('Renk kaydedilemedi:', err);
+            }
+        });
+        popup.appendChild(dot);
+    });
+
+    // Picker'ı anchor'ın yanına konumlandır
+    document.body.appendChild(popup);
+    const rect = anchorEl.getBoundingClientRect();
+    popup.style.top  = (rect.bottom + 6) + 'px';
+    popup.style.left = Math.min(rect.left, window.innerWidth - 220) + 'px';
+
+    // Dışarı tıklayınca kapat
+    setTimeout(() => {
+        document.addEventListener('click', () => popup.remove(), { once: true });
+    }, 0);
+}
+
 export function renderTagManagerUI() {
     const tbody = document.getElementById('tag-manager-tbody');
     if (!tbody) return;
@@ -245,8 +304,27 @@ export function renderTagManagerUI() {
             cb.addEventListener('change', updateTagManagerSelection);
             cbCell.appendChild(cb);
 
-            // Etiket
+            // Etiket + renk noktası (Adim 4.5)
             const tagCell = row.insertCell(1);
+            tagCell.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+            // Renk noktası — tıklayınca renk picker açılır
+            const colorDot = document.createElement('span');
+            colorDot.title = currentLang === 'tr' ? 'Rengi değiştir' : 'Change color';
+            colorDot.style.cssText = `
+                width:14px; height:14px; border-radius:50%; flex-shrink:0; cursor:pointer;
+                background:${color || '#64748b'};
+                border:2px solid ${color ? color + '88' : 'rgba(255,255,255,0.2)'};
+                display:inline-block; transition:transform 0.15s;
+            `;
+            colorDot.addEventListener('mouseenter', () => colorDot.style.transform = 'scale(1.3)');
+            colorDot.addEventListener('mouseleave', () => colorDot.style.transform = 'scale(1)');
+            colorDot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openColorPickerForTag(tag, colorDot);
+            });
+            tagCell.appendChild(colorDot);
+
             const badge = document.createElement('span');
             badge.style.cssText = `
                 display:inline-block;

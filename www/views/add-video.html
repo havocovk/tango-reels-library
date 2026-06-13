@@ -76,9 +76,10 @@
                             <option value="Follower" id="opt-follower-role">Takipçi</option>
                         </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="position:relative;">
                         <label id="lbl-partner">Partner Adı (İsteğe Bağlı):</label>
-                        <input type="text" id="form-partner-name" placeholder="Örn: Maria">
+                        <input type="text" id="form-partner-name" placeholder="Örn: Maria" autocomplete="off">
+                        <div id="partner-autocomplete-list" class="autocomplete-items" style="position:absolute;z-index:100;width:100%;"></div>
                     </div>
                 </div>
 
