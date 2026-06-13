@@ -489,7 +489,7 @@ export function renderInstructorProfile(instructorId) {
                         font-family:'Plus Jakarta Sans',sans-serif;
                         cursor:pointer; white-space:nowrap; flex-shrink:0;
                         transition:background 0.2s;
-                    ">${T.photoUploadBtn}</button>
+                    ">${icon('upload', { size: 14, color: '#00f0ff' })} ${lang === 'tr' ? 'Fotoğraf Yükle' : 'Upload Photo'}</button>
                 </div>
                 <input id="prof-photo-file-input" type="file" accept="image/*" style="display:none;">
                 <div id="prof-photo-upload-status" style="font-size:0.72rem;color:#94a3b8;margin-top:4px;"></div>
