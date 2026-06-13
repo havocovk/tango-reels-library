@@ -385,7 +385,7 @@ export async function openLinkManager(video) {
                 ? (lang === 'tr' ? 'Haritayı Gizle' : 'Hide Map')
                 : (lang === 'tr' ? 'Zincir Haritasını Göster' : 'Show Chain Map');
 
-            if (chainMapVisible) _renderChainMap(video.id, mapCanvas, mapEmpty, lang);
+            if (chainMapVisible) setTimeout(() => _renderChainMap(video.id, mapCanvas, mapEmpty, lang), 50);
         };
     }
 
@@ -441,6 +441,8 @@ function _renderChainMap(videoId, canvas, emptyEl, lang) {
             }
         }
     }
+
+    console.log('[ChainMap] nodeIds:', nodeIds.size, 'edges:', edges.length, 'allLinks:', allLinks.length);
 
     if (edges.length === 0) {
         canvas.style.display = 'none';
