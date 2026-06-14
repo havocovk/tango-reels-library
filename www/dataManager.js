@@ -411,12 +411,24 @@ export function renderShows() {
             tags.map(tg => `<option value="${tg}">${tg}</option>`).join('');
     }
 
+    // Arama placeholder dil güncellemesi
+    const searchInput2 = document.getElementById('shows-search-input');
+    if (searchInput2) searchInput2.placeholder = t ? 'Sanatçı, etiket veya not ara...' : 'Search artist, tag or note...';
+    const searchLabel2 = document.getElementById('shows-search-label');
+    if (searchLabel2) searchLabel2.textContent = t ? 'Ara' : 'Search';
+    const allInstrOpt  = document.getElementById('shows-opt-all-instructors');
+    if (allInstrOpt) allInstrOpt.textContent = t ? 'Tüm Sanatçılar' : 'All Artists';
+    const allTagOpt    = document.getElementById('shows-opt-all-tags');
+    if (allTagOpt) allTagOpt.textContent = t ? 'Tüm Etiketler' : 'All Tags';
+    const allPlatOpt   = document.getElementById('shows-opt-all-platforms');
+    if (allPlatOpt) allPlatOpt.textContent = t ? 'Tüm Platformlar' : 'All Platforms';
+
     // Rastgele buton
     const randomBtn = document.getElementById('shows-random-btn');
+    import('./icons.js').then(({ icon }) => {
+        if (randomBtn) randomBtn.innerHTML = `${icon('shuffle', { size: 15, color: '#c026d3' })} ${t ? 'Rastgele' : 'Random'}`;
+    });
     if (randomBtn && !randomBtn.dataset.bound) {
-        import('./icons.js').then(({ icon }) => {
-            randomBtn.innerHTML = `${icon('shuffle', { size: 15, color: '#c026d3' })} ${t ? 'Rastgele' : 'Random'}`;
-        });
         randomBtn.dataset.bound = '1';
         randomBtn.addEventListener('click', () => _applyShowsFilter(true));
     }
@@ -453,7 +465,7 @@ async function _applyShowsFilter(random = false) {
     if (platform !== 'all') shows = shows.filter(v => v.platform === platform);
 
     const countEl = document.getElementById('shows-total-count');
-    if (countEl) countEl.textContent = `${t ? 'Toplam:' : 'Total:'} ${shows.length}`;
+    if (countEl) countEl.textContent = `${t ? 'Toplam Video Sayısı:' : 'Total Videos:'} ${shows.length}`;
 
     const grid = document.getElementById('shows-grid');
     if (!grid) return;

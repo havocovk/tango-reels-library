@@ -38,7 +38,7 @@ import {
 import { store } from './store.js';
 import {
     fetchInstructors, fetchVideos, renderStatsPanel, renderTagManagerUI, renderDashboard,
-    setShowsCallbacks, updateAllLanguages
+    setShowsCallbacks, renderShows, updateAllLanguages
 } from './dataManager.js';
 import {
     callSwitchView, clearAllFavorites, callGetUniqueTagsPool,
@@ -136,6 +136,16 @@ async function initializeApp() {
             if (store.get('currentView') === 'stats') renderStatsPanel();
             if (store.get('currentView') === 'tagManager') renderTagManagerUI();
             if (store.get('currentView') === 'dashboard') renderDashboard();
+            if (store.get('currentView') === 'shows') renderShows();
+            if (store.get('currentView') === 'instructorsList') {
+                import('./instructorProfile.js').then(({ renderInstructorsList }) => renderInstructorsList());
+            }
+            if (store.get('currentView') === 'instructorProfile') {
+                import('./instructorProfile.js').then(({ renderInstructorProfile }) => {
+                    const instrId = store.get('currentInstructorId');
+                    if (instrId) renderInstructorProfile(instrId);
+                });
+            }
         };
     }
 

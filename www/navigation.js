@@ -65,7 +65,7 @@ export function callSwitchView(viewName, options = {}) {
         renderDashboard: renderDashboard,
         renderShows:     renderShows,
         renderProfile: options.instructorId
-            ? () => renderInstructorProfile(options.instructorId)
+            ? () => { store.set('currentInstructorId', options.instructorId); renderInstructorProfile(options.instructorId); }
             : null,
         renderInstructorsList: viewName === 'instructorsList'
             ? () => renderInstructorsList()
