@@ -228,7 +228,7 @@ document.addEventListener('click', () => {
 // renderVideoCards  (Grid görünümü — ana fonksiyon)
 // ─────────────────────────────────────────────────────────────
 export function renderVideoCards(videos, config) {
-    if (store.get('viewMode') === 'list') {
+    if (store.get('viewMode') === 'list' && !config.containerId) {
         renderVideoList(videos, config);
         return;
     }
@@ -238,11 +238,12 @@ export function renderVideoCards(videos, config) {
         toggleFavorite, openTagsEditModal, startVideoEditFlow,
         deleteVideoFlow, openVideoModal, refreshList,
         updateLearningStatus, showPlaylistDropdown,
-        appendMode = false,   // Adim 5.4: true ise mevcut kartlara ekle, sıfırlama yapma
-        startIndex  = 0       // Adim 5.4: hangi index'ten itibaren kartlar yeni
+        appendMode   = false,
+        startIndex   = 0,
+        containerId  = 'video-grid'   // Tango Şovları için farklı container
     } = config;
 
-    const videoGrid = document.getElementById('video-grid');
+    const videoGrid = document.getElementById(containerId);
     const lang = langPack[currentLang];
 
     videoGrid.classList.remove('video-list-mode');

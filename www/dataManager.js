@@ -293,8 +293,13 @@ export function renderDashboard() {
     // ── Toplam video ──────────────────────────────────────────
     const totalEl  = document.getElementById('dash-total-count');
     const totalLbl = document.getElementById('dash-total-label');
-    if (totalEl)  totalEl.textContent  = `${combinationVideos.length} + ${showVideos.length}`;
-    if (totalLbl) totalLbl.textContent = t ? 'Kombinasyon + Şov' : 'Combinations + Shows';
+    if (totalEl)  totalEl.textContent  = combinationVideos.length;
+    if (totalLbl) totalLbl.textContent = t ? 'Kombinasyon' : 'Combinations';
+
+    const showsEl  = document.getElementById('dash-shows-count');
+    const showsLbl = document.getElementById('dash-shows-label');
+    if (showsEl)  showsEl.textContent  = showVideos.length;
+    if (showsLbl) showsLbl.textContent = t ? 'Tango Şovu' : 'Tango Shows';
 
     // ── Bu hafta çalışılan ────────────────────────────────────
     const now       = new Date();
@@ -477,7 +482,8 @@ async function _applyShowsFilter(random = false) {
         openVideoModal:       cb.openVideoModal        || (() => {}),
         refreshList:          () => _applyShowsFilter(),
         updateLearningStatus: cb.updateLearningStatus  || (() => {}),
-        showPlaylistDropdown: cb.showPlaylistDropdown  || (() => {})
+        showPlaylistDropdown: cb.showPlaylistDropdown  || (() => {}),
+        containerId:          'shows-grid'
     });
 
     // Rastgele modda scroll + vurgula
