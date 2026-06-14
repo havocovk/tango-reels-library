@@ -247,8 +247,12 @@ export function renderDashboard() {
         ? 'Kombinasyon koleksiyonunun özeti'
         : 'Summary of your combination collection';
 
-    // ── Bugün tekrar edilecek ──────────────────────────────────
-    const dueVideos = getDueVideos(videos);
+    // İçerik türüne göre ayır
+    const combinationVideos = videos.filter(v => !v.content_type || v.content_type === 'combination');
+    const showVideos        = videos.filter(v => v.content_type === 'show');
+
+    // ── Bugün tekrar edilecek — sadece kombinasyon videoları ──
+    const dueVideos = getDueVideos(combinationVideos);
     const dueEl     = document.getElementById('dash-due-count');
     const dueLblEl  = document.getElementById('dash-due-label');
     if (dueEl)    dueEl.textContent    = dueVideos.length;
@@ -272,15 +276,15 @@ export function renderDashboard() {
     }
 
     // ── Öğreniliyor ───────────────────────────────────────────
-    const learningCount = videos.filter(v => v.learning_status === 'learning').length;
-    const newCount      = videos.filter(v => !v.learning_status || v.learning_status === 'new').length;
+    const learningCount = combinationVideos.filter(v => v.learning_status === 'learning').length;
+    const newCount      = combinationVideos.filter(v => !v.learning_status || v.learning_status === 'new').length;
     const learningEl    = document.getElementById('dash-learning-count');
     const learningLbl   = document.getElementById('dash-learning-label');
     if (learningEl)  learningEl.textContent  = learningCount + newCount;
     if (learningLbl) learningLbl.textContent = t ? 'Öğreniliyor' : 'In Progress';
 
     // ── Ustalaşıldı ───────────────────────────────────────────
-    const masteredCount = videos.filter(v => v.learning_status === 'mastered').length;
+    const masteredCount = combinationVideos.filter(v => v.learning_status === 'mastered').length;
     const masteredEl    = document.getElementById('dash-mastered-count');
     const masteredLbl   = document.getElementById('dash-mastered-label');
     if (masteredEl)  masteredEl.textContent  = masteredCount;
@@ -289,15 +293,15 @@ export function renderDashboard() {
     // ── Toplam video ──────────────────────────────────────────
     const totalEl  = document.getElementById('dash-total-count');
     const totalLbl = document.getElementById('dash-total-label');
-    if (totalEl)  totalEl.textContent  = videos.length;
-    if (totalLbl) totalLbl.textContent = t ? 'Toplam Video' : 'Total Videos';
+    if (totalEl)  totalEl.textContent  = `${combinationVideos.length} + ${showVideos.length}`;
+    if (totalLbl) totalLbl.textContent = t ? 'Kombinasyon + Şov' : 'Combinations + Shows';
 
     // ── Bu hafta çalışılan ────────────────────────────────────
     const now       = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - now.getDay());
     weekStart.setHours(0, 0, 0, 0);
-    const weekCount = videos.filter(v =>
+    const weekCount = combinationVideos.filter(v =>
         v.last_reviewed_at && new Date(v.last_reviewed_at) >= weekStart
     ).length;
     const weekEl  = document.getElementById('dash-week-count');
@@ -310,7 +314,7 @@ export function renderDashboard() {
     if (tagTitleEl) tagTitleEl.textContent = t ? 'En Çok Çalışılan Teknikler' : 'Most Practiced Techniques';
 
     const tagMap = new Map();
-    videos.forEach(v => {
+    combinationVideos.forEach(v => {
         if (!v.tags) return;
         const count = v.review_count || 0;
         v.tags.split(',').forEach(raw => {
@@ -337,7 +341,7 @@ export function renderDashboard() {
     const recentTitleEl = document.getElementById('dash-recent-title');
     if (recentTitleEl) recentTitleEl.textContent = t ? 'Son Eklenen Videolar' : 'Recently Added Videos';
 
-    const recentVideos = [...videos]
+    const recentVideos = [...combinationVideos]
         .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
         .slice(0, 5);
 
@@ -376,6 +380,9 @@ export function renderDashboard() {
 // ─────────────────────────────────────────────────────────────
 // renderShows — Tango Şovları sayfasını doldurur
 // ─────────────────────────────────────────────────────────────
+let _showsCallbacks = null;
+export function setShowsCallbacks(cb) { _showsCallbacks = cb; }
+
 export function renderShows() {
     const lang      = store.get('currentLang');
     const t         = lang === 'tr';
@@ -423,7 +430,7 @@ export function renderShows() {
     _applyShowsFilter();
 }
 
-function _applyShowsFilter(random = false) {
+async function _applyShowsFilter(random = false) {
     const lang     = store.get('currentLang');
     const t        = lang === 'tr';
     const allVideos = store.get('globalVideos') || [];
@@ -456,28 +463,22 @@ function _applyShowsFilter(random = false) {
         highlightId = shows[Math.floor(Math.random() * shows.length)].id;
     }
 
-    // Kartları oluştur
-    grid.innerHTML = shows.map(v => {
-        const cover     = v.cover_url ? `<div class="vl-thumb" style="background-image:url('${v.cover_url}');"></div>` : `<div class="vl-thumb" style="background:rgba(192,38,211,0.1);display:flex;align-items:center;justify-content:center;font-size:2rem;">🎭</div>`;
-        const instrName = v.instructor_name || (t ? 'Bilinmeyen' : 'Unknown');
-        const partner   = v.partner_name   ? ` & ${v.partner_name}` : '';
-        const platform  = v.platform || 'other';
-        const tags      = v.tags ? v.tags.split(',').map(tg => `<span style="background:rgba(192,38,211,0.15);border:1px solid rgba(192,38,211,0.3);border-radius:6px;padding:2px 7px;font-size:0.7rem;color:#c026d3;">#${tg.trim()}</span>`).join('') : '';
-        const isYT      = platform === 'youtube';
-        const url       = isYT ? v.url : (v.drive_url || v.url || '#');
-        const target    = isYT ? 'data-modal-url="true" class="play-trigger-btn"' : `href="${url}" target="_blank"`;
-
-        return `<div class="video-card shows-card" data-video-id="${v.id}" ${highlightId === v.id ? 'style="outline:2px solid #c026d3;box-shadow:0 0 20px rgba(192,38,211,0.4);"' : ''}>
-            <a ${target} style="display:block;text-decoration:none;" ${isYT ? `data-url="${v.url}"` : ''}>
-                ${cover}
-            </a>
-            <div class="card-body">
-                <div style="font-weight:700;font-size:0.9rem;color:#e2e8f0;margin-bottom:4px;">${instrName}${partner}</div>
-                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${tags}</div>
-                <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);">${platform}</div>
-            </div>
-        </div>`;
-    }).join('');
+    // renderVideoCards ile tam kart desteği (düzenle/sil/⋮ menüsü)
+    const cb = _showsCallbacks || {};
+    renderVideoCards(shows, {
+        currentLang:          lang,
+        currentView:          'shows',
+        translations:         (await import('./i18n.js')).translations,
+        favs:                 store.get('globalFavorites') || [],
+        toggleFavorite:       cb.toggleFavorite       || (() => {}),
+        openTagsEditModal:    cb.openTagsEditModal     || (() => {}),
+        startVideoEditFlow:   cb.startVideoEditFlow    || (() => {}),
+        deleteVideoFlow:      cb.deleteVideoFlow       || (() => {}),
+        openVideoModal:       cb.openVideoModal        || (() => {}),
+        refreshList:          () => _applyShowsFilter(),
+        updateLearningStatus: cb.updateLearningStatus  || (() => {}),
+        showPlaylistDropdown: cb.showPlaylistDropdown  || (() => {})
+    });
 
     // Rastgele modda scroll + vurgula
     if (highlightId) {
@@ -489,17 +490,8 @@ function _applyShowsFilter(random = false) {
                     if (card) { card.style.outline = ''; card.style.boxShadow = ''; }
                 }, 5000);
             }
-        }, 150);
+        }, 300);
     }
-
-    // YouTube embed tıklamalarını bağla
-    grid.querySelectorAll('.play-trigger-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const url = btn.closest('[data-url]')?.dataset?.url || btn.dataset?.url;
-            if (url) import('./tangoModals.js').then(({ openVideoModal }) => openVideoModal(url));
-        });
-    });
 }
 
 export function updateAllLanguages() {

@@ -481,6 +481,17 @@ async function initializeApp() {
     // ── Grid/Liste toggle ───────────────────────────────────────
     document.getElementById('btn-view-toggle')?.addEventListener('click', toggleViewMode);
 
+    // Tango Şovları callback'lerini kaydet
+    setShowsCallbacks({
+        toggleFavorite,
+        openTagsEditModal,
+        startVideoEditFlow,
+        deleteVideoFlow,
+        openVideoModal,
+        updateLearningStatus: () => {},
+        showPlaylistDropdown: () => {}
+    });
+
     // ── Adim 5.5: Rastgele Keşfet butonu ────────────────────────
     const randomBtn = document.getElementById('btn-random-video');
     if (randomBtn) {
