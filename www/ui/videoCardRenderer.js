@@ -237,24 +237,33 @@ export function renderVideoCards(videos, config) {
         currentLang, currentView, translations: langPack, favs,
         toggleFavorite, openTagsEditModal, startVideoEditFlow,
         deleteVideoFlow, openVideoModal, refreshList,
-        updateLearningStatus, showPlaylistDropdown
+        updateLearningStatus, showPlaylistDropdown,
+        appendMode = false,   // Adim 5.4: true ise mevcut kartlara ekle, sıfırlama yapma
+        startIndex  = 0       // Adim 5.4: hangi index'ten itibaren kartlar yeni
     } = config;
 
     const videoGrid = document.getElementById('video-grid');
     const lang = langPack[currentLang];
 
     videoGrid.classList.remove('video-list-mode');
-    videoGrid.innerHTML = '';
 
-    if (videos.length === 0) {
+    // Adim 5.4: appendMode değilse grid'i sıfırla
+    if (!appendMode) {
+        videoGrid.innerHTML = '';
+    }
+
+    if (videos.length === 0 && !appendMode) {
         const msg = currentView === 'favorites' ? lang.emptyFav : lang.empty;
         videoGrid.innerHTML = `<div class="info-msg" id="loading-msg">${msg}</div>`;
         return;
     }
 
+    // Adim 5.4: appendMode'da sadece yeni kartları (startIndex'ten sonrakileri) ekle
+    const videosToRender = appendMode ? videos.slice(startIndex) : videos;
+
     const allVideos = store.get('globalVideos');
 
-    videos.forEach(video => {
+    videosToRender.forEach(video => {
         const platform = video.platform || 'other';
         const platformLabel = lang.platformLabels[platform] || 'Diğer';
         const iconUrl = lang.platformIconUrls[platform] || '';

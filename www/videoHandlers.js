@@ -263,9 +263,37 @@ function reconnectSentinel() {
                 const filtered = getFilteredVideos(source, filters, currentLang);
                 if (visibleCount < filtered.length) {
                     isLoadingMore = true;
+                    const prevVisibleCount = visibleCount;
                     incrementVisibleCount(20);
-                    applyFiltersAndSearch();
-                    setTimeout(() => { isLoadingMore = false; }, 500);
+                    // Adim 5.4: appendMode ile sadece yeni kartları ekle
+                    const newVisibleCount = store.get('visibleCount');
+                    const newCards = filtered.slice(prevVisibleCount, newVisibleCount);
+                    if (newCards.length > 0) {
+                        renderVideoCards(filtered.slice(0, newVisibleCount), {
+                            currentLang,
+                            currentView,
+                            translations,
+                            favs: favorites,
+                            toggleFavorite,
+                            openTagsEditModal: (video) => openTagsEditModalCallback(video),
+                            startVideoEditFlow: startVideoEditFlowCallback,
+                            deleteVideoFlow: deleteVideoFlowCallback,
+                            openVideoModal: openVideoModalCallback,
+                            refreshList: applyFiltersAndSearchCallback,
+                            updateLearningStatus,
+                            showPlaylistDropdown,
+                            appendMode: true,
+                            startIndex: prevVisibleCount
+                        });
+                        // load-more görünürlüğü güncelle
+                        const loadMoreDiv = document.getElementById('load-more-container');
+                        if (loadMoreDiv) {
+                            if (newVisibleCount < filtered.length) loadMoreDiv.classList.remove('d-none');
+                            else loadMoreDiv.classList.add('d-none');
+                        }
+                        reconnectSentinel();
+                    }
+                    setTimeout(() => { isLoadingMore = false; }, 300);
                 }
             }
         });
