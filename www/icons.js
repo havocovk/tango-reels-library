@@ -39,6 +39,7 @@ const ICON_PATHS = {
     'check':          `<polyline points="20 6 9 17 4 12"/>`,
     'check-circle':   `<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/>`,
     'zap':            `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>`,
+    'shuffle':        `<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>`,
     'bookmark':       `<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>`,
     'wind':           `<path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/>`,
     'x':              `<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`,

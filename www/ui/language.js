@@ -46,6 +46,12 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     setText('sidebar-title', lang.brandTitle);
     setText('lang-toggle-btn', lang.langBtn);
 
+    // Adim 5.5: Rastgele buton metni
+    const randomBtn2 = document.getElementById('btn-random-video');
+    if (randomBtn2) {
+        randomBtn2.innerHTML = `${icon('shuffle', { size: 15, color: '#f59e0b' })} ${currentLang === 'tr' ? 'Rastgele' : 'Random'}`;
+    }
+
     const dashboardMenuBtn2 = document.getElementById('menu-dashboard');
     if (dashboardMenuBtn2) dashboardMenuBtn2.innerHTML = `${icon('bar-chart-2', { size: 18 })} ${currentLang === 'tr' ? 'Genel Bakış' : 'Overview'}`;
     setHTML('menu-library',     `${icon('book-open',   { size: 18 })} ${lang.menuLibrary}`);

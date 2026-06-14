@@ -287,6 +287,7 @@ export function renderVideoCards(videos, config) {
 
         const card = document.createElement('div');
         card.className = 'video-card';
+        card.dataset.videoId = video.id; // Adim 5.5: Rastgele kart bulma için
         const instructorNameForAria = video.instructors ? video.instructors.name : 'Bilinmeyen Eğitmen';
         card.setAttribute('role', 'article');
         card.setAttribute('aria-label', `${instructorNameForAria} videosu`);
