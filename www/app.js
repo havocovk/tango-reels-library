@@ -7,6 +7,7 @@
 //   onclick ile kurulur — hangi koşulda olursa olsun çalışması garanti
 // ✅ GÜNCELLEME: menu-instructors butonu (Eğitmenler sayfası) eklendi
 import { translations } from './i18n.js';
+import { icon } from './icons.js'; // Adim 5.5
 import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
 import {
