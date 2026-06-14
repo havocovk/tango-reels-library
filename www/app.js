@@ -38,7 +38,7 @@ import {
 import { store } from './store.js';
 import {
     fetchInstructors, fetchVideos, renderStatsPanel, renderTagManagerUI, renderDashboard,
-    updateAllLanguages
+    setShowsCallbacks, updateAllLanguages
 } from './dataManager.js';
 import {
     callSwitchView, clearAllFavorites, callGetUniqueTagsPool,
