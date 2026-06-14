@@ -5,6 +5,7 @@
 // ✅ GÜNCELLEME (Adım 3.3 v2): ensureAllTagsHaveColors çağrısı eklendi
 // ✅ GÜNCELLEME (Backup v2.0): setupBackupButtons içinde exportToJSON async oldu
 import { translations } from './i18n.js';
+import { renderVideoCards } from './uiRenderer.js';
 import { dbFetchInstructors, dbFetchVideos, dbFetchVideosPage, dbFetchFavorites } from './tangoVeritabani.js';
 import { populateFilterDropdowns } from './tangoFilters.js';
 import { computeStats, renderStats } from './tangoStats.js';
