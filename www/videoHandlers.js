@@ -360,7 +360,7 @@ export function pickRandomVideo() {
             setTimeout(() => {
                 card.style.outline   = '';
                 card.style.boxShadow = '';
-            }, 2000);
+            }, 5000);
         }
     }, 200);
 }
