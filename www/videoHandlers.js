@@ -301,6 +301,70 @@ function reconnectSentinel() {
     scrollObserver.observe(sentinel);
 }
 
+// ─────────────────────────────────────────────────────────────
+// pickRandomVideo — Adim 5.5 (duzeltilmis)
+// Mevcut tüm filtreleri dikkate alarak rastgele bir video seçer
+// ve kartına scroll edip vurgular.
+// ─────────────────────────────────────────────────────────────
+export function pickRandomVideo() {
+    const globalVideos           = store.get('globalVideos') || [];
+    const favorites              = store.get('globalFavorites') || [];
+    const activePlaylistId       = store.get('activePlaylistId');
+    const activePlaylistVideoIds = store.get('activePlaylistVideoIds') || [];
+
+    let source = globalVideos;
+    if (activePlaylistId != null) {
+        source = globalVideos.filter(v => activePlaylistVideoIds.includes(v.id));
+    } else if (store.get('currentView') === 'favorites') {
+        source = globalVideos.filter(v => favorites.includes(v.id));
+    }
+
+    // Tüm aktif filtre değerlerini oku
+    const filters = {
+        aramaMetni:    document.getElementById('search-input')?.value || '',
+        rol:           document.getElementById('filter-role-select')?.value || 'all',
+        egitmen:       document.getElementById('filter-instructor-select')?.value || 'all',
+        etiket:        document.getElementById('filter-tag-select')?.value || 'all',
+        tarih:         document.getElementById('filter-date-select')?.value || 'all',
+        platform:      document.getElementById('filter-platform-select')?.value || 'all',
+        learningStatus:document.getElementById('filter-learning-status-select')?.value || 'all'
+    };
+
+    const filtered = getFilteredVideos(source, filters, currentLang);
+
+    if (filtered.length === 0) {
+        import('./toast.js').then(({ showToast }) => {
+            showToast(
+                currentLang === 'tr' ? 'Gösterilecek video yok.' : 'No videos to show.',
+                'info'
+            );
+        });
+        return;
+    }
+
+    const randomVideo  = filtered[Math.floor(Math.random() * filtered.length)];
+    const visibleCount = store.get('visibleCount');
+    const idx          = filtered.indexOf(randomVideo);
+
+    if (idx >= visibleCount) {
+        store.set('visibleCount', idx + 1);
+        applyFiltersAndSearch();
+    }
+
+    setTimeout(() => {
+        const card = document.querySelector(`[data-video-id="${randomVideo.id}"]`);
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.style.outline    = '2px solid #f59e0b';
+            card.style.boxShadow  = '0 0 20px rgba(245,158,11,0.4)';
+            setTimeout(() => {
+                card.style.outline   = '';
+                card.style.boxShadow = '';
+            }, 2000);
+        }
+    }, 200);
+}
+
 export function setupInfiniteScroll() {
     if (document.getElementById('scroll-sentinel')) {
         reconnectSentinel();

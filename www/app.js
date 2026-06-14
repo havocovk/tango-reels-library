@@ -21,7 +21,7 @@ import { renderFormChips } from './formHandlers.js';
 import {
     initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount,
     incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData, setupInfiniteScroll,
-    toggleViewMode
+    toggleViewMode, pickRandomVideo
 } from './videoHandlers.js';
 import {
     initInstructorHandlers, handleInstructorSubmit, deleteInstructor,
@@ -484,61 +484,7 @@ async function initializeApp() {
     if (randomBtn) {
         const lang = store.get('currentLang');
         randomBtn.innerHTML = `${icon('shuffle', { size: 15, color: '#f59e0b' })} ${lang === 'tr' ? 'Rastgele' : 'Random'}`;
-        randomBtn.addEventListener('click', () => {
-            const currentLang = store.get('currentLang');
-            // Mevcut filtrelenmiş videoları al
-            const filtered = (() => {
-                const globalVideos   = store.get('globalVideos') || [];
-                const favorites      = store.get('globalFavorites') || [];
-                const activePlaylistId       = store.get('activePlaylistId');
-                const activePlaylistVideoIds = store.get('activePlaylistVideoIds') || [];
-                let source = globalVideos;
-                if (activePlaylistId != null) {
-                    source = globalVideos.filter(v => activePlaylistVideoIds.includes(v.id));
-                } else if (store.get('currentView') === 'favorites') {
-                    source = globalVideos.filter(v => favorites.includes(v.id));
-                }
-                const searchVal = document.getElementById('search-input')?.value || '';
-                return source.filter(v => {
-                    if (!searchVal) return true;
-                    const hay = [v.instructor_name, v.tags, v.notes, v.partner_name]
-                        .filter(Boolean).join(' ').toLowerCase();
-                    return hay.includes(searchVal.toLowerCase());
-                });
-            })();
-
-            if (filtered.length === 0) {
-                import('./toast.js').then(({ showToast }) => {
-                    showToast(currentLang === 'tr' ? 'Gösterilecek video yok.' : 'No videos to show.', 'info');
-                });
-                return;
-            }
-
-            // Rastgele bir video seç
-            const randomVideo = filtered[Math.floor(Math.random() * filtered.length)];
-
-            // Görünür videoları artır (seçilen kart henüz DOM'da olmayabilir)
-            const visibleCount = store.get('visibleCount');
-            const idx = filtered.indexOf(randomVideo);
-            if (idx >= visibleCount) {
-                store.set('visibleCount', idx + 1);
-                applyFiltersAndSearch();
-            }
-
-            // Karta odaklan
-            setTimeout(() => {
-                const card = document.querySelector(`[data-video-id="${randomVideo.id}"]`);
-                if (card) {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    card.style.outline = '2px solid #f59e0b';
-                    card.style.boxShadow = '0 0 20px rgba(245,158,11,0.4)';
-                    setTimeout(() => {
-                        card.style.outline = '';
-                        card.style.boxShadow = '';
-                    }, 2000);
-                }
-            }, 150);
-        });
+        randomBtn.addEventListener('click', pickRandomVideo);
     }
 
     callUpdateInterfaceLanguage();
