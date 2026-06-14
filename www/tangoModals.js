@@ -117,8 +117,8 @@ export async function saveTagsToSupabaseDirectly() {
         if (_applyFiltersAndSearch) _applyFiltersAndSearch();
     } catch (err) {
         if (err.message.includes('ÇAKIŞMA')) {
-            showToast('Bu video başka bir cihazda değiştirildi. Sayfayı yenileyin.', 'error');
-            location.reload();
+            showToast('Bu video başka bir cihazda değiştirildi. Sayfa yenileniyor...', 'error');
+            setTimeout(() => location.reload(), 2000);
         } else {
             console.error("Etiket güncellenirken hata oluştu:", err);
             showToast('Etiketler güncellenemedi: ' + err.message, 'error');

@@ -7,7 +7,7 @@ import { setInstructorHandlersGlobalData } from './instructorHandlers.js';
 import { setFormHandlersGlobalData, formTagsArray } from './formHandlers.js';
 import { initTagManager } from './tagManager.js';
 import { populateFilterDropdowns } from './tangoFilters.js';
-import { renderStatsPanel, renderTagManagerUI, fetchVideos } from './dataManager.js';
+import { renderStatsPanel, renderTagManagerUI, fetchVideos, renderShows } from './dataManager.js';
 import { callUpdateInterfaceLanguage } from './navigation.js';
 import { renderPlaylistsInSidebar } from './playlistManager.js';
 
@@ -56,6 +56,7 @@ export function setupStoreSubscriptions() {
         applyFiltersAndSearch();
         if (store.get('currentView') === 'stats') renderStatsPanel();
         if (store.get('currentView') === 'tagManager') renderTagManagerUI();
+        if (store.get('currentView') === 'shows') renderShows();
     }));
 
     subscriptions.push(store.subscribe('globalFavorites', () => {
