@@ -147,12 +147,19 @@ export function applyFiltersAndSearch() {
     const activePlaylistId = store.get('activePlaylistId');
     const activePlaylistVideoIds = store.get('activePlaylistVideoIds') || [];
 
-    let source = globalVideos;
+    // Koleksiyon ve pratik listem: sadece combination videoları
+    // Tango Şovları: sadece show videoları
+    const combinationVideos = globalVideos.filter(v => !v.content_type || v.content_type === 'combination');
+    const showVideos        = globalVideos.filter(v => v.content_type === 'show');
 
-    if (activePlaylistId !== null && activePlaylistId !== undefined) {
-        source = globalVideos.filter(v => activePlaylistVideoIds.includes(v.id));
+    let source = combinationVideos;
+
+    if (currentView === 'shows') {
+        source = showVideos;
+    } else if (activePlaylistId !== null && activePlaylistId !== undefined) {
+        source = combinationVideos.filter(v => activePlaylistVideoIds.includes(v.id));
     } else if (currentView === 'favorites') {
-        source = globalVideos.filter(v => favorites.includes(v.id));
+        source = combinationVideos.filter(v => favorites.includes(v.id));
     }
 
     const searchInput = document.getElementById('search-input');
@@ -243,11 +250,16 @@ function reconnectSentinel() {
                 const favorites = store.get('globalFavorites');
                 const activePlaylistId = store.get('activePlaylistId');
                 const activePlaylistVideoIds = store.get('activePlaylistVideoIds') || [];
-                let source = globalVideos;
-                if (activePlaylistId !== null && activePlaylistId !== undefined) {
-                    source = globalVideos.filter(v => activePlaylistVideoIds.includes(v.id));
-                } else if (currentView === 'favorites') {
-                    source = globalVideos.filter(v => favorites.includes(v.id));
+                const combVideos2 = globalVideos.filter(v => !v.content_type || v.content_type === 'combination');
+                let source = currentView === 'shows'
+                    ? globalVideos.filter(v => v.content_type === 'show')
+                    : combVideos2;
+                if (currentView !== 'shows') {
+                    if (activePlaylistId !== null && activePlaylistId !== undefined) {
+                        source = combVideos2.filter(v => activePlaylistVideoIds.includes(v.id));
+                    } else if (currentView === 'favorites') {
+                        source = combVideos2.filter(v => favorites.includes(v.id));
+                    }
                 }
                 const searchInput = document.getElementById('search-input');
                 const aramaMetni = searchInput ? searchInput.value : '';
@@ -312,11 +324,17 @@ export function pickRandomVideo() {
     const activePlaylistId       = store.get('activePlaylistId');
     const activePlaylistVideoIds = store.get('activePlaylistVideoIds') || [];
 
-    let source = globalVideos;
-    if (activePlaylistId != null) {
-        source = globalVideos.filter(v => activePlaylistVideoIds.includes(v.id));
-    } else if (store.get('currentView') === 'favorites') {
-        source = globalVideos.filter(v => favorites.includes(v.id));
+    const currentView2   = store.get('currentView');
+    const combVideos3    = globalVideos.filter(v => !v.content_type || v.content_type === 'combination');
+    let source = currentView2 === 'shows'
+        ? globalVideos.filter(v => v.content_type === 'show')
+        : combVideos3;
+    if (currentView2 !== 'shows') {
+        if (activePlaylistId != null) {
+            source = combVideos3.filter(v => activePlaylistVideoIds.includes(v.id));
+        } else if (currentView2 === 'favorites') {
+            source = combVideos3.filter(v => favorites.includes(v.id));
+        }
     }
 
     // Tüm aktif filtre değerlerini oku

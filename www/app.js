@@ -68,20 +68,21 @@ async function loadTemplates() {
     if (!container) return;
     try {
         const [library, stats, addVideo, tagManager, practiceSession, instructorProfile,
-               dashboard, customDialogModal] = await Promise.all([
+               dashboard, shows, customDialogModal] = await Promise.all([
             fetch('views/library.html').then(r => r.text()),
             fetch('views/stats.html').then(r => r.text()),
             fetch('views/add-video.html').then(r => r.text()),
             fetch('views/tag-manager.html').then(r => r.text()),
             fetch('views/practice-session.html').then(r => r.text()),
             fetch('views/instructor-profile.html').then(r => r.text()),
-            fetch('views/dashboard.html').then(r => r.text()),    // Adim 4.1
+            fetch('views/dashboard.html').then(r => r.text()),
+            fetch('views/shows.html').then(r => r.text()),
             fetch('modals/custom-dialog-modal.html').then(r => r.text()),
         ]);
 
         // Tüm view'lar baştan DOM'a eklenir
         container.innerHTML = library + stats + addVideo + tagManager +
-                              practiceSession + instructorProfile + dashboard;
+                              practiceSession + instructorProfile + dashboard + shows;
 
         // custom-dialog-modal kritik — hemen ekle
         let modalContainer = document.getElementById('modals-container');
@@ -147,6 +148,7 @@ async function initializeApp() {
     // ✅ YENİ: Eğitmenler sayfası
     document.getElementById('menu-dashboard')?.addEventListener('click',    () => { callSwitchView('dashboard');        syncBottomNavActiveState('dashboard'); });
     document.getElementById('menu-instructors')?.addEventListener('click', () => { callSwitchView('instructorsList'); });
+    document.getElementById('menu-shows')?.addEventListener('click',       () => { callSwitchView('shows'); syncBottomNavActiveState('shows'); });
 
     // ── Pratik Başlat ───────────────────────────────────────────
     document.getElementById('btn-start-practice')?.addEventListener('click', () => {

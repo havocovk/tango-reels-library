@@ -52,6 +52,9 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         randomBtn2.innerHTML = `${icon('shuffle', { size: 15, color: '#f59e0b' })} ${currentLang === 'tr' ? 'Rastgele' : 'Random'}`;
     }
 
+    const showsMenuBtn2 = document.getElementById('menu-shows');
+    if (showsMenuBtn2) showsMenuBtn2.innerHTML = `${icon('video', { size: 18 })} ${currentLang === 'tr' ? 'Tango Şovları' : 'Tango Shows'}`;
+
     const dashboardMenuBtn2 = document.getElementById('menu-dashboard');
     if (dashboardMenuBtn2) dashboardMenuBtn2.innerHTML = `${icon('bar-chart-2', { size: 18 })} ${currentLang === 'tr' ? 'Genel Bakış' : 'Overview'}`;
     setHTML('menu-library',     `${icon('book-open',   { size: 18 })} ${lang.menuLibrary}`);

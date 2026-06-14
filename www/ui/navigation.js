@@ -18,6 +18,8 @@ export function switchView(viewName, state, functions) {
     if (instructorsMenuBtn) instructorsMenuBtn.classList.remove('active');
     const dashboardMenuBtn = document.getElementById('menu-dashboard');
     if (dashboardMenuBtn) dashboardMenuBtn.classList.remove('active');
+    const showsMenuBtn = document.getElementById('menu-shows');
+    if (showsMenuBtn) showsMenuBtn.classList.remove('active');
 
     const clearFavBtnContainer    = document.getElementById('clear-favorites-container');
     const libraryView             = document.getElementById('view-library-container');
@@ -27,12 +29,18 @@ export function switchView(viewName, state, functions) {
     const practiceSessionView     = document.getElementById('view-practice-session-container');
     const instructorProfileView   = document.getElementById('view-instructor-profile-container');
     const dashboardView           = document.getElementById('view-dashboard-container'); // Adim 4.1
+    const showsView               = document.getElementById('view-shows-container'); // Tango Sovlari
 
     // ── Tüm view'ları gizle (ortak başlangıç) ──
-    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView, dashboardView];
+    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView, dashboardView, showsView];
     allViews.forEach(v => { if (v) v.classList.add('d-none'); });
 
-    if (viewName === 'dashboard') {
+    if (viewName === 'shows') {
+        if (showsView) showsView.classList.remove('d-none');
+        if (showsMenuBtn) showsMenuBtn.classList.add('active');
+        if (functions.renderShows) functions.renderShows();
+
+    } else if (viewName === 'dashboard') {
         if (dashboardView) dashboardView.classList.remove('d-none');
         if (dashboardMenuBtn) dashboardMenuBtn.classList.add('active');
         if (functions.renderDashboard) functions.renderDashboard();

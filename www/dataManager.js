@@ -373,6 +373,135 @@ export function renderDashboard() {
     }
 }
 
+// ─────────────────────────────────────────────────────────────
+// renderShows — Tango Şovları sayfasını doldurur
+// ─────────────────────────────────────────────────────────────
+export function renderShows() {
+    const lang      = store.get('currentLang');
+    const t         = lang === 'tr';
+    const allVideos = store.get('globalVideos') || [];
+    const shows     = allVideos.filter(v => v.content_type === 'show');
+
+    // Sanatçı dropdown'ı doldur
+    const instrSelect = document.getElementById('shows-instructor-select');
+    if (instrSelect) {
+        const instructors = [...new Set(shows.map(v => v.instructor_name).filter(Boolean))].sort();
+        instrSelect.innerHTML = `<option value="all">${t ? 'Tüm Sanatçılar' : 'All Artists'}</option>` +
+            instructors.map(n => `<option value="${n}">${n}</option>`).join('');
+    }
+
+    // Etiket dropdown'ı doldur
+    const tagSelect = document.getElementById('shows-tag-select');
+    if (tagSelect) {
+        const tags = [...new Set(shows.flatMap(v => v.tags ? v.tags.split(',').map(t => t.trim()) : []).filter(Boolean))].sort();
+        tagSelect.innerHTML = `<option value="all">${t ? 'Tüm Etiketler' : 'All Tags'}</option>` +
+            tags.map(tg => `<option value="${tg}">${tg}</option>`).join('');
+    }
+
+    // Rastgele buton
+    const randomBtn = document.getElementById('shows-random-btn');
+    if (randomBtn && !randomBtn.dataset.bound) {
+        import('./icons.js').then(({ icon }) => {
+            randomBtn.innerHTML = `${icon('shuffle', { size: 15, color: '#c026d3' })} ${t ? 'Rastgele' : 'Random'}`;
+        });
+        randomBtn.dataset.bound = '1';
+        randomBtn.addEventListener('click', () => _applyShowsFilter(true));
+    }
+
+    // Arama + filtre event listener'ları (bir kez bağla)
+    const searchInput = document.getElementById('shows-search-input');
+    const searchBtn   = document.getElementById('shows-search-btn');
+    if (searchInput && !searchInput.dataset.bound) {
+        searchInput.dataset.bound = '1';
+        searchInput.addEventListener('input', () => _applyShowsFilter());
+        if (searchBtn) searchBtn.addEventListener('click', () => _applyShowsFilter());
+        document.getElementById('shows-instructor-select')?.addEventListener('change', () => _applyShowsFilter());
+        document.getElementById('shows-tag-select')?.addEventListener('change', () => _applyShowsFilter());
+        document.getElementById('shows-platform-select')?.addEventListener('change', () => _applyShowsFilter());
+    }
+
+    _applyShowsFilter();
+}
+
+function _applyShowsFilter(random = false) {
+    const lang     = store.get('currentLang');
+    const t        = lang === 'tr';
+    const allVideos = store.get('globalVideos') || [];
+    let shows      = allVideos.filter(v => v.content_type === 'show');
+
+    const search   = document.getElementById('shows-search-input')?.value?.toLowerCase() || '';
+    const instr    = document.getElementById('shows-instructor-select')?.value || 'all';
+    const tag      = document.getElementById('shows-tag-select')?.value || 'all';
+    const platform = document.getElementById('shows-platform-select')?.value || 'all';
+
+    if (search)          shows = shows.filter(v => [v.instructor_name, v.tags, v.notes, v.partner_name].filter(Boolean).join(' ').toLowerCase().includes(search));
+    if (instr !== 'all') shows = shows.filter(v => v.instructor_name === instr);
+    if (tag   !== 'all') shows = shows.filter(v => v.tags && v.tags.split(',').map(t => t.trim()).includes(tag));
+    if (platform !== 'all') shows = shows.filter(v => v.platform === platform);
+
+    const countEl = document.getElementById('shows-total-count');
+    if (countEl) countEl.textContent = `${t ? 'Toplam:' : 'Total:'} ${shows.length}`;
+
+    const grid = document.getElementById('shows-grid');
+    if (!grid) return;
+
+    if (shows.length === 0) {
+        grid.innerHTML = `<div class="info-msg">${t ? 'Tango şovu bulunamadı.' : 'No tango shows found.'}</div>`;
+        return;
+    }
+
+    // Rastgele modda: rastgele bir video vurgula
+    let highlightId = null;
+    if (random && shows.length > 0) {
+        highlightId = shows[Math.floor(Math.random() * shows.length)].id;
+    }
+
+    // Kartları oluştur
+    grid.innerHTML = shows.map(v => {
+        const cover     = v.cover_url ? `<div class="vl-thumb" style="background-image:url('${v.cover_url}');"></div>` : `<div class="vl-thumb" style="background:rgba(192,38,211,0.1);display:flex;align-items:center;justify-content:center;font-size:2rem;">🎭</div>`;
+        const instrName = v.instructor_name || (t ? 'Bilinmeyen' : 'Unknown');
+        const partner   = v.partner_name   ? ` & ${v.partner_name}` : '';
+        const platform  = v.platform || 'other';
+        const tags      = v.tags ? v.tags.split(',').map(tg => `<span style="background:rgba(192,38,211,0.15);border:1px solid rgba(192,38,211,0.3);border-radius:6px;padding:2px 7px;font-size:0.7rem;color:#c026d3;">#${tg.trim()}</span>`).join('') : '';
+        const isYT      = platform === 'youtube';
+        const url       = isYT ? v.url : (v.drive_url || v.url || '#');
+        const target    = isYT ? 'data-modal-url="true" class="play-trigger-btn"' : `href="${url}" target="_blank"`;
+
+        return `<div class="video-card shows-card" data-video-id="${v.id}" ${highlightId === v.id ? 'style="outline:2px solid #c026d3;box-shadow:0 0 20px rgba(192,38,211,0.4);"' : ''}>
+            <a ${target} style="display:block;text-decoration:none;" ${isYT ? `data-url="${v.url}"` : ''}>
+                ${cover}
+            </a>
+            <div class="card-body">
+                <div style="font-weight:700;font-size:0.9rem;color:#e2e8f0;margin-bottom:4px;">${instrName}${partner}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">${tags}</div>
+                <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);">${platform}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    // Rastgele modda scroll + vurgula
+    if (highlightId) {
+        setTimeout(() => {
+            const card = grid.querySelector(`[data-video-id="${highlightId}"]`);
+            if (card) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => {
+                    if (card) { card.style.outline = ''; card.style.boxShadow = ''; }
+                }, 5000);
+            }
+        }, 150);
+    }
+
+    // YouTube embed tıklamalarını bağla
+    grid.querySelectorAll('.play-trigger-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const url = btn.closest('[data-url]')?.dataset?.url || btn.dataset?.url;
+            if (url) import('./tangoModals.js').then(({ openVideoModal }) => openVideoModal(url));
+        });
+    });
+}
+
 export function updateAllLanguages() {
     const currentLang = store.get('currentLang');
     import('./utils.js').then(utils => utils.setCurrentLangForUtils(currentLang));

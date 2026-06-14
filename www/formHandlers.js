@@ -148,7 +148,8 @@ export async function handleFormSubmit(e) {
 
     const instructor_id = document.getElementById('form-instructor-select').value;
     let url = document.getElementById('form-video-url').value.trim();
-    const role_type = document.getElementById('form-role-select').value;
+    const role_type    = document.getElementById('form-role-select').value;
+    const content_type = document.querySelector('input[name="content_type"]:checked')?.value || 'combination';
     const partner_name = document.getElementById('form-partner-name').value.trim();
     const tags = formTagsArray.join(', ');
     const is_downloaded = document.getElementById('form-is-downloaded').checked;
@@ -203,7 +204,8 @@ export async function handleFormSubmit(e) {
         drive_url: drive_url || null,
         cover_url,
         platform,
-        duration: duration
+        duration: duration,
+        content_type: content_type
     };
 
     try {
