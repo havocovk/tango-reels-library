@@ -1,6 +1,9 @@
 // learningPathAdvisor.js - Kural tabanlı öğrenme yolu önerisi
 // ✅ YENİ DOSYA (Adım 4.3) — API gerektirmez, tamamen istemci taraflı
 // ✅ DÜZELTME: Tüm "Çalışıyorum" etiketleri gösteriliyor, video detayı eklendi
+// ✅ GÜNCELLEME: Emoji ikonlar Lucide SVG ikonlarına çevrildi
+
+import { icon } from './icons.js';
 
 // ─────────────────────────────────────────────────────────────
 // buildLearningProfile — Video listesinden öğrenme profili çıkar
@@ -103,11 +106,11 @@ export function renderLearningPathCard(videos, currentLang) {
     // ── Genel durum satırı
     const overallHtml = `
         <div class="lp-overall">
-            <span class="lp-stat">📊 ${isTr ? 'Toplam' : 'Total'}: <strong>${profile.totalVideos}</strong></span>
-            <span class="lp-stat">✅ ${isTr ? 'Ustalaştım' : 'Mastered'}: <strong>${profile.masteredVideos}</strong></span>
-            <span class="lp-stat">📚 ${isTr ? 'Çalışıyorum' : 'Learning'}: <strong>${profile.learningVideos}</strong></span>
-            <span class="lp-stat">🆕 ${isTr ? 'Yeni' : 'New'}: <strong>${profile.newVideos}</strong></span>
-            <span class="lp-stat lp-rate">🏆 %${profile.masteryRate} ${isTr ? 'tamamlandı' : 'complete'}</span>
+            <span class="lp-stat">${icon('bar-chart-2', { size: 14, color: '#00f0ff' })} ${isTr ? 'Toplam' : 'Total'}: <strong>${profile.totalVideos}</strong></span>
+            <span class="lp-stat">${icon('check-circle', { size: 14, color: '#4ade80' })} ${isTr ? 'Ustalaştım' : 'Mastered'}: <strong>${profile.masteredVideos}</strong></span>
+            <span class="lp-stat">${icon('book-open', { size: 14, color: '#ff007f' })} ${isTr ? 'Çalışıyorum' : 'Learning'}: <strong>${profile.learningVideos}</strong></span>
+            <span class="lp-stat">${icon('plus-circle', { size: 14, color: '#64748b' })} ${isTr ? 'Yeni' : 'New'}: <strong>${profile.newVideos}</strong></span>
+            <span class="lp-stat lp-rate">${icon('star', { size: 14, color: '#f59e0b' })} %${profile.masteryRate} ${isTr ? 'tamamlandı' : 'complete'}</span>
         </div>
     `;
 
@@ -117,12 +120,12 @@ export function renderLearningPathCard(videos, currentLang) {
         container.innerHTML = `
             <div class="learning-path-card">
                 <div class="lp-header">
-                    <span class="lp-icon">🤖</span>
+                    <span class="lp-icon">${icon('target', { size: 20, color: '#ff007f' })}</span>
                     <span>${isTr ? 'Öğrenme Yolu Önerisi' : 'Learning Path Advice'}</span>
                 </div>
                 ${overallHtml}
                 <div class="lp-empty">
-                    📚 ${isTr
+                    ${icon('book-open', { size: 16, color: '#94a3b8' })} ${isTr
                         ? 'Henüz hiç video çalışılmamış. Ana sayfada bir videoyu "Çalışıyorum" olarak işaretle ve öneri almaya başla.'
                         : 'No videos marked as learning yet. Go to the library and mark a video as "Learning" to get advice.'}
                 </div>
@@ -158,7 +161,7 @@ export function renderLearningPathCard(videos, currentLang) {
 
         suggestionsHtml += `
             <div class="lp-suggestion lp-continue">
-                <div class="lp-suggestion-icon">🎯</div>
+                <div class="lp-suggestion-icon">${icon('zap', { size: 22, color: '#ff007f' })}</div>
                 <div class="lp-suggestion-content">
                     <div class="lp-suggestion-title">${isTr ? 'Hemen Devam Et' : 'Keep Going'}</div>
                     <div class="lp-continue-tags">${tagsHtml}</div>
@@ -171,7 +174,7 @@ export function renderLearningPathCard(videos, currentLang) {
     if (advice && advice.nextTag) {
         suggestionsHtml += `
             <div class="lp-suggestion lp-next">
-                <div class="lp-suggestion-icon">📚</div>
+                <div class="lp-suggestion-icon">${icon('book-open', { size: 22, color: '#00f0ff' })}</div>
                 <div class="lp-suggestion-content">
                     <div class="lp-suggestion-title">${isTr ? 'Sıradaki Öğrenim' : 'Next to Learn'}</div>
                     <div class="lp-suggestion-detail">
@@ -189,7 +192,7 @@ export function renderLearningPathCard(videos, currentLang) {
     if (advice && advice.almostTag) {
         suggestionsHtml += `
             <div class="lp-suggestion lp-almost">
-                <div class="lp-suggestion-icon">⭐</div>
+                <div class="lp-suggestion-icon">${icon('star', { size: 22, color: '#f59e0b' })}</div>
                 <div class="lp-suggestion-content">
                     <div class="lp-suggestion-title">${isTr ? 'Ustalaşmaya Yakın' : 'Almost Mastered'}</div>
                     <div class="lp-suggestion-detail">
@@ -207,7 +210,7 @@ export function renderLearningPathCard(videos, currentLang) {
     if (advice && advice.neglectedTag) {
         suggestionsHtml += `
             <div class="lp-suggestion lp-neglected">
-                <div class="lp-suggestion-icon">⚠️</div>
+                <div class="lp-suggestion-icon">${icon('alert-triangle', { size: 22, color: '#ef4444' })}</div>
                 <div class="lp-suggestion-content">
                     <div class="lp-suggestion-title">${isTr ? 'Dikkat Gerektiriyor' : 'Needs Attention'}</div>
                     <div class="lp-suggestion-detail">
@@ -224,9 +227,9 @@ export function renderLearningPathCard(videos, currentLang) {
     container.innerHTML = `
         <div class="learning-path-card">
             <div class="lp-header">
-                <span class="lp-icon">🤖</span>
+                <span class="lp-icon">${icon('target', { size: 20, color: '#ff007f' })}</span>
                 <span>${isTr ? 'Öğrenme Yolu Önerisi' : 'Learning Path Advice'}</span>
-                <button id="lp-refresh-btn" class="lp-refresh-btn" title="${isTr ? 'Yenile' : 'Refresh'}">🔄</button>
+                <button id="lp-refresh-btn" class="lp-refresh-btn" title="${isTr ? 'Yenile' : 'Refresh'}">${icon('refresh-cw', { size: 16, color: '#94a3b8' })}</button>
             </div>
             ${overallHtml}
             <div class="lp-suggestions">${suggestionsHtml}</div>
