@@ -55,3 +55,23 @@ export async function dbFetchPracticeSessions() {
     if (!res.ok) throw new Error('Seanslar alınamadı');
     return await res.json();
 }
+
+// ─────────────────────────────────────────────────────────────
+// dbDeletePracticeSession — Tek bir seans kaydını siler
+// ─────────────────────────────────────────────────────────────
+export async function dbDeletePracticeSession(id) {
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/practice_sessions?id=eq.${id}`,
+        {
+            method: 'DELETE',
+            headers: {
+                'apikey':        SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        }
+    );
+    if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`Seans silinemedi (HTTP ${res.status}): ${errText}`);
+    }
+}

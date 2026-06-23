@@ -1,5 +1,5 @@
 // stats/statsUI.js
-import { dbFetchPracticeSessions } from '../db/practiceSessions.js'; // Adim 4.3 - İstatistikleri HTML olarak render etme ve grafik çizme
+import { dbFetchPracticeSessions, dbDeletePracticeSession } from '../db/practiceSessions.js'; // Adim 4.3 - İstatistikleri HTML olarak render etme ve grafik çizme
 // ✅ GÜNCELLEME (Adım 5.1): renderLearningHeatmap eklendi
 // ✅ GÜNCELLEME (Adım 5.3): renderTagCloud eklendi
 // ✅ GÜNCELLEME (Adım 5.4): Yıl seçici ve renderMonthlyChart eklendi
@@ -8,10 +8,14 @@ import { dbFetchPracticeSessions } from '../db/practiceSessions.js'; // Adim 4.3
 //    - Aylık bar grafik sayıları: Chart.js plugin ile güvenilir rendering
 //    - Heatmap yazıları: daha parlak renk + büyük font (PC uyumu)
 //    - Etiket ağ haritası: dinamik yükseklik + fit() ile kesilme sorunu düzeltildi
+// ✅ GÜNCELLEME: Pratik seans geçmişi satırlarına silme (çöp kutusu) butonu eklendi
 import { translations } from '../i18n.js';
 import { computeLearningHeatmap, computeMonthlyData, getAvailableYears, computeTagNetwork } from './computeStats.js';
 import { store } from '../store.js';
 import { filterByTag } from '../navigation.js';
+import { icon } from '../icons.js';
+import { showCustomConfirm } from '../tangoModals.js';
+import { showToast } from '../toast.js';
 
 let platformChart = null;
 let monthlyChart  = null;
@@ -383,9 +387,20 @@ async function renderSessionHistory(container, currentLang) {
             <p style="color:rgba(255,255,255,0.3);font-size:0.82rem;">${t ? 'Yükleniyor...' : 'Loading...'}</p>
         </div>`;
 
+    await loadAndRenderSessions(currentLang);
+}
+
+// ─────────────────────────────────────────────────────────────
+// loadAndRenderSessions — Seansları çeker ve listeyi (silme
+// butonlarıyla birlikte) çizer. Silme sonrası yeniden çağrılır.
+// ─────────────────────────────────────────────────────────────
+async function loadAndRenderSessions(currentLang) {
+    const t = currentLang === 'tr';
+    const listEl = document.getElementById('session-history-list');
+    if (!listEl) return;
+
     try {
         const sessions = await dbFetchPracticeSessions();
-        const listEl   = document.getElementById('session-history-list');
         if (!listEl) return;
 
         if (sessions.length === 0) {
@@ -403,7 +418,7 @@ async function renderSessionHistory(container, currentLang) {
             const pct      = total > 0 ? Math.round((s.practiced_count / total) * 100) : 0;
             const barColor = pct >= 80 ? '#4ade80' : pct >= 50 ? '#f59e0b' : '#ff007f';
 
-            return `<div style="
+            return `<div class="ph-session-row" data-session-id="${s.id}" style="
                 background:rgba(255,255,255,0.03);
                 border:1px solid rgba(255,255,255,0.07);
                 border-radius:12px;
@@ -411,7 +426,9 @@ async function renderSessionHistory(container, currentLang) {
                 display:flex;
                 align-items:center;
                 gap:16px;
-                flex-wrap:wrap;">
+                flex-wrap:wrap;
+                position:relative;
+                transition:border-color 0.2s;">
                     <span style="color:rgba(255,255,255,0.5);font-size:0.8rem;min-width:100px;">${dateStr}</span>
                     <div style="flex:1;min-width:120px;">
                         <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;">
@@ -424,12 +441,57 @@ async function renderSessionHistory(container, currentLang) {
                     <span style="color:rgba(255,255,255,0.4);font-size:0.78rem;white-space:nowrap;">
                         ⏱ ${durStr}
                     </span>
+                    <button class="ph-delete-btn" data-session-id="${s.id}" title="${t ? 'Bu seansı sil' : 'Delete this session'}" style="
+                        flex-shrink:0;
+                        width:30px;height:30px;
+                        border-radius:8px;
+                        background:transparent;
+                        border:1px solid rgba(239,68,68,0.25);
+                        color:#ef4444;
+                        opacity:0;
+                        cursor:pointer;
+                        display:flex;align-items:center;justify-content:center;
+                        transition:opacity 0.15s, background 0.15s;">
+                        ${icon('trash-2', { size: 15, color: '#ef4444' })}
+                    </button>
             </div>`;
         }).join('');
 
+        // ── Hover'da çöp kutusu butonunu göster/gizle ──────────
+        listEl.querySelectorAll('.ph-session-row').forEach(row => {
+            const delBtn = row.querySelector('.ph-delete-btn');
+            row.addEventListener('mouseenter', () => { if (delBtn) delBtn.style.opacity = '1'; });
+            row.addEventListener('mouseleave', () => { if (delBtn) delBtn.style.opacity = '0'; });
+        });
+
+        // ── Silme butonuna tıklama → onay → sil → listeyi yenile ──
+        listEl.querySelectorAll('.ph-delete-btn').forEach(btn => {
+            btn.addEventListener('mouseover', () => { btn.style.background = 'rgba(239,68,68,0.15)'; });
+            btn.addEventListener('mouseout',  () => { btn.style.background = 'transparent'; });
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const sessionId = btn.dataset.sessionId;
+                const confirmMsg = t
+                    ? 'Bu pratik seansını silmek istediğine emin misin? Bu işlem geri alınamaz.'
+                    : 'Are you sure you want to delete this practice session? This cannot be undone.';
+                const confirmed = await showCustomConfirm(confirmMsg, t ? 'Sil' : 'Delete', t ? 'İptal' : 'Cancel');
+                if (!confirmed) return;
+
+                try {
+                    btn.disabled = true;
+                    await dbDeletePracticeSession(sessionId);
+                    showToast(t ? 'Seans silindi ✓' : 'Session deleted ✓', 'success');
+                    await loadAndRenderSessions(currentLang);
+                } catch (err) {
+                    console.error('[SessionHistory] Silme hatası:', err);
+                    showToast(t ? 'Seans silinemedi.' : 'Could not delete session.', 'error');
+                    btn.disabled = false;
+                }
+            });
+        });
+
     } catch (err) {
         console.warn('[SessionHistory] Yüklenemedi:', err);
-        const listEl = document.getElementById('session-history-list');
         if (listEl) listEl.innerHTML = `<p style="color:rgba(239,68,68,0.7);font-size:0.82rem;">${t ? 'Seanslar yüklenemedi.' : 'Could not load sessions.'}</p>`;
     }
 }
