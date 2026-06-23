@@ -34,8 +34,8 @@ export async function dbDeleteInstructor(id) {
     return res;
 }
 
-// ✅ GÜNCELLEME: instagram_url ve facebook_url alanları eklendi
-export async function dbUpdateInstructorProfile(id, photoUrl, bio, instagramUrl, facebookUrl) {
+// ✅ GÜNCELLEME: instagram_url, facebook_url ve youtube_url alanları eklendi
+export async function dbUpdateInstructorProfile(id, photoUrl, bio, instagramUrl, facebookUrl, youtubeUrl) {
     const res = await fetchWithRetry(`${SUPABASE_URL}/rest/v1/instructors?id=eq.${id}`, {
         method: 'PATCH',
         headers: {
@@ -48,7 +48,8 @@ export async function dbUpdateInstructorProfile(id, photoUrl, bio, instagramUrl,
             photo_url:      photoUrl      || null,
             bio:            bio           || null,
             instagram_url:  instagramUrl  || null,
-            facebook_url:   facebookUrl   || null
+            facebook_url:   facebookUrl   || null,
+            youtube_url:    youtubeUrl    || null
         })
     });
     if (!res.ok) {

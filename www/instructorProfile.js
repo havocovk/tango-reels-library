@@ -102,13 +102,20 @@ export function renderInstructorsList() {
                       title="Facebook">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                    </a>` : '';
+            const ytIcon = ins.youtube_url
+                ? `<a href="${escapeHtml(ins.youtube_url)}" target="_blank" rel="noopener"
+                      style="color:#ff0000;opacity:0.85;transition:opacity 0.15s;"
+                      onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"
+                      title="YouTube">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                   </a>` : '';
 
             return `
                 <div class="ins-list-card" data-ins-id="${ins.id}">
                     <div class="ins-list-avatar-wrap">${avatarHtml}</div>
                     <div class="ins-list-name">${escapeHtml(ins.name)}</div>
                     <div class="ins-list-count">${videoCount} ${videoLabel}</div>
-                    ${(igIcon || fbIcon) ? `<div class="ins-list-socials">${igIcon}${fbIcon}</div>` : ''}
+                    ${(igIcon || fbIcon || ytIcon) ? `<div class="ins-list-socials">${igIcon}${fbIcon}${ytIcon}</div>` : ''}
                     <button class="ins-list-view-btn" data-ins-id="${ins.id}">${viewLabel}</button>
                 </div>`;
         }).join('');
@@ -242,11 +249,13 @@ export function renderInstructorProfile(instructorId) {
         photoUploading:       lang === 'tr' ? 'Yükleniyor...' : 'Uploading...',
         instagramLabel:       lang === 'tr' ? 'Instagram Profil URL:' : 'Instagram Profile URL:',
         facebookLabel:        lang === 'tr' ? 'Facebook Profil URL:' : 'Facebook Profile URL:',
+        youtubeLabel:         lang === 'tr' ? 'YouTube Kanal URL:' : 'YouTube Channel URL:',
         bioLabel:             lang === 'tr' ? 'Biyografi:' : 'Biography:',
         bioPlaceholder:       lang === 'tr' ? 'Eğitmen hakkında kısa bir not...' : 'A short note about the instructor...',
         photoPlaceholder:     lang === 'tr' ? 'https://... fotoğraf linki' : 'https://... photo link',
         igPlaceholder:        'https://www.instagram.com/kullaniciadi',
         fbPlaceholder:        'https://www.facebook.com/kullaniciadi',
+        ytPlaceholder:        'https://www.youtube.com/@kullaniciadi',
         totalVideos:          lang === 'tr' ? 'Toplam Video' : 'Total Videos',
         roleTitle:            lang === 'tr' ? 'Rol Dağılımı' : 'Role Distribution',
         leader:               lang === 'tr' ? 'Lider' : 'Leader',
@@ -333,8 +342,16 @@ export function renderInstructorProfile(instructorId) {
               title="Facebook">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
            </a>` : '';
-    const socialLinksHtml = (igLink || fbLink)
-        ? `<div style="display:flex;align-items:center;gap:10px;margin-top:8px;">${igLink}${fbLink}</div>`
+    const ytLink = instructor.youtube_url
+        ? `<a href="${escapeHtml(instructor.youtube_url)}" target="_blank" rel="noopener"
+              style="display:inline-flex;align-items:center;color:#ff0000;
+                     opacity:0.85;transition:opacity 0.15s;text-decoration:none;"
+              onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"
+              title="YouTube">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+           </a>` : '';
+    const socialLinksHtml = (igLink || fbLink || ytLink)
+        ? `<div style="display:flex;align-items:center;gap:10px;margin-top:8px;">${igLink}${fbLink}${ytLink}</div>`
         : '';
 
     // ── Ana HTML ─────────────────────────────────────────────
@@ -512,6 +529,15 @@ export function renderInstructorProfile(instructorId) {
                     placeholder="${T.fbPlaceholder}"
                     value="${escapeHtml(instructor.facebook_url || '')}">
             </div>
+            <div style="margin-bottom:14px;">
+                <label style="font-size:0.75rem;color:#ff0000;display:block;margin-bottom:6px;">
+                    <svg style="vertical-align:middle;margin-right:4px;" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    ${T.youtubeLabel}
+                </label>
+                <input id="prof-youtube-input" type="url" class="prof-edit-field"
+                    placeholder="${T.ytPlaceholder}"
+                    value="${escapeHtml(instructor.youtube_url || '')}">
+            </div>
             <div style="margin-bottom:16px;">
                 <label style="font-size:0.75rem;color:#94a3b8;display:block;margin-bottom:6px;">${T.bioLabel}</label>
                 <textarea id="prof-bio-input" class="prof-edit-field"
@@ -626,13 +652,14 @@ export function renderInstructorProfile(instructorId) {
         const photoVal     = (document.getElementById('prof-photo-input')?.value     || '').trim();
         const igVal        = (document.getElementById('prof-instagram-input')?.value  || '').trim();
         const fbVal        = (document.getElementById('prof-facebook-input')?.value   || '').trim();
+        const ytVal        = (document.getElementById('prof-youtube-input')?.value    || '').trim();
         const bioVal       = (document.getElementById('prof-bio-input')?.value        || '').trim();
         const saveBtn      = document.getElementById('prof-save-btn');
         const errEl        = document.getElementById('prof-edit-error');
         if (errEl) errEl.style.display = 'none';
         if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.5'; }
         try {
-            await dbUpdateInstructorProfile(instructorId, photoVal, bioVal, igVal, fbVal);
+            await dbUpdateInstructorProfile(instructorId, photoVal, bioVal, igVal, fbVal, ytVal);
             // Store'u local olarak güncelle
             const instructors = store.get('globalInstructors');
             const idx = instructors.findIndex(i => i.id === instructorId);
@@ -642,7 +669,8 @@ export function renderInstructorProfile(instructorId) {
                     photo_url:     photoVal || null,
                     bio:           bioVal   || null,
                     instagram_url: igVal    || null,
-                    facebook_url:  fbVal    || null
+                    facebook_url:  fbVal    || null,
+                    youtube_url:   ytVal    || null
                 };
                 store.set('globalInstructors', [...instructors]);
             }
