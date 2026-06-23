@@ -1,4 +1,6 @@
 import { escapeHtml } from './utils.js'; // Adim 1.2
+import { icon } from './icons.js';
+// ✅ GÜNCELLEME: Emoji ikonlar Lucide SVG ikonlarına çevrildi
 
 // toast.js - Otomatik kaybolan bildirimler
 let activeToasts = [];
@@ -49,10 +51,10 @@ export function showToast(message, type = 'info', duration = 3000) {
 
 function getIconForType(type) {
     switch(type) {
-        case 'success': return '✅';
-        case 'error':   return '❌';
-        case 'warning': return '⚠️';
-        default:        return 'ℹ️';
+        case 'success': return icon('check-circle',   { size: 18, color: '#4ade80' });
+        case 'error':   return icon('x-circle',       { size: 18, color: '#ef4444' });
+        case 'warning': return icon('alert-triangle', { size: 18, color: '#f59e0b' });
+        default:        return icon('lightbulb',      { size: 18, color: '#00f0ff' });
     }
 }
 
