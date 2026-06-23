@@ -128,9 +128,9 @@ export async function updateLearningStatus(videoId, newStatus, currentReviewCoun
 
 function getStatusText(status) {
     if (currentLang === 'tr') {
-        if (status === 'new') return '🆕 Yeni olarak işaretlendi';
-        if (status === 'learning') return '📚 Çalışıyorum olarak işaretlendi';
-        if (status === 'mastered') return '✅ Ustalaştım olarak işaretlendi';
+        if (status === 'new') return 'Yeni olarak işaretlendi';
+        if (status === 'learning') return 'Çalışıyorum olarak işaretlendi';
+        if (status === 'mastered') return 'Ustalaştım olarak işaretlendi';
     } else {
         if (status === 'new') return '🆕 Marked as New';
         if (status === 'learning') return '📚 Marked as Learning';
