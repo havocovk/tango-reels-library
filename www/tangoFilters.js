@@ -72,9 +72,9 @@ export function populateFilterDropdowns(videolar, currentLang) {
 
     if (learningStatusSelect) {
         learningStatusSelect.innerHTML  = `<option value="all">${lang.allLearningStatuses || 'Tümü'}</option>`;
-        learningStatusSelect.innerHTML += `<option value="new">🆕 ${lang.learningNew || 'Yeni'}</option>`;
-        learningStatusSelect.innerHTML += `<option value="learning">📚 ${lang.learningActive || 'Çalışıyorum'}</option>`;
-        learningStatusSelect.innerHTML += `<option value="mastered">✅ ${lang.learningMastered || 'Ustalaştım'}</option>`;
+        learningStatusSelect.innerHTML += `<option value="new">${lang.learningNew || 'Yeni'}</option>`;
+        learningStatusSelect.innerHTML += `<option value="learning">${lang.learningActive || 'Çalışıyorum'}</option>`;
+        learningStatusSelect.innerHTML += `<option value="mastered">${lang.learningMastered || 'Ustalaştım'}</option>`;
     }
 
     // Eğitmenleri say ve sırala

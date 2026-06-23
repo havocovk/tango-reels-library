@@ -11,6 +11,7 @@ import { getDueTodayCount } from './learning/spacedRepetition.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js'; // Adim 1.3
 import { dbFetchAnnotations } from './db/annotations.js'; // Adim 4.5
+import { icon } from './icons.js';
 
 // ─────────────────────────────────────────────────────────────
 // OTURUM STATE'İ
@@ -130,9 +131,9 @@ function showCurrentCard() {
         const roleCls = roleClass[role] || 'badge-both';
 
         const statusMap = {
-            new:      lang === 'tr' ? '🆕 Yeni'         : '🆕 New',
-            learning: lang === 'tr' ? '📚 Çalışıyorum'  : '📚 Learning',
-            mastered: lang === 'tr' ? '✅ Ustalaştım'   : '✅ Mastered'
+            new:      `${icon('zap', { size: 12, color: '#f59e0b' })} ${lang === 'tr' ? 'Yeni' : 'New'}`,
+            learning: `${icon('bookmark', { size: 12, color: '#00f0ff' })} ${lang === 'tr' ? 'Çalışıyorum' : 'Learning'}`,
+            mastered: `${icon('check-circle', { size: 12, color: '#4ade80' })} ${lang === 'tr' ? 'Ustalaştım' : 'Mastered'}`
         };
         const statusClassMap = {
             new: 'badge-learning-new',
