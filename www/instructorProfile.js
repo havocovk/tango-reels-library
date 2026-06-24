@@ -674,7 +674,7 @@ export function renderInstructorProfile(instructorId) {
                 };
                 store.set('globalInstructors', [...instructors]);
             }
-            showToast(lang === 'tr' ? 'Profil kaydedildi ✓' : 'Profile saved ✓', 'success');
+            showToast(lang === 'tr' ? 'Profil kaydedildi' : 'Profile saved', 'success');
             renderInstructorProfile(instructorId);
         } catch (err) {
             if (errEl) { errEl.textContent = err.message; errEl.style.display = 'block'; }

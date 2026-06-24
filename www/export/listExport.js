@@ -166,8 +166,8 @@ export async function copyListToClipboard() {
         await navigator.clipboard.writeText(text);
         showToast(
             lang === 'tr'
-                ? `📋 ${listName} panoya kopyalandı!`
-                : `📋 ${listName} copied to clipboard!`,
+                ? `${listName} panoya kopyalandı!`
+                : `${listName} copied to clipboard!`,
             'success'
         );
     } catch {

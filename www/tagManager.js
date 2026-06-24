@@ -152,7 +152,7 @@ export async function runTagHealthCheck() {
 
         if (!problems || problems.length === 0) {
             showToast(
-                lang === 'tr' ? '✅ Tüm etiketler senkron' : '✅ All tags are in sync',
+                lang === 'tr' ? 'Tüm etiketler senkron' : 'All tags are in sync',
                 'success', 3000
             );
             return;

@@ -186,7 +186,7 @@ export async function addLink(sourceId, targetId) {
         if (row) {
             store.addVideoLinkLocally(row);
             showToast(store.get('currentLang') === 'tr'
-                ? 'Bağlantı eklendi ✓' : 'Link added ✓', 'success');
+                ? 'Bağlantı eklendi' : 'Link added', 'success');
             if (refreshListCb) refreshListCb();
             renderLinkManagerLists();
             renderSearchResults(getCurrentSearchTerm());

@@ -169,7 +169,7 @@ export async function fetchVideos() {
             if (store.get('currentView') === 'tagManager') renderTagManagerUI();
 
             import('./toast.js').then(({ showToast }) => {
-                showToast('📴 Çevrimdışı mod — son kayıtlı veri gösteriliyor', 'info', 5000);
+                showToast('Çevrimdışı mod — son kayıtlı veri gösteriliyor', 'info', 5000);
             });
         } else {
             const grid = document.getElementById('video-grid');

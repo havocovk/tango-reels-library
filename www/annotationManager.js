@@ -279,7 +279,7 @@ export async function openAnnotationModal(video) {
                 if (tsInput)   tsInput.value   = '';
                 if (noteInput) noteInput.value = '';
                 await loadAnnotations(activeVideoId, activeVideoUrl, activePlatform);
-                showToast('Not eklendi ✓', 'success');
+                showToast('Not eklendi', 'success');
             } catch (err) {
                 if (errEl) {
                     errEl.textContent = 'Kaydedilemedi: ' + err.message;

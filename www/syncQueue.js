@@ -89,7 +89,7 @@ export async function flushQueue() {
     const sentCount = queue.length - remaining.length - conflictCount;
     if (sentCount > 0) {
         import('./toast.js').then(({ showToast }) => {
-            showToast(`✅ ${sentCount} bekleyen değişiklik sunucuya gönderildi`, 'success', 4000);
+            showToast(`${sentCount} bekleyen değişiklik sunucuya gönderildi`, 'success', 4000);
         });
     }
 
@@ -98,8 +98,8 @@ export async function flushQueue() {
         import('./toast.js').then(({ showToast }) => {
             const lang = localStorage.getItem('tango_lang') || 'tr';
             const msg = lang === 'en'
-                ? `⚠️ ${conflictCount} offline change(s) skipped — the item was updated elsewhere. The server version was kept.`
-                : `⚠️ ${conflictCount} çevrimdışı değişiklik atlandı — kayıt başka bir yerde güncellenmişti. Sunucudaki sürüm korundu.`;
+                ? `${conflictCount} offline change(s) skipped — the item was updated elsewhere. The server version was kept.`
+                : `${conflictCount} çevrimdışı değişiklik atlandı — kayıt başka bir yerde güncellenmişti. Sunucudaki sürüm korundu.`;
             showToast(msg, 'info', 7000);
         });
         // Çakışma sonrası sunucudaki güncel veriyi çekmek için sinyal gönder

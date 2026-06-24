@@ -291,7 +291,7 @@ export async function createNewPlaylist(name, color = '#ff007f') {
         const playlists = store.get('globalPlaylists') || [];
         store.set('globalPlaylists', [...playlists, newPlaylist]);
         renderPlaylistsInSidebar();
-        showToast(lang === 'tr' ? `"${name}" listesi oluşturuldu ✅` : `"${name}" list created ✅`, 'success');
+        showToast(lang === 'tr' ? `"${name}" listesi oluşturuldu` : `"${name}" list created`, 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Liste oluşturulamadı' : 'Failed to create list', 'error');
         console.error(err);
@@ -318,7 +318,7 @@ export async function editPlaylist(id, name, color) {
         );
         store.set('globalPlaylists', playlists);
         renderPlaylistsInSidebar();
-        showToast(lang === 'tr' ? 'Liste güncellendi ✅' : 'List updated ✅', 'success');
+        showToast(lang === 'tr' ? 'Liste güncellendi' : 'List updated', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Güncelleme hatası' : 'Update failed', 'error');
         console.error(err);
@@ -351,7 +351,7 @@ export async function deletePlaylist(id) {
             store.set('activePlaylistVideoIds', []);
         }
         renderPlaylistsInSidebar();
-        showToast(lang === 'tr' ? 'Liste silindi 🗑️' : 'List deleted 🗑️', 'success');
+        showToast(lang === 'tr' ? 'Liste silindi' : 'List deleted', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Silme hatası' : 'Delete failed', 'error');
         console.error(err);
@@ -374,7 +374,7 @@ export async function addToPlaylist(videoId, playlistId) {
         if (!map[videoId]) map[videoId] = [];
         if (!map[videoId].includes(playlistId)) map[videoId] = [...map[videoId], playlistId];
         store.set('playlistVideoMap', map);
-        showToast(lang === 'tr' ? '✅ Listeye eklendi' : '✅ Added to list', 'success');
+        showToast(lang === 'tr' ? 'Listeye eklendi' : 'Added to list', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Eklenemedi' : 'Failed to add', 'error');
         console.error(err);
@@ -396,7 +396,7 @@ export async function removeFromPlaylist(videoId, playlistId) {
             if (map[videoId].length === 0) delete map[videoId];
         }
         store.set('playlistVideoMap', map);
-        showToast(lang === 'tr' ? '🗑️ Listeden çıkarıldı' : '🗑️ Removed from list', 'success');
+        showToast(lang === 'tr' ? 'Listeden çıkarıldı' : 'Removed from list', 'success');
     } catch (err) {
         showToast(lang === 'tr' ? 'Çıkarılamadı' : 'Failed to remove', 'error');
         console.error(err);
