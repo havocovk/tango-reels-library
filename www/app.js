@@ -166,8 +166,8 @@ async function initializeApp() {
         if (dueVideos.length === 0) {
             showCustomAlert(
                 store.get('currentLang') === 'tr'
-                    ? '🎉 Bugün için tüm kombinasyonları çalıştın! Harika iş.'
-                    : '🎉 You\'ve practiced all combinations for today! Great job.'
+                    ? 'Bugün için tüm kombinasyonları çalıştın! Harika iş.'
+                    : 'You\'ve practiced all combinations for today! Great job.'
             );
             return;
         }

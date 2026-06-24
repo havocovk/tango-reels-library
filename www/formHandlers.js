@@ -245,8 +245,8 @@ export async function handleFormSubmit(e) {
 
         await showCustomAlert(
             editingVideoId
-                ? (currentLang === 'tr' ? '✅ Video güncellendi!' : '✅ Video updated!')
-                : (currentLang === 'tr' ? '✅ Video eklendi!' : '✅ Video added!'),
+                ? (currentLang === 'tr' ? 'Video güncellendi!' : 'Video updated!')
+                : (currentLang === 'tr' ? 'Video eklendi!' : 'Video added!'),
             okText
         );
 
