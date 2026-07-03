@@ -61,6 +61,8 @@ export function getDueVideos(videos) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const due = videos.filter(video => {
+        // Tango Şov videoları pratik listesine dahil edilmez
+        if (video.content_type === 'show') return false;
         const nextReview = calculateNextReviewDate(video);
         // nextReview bugün veya geçmişte ise listeye al
         return nextReview <= todayStart || 
