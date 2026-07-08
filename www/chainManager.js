@@ -11,8 +11,9 @@ import {
 } from './db/videoLinks.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
-import { escapeHtml } from './utils.js'; // Adim 1.2
-import { ensureModalLoaded } from './modalLoader.js'; // Adim 3.4
+import { escapeHtml } from './utils.js';
+import { ensureModalLoaded } from './modalLoader.js';
+import { icon } from './icons.js';
 
 // ── Modül düzeyi durum ────────────────────────────────────────
 let openVideoModalCb = null;   // Bir videoyu modalda açmak için (app.js'ten gelir)
@@ -250,7 +251,7 @@ function renderLinkManagerLists() {
                     <div class="link-row-name">${name}</div>
                     <div class="link-row-tags">${tagTxt}</div>
                 </div>
-                <button class="link-row-del" data-del-link="${e.linkId}" title="${lang === 'tr' ? 'Bağlantıyı kaldır' : 'Remove link'}">🗑️</button>
+                <button class="link-row-del" data-del-link="${e.linkId}" title="${lang === 'tr' ? 'Bağlantıyı kaldır' : 'Remove link'}">${icon('trash-2', { size: 14, color: '#ef4444' })}</button>
             </div>`;
         }).join('');
 
@@ -294,15 +295,25 @@ function renderSearchResults(term) {
         return;
     }
 
-    const addNextTxt = lang === 'tr' ? 'Sonraki →' : 'Next →';
-    const addPrevTxt = lang === 'tr' ? '← Önceki' : '← Previous';
+    const addNextTxt    = lang === 'tr' ? 'Sonraki →' : 'Next →';
+    const addPrevTxt    = lang === 'tr' ? '← Önceki' : '← Prev';
+    const alreadyAddedTxt = lang === 'tr' ? '✓ Ekli' : '✓ Added';
 
     container.innerHTML = matches.map(v => {
         const name = escapeHtml(instructorNameOf(v));
         const tagTxt = escapeHtml(shortTags(v, 2));
         const cover = v.cover_url || '';
-        const nextDisabled = alreadyNext.has(v.id) ? 'disabled' : '';
-        const prevDisabled = alreadyPrev.has(v.id) ? 'disabled' : '';
+        const isNext = alreadyNext.has(v.id);
+        const isPrev = alreadyPrev.has(v.id);
+
+        const nextBtn = isNext
+            ? `<button class="link-add-next link-already-added" disabled title="${lang === 'tr' ? 'Zaten Sonraki olarak eklendi' : 'Already added as Next'}">${alreadyAddedTxt}</button>`
+            : `<button class="link-add-next" data-add-next="${v.id}">${addNextTxt}</button>`;
+
+        const prevBtn = isPrev
+            ? `<button class="link-add-prev link-already-added" disabled title="${lang === 'tr' ? 'Zaten Önceki olarak eklendi' : 'Already added as Prev'}">${alreadyAddedTxt}</button>`
+            : `<button class="link-add-prev" data-add-prev="${v.id}">${addPrevTxt}</button>`;
+
         return `<div class="link-search-row">
             <div class="link-row-thumb" style="background-image:url('${cover}');"></div>
             <div class="link-row-info">
@@ -310,8 +321,8 @@ function renderSearchResults(term) {
                 <div class="link-row-tags">${tagTxt}</div>
             </div>
             <div class="link-search-actions">
-                <button class="link-add-prev" data-add-prev="${v.id}" ${prevDisabled}>${addPrevTxt}</button>
-                <button class="link-add-next" data-add-next="${v.id}" ${nextDisabled}>${addNextTxt}</button>
+                ${prevBtn}
+                ${nextBtn}
             </div>
         </div>`;
     }).join('');
@@ -351,8 +362,8 @@ export async function openLinkManager(video) {
     if (subtitle) {
         const name = instructorNameOf(video);
         subtitle.textContent = lang === 'tr'
-            ? `${name} kombinasyonu için zincir bağlantıları`
-            : `Chain links for ${name}'s combination`;
+            ? `${name} — birden fazla önceki ve sonraki kombinasyon eklenebilir`
+            : `${name} — multiple previous and next combinations can be added`;
     }
 
     const searchInput = document.getElementById('link-search-input');
