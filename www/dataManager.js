@@ -22,7 +22,6 @@ import { exportToJSON, importFromJSON, setBackupLang } from './backup.js';
 import { store } from './store.js';
 import { getDueTodayCount, getDueVideos } from './learning/spacedRepetition.js';
 import { ensureAllTagsHaveColors } from './tagColorManager.js';
-import { renderLearningPathCard } from './learningPathAdvisor.js';
 import {
     initOfflineCache,
     cacheVideos,
@@ -183,8 +182,6 @@ export function renderStatsPanel() {
     const stats = computeStats(store.get('globalVideos'), store.get('globalInstructors'));
     renderStats(stats, store.get('currentLang'));
     setupBackupButtons();
-    // Öğrenme yolu önerisi kartını render et
-    renderLearningPathCard(store.get('globalVideos'), store.get('currentLang'));
 }
 
 function setupBackupButtons() {
