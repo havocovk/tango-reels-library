@@ -20,6 +20,8 @@ export function switchView(viewName, state, functions) {
     if (dashboardMenuBtn) dashboardMenuBtn.classList.remove('active');
     const showsMenuBtn = document.getElementById('menu-shows');
     if (showsMenuBtn) showsMenuBtn.classList.remove('active');
+    const practiceListMenuBtn = document.getElementById('menu-practice-list');
+    if (practiceListMenuBtn) practiceListMenuBtn.classList.remove('active');
 
     const clearFavBtnContainer    = document.getElementById('clear-favorites-container');
     const libraryView             = document.getElementById('view-library-container');
@@ -30,12 +32,18 @@ export function switchView(viewName, state, functions) {
     const instructorProfileView   = document.getElementById('view-instructor-profile-container');
     const dashboardView           = document.getElementById('view-dashboard-container'); // Adim 4.1
     const showsView               = document.getElementById('view-shows-container'); // Tango Sovlari
+    const practiceListView        = document.getElementById('view-practice-list-container'); // Pratik Listem
 
     // ── Tüm view'ları gizle (ortak başlangıç) ──
-    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView, dashboardView, showsView];
+    const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView, dashboardView, showsView, practiceListView];
     allViews.forEach(v => { if (v) v.classList.add('d-none'); });
 
-    if (viewName === 'shows') {
+    if (viewName === 'practiceList') {
+        if (practiceListView) practiceListView.classList.remove('d-none');
+        if (practiceListMenuBtn) practiceListMenuBtn.classList.add('active');
+        if (functions.renderPracticeList) functions.renderPracticeList();
+
+    } else if (viewName === 'shows') {
         if (showsView) showsView.classList.remove('d-none');
         if (showsMenuBtn) showsMenuBtn.classList.add('active');
         if (functions.renderShows) functions.renderShows();

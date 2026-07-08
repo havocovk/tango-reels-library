@@ -58,7 +58,8 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const dashboardMenuBtn2 = document.getElementById('menu-dashboard');
     if (dashboardMenuBtn2) dashboardMenuBtn2.innerHTML = `${icon('bar-chart-2', { size: 18 })} ${currentLang === 'tr' ? 'Genel Bakış' : 'Overview'}`;
     setHTML('menu-library',     `${icon('book-open',   { size: 18 })} ${lang.menuLibrary}`);
-    setHTML('menu-favorites',   `${icon('star',        { size: 18 })} ${lang.menuFavorites}`);
+    setHTML('menu-favorites',      `${icon('star',        { size: 18 })} ${lang.menuFavorites}`);
+    setHTML('menu-practice-list',  `${icon('dumbbell',    { size: 18 })} ${lang.menuPracticeList}`);
     setHTML('menu-stats',       `${icon('bar-chart-2', { size: 18 })} ${lang.menuStats}`);
     setHTML('menu-add-video',   `${icon('plus-circle', { size: 18 })} ${lang.menuAddVideo}`);
 
@@ -137,6 +138,9 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
 
     const btnClearFavs = document.getElementById('btn-clear-favorites');
     if (btnClearFavs) btnClearFavs.innerHTML = `${icon('trash-2', { size: 15, color: '#ef4444' })} ${lang.btnClearFavorites}`;
+
+    const btnClearPL = document.getElementById('btn-clear-practice-list');
+    if (btnClearPL) btnClearPL.innerHTML = `${icon('trash-2', { size: 15, color: '#ef4444' })} ${lang.btnClearPracticeList}`;
 
     const editTagsTitle = document.getElementById('edit-tags-title');
     if (editTagsTitle) editTagsTitle.innerHTML = `${icon('pencil', { size: 16, color: '#c026d3' })} ${lang.editTagsTitle}`;

@@ -87,6 +87,19 @@ class Store {
     this.set('globalFavorites', []);
   }
 
+  updatePracticeListLocally(videoId, isInList) {
+    let pl = this.get('globalPracticeList');
+    if (isInList && !pl.includes(videoId)) {
+      this.set('globalPracticeList', [...pl, videoId]);
+    } else if (!isInList && pl.includes(videoId)) {
+      this.set('globalPracticeList', pl.filter(id => id !== videoId));
+    }
+  }
+
+  clearPracticeListLocally() {
+    this.set('globalPracticeList', []);
+  }
+
   // ✅ YENİ (Adım 6.2): Kombinasyon zinciri bağlantıları
   addVideoLinkLocally(link) {
     const links = this.get('globalVideoLinks') || [];
@@ -118,6 +131,7 @@ const initialState = {
   playlistVideoMap: {},   // ✅ GÜNCELLEME (Adım 1.1): { videoId: [playlistId, ...] } haritası
   viewMode: 'grid',
   tagColors: {},   // ✅ YENİ (Adım 3.3): { tagName: colorCode } formatında
+  globalPracticeList: [], // Pratik Listesi video id'leri
   globalVideoLinks: [],   // ✅ YENİ (Adım 6.2): kombinasyon zinciri bağlantıları
   totalVideoCount: 0,   // ✅ YENİ (Adım 4.3): sunucudaki toplam video sayısı
   currentPage: 0        // ✅ YENİ (Adım 4.3): yüklenmiş son sayfa indeksi
