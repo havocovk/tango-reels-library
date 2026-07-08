@@ -156,11 +156,13 @@ export function renderPracticeListView() {
 export function populatePracticeListInstructorSelect() {
     const sel = document.getElementById('pl-filter-instructor-select');
     if (!sel) return;
-    const lang = store.get('currentLang');
+    const langCode = store.get('currentLang');
     const instructors = store.get('globalInstructors') || [];
-    const allLabel = lang === 'tr' ? 'Tüm Eğitmenler' : 'All Instructors';
+    const allLabel = translations[langCode]?.allInstructors || (langCode === 'tr' ? 'Tüm Eğitmenler' : 'All Instructors');
+    const currentVal = sel.value;
     sel.innerHTML = `<option value="all">${allLabel}</option>` +
         instructors.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
+    if (currentVal && currentVal !== 'all') sel.value = currentVal;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -169,11 +171,12 @@ export function populatePracticeListInstructorSelect() {
 export function populatePracticeListTagSelect() {
     const sel = document.getElementById('pl-filter-tag-select');
     if (!sel) return;
-    const lang = store.get('currentLang');
+    const langCode = store.get('currentLang');
     const allVideos = store.get('globalVideos') || [];
     const plIds = store.get('globalPracticeList') || [];
     const practiceVideos = allVideos.filter(v => plIds.includes(v.id));
-    const allLabel = lang === 'tr' ? 'Tüm Etiketler' : 'All Tags';
+    const allLabel = translations[langCode]?.allTags || (langCode === 'tr' ? 'Tüm Etiketler' : 'All Tags');
+    const currentVal = sel.value;
 
     const tags = [...new Set(
         practiceVideos.flatMap(v => {
@@ -184,6 +187,7 @@ export function populatePracticeListTagSelect() {
 
     sel.innerHTML = `<option value="all">${allLabel}</option>` +
         tags.map(tag => `<option value="${tag}">${tag}</option>`).join('');
+    if (currentVal && currentVal !== 'all') sel.value = currentVal;
 }
 
 // ─────────────────────────────────────────────────────────────

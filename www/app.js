@@ -140,6 +140,11 @@ async function initializeApp() {
             if (store.get('currentView') === 'tagManager') renderTagManagerUI();
             if (store.get('currentView') === 'dashboard') renderDashboard();
             if (store.get('currentView') === 'shows') renderShows();
+            if (store.get('currentView') === 'practiceList') {
+                populatePracticeListInstructorSelect();
+                populatePracticeListTagSelect();
+                renderPracticeListView();
+            }
             if (store.get('currentView') === 'instructorsList') {
                 import('./instructorProfile.js').then(({ renderInstructorsList }) => renderInstructorsList());
             }

@@ -83,22 +83,6 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
         startPracticeBtn.innerHTML = `${icon('target', { size: 15 })} ${currentLang === 'tr' ? 'Pratik Başlat' : 'Start Practice'}`;
     }
 
-    const viewToggleBtn = document.getElementById('btn-view-toggle');
-    if (viewToggleBtn) {
-        const viewMode = store.get('viewMode');
-        viewToggleBtn.innerHTML = viewMode === 'list'
-            ? `${icon('grid', { size: 15 })} Grid`
-            : `${icon('list', { size: 15 })} ${currentLang === 'tr' ? 'Liste' : 'List'}`;
-    }
-
-    const plViewToggleBtn = document.getElementById('pl-btn-view-toggle');
-    if (plViewToggleBtn) {
-        const viewMode = store.get('viewMode');
-        plViewToggleBtn.innerHTML = viewMode === 'list'
-            ? `${icon('grid', { size: 15 })} Grid`
-            : `${icon('list', { size: 15 })} ${currentLang === 'tr' ? 'Liste' : 'List'}`;
-    }
-
     // ── Filtre dropdown seçenekleri ───────────────────────────
     const allRolesOpt = document.getElementById('opt-all-roles');
     if (allRolesOpt) allRolesOpt.innerText = lang.allRoles;
@@ -158,6 +142,82 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
 
     const btnClearPL = document.getElementById('btn-clear-practice-list');
     if (btnClearPL) btnClearPL.innerHTML = `${icon('trash-2', { size: 15, color: '#ef4444' })} ${lang.btnClearPracticeList}`;
+
+    // ── Pratik Listem sayfası dil güncellemeleri ─────────────
+    const plSearchInput = document.getElementById('practice-list-search-input');
+    if (plSearchInput) plSearchInput.placeholder = lang.searchPlaceholder;
+
+    const plSearchBtn = document.getElementById('practice-list-search-btn');
+    if (plSearchBtn) plSearchBtn.innerHTML = `${icon('search', { size: 15 })} ${lang.searchBtn}`;
+
+    const plStartPracticeBtn = document.getElementById('pl-btn-start-practice');
+    if (plStartPracticeBtn) {
+        plStartPracticeBtn.innerHTML = `${icon('target', { size: 15 })} ${currentLang === 'tr' ? 'Pratik Başlat' : 'Start Practice'}`;
+    }
+
+    const plViewToggleBtn = document.getElementById('pl-btn-view-toggle');
+    if (plViewToggleBtn) {
+        const viewMode = store.get('viewMode');
+        plViewToggleBtn.innerHTML = viewMode === 'list'
+            ? `${icon('grid', { size: 15 })} Grid`
+            : `${icon('list', { size: 15 })} ${currentLang === 'tr' ? 'Liste' : 'List'}`;
+    }
+
+    // Liste butonunu (koleksiyon/favoriler sayfası) da dile göre güncelle
+    const viewToggleBtn = document.getElementById('btn-view-toggle');
+    if (viewToggleBtn) {
+        const viewMode = store.get('viewMode');
+        viewToggleBtn.innerHTML = viewMode === 'list'
+            ? `${icon('grid', { size: 15 })} Grid`
+            : `${icon('list', { size: 15 })} ${currentLang === 'tr' ? 'Liste' : 'List'}`;
+    }
+
+    // Pratik Listem filtre dropdown'ları
+    const plRoleSelect = document.getElementById('pl-filter-role-select');
+    if (plRoleSelect) {
+        plRoleSelect.options[0].innerText = lang.allRoles;
+        if (plRoleSelect.options[1]) plRoleSelect.options[1].innerText = lang.leader;
+        if (plRoleSelect.options[2]) plRoleSelect.options[2].innerText = lang.follower;
+        if (plRoleSelect.options[3]) plRoleSelect.options[3].innerText = lang.both;
+    }
+
+    const plInstructorSelect = document.getElementById('pl-filter-instructor-select');
+    if (plInstructorSelect && plInstructorSelect.options[0]) {
+        plInstructorSelect.options[0].innerText = lang.allInstructors;
+    }
+
+    const plTagSelect = document.getElementById('pl-filter-tag-select');
+    if (plTagSelect && plTagSelect.options[0]) {
+        plTagSelect.options[0].innerText = lang.allTags;
+    }
+
+    const plDateSelect = document.getElementById('pl-filter-date-select');
+    if (plDateSelect) {
+        plDateSelect.options[0].innerText = lang.allDates;
+        if (plDateSelect.options[1]) plDateSelect.options[1].innerText = currentLang === 'tr' ? 'Bu Hafta' : 'This Week';
+        if (plDateSelect.options[2]) plDateSelect.options[2].innerText = currentLang === 'tr' ? 'Bu Ay' : 'This Month';
+        if (plDateSelect.options[3]) plDateSelect.options[3].innerText = currentLang === 'tr' ? 'Son 3 Ay' : 'Last 3 Months';
+    }
+
+    const plPlatformSelect = document.getElementById('pl-filter-platform-select');
+    if (plPlatformSelect) {
+        plPlatformSelect.options[0].innerText = lang.allPlatforms;
+    }
+
+    const plLearningSelect = document.getElementById('pl-filter-learning-status-select');
+    if (plLearningSelect) {
+        plLearningSelect.options[0].innerText = lang.allLearningStatuses;
+        if (plLearningSelect.options[1]) plLearningSelect.options[1].innerText = lang.learningNew;
+        if (plLearningSelect.options[2]) plLearningSelect.options[2].innerText = lang.learningActive;
+        if (plLearningSelect.options[3]) plLearningSelect.options[3].innerText = lang.learningMastered;
+    }
+
+    // Pratik Listem sayaç etiketi
+    const plCountEl = document.getElementById('practice-list-total-count');
+    if (plCountEl && plCountEl.textContent) {
+        const count = plCountEl.textContent.split(':')[1]?.trim() || '0';
+        plCountEl.textContent = `${lang.practiceListCountLabel} ${count}`;
+    }
 
     const editTagsTitle = document.getElementById('edit-tags-title');
     if (editTagsTitle) editTagsTitle.innerHTML = `${icon('pencil', { size: 16, color: '#c026d3' })} ${lang.editTagsTitle}`;
