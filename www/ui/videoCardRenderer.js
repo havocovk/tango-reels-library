@@ -97,7 +97,8 @@ export function renderVideoList(videos, config) {
         deleteVideoFlow, openVideoModal, updateLearningStatus
     } = config;
 
-    const videoGrid = document.getElementById('video-grid');
+    const containerId = config.containerId || 'video-grid';
+    const videoGrid = document.getElementById(containerId);
     const lang = langPack[currentLang];
 
     videoGrid.classList.add('video-list-mode');
@@ -223,7 +224,7 @@ document.addEventListener('click', () => {
 // renderVideoCards  (Grid görünümü — ana fonksiyon)
 // ─────────────────────────────────────────────────────────────
 export function renderVideoCards(videos, config) {
-    if (store.get('viewMode') === 'list' && !config.containerId) {
+    if (store.get('viewMode') === 'list') {
         renderVideoList(videos, config);
         return;
     }
