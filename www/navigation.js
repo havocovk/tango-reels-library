@@ -14,7 +14,8 @@ import { getAllUniqueTagsPool } from './tangoFilters.js';
 import { renderStatsPanel, renderTagManagerUI, fetchVideos, renderDashboard, renderShows } from './dataManager.js';
 import { store } from './store.js';
 import { clearActivePlaylist } from './playlistManager.js';
-import { renderInstructorProfile, renderInstructorsList } from './instructorProfile.js';
+import { renderInstructorProfile } from './instructorProfile.js';
+import { renderInstructorsList } from './instructorsList.js';
 import { writeUrlState, clearUrlState } from './urlState.js';
 import { ensureViewLoaded, ensureModalLoaded } from './modalLoader.js'; // Adim 3.4
 
