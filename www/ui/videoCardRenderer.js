@@ -7,7 +7,8 @@ import { openAnnotationModal } from '../annotationManager.js';
 import { openLinkManager, buildChainNavHtml } from '../chainManager.js';
 import { openInstructorProfile } from '../instructorProfile.js';
 import { icon } from '../icons.js';
-import { escapeHtml } from '../utils.js'; // Adim 1.2
+import { escapeHtml } from '../utils.js';
+import { togglePracticeList } from '../practiceListManager.js';
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -319,6 +320,7 @@ export function renderVideoCards(videos, config) {
         const defaultCover = 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?q=80&w=600';
         const coverImg = video.cover_url || defaultCover;
         const isFav = favs.includes(video.id);
+        const isInPracticeList = (store.get('globalPracticeList') || []).includes(video.id);
         const noteText = video.notes
             ? (video.notes.length > 60 ? video.notes.substring(0, 60) + '...' : video.notes)
             : lang.addNote;
@@ -365,8 +367,8 @@ export function renderVideoCards(videos, config) {
         card.innerHTML = `
             <div class="video-cover-link">
                 <div class="video-cover-container" style="background-image:url('${coverImg}');">
-                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}" aria-label="${isFav ? (currentLang === 'tr' ? 'Pratik listesinden çıkar' : 'Remove from practice list') : (currentLang === 'tr' ? 'Pratik listesine ekle' : 'Add to practice list')}" aria-pressed="${isFav}">${icon('star', { size: 18 })}</button>
-                    <button class="playlist-add-btn" data-video-id="${video.id}" title="${currentLang === 'tr' ? 'Listeye Ekle' : 'Add to List'}" aria-label="${currentLang === 'tr' ? 'Playlist\'e ekle' : 'Add to playlist'}">${icon('clipboard-list', { size: 15, color: '#f59e0b' })}</button>
+                    <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}" aria-label="${isFav ? (currentLang === 'tr' ? 'Favorilerden çıkar' : 'Remove from favorites') : (currentLang === 'tr' ? 'Favorilere ekle' : 'Add to favorites')}" aria-pressed="${isFav}">${icon('star', { size: 18 })}</button>
+                    <button class="practice-list-btn ${isInPracticeList ? 'active' : ''}" data-id="${video.id}" aria-label="${isInPracticeList ? (currentLang === 'tr' ? 'Pratik listesinden çıkar' : 'Remove from practice list') : (currentLang === 'tr' ? 'Pratik listesine ekle' : 'Add to practice list')}" aria-pressed="${isInPracticeList}" title="${currentLang === 'tr' ? 'Pratik Listesi' : 'Practice List'}">${icon('dumbbell', { size: 15 })}</button>
                     <a ${actionClickAttr}>
                         <div class="play-overlay"><span class="play-icon">${icon('play', { size: 28, color: '#4ade80', fill: '#4ade80' })}</span></div>
                     </a>
@@ -417,11 +419,14 @@ export function renderVideoCards(videos, config) {
             });
         }
 
-        const playlistBtn = card.querySelector('.playlist-add-btn');
-        if (playlistBtn && showPlaylistDropdown) {
-            playlistBtn.addEventListener('click', (e) => {
+        const practiceListBtn = card.querySelector('.practice-list-btn');
+        if (practiceListBtn) {
+            practiceListBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                showPlaylistDropdown(video.id, playlistBtn);
+                togglePracticeList(video.id);
+                // Butonu anında güncelle (store subscription olmadan hızlı feedback)
+                const nowInList = (store.get('globalPracticeList') || []).includes(video.id);
+                practiceListBtn.classList.toggle('active', nowInList);
             });
         }
 

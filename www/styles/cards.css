@@ -203,6 +203,41 @@
     box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
 }
 
+/* ── Pratik Listesi (Dumbbell) Butonu ── */
+.practice-list-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(11, 8, 19, 0.7);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(192, 38, 211, 0.3);
+    color: rgba(255, 255, 255, 0.4);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.practice-list-btn:hover {
+    transform: scale(1.1);
+    color: #ff007f;
+    background: rgba(11, 8, 19, 0.9);
+    border-color: rgba(255, 0, 127, 0.5);
+}
+
+.practice-list-btn.active {
+    color: #ff007f;
+    background: rgba(11, 8, 19, 0.8);
+    border-color: rgba(255, 0, 127, 0.5);
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.25);
+}
+
 .info-msg {
     grid-column: 1 / -1;
     text-align: center;
