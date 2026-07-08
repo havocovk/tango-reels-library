@@ -23,11 +23,11 @@ export const CUMULATIVE_PRACTICE_BADGES = [
 ];
 
 export const COLLECTION_BADGES = [
-    { id: 'baslangic',        nameTr: 'Başlangıç',        nameEn: 'Beginner',    threshold: 10,  iconName: 'sprout',  color: '#4ade80' },
-    { id: 'koleksiyoner',     nameTr: 'Koleksiyoner',     nameEn: 'Collector',   threshold: 25,  iconName: 'library', color: '#00f0ff' },
-    { id: 'arsivci',          nameTr: 'Arşivci',          nameEn: 'Archivist',   threshold: 50,  iconName: 'archive', color: '#f59e0b' },
-    { id: 'usta-koleksiyoner',nameTr: 'Usta Koleksiyoner',nameEn: 'Expert',      threshold: 100, iconName: 'trophy',  color: '#ff007f' },
-    { id: 'efsane',           nameTr: 'Efsane',           nameEn: 'Legend',      threshold: 200, iconName: 'crown',   color: '#c026d3' },
+    { id: 'baslangic',         nameTr: 'Başlangıç',         nameEn: 'Beginner',    threshold: 25,  iconName: 'sprout',  color: '#4ade80' },
+    { id: 'koleksiyoner',      nameTr: 'Koleksiyoner',      nameEn: 'Collector',   threshold: 100, iconName: 'library', color: '#00f0ff' },
+    { id: 'arsivci',           nameTr: 'Arşivci',           nameEn: 'Archivist',   threshold: 250, iconName: 'archive', color: '#f59e0b' },
+    { id: 'usta-koleksiyoner', nameTr: 'Usta Koleksiyoner', nameEn: 'Expert',      threshold: 500, iconName: 'trophy',  color: '#ff007f' },
+    { id: 'efsane',            nameTr: 'Efsane',            nameEn: 'Legend',      threshold: 1000,iconName: 'crown',   color: '#c026d3' },
 ];
 
 export const MASTERY_BADGES = [
@@ -81,12 +81,12 @@ export function computeBadgeData(videos, monthlyStats) {
 // ─────────────────────────────────────────────────────────────
 function badgeHtml(badge, currentLang) {
     const name = currentLang === 'tr' ? badge.nameTr : badge.nameEn;
-    const color = badge.earned ? badge.color : '#334155';
-    const textColor = badge.earned ? badge.color : '#475569';
-    const opacity = badge.earned ? '1' : '0.45';
+    const color = badge.earned ? badge.color : '#64748b';
+    const textColor = badge.earned ? badge.color : '#94a3b8';
+    const opacity = badge.earned ? '1' : '0.85';
     const glowStyle = badge.earned
         ? `box-shadow: 0 0 14px ${badge.color}55; border-color: ${badge.color}66;`
-        : 'border-color: rgba(255,255,255,0.07);';
+        : 'border-color: rgba(255,255,255,0.12);';
 
     return `
         <div class="badge-item ${badge.earned ? 'badge-earned' : 'badge-locked'}"
@@ -102,7 +102,7 @@ function badgeHtml(badge, currentLang) {
                         text-align:center; line-height:1.3; max-width:72px;">
                 ${name}
             </div>
-            <div style="font-size:0.6rem; color:${badge.earned ? '#4ade80' : '#334155'};
+            <div style="font-size:0.6rem; color:${badge.earned ? '#4ade80' : '#64748b'};
                         font-weight:600;">
                 ${badge.earned
                     ? (currentLang === 'tr' ? '✓ Kazanıldı' : '✓ Earned')
