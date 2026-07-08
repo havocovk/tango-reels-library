@@ -1,5 +1,6 @@
-// badgeSystem.js - Rozet & Hedef Takibi (Adım 10)
+// badgeSystem.js - Rozet & Hedef Takibi
 // Tamamen istemci taraflı — DB'den gelen verilerle çalışır
+// ✅ GÜNCELLEME: Pratik (8 rozet, max 200), Koleksiyon (8 rozet, max 1000), Ustalık (8 rozet, max 150)
 
 import { icon } from './icons.js';
 
@@ -8,34 +9,46 @@ import { icon } from './icons.js';
 // ─────────────────────────────────────────────────────────────
 
 export const MONTHLY_BADGES = [
-    { id: 'aktif',        nameTr: 'Aktif',         nameEn: 'Active',      threshold: 2,  iconName: 'zap',    color: '#f59e0b' },
-    { id: 'kararli',      nameTr: 'Kararlı',       nameEn: 'Committed',   threshold: 6,  iconName: 'flame',  color: '#ff007f' },
-    { id: 'disiplinli',   nameTr: 'Disiplinli',    nameEn: 'Disciplined', threshold: 10, iconName: 'target', color: '#c026d3' },
-    { id: 'ay-sampiyonu', nameTr: 'Ay Şampiyonu',  nameEn: 'Champion',    threshold: 13, iconName: 'trophy', color: '#00f0ff' },
+    { id: 'aktif',        nameTr: 'Aktif',        nameEn: 'Active',      threshold: 2,  iconName: 'zap',    color: '#f59e0b' },
+    { id: 'kararli',      nameTr: 'Kararlı',      nameEn: 'Committed',   threshold: 6,  iconName: 'flame',  color: '#ff007f' },
+    { id: 'disiplinli',   nameTr: 'Disiplinli',   nameEn: 'Disciplined', threshold: 10, iconName: 'target', color: '#c026d3' },
+    { id: 'ay-sampiyonu', nameTr: 'Ay Şampiyonu', nameEn: 'Champion',    threshold: 13, iconName: 'trophy', color: '#00f0ff' },
 ];
 
+// 8 rozet — kümülatif — max 200 pratik
 export const CUMULATIVE_PRACTICE_BADGES = [
-    { id: 'ilk-hareket', nameTr: 'İlk Hareket', nameEn: 'First Move',   threshold: 5,  iconName: 'play',     color: '#4ade80' },
-    { id: 'isinma',      nameTr: 'Isınma',       nameEn: 'Warm Up',      threshold: 15, iconName: 'activity', color: '#00f0ff' },
-    { id: 'ritim',       nameTr: 'Ritim',         nameEn: 'Rhythm',       threshold: 25, iconName: 'repeat',   color: '#ff007f' },
-    { id: 'akis',        nameTr: 'Akış',           nameEn: 'Flow',         threshold: 50, iconName: 'flame',    color: '#f59e0b' },
-    { id: 'dans-ustasi', nameTr: 'Dans Ustası',   nameEn: 'Dance Master', threshold: 70, iconName: 'medal',    color: '#c026d3' },
+    { id: 'ilk-hareket',  nameTr: 'İlk Hareket',  nameEn: 'First Move',    threshold: 5,   iconName: 'play',         color: '#4ade80' },
+    { id: 'isinma',       nameTr: 'Isınma',        nameEn: 'Warm Up',       threshold: 15,  iconName: 'activity',     color: '#00f0ff' },
+    { id: 'ritim',        nameTr: 'Ritim',         nameEn: 'Rhythm',        threshold: 30,  iconName: 'repeat',       color: '#f59e0b' },
+    { id: 'akis',         nameTr: 'Akış',          nameEn: 'Flow',          threshold: 50,  iconName: 'flame',        color: '#ff007f' },
+    { id: 'kararli-dans', nameTr: 'Kararlı Dans',  nameEn: 'Steady Dancer', threshold: 75,  iconName: 'footprints',   color: '#c026d3' },
+    { id: 'ritim-ustasi', nameTr: 'Ritim Ustası',  nameEn: 'Rhythm Master', threshold: 110, iconName: 'music',        color: '#00f0ff' },
+    { id: 'danisman',     nameTr: 'Danışman',      nameEn: 'Advisor',       threshold: 150, iconName: 'award',        color: '#ff007f' },
+    { id: 'dans-ustasi',  nameTr: 'Dans Ustası',   nameEn: 'Dance Master',  threshold: 200, iconName: 'medal',        color: '#c026d3' },
 ];
 
+// 8 rozet — şu anki koleksiyon boyutu — max 1000 video
 export const COLLECTION_BADGES = [
-    { id: 'baslangic',         nameTr: 'Başlangıç',         nameEn: 'Beginner',    threshold: 25,  iconName: 'sprout',  color: '#4ade80' },
-    { id: 'koleksiyoner',      nameTr: 'Koleksiyoner',      nameEn: 'Collector',   threshold: 100, iconName: 'library', color: '#00f0ff' },
-    { id: 'arsivci',           nameTr: 'Arşivci',           nameEn: 'Archivist',   threshold: 250, iconName: 'archive', color: '#f59e0b' },
-    { id: 'usta-koleksiyoner', nameTr: 'Usta Koleksiyoner', nameEn: 'Expert',      threshold: 500, iconName: 'trophy',  color: '#ff007f' },
-    { id: 'efsane',            nameTr: 'Efsane',            nameEn: 'Legend',      threshold: 1000,iconName: 'crown',   color: '#c026d3' },
+    { id: 'merakli',            nameTr: 'Meraklı',           nameEn: 'Curious',         threshold: 10,   iconName: 'search',   color: '#4ade80' },
+    { id: 'baslangic',          nameTr: 'Başlangıç',         nameEn: 'Beginner',         threshold: 25,   iconName: 'sprout',   color: '#00f0ff' },
+    { id: 'toplayici',          nameTr: 'Toplayıcı',         nameEn: 'Gatherer',         threshold: 50,   iconName: 'package',  color: '#f59e0b' },
+    { id: 'koleksiyoner',       nameTr: 'Koleksiyoner',      nameEn: 'Collector',        threshold: 100,  iconName: 'library',  color: '#ff007f' },
+    { id: 'kütüphaneci',        nameTr: 'Kütüphaneci',       nameEn: 'Librarian',        threshold: 200,  iconName: 'book',     color: '#c026d3' },
+    { id: 'arsivci',            nameTr: 'Arşivci',           nameEn: 'Archivist',        threshold: 350,  iconName: 'archive',  color: '#00f0ff' },
+    { id: 'usta-koleksiyoner',  nameTr: 'Usta Koleksiyoner', nameEn: 'Expert Collector', threshold: 600,  iconName: 'trophy',   color: '#ff007f' },
+    { id: 'efsane',             nameTr: 'Efsane',            nameEn: 'Legend',           threshold: 1000, iconName: 'crown',    color: '#c026d3' },
 ];
 
+// 8 rozet — kümülatif ustalaşılan kombinasyon sayısı — max 150
 export const MASTERY_BADGES = [
-    { id: 'ilk-ustalik',   nameTr: 'İlk Ustalık',   nameEn: 'First Mastery', threshold: 1,  iconName: 'star',      color: '#f59e0b' },
-    { id: 'repertuar',     nameTr: 'Repertuar',      nameEn: 'Repertoire',    threshold: 5,  iconName: 'book-open', color: '#4ade80' },
-    { id: 'teknik',        nameTr: 'Teknik',         nameEn: 'Technical',     threshold: 10, iconName: 'layers',    color: '#00f0ff' },
-    { id: 'virtuoz',       nameTr: 'Virtüöz',        nameEn: 'Virtuoso',      threshold: 25, iconName: 'gem',       color: '#ff007f' },
-    { id: 'tango-maestro', nameTr: 'Tango Maestro',  nameEn: 'Tango Maestro', threshold: 50, iconName: 'crown',     color: '#c026d3' },
+    { id: 'ilk-ustalik',    nameTr: 'İlk Ustalık',    nameEn: 'First Mastery',  threshold: 1,   iconName: 'star',      color: '#f59e0b' },
+    { id: 'repertuar',      nameTr: 'Repertuar',       nameEn: 'Repertoire',     threshold: 5,   iconName: 'book-open', color: '#4ade80' },
+    { id: 'teknik',         nameTr: 'Teknik',          nameEn: 'Technical',      threshold: 10,  iconName: 'layers',    color: '#00f0ff' },
+    { id: 'gelisen-dans',   nameTr: 'Gelişen Dans',    nameEn: 'Growing Dance',  threshold: 20,  iconName: 'trending-up', color: '#f59e0b' },
+    { id: 'virtuoz',        nameTr: 'Virtüöz',         nameEn: 'Virtuoso',       threshold: 35,  iconName: 'gem',       color: '#ff007f' },
+    { id: 'ustalasmiş',     nameTr: 'Ustalaşmış',      nameEn: 'Seasoned',       threshold: 55,  iconName: 'shield',    color: '#c026d3' },
+    { id: 'sahne-sanatcisi',nameTr: 'Sahne Sanatçısı', nameEn: 'Stage Artist',   threshold: 90,  iconName: 'music-4',   color: '#00f0ff' },
+    { id: 'tango-maestro',  nameTr: 'Tango Maestro',   nameEn: 'Tango Maestro',  threshold: 150, iconName: 'crown',     color: '#c026d3' },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -69,10 +82,10 @@ export function computeBadgeData(videos, monthlyStats) {
         totalPracticed,
         totalVideos,
         masteredCount,
-        monthlyBadges:     MONTHLY_BADGES.map(b => ({ ...b, earned: thisMonthCount >= b.threshold })),
-        practicesBadges:   CUMULATIVE_PRACTICE_BADGES.map(b => ({ ...b, earned: totalPracticed >= b.threshold })),
-        collectionBadges:  COLLECTION_BADGES.map(b => ({ ...b, earned: totalVideos >= b.threshold })),
-        masteryBadges:     MASTERY_BADGES.map(b => ({ ...b, earned: masteredCount >= b.threshold })),
+        monthlyBadges:    MONTHLY_BADGES.map(b => ({ ...b, earned: thisMonthCount >= b.threshold })),
+        practicesBadges:  CUMULATIVE_PRACTICE_BADGES.map(b => ({ ...b, earned: totalPracticed >= b.threshold })),
+        collectionBadges: COLLECTION_BADGES.map(b => ({ ...b, earned: totalVideos >= b.threshold })),
+        masteryBadges:    MASTERY_BADGES.map(b => ({ ...b, earned: masteredCount >= b.threshold })),
     };
 }
 
@@ -142,10 +155,10 @@ export function renderBadgePanel(badgeData, currentLang) {
     const t = currentLang === 'tr';
 
     const monthName = new Date().toLocaleString(t ? 'tr-TR' : 'en-US', { month: 'long' });
-    const monthStatLine = `${t ? 'Bu ay' : 'This month'}: ${badgeData.thisMonthCount} ${t ? 'pratik' : 'sessions'}`;
+    const monthStatLine    = `${t ? 'Bu ay' : 'This month'}: ${badgeData.thisMonthCount} ${t ? 'pratik' : 'sessions'}`;
     const practiceStatLine = `${t ? 'Toplam' : 'Total'}: ${badgeData.totalPracticed} ${t ? 'pratik' : 'sessions'}`;
     const collectionStatLine = `${t ? 'Koleksiyon' : 'Collection'}: ${badgeData.totalVideos} ${t ? 'video' : 'videos'}`;
-    const masteryStatLine = `${t ? 'Ustalaşılan' : 'Mastered'}: ${badgeData.masteredCount} ${t ? 'kombinasyon' : 'combinations'}`;
+    const masteryStatLine  = `${t ? 'Ustalaşılan' : 'Mastered'}: ${badgeData.masteredCount} ${t ? 'kombinasyon' : 'combinations'}`;
 
     container.innerHTML = `
         <div style="
