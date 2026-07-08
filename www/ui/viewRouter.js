@@ -1,4 +1,4 @@
-// ui/navigation.js - Görünüm geçişi (view switch)
+// ui/viewRouter.js - Görünüm geçişi (view switch)
 // ✅ GÜNCELLEME (Adım 2.3): practiceSession view case eklendi
 // ✅ GÜNCELLEME: instructorsList view case eklendi
 // ✅ GÜNCELLEME: favorites view'ında btn-start-practice gizlenir
