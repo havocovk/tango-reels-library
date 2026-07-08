@@ -21,7 +21,7 @@ import { renderFormChips } from './formHandlers.js';
 import {
     initVideoHandlers, toggleFavorite, applyFiltersAndSearch, setVisibleCount,
     incrementVisibleCount, deleteVideoFlow, setVideoHandlersGlobalData, setupInfiniteScroll,
-    toggleViewMode, pickRandomVideo
+    toggleViewMode, pickRandomVideo, resetPracticeCount
 } from './videoHandlers.js';
 import {
     initInstructorHandlers, handleInstructorSubmit, deleteInstructor,

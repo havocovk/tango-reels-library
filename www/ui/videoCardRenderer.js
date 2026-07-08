@@ -9,6 +9,7 @@ import { openInstructorProfile } from '../instructorProfile.js';
 import { icon } from '../icons.js';
 import { escapeHtml } from '../utils.js';
 import { togglePracticeList } from '../practiceListManager.js';
+import { resetPracticeCount } from '../videoHandlers.js';
 
 // ─────────────────────────────────────────────────────────────
 // getLearningStatusBadgeHtml
@@ -409,6 +410,10 @@ export function renderVideoCards(videos, config) {
                                 ${icon('link-2', { size: 13, color: '#00f0ff' })}
                                 <span>${currentLang === 'tr' ? 'Kombinasyon Zinciri' : 'Chain Links'}</span>
                             </button>
+                            <button class="card-more-item card-reset-count-btn">
+                                ${icon('refresh-cw', { size: 13, color: '#4ade80' })}
+                                <span>${currentLang === 'tr' ? 'Sayacı Sıfırla' : 'Reset Counter'}</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -482,6 +487,15 @@ export function renderVideoCards(videos, config) {
                 e.stopPropagation();
                 if (moreMenu) moreMenu.classList.add('d-none');
                 openLinkManager(video);
+            });
+        }
+
+        const resetCountBtn = card.querySelector('.card-reset-count-btn');
+        if (resetCountBtn) {
+            resetCountBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (moreMenu) moreMenu.classList.add('d-none');
+                resetPracticeCount(video.id);
             });
         }
 

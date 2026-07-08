@@ -3,6 +3,7 @@
 // ✅ GÜNCELLEME (Adım 3.2): applyFiltersAndSearch URL durumunu yazıyor
 // ✅ GÜNCELLEME (Adım 2.3): toggleFavorite ve updateLearningStatus offline destekli
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
+import { dbResetPracticeCount } from './db/videos.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
 import { getFilteredVideos } from './tangoFilters.js';
@@ -220,6 +221,35 @@ export function applyFiltersAndSearch() {
 
 export function setVisibleCount(count) { store.set('visibleCount', count); }
 export function incrementVisibleCount(inc) { store.set('visibleCount', store.get('visibleCount') + inc); }
+
+// ─────────────────────────────────────────────────────────────
+// resetPracticeCount — Adım 7
+// Videonun practice_count değerini 0'a sıfırlar.
+// ─────────────────────────────────────────────────────────────
+export async function resetPracticeCount(videoId) {
+    const lang = store.get('currentLang');
+    const msg      = lang === 'tr' ? 'Bu videonun çalışma sayacını sıfırlamak istiyor musun?' : 'Reset the practice counter for this video?';
+    const okText   = lang === 'tr' ? 'Evet, Sıfırla' : 'Yes, Reset';
+    const cancelTxt = lang === 'tr' ? 'İptal' : 'Cancel';
+
+    const confirmed = await showCustomConfirm(msg, okText, cancelTxt);
+    if (!confirmed) return;
+
+    try {
+        await dbResetPracticeCount(videoId);
+        store.updateVideoLocally(videoId, { practice_count: 0 });
+        showToast(
+            lang === 'tr' ? 'Sayaç sıfırlandı' : 'Counter reset',
+            'success'
+        );
+        applyFiltersAndSearch();
+    } catch (err) {
+        showToast(
+            lang === 'tr' ? 'Sıfırlama hatası!' : 'Reset failed!',
+            'error'
+        );
+    }
+}
 
 export async function deleteVideoFlow(videoId) {
     const lang = translations[currentLang];
