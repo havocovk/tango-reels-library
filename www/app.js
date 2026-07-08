@@ -169,14 +169,23 @@ async function initializeApp() {
         renderPracticeListView();
     });
 
-    // ── Pratik Başlat — ADIM 4: SM-2 devre dışı, ADIM 5'te Pratik Listesi'ne bağlanacak ──
+    // ── Pratik Başlat — ADIM 5: Pratik Listesi'ndeki videoları kullan ──
     document.getElementById('btn-start-practice')?.addEventListener('click', () => {
         const lang = store.get('currentLang');
-        showCustomAlert(
-            lang === 'tr'
-                ? 'Pratik Listesi henüz hazırlanıyor. Lütfen bekleyin.'
-                : 'Practice list feature is coming soon.'
+        const allVideos = store.get('globalVideos') || [];
+        const plIds = store.get('globalPracticeList') || [];
+        const practiceVideos = allVideos.filter(
+            v => plIds.includes(v.id) && (!v.content_type || v.content_type === 'combination')
         );
+        if (practiceVideos.length === 0) {
+            showCustomAlert(
+                lang === 'tr'
+                    ? 'Pratik listende video yok. Önce kartlardaki halter ikonuna basarak listeye video ekle.'
+                    : 'Your practice list is empty. Add videos using the dumbbell icon on the cards.'
+            );
+            return;
+        }
+        startPracticeSession(practiceVideos);
     });
 
     // ── Tüm modül başlatıcıları ─────────────────────────────────
