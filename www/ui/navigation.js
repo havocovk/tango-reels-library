@@ -1,6 +1,7 @@
 // ui/navigation.js - Görünüm geçişi (view switch)
 // ✅ GÜNCELLEME (Adım 2.3): practiceSession view case eklendi
 // ✅ GÜNCELLEME: instructorsList view case eklendi
+// ✅ GÜNCELLEME: favorites view'ında btn-start-practice gizlenir
 import { translations } from '../i18n.js';
 import { updateSmartFilenameAssistant } from './language.js';
 
@@ -30,7 +31,7 @@ export function switchView(viewName, state, functions) {
     const tagView                 = document.getElementById('view-tag-manager-container');
     const practiceSessionView     = document.getElementById('view-practice-session-container');
     const instructorProfileView   = document.getElementById('view-instructor-profile-container');
-    const dashboardView           = document.getElementById('view-dashboard-container'); // Adim 4.1
+    const dashboardView           = document.getElementById('view-dashboard-container');
     const showsView               = document.getElementById('view-shows-container');
     const practiceListView        = document.getElementById('view-practice-list-container');
 
@@ -56,6 +57,16 @@ export function switchView(viewName, state, functions) {
     } else if (viewName === 'library' || viewName === 'favorites') {
         if (libraryView) libraryView.classList.remove('d-none');
         document.getElementById(`menu-${viewName}`)?.classList.add('active');
+
+        // ✅ Favoriler view'ında Pratik Başlat butonunu gizle, Library'de göster
+        const startPracticeBtn = document.getElementById('btn-start-practice');
+        if (startPracticeBtn) {
+            if (viewName === 'favorites') {
+                startPracticeBtn.style.display = 'none';
+            } else {
+                startPracticeBtn.style.display = '';
+            }
+        }
 
         if (viewName === 'favorites') {
             if (clearFavBtnContainer) clearFavBtnContainer.classList.remove('d-none');
@@ -106,7 +117,6 @@ export function switchView(viewName, state, functions) {
 
     } else if (viewName === 'instructorsList') {
         // ✅ YENİ: Eğitmenler listesi — instructor-profile-container'ı kullanır
-        // (ayrı bir HTML şablonu gerektirmez, aynı container paylaşılır)
         if (instructorProfileView) instructorProfileView.classList.remove('d-none');
         if (clearFavBtnContainer) clearFavBtnContainer.classList.add('d-none');
         if (instructorsMenuBtn) instructorsMenuBtn.classList.add('active');

@@ -48,7 +48,7 @@ import { setupStoreSubscriptions } from './uiSubscriptions.js';
 import { getDueVideos } from './learning/spacedRepetition.js';
 import { initPracticeSession, startPracticeSession } from './practiceSession.js';
 import { initPlaylists } from './playlistManager.js';
-import { initPracticeListModule, renderPracticeListView, bindPracticeListSearch, clearPracticeList } from './practiceListManager.js';
+import { initPracticeListModule, renderPracticeListView, bindPracticeListSearch, clearPracticeList, populatePracticeListInstructorSelect, populatePracticeListTagSelect } from './practiceListManager.js';
 import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
 import { initChainManager, loadAllVideoLinks } from './chainManager.js';
@@ -165,6 +165,8 @@ async function initializeApp() {
     document.getElementById('menu-practice-list')?.addEventListener('click', () => {
         callSwitchView('practiceList');
         syncBottomNavActiveState('practiceList');
+        populatePracticeListInstructorSelect();
+        populatePracticeListTagSelect();
         bindPracticeListSearch();
         renderPracticeListView();
     });
@@ -385,6 +387,40 @@ async function initializeApp() {
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
     document.getElementById('btn-clear-practice-list')?.addEventListener('click', clearPracticeList);
+
+    // ── Pratik Listem — Pratik Başlat butonu ───────────────────
+    document.getElementById('pl-btn-start-practice')?.addEventListener('click', () => {
+        const lang = store.get('currentLang');
+        const allVideos = store.get('globalVideos') || [];
+        const plIds = store.get('globalPracticeList') || [];
+        const practiceVideos = allVideos.filter(
+            v => plIds.includes(v.id) && (!v.content_type || v.content_type === 'combination')
+        );
+        if (practiceVideos.length === 0) {
+            showCustomAlert(
+                lang === 'tr'
+                    ? 'Pratik listende video yok. Önce kartlardaki halter ikonuna basarak listeye video ekle.'
+                    : 'Your practice list is empty. Add videos using the dumbbell icon on the cards.'
+            );
+            return;
+        }
+        startPracticeSession(practiceVideos);
+    });
+
+    // ── Pratik Listem — Grid/Liste toggle ──────────────────────
+    document.getElementById('pl-btn-view-toggle')?.addEventListener('click', () => {
+        const current = store.get('viewMode');
+        const next = current === 'grid' ? 'list' : 'grid';
+        store.set('viewMode', next);
+        const btn = document.getElementById('pl-btn-view-toggle');
+        if (btn) {
+            const lang = store.get('currentLang');
+            btn.innerHTML = next === 'list'
+                ? `${icon('grid', { size: 15 })} Grid`
+                : `${icon('list', { size: 15 })} ${lang === 'tr' ? 'Liste' : 'List'}`;
+        }
+        renderPracticeListView();
+    });
 
     // ── Etiket yönetimi ─────────────────────────────────────────
     document.getElementById('tag-manager-merge-btn')?.addEventListener('click',   () => mergeSelectedTags());

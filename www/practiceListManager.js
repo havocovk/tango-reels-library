@@ -1,10 +1,12 @@
 // practiceListManager.js - Pratik Listesi modülü
 // Favorilerden bağımsız, ayrı bir pratik listesi yönetir.
+// ✅ GÜNCELLEME: Filtreler eklendi (rol, eğitmen, etiket, tarih, platform, öğrenme durumu)
 import { dbFetchPracticeList, dbAddToPracticeList, dbRemoveFromPracticeList, dbClearPracticeList } from './db/practiceList.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
+import { getFilteredVideos } from './tangoFilters.js';
 import { translations } from './i18n.js';
 
 // ─────────────────────────────────────────────────────────────
@@ -85,7 +87,7 @@ export async function clearPracticeList() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Render — Pratik Listesi sayfasını doldurur
+// Render — Pratik Listesi sayfasını doldurur (filtreli)
 // ─────────────────────────────────────────────────────────────
 export function renderPracticeListView() {
     const lang      = store.get('currentLang');
@@ -98,15 +100,18 @@ export function renderPracticeListView() {
         v => plIds.includes(v.id) && (!v.content_type || v.content_type === 'combination')
     );
 
-    // Arama filtresi
-    const searchInput = document.getElementById('practice-list-search-input');
-    const searchVal   = searchInput ? searchInput.value.trim().toLowerCase() : '';
-    const filtered    = searchVal
-        ? practiceVideos.filter(v =>
-            [v.instructor_name, v.tags, v.notes, v.partner_name]
-                .filter(Boolean).join(' ').toLowerCase().includes(searchVal)
-        )
-        : practiceVideos;
+    // ── Filtre değerlerini oku ──────────────────────────────────
+    const searchInput  = document.getElementById('practice-list-search-input');
+    const aramaMetni   = searchInput ? searchInput.value.trim() : '';
+    const rol          = document.getElementById('pl-filter-role-select')?.value || 'all';
+    const egitmen      = document.getElementById('pl-filter-instructor-select')?.value || 'all';
+    const etiket       = document.getElementById('pl-filter-tag-select')?.value || 'all';
+    const tarih        = document.getElementById('pl-filter-date-select')?.value || 'all';
+    const platform     = document.getElementById('pl-filter-platform-select')?.value || 'all';
+    const learningStatus = document.getElementById('pl-filter-learning-status-select')?.value || 'all';
+
+    const filters = { aramaMetni, rol, egitmen, etiket, tarih, platform, learningStatus };
+    const filtered = getFilteredVideos(practiceVideos, filters, lang);
 
     // Sayaç
     const countEl = document.getElementById('practice-list-total-count');
@@ -146,14 +151,67 @@ export function renderPracticeListView() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Arama bağlantısı — view yüklenince bir kez bağlanır
+// Eğitmen dropdown'ını doldur
+// ─────────────────────────────────────────────────────────────
+export function populatePracticeListInstructorSelect() {
+    const sel = document.getElementById('pl-filter-instructor-select');
+    if (!sel) return;
+    const lang = store.get('currentLang');
+    const instructors = store.get('globalInstructors') || [];
+    const allLabel = lang === 'tr' ? 'Tüm Eğitmenler' : 'All Instructors';
+    sel.innerHTML = `<option value="all">${allLabel}</option>` +
+        instructors.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// Etiket dropdown'ını doldur
+// ─────────────────────────────────────────────────────────────
+export function populatePracticeListTagSelect() {
+    const sel = document.getElementById('pl-filter-tag-select');
+    if (!sel) return;
+    const lang = store.get('currentLang');
+    const allVideos = store.get('globalVideos') || [];
+    const plIds = store.get('globalPracticeList') || [];
+    const practiceVideos = allVideos.filter(v => plIds.includes(v.id));
+    const allLabel = lang === 'tr' ? 'Tüm Etiketler' : 'All Tags';
+
+    const tags = [...new Set(
+        practiceVideos.flatMap(v => {
+            if (!v.tags) return [];
+            try { return JSON.parse(v.tags); } catch { return []; }
+        })
+    )].sort();
+
+    sel.innerHTML = `<option value="all">${allLabel}</option>` +
+        tags.map(tag => `<option value="${tag}">${tag}</option>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// Arama + filtre bağlantısı — view yüklenince bir kez bağlanır
 // ─────────────────────────────────────────────────────────────
 export function bindPracticeListSearch() {
     const input = document.getElementById('practice-list-search-input');
     const btn   = document.getElementById('practice-list-search-btn');
+
     if (input && !input.dataset.bound) {
         input.dataset.bound = '1';
         input.addEventListener('input', renderPracticeListView);
         if (btn) btn.addEventListener('click', renderPracticeListView);
+
+        // Filtre select'leri
+        [
+            'pl-filter-role-select',
+            'pl-filter-instructor-select',
+            'pl-filter-tag-select',
+            'pl-filter-date-select',
+            'pl-filter-platform-select',
+            'pl-filter-learning-status-select'
+        ].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', renderPracticeListView);
+        });
     }
+
+    // Dropdown'ları her açılışta güncelle
+    populatePracticeListInstructorSelect();
+    populatePracticeListTagSelect();
 }
