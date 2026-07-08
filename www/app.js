@@ -52,7 +52,8 @@ import { initPracticeListModule, renderPracticeListView, bindPracticeListSearch,
 import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
 import { initChainManager, loadAllVideoLinks } from './chainManager.js';
-import { initInstructorProfile } from './instructorProfile.js';
+import { initInstructorProfile, openInstructorProfile, renderInstructorProfile } from './instructorProfile.js';
+import { initInstructorsList, renderInstructorsList } from './instructorsList.js';
 import { shareToWhatsApp, copyListToClipboard, exportToPrintView } from './export/listExport.js';
 import { readUrlState, applyUrlStateToUI } from './urlState.js';
 import { flushQueue, hasPendingItems, getPendingCount } from './syncQueue.js'; // Adim 4.5
@@ -121,6 +122,7 @@ async function initializeApp() {
     await loadAllVideoLinks();
 
     initInstructorProfile(callSwitchView);
+    initInstructorsList(callSwitchView);
     initPracticeSession(callSwitchView);
 
     // ── Dil butonu ──────────────────────────────────────────────
