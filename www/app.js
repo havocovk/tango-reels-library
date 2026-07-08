@@ -148,7 +148,7 @@ async function initializeApp() {
                 renderPracticeListView();
             }
             if (store.get('currentView') === 'instructorsList') {
-                import('./instructorProfile.js').then(({ renderInstructorsList }) => renderInstructorsList());
+                import('./instructorsList.js').then(({ renderInstructorsList }) => renderInstructorsList());
             }
             if (store.get('currentView') === 'instructorProfile') {
                 import('./instructorProfile.js').then(({ renderInstructorProfile }) => {
