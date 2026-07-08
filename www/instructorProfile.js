@@ -8,7 +8,7 @@ import { store } from './store.js';
 import { showToast } from './toast.js';
 import { openVideoModal } from './tangoModals.js';
 import { icon } from './icons.js';
-import { escapeHtml } from './utils.js'; // Adim 1.2
+import { escapeHtml, convertYoutubeUrlToEmbed } from './utils.js';
 
 // ── Modül düzeyi durum ────────────────────────────────────────
 let callSwitchViewFn = null;   // app.js'ten enjekte edilir (callSwitchView)
@@ -24,14 +24,7 @@ export function openInstructorProfile(instructorId) {
     }
 }
 
-// escapeHtml -> utils.js (Adim 1.2)
-
-function convertYoutubeUrlToEmbed(url) {
-    if (!url) return url;
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-    if (match) return `https://www.youtube.com/embed/${match[1]}`;
-    return url;
-}
+// escapeHtml, convertYoutubeUrlToEmbed -> utils.js
 
 function computeTagFrequency(videos, topN = 10) {
     const map = new Map();

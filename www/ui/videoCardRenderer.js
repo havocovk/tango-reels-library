@@ -7,7 +7,7 @@ import { openAnnotationModal } from '../annotationManager.js';
 import { openLinkManager, buildChainNavHtml } from '../chainManager.js';
 import { openInstructorProfile } from '../instructorProfile.js';
 import { icon } from '../icons.js';
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, convertYoutubeUrlToEmbed } from '../utils.js';
 import { togglePracticeList } from '../practiceListManager.js';
 import { resetPracticeCount } from '../videoHandlers.js';
 
@@ -85,14 +85,7 @@ function findSimilarVideos(video, allVideos, limit = 3) {
     return scored.slice(0, limit).map(s => s.video);
 }
 
-// escapeHtml -> utils.js (Adim 1.2)
-
-function convertYoutubeUrlToEmbed(url) {
-    if (!url) return url;
-    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-    if (match) return `https://www.youtube.com/embed/${match[1]}`;
-    return url;
-}
+// escapeHtml, convertYoutubeUrlToEmbed -> utils.js
 
 // ─────────────────────────────────────────────────────────────
 // renderVideoList  (Liste görünümü)

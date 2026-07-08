@@ -27,6 +27,13 @@ export function escapeHtml(str) {
     });
 }
 
+export function convertYoutubeUrlToEmbed(url) {
+    if (!url) return url;
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+    if (match) return `https://www.youtube.com/embed/${match[1]}`;
+    return url;
+}
+
 export function showModernPrompt(title, defaultValue = '', placeholder = '') {
     return new Promise((resolve) => {
         const modal   = document.getElementById('custom-dialog-modal');
