@@ -2,7 +2,7 @@
 // ✅ GÜNCELLEME: instagram_url, facebook_url alanları eklendi
 // ✅ GÜNCELLEME: renderInstructorsList() — sol menüdeki "Eğitmenler" sayfası
 
-import { dbUpdateInstructorProfile } from './db/instructors.js';
+import { dbUpdateInstructorProfile } from './tangoVeritabani.js';
 import { uploadInstructorPhoto } from './storage.js'; // Ek ozellik
 import { store } from './store.js';
 import { showToast } from './toast.js';

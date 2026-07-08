@@ -19,7 +19,7 @@ import {
     dbFetchPlaylistVideoIds,
     dbAddVideoToPlaylist,
     dbRemoveVideoFromPlaylist
-} from './db/playlists.js';
+} from './tangoVeritabani.js';
 
 // ─────────────────────────────────────────────────────────────
 // Synthwave temasıyla uyumlu 10 hazır renk paleti

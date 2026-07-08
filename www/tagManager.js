@@ -5,7 +5,7 @@ import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, showModernPrompt } from './utils.js';
 import { store } from './store.js';
-import { dbRunTagSyncCheck, dbRepairTagSync } from './db/healthCheck.js';
+import { dbRunTagSyncCheck, dbRepairTagSync } from './tangoVeritabani.js';
 import { showToast } from './toast.js';
 import { icon } from './icons.js';
 

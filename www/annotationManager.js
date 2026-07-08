@@ -1,6 +1,6 @@
 // annotationManager.js - Zaman damgasına bağlı not yönetimi
 // ✅ YENİ (Adım 6.1)
-import { dbFetchAnnotations, dbAddAnnotation, dbDeleteAnnotation } from './db/annotations.js';
+import { dbFetchAnnotations, dbAddAnnotation, dbDeleteAnnotation } from './tangoVeritabani.js';
 import { escapeHtml } from './utils.js'; // Adim 1.2
 import { ensureModalLoaded } from './modalLoader.js'; // Adim 3.4
 import { showToast } from './toast.js';

@@ -7,10 +7,13 @@ import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { showLoading, fetchWithRetry } from './utils.js';
 import { store } from './store.js';
-import { dbFetchAllAnnotations } from './db/annotations.js';
-import { dbFetchPlaylists, dbFetchAllPlaylistVideos } from './db/playlists.js';
-import { dbFetchAllVideoLinks } from './db/videoLinks.js';
-import { dbFetchTagColors } from './db/tagColors.js';
+import {
+    dbFetchAllAnnotations,
+    dbFetchPlaylists,
+    dbFetchAllPlaylistVideos,
+    dbFetchAllVideoLinks,
+    dbFetchTagColors
+} from './tangoVeritabani.js';
 
 let currentLang = 'tr';
 

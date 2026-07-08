@@ -1,6 +1,6 @@
 // tagColorManager.js - Etiket renk yönetimi (otomatik atama sistemi)
 // ✅ GÜNCELLEME (Adım 3.3 v2): Manuel seçim → otomatik benzersiz renk atama
-import { dbFetchTagColors, dbSetTagColor, dbDeleteTagColor } from './db/tagColors.js';
+import { dbFetchTagColors, dbSetTagColor, dbDeleteTagColor } from './tangoVeritabani.js';
 import { store } from './store.js';
 
 // ─────────────────────────────────────────────────────────────

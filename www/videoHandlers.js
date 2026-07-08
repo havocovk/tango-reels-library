@@ -3,7 +3,7 @@
 // ✅ GÜNCELLEME (Adım 3.2): applyFiltersAndSearch URL durumunu yazıyor
 // ✅ GÜNCELLEME (Adım 2.3): toggleFavorite ve updateLearningStatus offline destekli
 import { dbAddFavorite, dbRemoveFavorite, dbDeleteVideo, dbUpdateLearningStatus } from './tangoVeritabani.js';
-import { dbResetPracticeCount } from './db/videos.js';
+import { dbResetPracticeCount } from './tangoVeritabani.js';
 import { showCustomAlert, showCustomConfirm } from './tangoModals.js';
 import { renderVideoCards } from './uiRenderer.js';
 import { getFilteredVideos } from './tangoFilters.js';

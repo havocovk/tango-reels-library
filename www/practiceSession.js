@@ -4,14 +4,20 @@
 // Kullanıcı her kart için "Çalıştım", "Geç" veya "İzle" seçeneği yapar.
 // Oturum sonunda özet ekranı gösterilir.
 
+import {
+    dbIncrementPracticeCount,
+    dbIncrementMonthlyPracticeCount,
+    dbSavePracticeSession,
+    dbFetchAnnotations
+} from './tangoVeritabani.js';
 import { store } from './store.js';
 import { dbUpdateLearningStatus } from './tangoVeritabani.js';
-import { dbIncrementPracticeCount } from './db/videos.js';
-import { dbIncrementMonthlyPracticeCount } from './db/monthlyStats.js';
-import { dbSavePracticeSession } from './db/practiceSessions.js';
+
+
+
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';
-import { dbFetchAnnotations } from './db/annotations.js';
+
 import { icon } from './icons.js';
 
 // ─────────────────────────────────────────────────────────────

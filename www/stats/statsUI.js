@@ -1,5 +1,5 @@
 // stats/statsUI.js
-import { dbFetchPracticeSessions, dbDeletePracticeSession } from '../db/practiceSessions.js'; // Adim 4.3 - İstatistikleri HTML olarak render etme ve grafik çizme
+import { dbFetchPracticeSessions, dbDeletePracticeSession } from '../tangoVeritabani.js';
 // ✅ GÜNCELLEME (Adım 5.1): renderLearningHeatmap eklendi
 // ✅ GÜNCELLEME (Adım 5.3): renderTagCloud eklendi
 // ✅ GÜNCELLEME (Adım 5.4): Yıl seçici ve renderMonthlyChart eklendi
@@ -16,7 +16,7 @@ import { filterByTag } from '../navigation.js';
 import { icon } from '../icons.js';
 import { showCustomConfirm } from '../tangoModals.js';
 import { showToast } from '../toast.js';
-import { dbFetchMonthlyStats } from '../db/monthlyStats.js';
+import { dbFetchMonthlyStats } from '../tangoVeritabani.js';
 import { computeBadgeData, renderBadgePanel } from '../badgeSystem.js';
 
 let platformChart = null;

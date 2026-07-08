@@ -8,7 +8,7 @@ import {
     dbFetchVideoLinks,
     dbAddVideoLink,
     dbDeleteVideoLink
-} from './db/videoLinks.js';
+} from './tangoVeritabani.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { escapeHtml } from './utils.js';

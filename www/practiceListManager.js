@@ -1,7 +1,7 @@
 // practiceListManager.js - Pratik Listesi modülü
 // Favorilerden bağımsız, ayrı bir pratik listesi yönetir.
 // ✅ GÜNCELLEME: Filtreler eklendi (rol, eğitmen, etiket, tarih, platform, öğrenme durumu)
-import { dbFetchPracticeList, dbAddToPracticeList, dbRemoveFromPracticeList, dbClearPracticeList } from './db/practiceList.js';
+import { dbFetchPracticeList, dbAddToPracticeList, dbRemoveFromPracticeList, dbClearPracticeList } from './tangoVeritabani.js';
 import { store } from './store.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';

@@ -1,6 +1,5 @@
 // tangoVeritabani.js - Tüm veritabanı fonksiyonlarının merkezi export noktası
-// ✅ GÜNCELLEME (Adım 2.4): playlist fonksiyonları eklendi
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+// ✅ GÜNCELLEME: Tüm db/ fonksiyonları wrapper'a eklendi — tek erişim noktası
 
 // videos
 import {
@@ -11,19 +10,36 @@ import {
     dbSaveVideo,
     dbUpdateTagsDirectly,
     dbUpdateNote,
-    dbUpdateLearningStatus
+    dbUpdateLearningStatus,
+    dbIncrementPracticeCount,
+    dbResetPracticeCount
 } from './db/videos.js';
 
 // instructors
-import { dbFetchInstructors, dbSaveInstructor, dbDeleteInstructor } from './db/instructors.js';
+import {
+    dbFetchInstructors,
+    dbSaveInstructor,
+    dbDeleteInstructor,
+    dbUpdateInstructorProfile
+} from './db/instructors.js';
 
 // favorites
-import { dbFetchFavorites, dbAddFavorite, dbRemoveFavorite, dbClearAllFavorites } from './db/favorites.js';
+import {
+    dbFetchFavorites,
+    dbAddFavorite,
+    dbRemoveFavorite,
+    dbClearAllFavorites
+} from './db/favorites.js';
 
-// tags (toplu işlemler)
-import { dbMergeTags, dbDeleteTagFromAllVideos, dbRenameTag, dbCleanupUnusedTags } from './db/tags.js';
+// tags
+import {
+    dbMergeTags,
+    dbDeleteTagFromAllVideos,
+    dbRenameTag,
+    dbCleanupUnusedTags
+} from './db/tags.js';
 
-// ✅ YENİ (Adım 2.4): playlists
+// playlists
 import {
     dbFetchPlaylists,
     dbCreatePlaylist,
@@ -31,11 +47,66 @@ import {
     dbDeletePlaylist,
     dbFetchPlaylistVideoIds,
     dbAddVideoToPlaylist,
-    dbRemoveVideoFromPlaylist
+    dbRemoveVideoFromPlaylist,
+    dbFetchAllPlaylistVideos
 } from './db/playlists.js';
 
+// annotations
+import {
+    dbFetchAnnotations,
+    dbFetchAllAnnotations,
+    dbAddAnnotation,
+    dbDeleteAnnotation
+} from './db/annotations.js';
+
+// videoLinks
+import {
+    dbFetchAllVideoLinks,
+    dbFetchVideoLinks,
+    dbAddVideoLink,
+    dbDeleteVideoLink
+} from './db/videoLinks.js';
+
+// tagColors
+import {
+    dbFetchTagColors,
+    dbSetTagColor,
+    dbDeleteTagColor
+} from './db/tagColors.js';
+
+// healthCheck
+import {
+    dbRunTagSyncCheck,
+    dbRepairTagSync
+} from './db/healthCheck.js';
+
+// monthlyStats
+import {
+    dbFetchMonthlyStats,
+    dbFetchCurrentMonthStat,
+    dbIncrementMonthlyPracticeCount
+} from './db/monthlyStats.js';
+
+// practiceSessions
+import {
+    dbSavePracticeSession,
+    dbFetchPracticeSessions,
+    dbDeletePracticeSession
+} from './db/practiceSessions.js';
+
+// practiceList
+import {
+    dbFetchPracticeList,
+    dbAddToPracticeList,
+    dbRemoveFromPracticeList,
+    dbClearPracticeList
+} from './db/practiceList.js';
+
+// ─────────────────────────────────────────────────────────────
 // Tüm fonksiyonları dışa aktar
+// ─────────────────────────────────────────────────────────────
 export {
+    // videos
     dbFetchVideos,
     dbFetchVideosPage,
     dbFetchVideosCount,
@@ -44,25 +115,62 @@ export {
     dbUpdateTagsDirectly,
     dbUpdateNote,
     dbUpdateLearningStatus,
+    dbIncrementPracticeCount,
+    dbResetPracticeCount,
+    // instructors
     dbFetchInstructors,
     dbSaveInstructor,
     dbDeleteInstructor,
+    dbUpdateInstructorProfile,
+    // favorites
     dbFetchFavorites,
     dbAddFavorite,
     dbRemoveFavorite,
     dbClearAllFavorites,
+    // tags
     dbMergeTags,
     dbDeleteTagFromAllVideos,
     dbRenameTag,
     dbCleanupUnusedTags,
-    // ✅ YENİ (Adım 2.4)
+    // playlists
     dbFetchPlaylists,
     dbCreatePlaylist,
     dbUpdatePlaylist,
     dbDeletePlaylist,
     dbFetchPlaylistVideoIds,
     dbAddVideoToPlaylist,
-    dbRemoveVideoFromPlaylist
+    dbRemoveVideoFromPlaylist,
+    dbFetchAllPlaylistVideos,
+    // annotations
+    dbFetchAnnotations,
+    dbFetchAllAnnotations,
+    dbAddAnnotation,
+    dbDeleteAnnotation,
+    // videoLinks
+    dbFetchAllVideoLinks,
+    dbFetchVideoLinks,
+    dbAddVideoLink,
+    dbDeleteVideoLink,
+    // tagColors
+    dbFetchTagColors,
+    dbSetTagColor,
+    dbDeleteTagColor,
+    // healthCheck
+    dbRunTagSyncCheck,
+    dbRepairTagSync,
+    // monthlyStats
+    dbFetchMonthlyStats,
+    dbFetchCurrentMonthStat,
+    dbIncrementMonthlyPracticeCount,
+    // practiceSessions
+    dbSavePracticeSession,
+    dbFetchPracticeSessions,
+    dbDeletePracticeSession,
+    // practiceList
+    dbFetchPracticeList,
+    dbAddToPracticeList,
+    dbRemoveFromPracticeList,
+    dbClearPracticeList
 };
 
 // Yardımcı fonksiyon
