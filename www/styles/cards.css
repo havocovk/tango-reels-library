@@ -206,7 +206,7 @@
 /* ── Pratik Listesi (Dumbbell) Butonu ── */
 .practice-list-btn {
     position: absolute;
-    top: 52px;
+    top: 10px;
     left: 10px;
     background: rgba(11, 8, 19, 0.7);
     backdrop-filter: blur(4px);
@@ -241,8 +241,8 @@
 /* ── Playlist butonu — practice-list-btn'in yanında ── */
 .playlist-add-btn {
     position: absolute;
-    top: 10px;
-    left: 52px;
+    top: 52px;
+    left: 10px;
     background: rgba(11, 8, 19, 0.7);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(245, 158, 11, 0.3);

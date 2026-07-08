@@ -424,9 +424,12 @@ export function renderVideoCards(videos, config) {
         if (practiceListBtn) {
             practiceListBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // Mevcut durumu ÖNCE oku, sonra toggle et
+                const currentlyInList = practiceListBtn.classList.contains('active');
+                // Butonu anında güncelle (optimistic UI)
+                practiceListBtn.classList.toggle('active', !currentlyInList);
+                // DB işlemini async yap
                 togglePracticeList(video.id);
-                const nowInList = (store.get('globalPracticeList') || []).includes(video.id);
-                practiceListBtn.classList.toggle('active', nowInList);
             });
         }
 
