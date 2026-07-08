@@ -369,6 +369,7 @@ export function renderVideoCards(videos, config) {
                 <div class="video-cover-container" style="background-image:url('${coverImg}');">
                     <button class="fav-star-btn ${isFav ? 'active' : ''}" data-id="${video.id}" aria-label="${isFav ? (currentLang === 'tr' ? 'Favorilerden çıkar' : 'Remove from favorites') : (currentLang === 'tr' ? 'Favorilere ekle' : 'Add to favorites')}" aria-pressed="${isFav}">${icon('star', { size: 18 })}</button>
                     <button class="practice-list-btn ${isInPracticeList ? 'active' : ''}" data-id="${video.id}" aria-label="${isInPracticeList ? (currentLang === 'tr' ? 'Pratik listesinden çıkar' : 'Remove from practice list') : (currentLang === 'tr' ? 'Pratik listesine ekle' : 'Add to practice list')}" aria-pressed="${isInPracticeList}" title="${currentLang === 'tr' ? 'Pratik Listesi' : 'Practice List'}">${icon('dumbbell', { size: 15 })}</button>
+                    <button class="playlist-add-btn" data-video-id="${video.id}" title="${currentLang === 'tr' ? 'Listeye Ekle' : 'Add to List'}" aria-label="${currentLang === 'tr' ? 'Playlist\'e ekle' : 'Add to playlist'}">${icon('clipboard-list', { size: 15, color: '#f59e0b' })}</button>
                     <a ${actionClickAttr}>
                         <div class="play-overlay"><span class="play-icon">${icon('play', { size: 28, color: '#4ade80', fill: '#4ade80' })}</span></div>
                     </a>
@@ -424,9 +425,16 @@ export function renderVideoCards(videos, config) {
             practiceListBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 togglePracticeList(video.id);
-                // Butonu anında güncelle (store subscription olmadan hızlı feedback)
                 const nowInList = (store.get('globalPracticeList') || []).includes(video.id);
                 practiceListBtn.classList.toggle('active', nowInList);
+            });
+        }
+
+        const playlistBtn = card.querySelector('.playlist-add-btn');
+        if (playlistBtn && showPlaylistDropdown) {
+            playlistBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showPlaylistDropdown(video.id, playlistBtn);
             });
         }
 
