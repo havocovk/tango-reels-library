@@ -321,6 +321,12 @@ export function renderVideoCards(videos, config) {
         const coverImg = video.cover_url || defaultCover;
         const isFav = favs.includes(video.id);
         const isInPracticeList = (store.get('globalPracticeList') || []).includes(video.id);
+
+        // Adım 6: practice_count sayacı — 0 ise gösterme
+        const practiceCount = video.practice_count || 0;
+        const practiceCountHtml = practiceCount > 0
+            ? `<span class="practice-count-badge" title="${currentLang === 'tr' ? `${practiceCount} kez çalışıldı` : `Practiced ${practiceCount} times`}">${icon('refresh-cw', { size: 11, color: '#4ade80' })} ${practiceCount}</span>`
+            : '';
         const noteText = video.notes
             ? (video.notes.length > 60 ? video.notes.substring(0, 60) + '...' : video.notes)
             : lang.addNote;
@@ -382,6 +388,7 @@ export function renderVideoCards(videos, config) {
                     <span class="badge ${roleBadgeClass}">${roleDisplay}</span>
                     ${platformBadgeHtml}
                     ${learningBadgeHtml}
+                    ${practiceCountHtml}
                 </div>
                 <div class="card-badges card-tags-wrapper-row" style="margin-top:2px;gap:4px;align-items:center;">${tagsHtml}</div>
                 ${noteHtml}

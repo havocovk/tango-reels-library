@@ -238,6 +238,20 @@
     box-shadow: 0 0 10px rgba(255, 0, 127, 0.25);
 }
 
+/* ── Pratik Sayacı Badge ── */
+.practice-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    border-radius: 8px;
+    padding: 2px 7px;
+}
+
 /* ── Playlist butonu — practice-list-btn'in yanında ── */
 .playlist-add-btn {
     position: absolute;

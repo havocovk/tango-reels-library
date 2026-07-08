@@ -236,8 +236,48 @@ export async function dbUpdateNote(videoId, newNote, old_updated_at) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Öğrenme durumunu güncelle
+// practice_count artır (+1)
 // ─────────────────────────────────────────────────────────────
+export async function dbIncrementPracticeCount(videoId, currentCount) {
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`,
+        {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ practice_count: (currentCount || 0) + 1 })
+        }
+    );
+    if (!res.ok) throw new Error('practice_count güncellenemedi');
+    const json = await res.json();
+    return Array.isArray(json) ? json[0] : json;
+}
+
+// ─────────────────────────────────────────────────────────────
+// practice_count sıfırla
+// ─────────────────────────────────────────────────────────────
+export async function dbResetPracticeCount(videoId) {
+    const res = await fetchWithRetry(
+        `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`,
+        {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ practice_count: 0 })
+        }
+    );
+    if (!res.ok) throw new Error('practice_count sıfırlanamadı');
+    const json = await res.json();
+    return Array.isArray(json) ? json[0] : json;
+}
 export async function dbUpdateLearningStatus(videoId, newStatus, reviewCount, old_updated_at, reviewCountDelta = 1) {
     let url = `${SUPABASE_URL}/rest/v1/videos?id=eq.${videoId}`;
     if (old_updated_at) {

@@ -6,10 +6,11 @@
 
 import { store } from './store.js';
 import { dbUpdateLearningStatus } from './tangoVeritabani.js';
-import { dbSavePracticeSession } from './db/practiceSessions.js'; // Adim 4.3
+import { dbIncrementPracticeCount } from './db/videos.js';
+import { dbSavePracticeSession } from './db/practiceSessions.js';
 import { showToast } from './toast.js';
-import { showCustomConfirm } from './tangoModals.js'; // Adim 1.3
-import { dbFetchAnnotations } from './db/annotations.js'; // Adim 4.5
+import { showCustomConfirm } from './tangoModals.js';
+import { dbFetchAnnotations } from './db/annotations.js';
 import { icon } from './icons.js';
 
 // ─────────────────────────────────────────────────────────────
@@ -268,6 +269,13 @@ async function markPracticed(video, reviewCountDelta = 1) {
             });
         }
         practicedIds.push(video.id);
+
+        // Adım 6: practice_count artır (sessiz — hata olursa devam et)
+        dbIncrementPracticeCount(video.id, video.practice_count || 0)
+            .then(updated => {
+                if (updated) store.updateVideoLocally(video.id, { practice_count: updated.practice_count });
+            })
+            .catch(err => console.warn('[PracticeSession] practice_count güncellenemedi:', err));
 
     } catch (err) {
         console.error('Pratik kaydı hatası:', err);
