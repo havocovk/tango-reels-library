@@ -7,7 +7,6 @@
 import { store } from './store.js';
 import { dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { dbSavePracticeSession } from './db/practiceSessions.js'; // Adim 4.3
-import { getDueTodayCount } from './learning/spacedRepetition.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js'; // Adim 1.3
 import { dbFetchAnnotations } from './db/annotations.js'; // Adim 4.5
@@ -269,10 +268,6 @@ async function markPracticed(video, reviewCountDelta = 1) {
             });
         }
         practicedIds.push(video.id);
-
-        // dueTodayCount'u güncelle
-        const updatedVideos = store.get('globalVideos');
-        store.set('dueTodayCount', getDueTodayCount(updatedVideos));
 
     } catch (err) {
         console.error('Pratik kaydı hatası:', err);

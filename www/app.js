@@ -45,10 +45,8 @@ import {
     startVideoEditFlow, callUpdateSmartAssistant, callUpdateInterfaceLanguage
 } from './navigation.js';
 import { setupStoreSubscriptions } from './uiSubscriptions.js';
-import { getDueVideos } from './learning/spacedRepetition.js';
 import { initPracticeSession, startPracticeSession } from './practiceSession.js';
 import { initPlaylists } from './playlistManager.js';
-import { initPracticeListModule, clearPracticeList, renderPracticeListView, bindPracticeListSearch } from './practiceListManager.js';
 import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
 import { initChainManager, loadAllVideoLinks } from './chainManager.js';
@@ -69,7 +67,7 @@ async function loadTemplates() {
     if (!container) return;
     try {
         const [library, stats, addVideo, tagManager, practiceSession, instructorProfile,
-               dashboard, shows, practiceList, customDialogModal] = await Promise.all([
+               dashboard, shows, customDialogModal] = await Promise.all([
             fetch('views/library.html').then(r => r.text()),
             fetch('views/stats.html').then(r => r.text()),
             fetch('views/add-video.html').then(r => r.text()),
@@ -78,13 +76,12 @@ async function loadTemplates() {
             fetch('views/instructor-profile.html').then(r => r.text()),
             fetch('views/dashboard.html').then(r => r.text()),
             fetch('views/shows.html').then(r => r.text()),
-            fetch('views/practice-list.html').then(r => r.text()),
             fetch('modals/custom-dialog-modal.html').then(r => r.text()),
         ]);
 
         // Tüm view'lar baştan DOM'a eklenir
         container.innerHTML = library + stats + addVideo + tagManager +
-                              practiceSession + instructorProfile + dashboard + shows + practiceList;
+                              practiceSession + instructorProfile + dashboard + shows;
 
         // custom-dialog-modal kritik — hemen ekle
         let modalContainer = document.getElementById('modals-container');
@@ -114,7 +111,6 @@ async function initializeApp() {
     await fetchInstructors();
     await fetchVideos();
     await initPlaylists();
-    await initPracticeListModule();
     initRealtimeSync();
 
     initChainManager(openVideoModal, applyFiltersAndSearch);
@@ -160,27 +156,18 @@ async function initializeApp() {
     document.getElementById('menu-tag-manager')?.addEventListener('click', () => { callSwitchView('tagManager');      syncBottomNavActiveState('tagManager'); });
     // ✅ YENİ: Eğitmenler sayfası
     document.getElementById('menu-dashboard')?.addEventListener('click',    () => { callSwitchView('dashboard');        syncBottomNavActiveState('dashboard'); });
-    document.getElementById('menu-practice-list')?.addEventListener('click', () => {
-        callSwitchView('practiceList');
-        syncBottomNavActiveState('practiceList');
-        bindPracticeListSearch();
-        renderPracticeListView();
-    });
     document.getElementById('menu-instructors')?.addEventListener('click', () => { callSwitchView('instructorsList'); });
     document.getElementById('menu-shows')?.addEventListener('click',       () => { callSwitchView('shows'); syncBottomNavActiveState('shows'); });
 
     // ── Pratik Başlat ───────────────────────────────────────────
+    // ⛔ ADIM 4: SM-2 devre dışı. ADIM 5'te Pratik Listesi'ne bağlanacak.
     document.getElementById('btn-start-practice')?.addEventListener('click', () => {
-        const dueVideos = getDueVideos(store.get('globalVideos'));
-        if (dueVideos.length === 0) {
-            showCustomAlert(
-                store.get('currentLang') === 'tr'
-                    ? 'Bugün için tüm kombinasyonları çalıştın! Harika iş.'
-                    : 'You\'ve practiced all combinations for today! Great job.'
-            );
-            return;
-        }
-        startPracticeSession(dueVideos);
+        const lang = store.get('currentLang');
+        showCustomAlert(
+            lang === 'tr'
+                ? 'Pratik Listesi henüz hazırlanıyor. Lütfen bekleyin.'
+                : 'Practice list feature is coming soon.'
+        );
     });
 
     // ── Tüm modül başlatıcıları ─────────────────────────────────
@@ -379,7 +366,6 @@ async function initializeApp() {
     // ── Form submit + favori temizle ────────────────────────────
     document.getElementById('btn-submit-video')?.addEventListener('click', handleFormSubmit);
     document.getElementById('btn-clear-favorites')?.addEventListener('click', clearAllFavorites);
-    document.getElementById('btn-clear-practice-list')?.addEventListener('click', clearPracticeList);
 
     // ── Etiket yönetimi ─────────────────────────────────────────
     document.getElementById('tag-manager-merge-btn')?.addEventListener('click',   () => mergeSelectedTags());

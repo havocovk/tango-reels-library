@@ -48,43 +48,18 @@ export function calculateNextReviewDate(video) {
 // ─────────────────────────────────────────────────────────────
 // getDueVideos(videos)
 //
-// Tüm video listesini alır; bugün veya daha önce
-// tekrar edilmesi gereken videoları filtreler ve
-// en acil olandan (en eski last_reviewed_at) başa
-// sıralayarak döner.
+// ⛔ ADIM 4: SM-2 algoritması devre dışı bırakıldı.
+// Pratik Başlat artık Pratik Listesi'ndeki videoları kullanır.
+// Geçmiş veriler ve tablo korunmaktadır.
 // ─────────────────────────────────────────────────────────────
 export function getDueVideos(videos) {
-    if (!videos || videos.length === 0) return [];
-
-    const now = new Date();
-    // Günün başlangıcı (saat 00:00:00) — "bugün olan" karşılaştırması için
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const due = videos.filter(video => {
-        // Tango Şov videoları pratik listesine dahil edilmez
-        if (video.content_type === 'show') return false;
-        const nextReview = calculateNextReviewDate(video);
-        // nextReview bugün veya geçmişte ise listeye al
-        return nextReview <= todayStart || 
-               (nextReview.toDateString() === now.toDateString());
-    });
-
-    // En acil sıralama: last_reviewed_at en eski olan (veya hiç bakılmamış) önce
-    due.sort((a, b) => {
-        const aTime = a.last_reviewed_at ? new Date(a.last_reviewed_at).getTime() : 0;
-        const bTime = b.last_reviewed_at ? new Date(b.last_reviewed_at).getTime() : 0;
-        return aTime - bTime; // küçükten büyüğe → en eski en başta
-    });
-
-    return due;
+    return [];
 }
 
 // ─────────────────────────────────────────────────────────────
 // getDueTodayCount(videos)
-//
-// Bugün çalışılması gereken video sayısını döner.
-// Sol menüdeki badge sayısı için kullanılır.
+// ⛔ ADIM 4: Devre dışı — her zaman 0 döner.
 // ─────────────────────────────────────────────────────────────
 export function getDueTodayCount(videos) {
-    return getDueVideos(videos).length;
+    return 0;
 }
