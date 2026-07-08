@@ -7,6 +7,7 @@
 import { store } from './store.js';
 import { dbUpdateLearningStatus } from './tangoVeritabani.js';
 import { dbIncrementPracticeCount } from './db/videos.js';
+import { dbIncrementMonthlyPracticeCount } from './db/monthlyStats.js';
 import { dbSavePracticeSession } from './db/practiceSessions.js';
 import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';
@@ -270,17 +271,22 @@ async function markPracticed(video, reviewCountDelta = 1) {
         }
         practicedIds.push(video.id);
 
-        // Adım 6: practice_count artır (sessiz — hata olursa devam et)
+        // Adım 6: practice_count artır
         dbIncrementPracticeCount(video.id, video.practice_count || 0)
             .then(updated => {
                 if (updated) store.updateVideoLocally(video.id, { practice_count: updated.practice_count });
             })
-            .catch(err => console.warn('[PracticeSession] practice_count güncellenemedi:', err));
+            .catch(err => console.warn('[PS] practice_count güncellenemedi:', err));
+
+        // Adım 10: monthly_stats artır
+        const now = new Date();
+        dbIncrementMonthlyPracticeCount(now.getFullYear(), now.getMonth() + 1)
+            .catch(err => console.warn('[PS] monthly_stats güncellenemedi:', err));
 
     } catch (err) {
         console.error('Pratik kaydı hatası:', err);
         showToast(currentLang === 'tr' ? 'Kayıt hatası, devam ediliyor...' : 'Save error, continuing...', 'error');
-        practicedIds.push(video.id); // hata olsa bile ilerle
+        practicedIds.push(video.id);
     }
     nextCard();
 }

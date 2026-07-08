@@ -16,6 +16,8 @@ import { filterByTag } from '../navigation.js';
 import { icon } from '../icons.js';
 import { showCustomConfirm } from '../tangoModals.js';
 import { showToast } from '../toast.js';
+import { dbFetchMonthlyStats } from '../db/monthlyStats.js';
+import { computeBadgeData, renderBadgePanel } from '../badgeSystem.js';
 
 let platformChart = null;
 let monthlyChart  = null;
@@ -367,6 +369,26 @@ export function renderStats(stats, currentLang) {
     sessionSection.style.marginTop = '30px';
     container.appendChild(sessionSection);
     renderSessionHistory(sessionSection, currentLang);
+
+    // Adım 10: Rozet paneli
+    const badgeSection = document.createElement('div');
+    badgeSection.id = 'badge-panel-container';
+    container.appendChild(badgeSection);
+
+    // monthly_stats çek ve rozet panelini çiz
+    dbFetchMonthlyStats()
+        .then(monthlyStats => {
+            const videos = store.get('globalVideos') || [];
+            const badgeData = computeBadgeData(videos, monthlyStats);
+            renderBadgePanel(badgeData, currentLang);
+        })
+        .catch(err => {
+            console.warn('[Badges] monthly_stats alınamadı:', err);
+            // Yine de rozet panelini göster (sadece pratik sayacı 0 olur)
+            const videos = store.get('globalVideos') || [];
+            const badgeData = computeBadgeData(videos, []);
+            renderBadgePanel(badgeData, currentLang);
+        });
 }
 
 // ─────────────────────────────────────────────────────────────
