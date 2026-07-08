@@ -4,7 +4,7 @@
 //    - Supabase API çağrıları → her zaman ağdan git (önbelleğe alma)
 //    - Uygulama dosyaları (HTML/CSS/JS/Font) → önce ağdan dene, ağ yoksa önbellekten sun
 
-const CACHE_NAME = 'tango-app-v2';
+const CACHE_NAME = 'tango-app-v3';
 
 // Önbelleğe alınacak uygulama dosyaları (uygulama kabuğu)
 const PRECACHE_URLS = [

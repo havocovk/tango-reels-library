@@ -31,8 +31,8 @@ export function switchView(viewName, state, functions) {
     const practiceSessionView     = document.getElementById('view-practice-session-container');
     const instructorProfileView   = document.getElementById('view-instructor-profile-container');
     const dashboardView           = document.getElementById('view-dashboard-container'); // Adim 4.1
-    const showsView               = document.getElementById('view-shows-container'); // Tango Sovlari
-    const practiceListView        = document.getElementById('view-practice-list-container'); // Pratik Listem
+    const showsView               = document.getElementById('view-shows-container');
+    const practiceListView        = document.getElementById('view-practice-list-container');
 
     // ── Tüm view'ları gizle (ortak başlangıç) ──
     const allViews = [libraryView, statsView, addView, tagView, practiceSessionView, instructorProfileView, dashboardView, showsView, practiceListView];
@@ -41,7 +41,7 @@ export function switchView(viewName, state, functions) {
     if (viewName === 'practiceList') {
         if (practiceListView) practiceListView.classList.remove('d-none');
         if (practiceListMenuBtn) practiceListMenuBtn.classList.add('active');
-        if (functions.renderPracticeList) functions.renderPracticeList();
+        if (clearFavBtnContainer) clearFavBtnContainer.classList.add('d-none');
 
     } else if (viewName === 'shows') {
         if (showsView) showsView.classList.remove('d-none');
