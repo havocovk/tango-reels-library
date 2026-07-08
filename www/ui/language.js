@@ -58,8 +58,8 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const dashboardMenuBtn2 = document.getElementById('menu-dashboard');
     if (dashboardMenuBtn2) dashboardMenuBtn2.innerHTML = `${icon('bar-chart-2', { size: 18 })} ${currentLang === 'tr' ? 'Genel Bakış' : 'Overview'}`;
     setHTML('menu-library',     `${icon('book-open',   { size: 18 })} ${lang.menuLibrary}`);
-    setHTML('menu-favorites',      `${icon('star',        { size: 18 })} ${lang.menuFavorites}`);
-    setHTML('menu-practice-list',  `${icon('dumbbell',    { size: 18 })} ${lang.menuPracticeList}`);
+    setHTML('menu-favorites',   `${icon('star',        { size: 18 })} ${lang.menuFavorites}`);
+    setHTML('menu-practice-list', `${icon('dumbbell',  { size: 18 })} ${lang.menuPracticeList}`);
     setHTML('menu-stats',       `${icon('bar-chart-2', { size: 18 })} ${lang.menuStats}`);
     setHTML('menu-add-video',   `${icon('plus-circle', { size: 18 })} ${lang.menuAddVideo}`);
 
