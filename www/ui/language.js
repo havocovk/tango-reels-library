@@ -3,6 +3,7 @@
 // ✅ GÜNCELLEME: menu-instructors butonu eklendi
 import { translations } from '../i18n.js';
 import { icon } from '../icons.js';
+import { store } from '../store.js';
 
 export function updateSmartFilenameAssistant(currentLang, formTagsArray) {
     const lang = translations[currentLang];
@@ -80,6 +81,22 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const startPracticeBtn = document.getElementById('btn-start-practice');
     if (startPracticeBtn) {
         startPracticeBtn.innerHTML = `${icon('target', { size: 15 })} ${currentLang === 'tr' ? 'Pratik Başlat' : 'Start Practice'}`;
+    }
+
+    const viewToggleBtn = document.getElementById('btn-view-toggle');
+    if (viewToggleBtn) {
+        const viewMode = store.get('viewMode');
+        viewToggleBtn.innerHTML = viewMode === 'list'
+            ? `${icon('grid', { size: 15 })} Grid`
+            : `${icon('list', { size: 15 })} ${currentLang === 'tr' ? 'Liste' : 'List'}`;
+    }
+
+    const plViewToggleBtn = document.getElementById('pl-btn-view-toggle');
+    if (plViewToggleBtn) {
+        const viewMode = store.get('viewMode');
+        plViewToggleBtn.innerHTML = viewMode === 'list'
+            ? `${icon('grid', { size: 15 })} Grid`
+            : `${icon('list', { size: 15 })} ${currentLang === 'tr' ? 'Liste' : 'List'}`;
     }
 
     // ── Filtre dropdown seçenekleri ───────────────────────────
