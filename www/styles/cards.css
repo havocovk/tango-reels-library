@@ -251,7 +251,7 @@
     height: 34px;
     border-radius: 50%;
     cursor: pointer;
-    z-index: 10;
+    z-index: 9;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -260,7 +260,6 @@
 }
 
 .playlist-add-btn:hover {
-    transform: scale(1.1);
     background: rgba(11, 8, 19, 0.9);
     border-color: rgba(245, 158, 11, 0.6);
     box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
