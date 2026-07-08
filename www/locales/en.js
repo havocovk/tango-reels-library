@@ -111,5 +111,10 @@ export const en = {
     learningActive: "Learning",
     learningMastered: "Mastered",
     dueToday: "Due for review today",
-    videosForReview: "videos"
+    videosForReview: "videos",
+    btnExportBackup: "Backup (Export)",
+    btnImportBackup: "Restore from Backup",
+    shareLabel: "Share:",
+    shareCopy: "Copy",
+    sharePrint: "PDF / Print"
 };

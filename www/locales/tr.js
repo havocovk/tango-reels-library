@@ -111,5 +111,10 @@ export const tr = {
     learningActive: "Çalışıyorum",
     learningMastered: "Ustalaştım",
     dueToday: "Bugün tekrar edilecek",
-    videosForReview: "video var"
+    videosForReview: "video var",
+    btnExportBackup: "Yedekle (Dışa Aktar)",
+    btnImportBackup: "Yedekten Geri Yükle",
+    shareLabel: "Paylaş:",
+    shareCopy: "Kopyala",
+    sharePrint: "PDF / Yazdır"
 };

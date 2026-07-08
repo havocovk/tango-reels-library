@@ -243,6 +243,23 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const loadMoreBtn = document.getElementById('btn-load-more');
     if (loadMoreBtn) loadMoreBtn.innerHTML = `${icon('plus', { size: 14 })} ${lang.loadMore}`;
 
+    // ── İstatistik sayfası — Yedekle butonları ───────────────
+    const exportBtn = document.getElementById('btn-export-backup');
+    if (exportBtn) exportBtn.innerHTML = `${icon('download', { size: 15 })} ${lang.btnExportBackup}`;
+
+    const importBtn = document.getElementById('btn-import-backup');
+    if (importBtn) importBtn.innerHTML = `${icon('upload', { size: 15 })} ${lang.btnImportBackup}`;
+
+    // ── Paylaş çubuğu (Koleksiyon & Favoriler) ───────────────
+    const shareLabel = document.getElementById('share-label');
+    if (shareLabel) shareLabel.textContent = lang.shareLabel;
+
+    const clipboardBtn = document.getElementById('btn-share-clipboard');
+    if (clipboardBtn) clipboardBtn.innerHTML = `${icon('clipboard', { size: 14 })} ${lang.shareCopy}`;
+
+    const printBtn = document.getElementById('btn-share-print');
+    if (printBtn) printBtn.innerHTML = `${icon('printer', { size: 14 })} ${lang.sharePrint}`;
+
     const roleSelect = document.getElementById('form-role-select');
     if (roleSelect) {
         const bothOption     = roleSelect.querySelector('option[value="Both"]');
