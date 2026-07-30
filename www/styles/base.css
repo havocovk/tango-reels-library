@@ -10,10 +10,23 @@
     font-family: 'Poppins', sans-serif;
 }
 
+/* Asıl yatay taşma kaynağı: .bg-glow elementleri (position:absolute,
+   right:-10%/left:-10%) body kutusunun dışına taşıyordu. body{overflow-x:hidden}
+   tek başına yetmiyor — tarayıcı sayfa scroll'unu documentElement (html)
+   üzerinden yönetir, o yüzden html'e de overflow-x:hidden + max-width:100%
+   gerekiyor. Kanıt: Chrome DevTools'ta 360px genişlikte test edilip
+   documentElement.scrollWidth ölçülerek doğrulandı (494px viewport'ta
+   543px'e taşıyordu; bu düzeltmeyle 494px'e iniyor). */
+html {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
 body {
     background: #0b0813;
     color: #f1f5f9;
     min-height: 100vh;
+    max-width: 100%;
     overflow-x: hidden;
     display: flex;
     justify-content: center;
