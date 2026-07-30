@@ -139,12 +139,26 @@ body {
 
 /* Mobil temel düzen (sadece app-container için) */
 @media screen and (max-width: 768px) {
+    /* Masaüstünde body ortalamak için flex+align-items:center kullanılıyor;
+       mobilde bu, app-container'ın 100vw genişliğiyle çakışıp yatay taşmaya
+       yol açıyordu (padding + border, box-sizing'e rağmen viewport dışına
+       taşıyordu). Mobilde flex ortalamayı kaldırıp normal blok akışına geç. */
+    body {
+        display: block;
+        overflow-x: hidden;
+    }
+
     .app-container {
         flex-direction: column;
-        width: 100vw;
+        width: 100%;
+        max-width: 100vw;
         height: auto;
         min-height: 100vh;
+        margin: 0;
         padding: 10px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
 
     nav.sidebar-glass {
@@ -283,6 +297,36 @@ body {
 
 .bottom-nav-btn.active .bn-label {
     color: #ff007f;
+}
+
+/* ── Dar ekranlar (ör. S23: ~360px genişlik): 6 buton sıkışmasın,
+   ikon ve etiket boyutu küçülür, yatay padding daralır ── */
+@media screen and (max-width: 380px) {
+    .bottom-nav-btn {
+        padding: 6px 2px;
+    }
+
+    .bottom-nav-btn .bn-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .bottom-nav-btn .bn-label {
+        font-size: 0.52rem;
+        letter-spacing: 0;
+    }
+}
+
+/* ── Çok dar ekranlar (ör. katlanır telefonlar, ~320px):
+   etiketleri tamamen gizle, sadece ikon + aktif renk kalsın ── */
+@media screen and (max-width: 340px) {
+    .bottom-nav-btn .bn-label {
+        display: none;
+    }
+
+    .bottom-nav-btn {
+        min-height: 40px;
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════
