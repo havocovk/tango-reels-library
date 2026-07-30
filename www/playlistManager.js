@@ -242,6 +242,54 @@ export function renderPlaylistsInSidebar() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// renderPlaylistsInMobileSheet — mobil "Listelerim" bottom sheet'ini doldurur
+// Masaüstündeki renderPlaylistsInSidebar ile aynı veriyi kullanır,
+// ayrı bir container'a (#mobile-playlist-list-container) render eder.
+// Bir listeye dokununca: seçilir + sheet kapanır + Koleksiyon view'ına geçilir.
+// ─────────────────────────────────────────────────────────────
+export function renderPlaylistsInMobileSheet() {
+    const container = document.getElementById('mobile-playlist-list-container');
+    if (!container) return;
+
+    const playlists = store.get('globalPlaylists') || [];
+    const activeId  = store.get('activePlaylistId');
+    const lang      = store.get('currentLang');
+
+    container.innerHTML = '';
+
+    if (playlists.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'playlist-sidebar-empty';
+        empty.textContent = lang === 'tr' ? 'Henüz liste yok' : 'No lists yet';
+        container.appendChild(empty);
+        return;
+    }
+
+    playlists.forEach(pl => {
+        const btn = document.createElement('button');
+        btn.className = 'playlist-sidebar-btn bottom-sheet-item' + (pl.id === activeId ? ' active' : '');
+        btn.dataset.playlistId = pl.id;
+        const map = store.get('playlistVideoMap') || {};
+        const videoCount = Object.values(map).filter(ids => ids.includes(pl.id)).length;
+
+        btn.innerHTML = `
+            <span class="playlist-color-dot" style="background:${pl.color || '#ff007f'};"></span>
+            <span class="playlist-btn-name">${escapeHtml(pl.name)}</span>
+            <span class="playlist-btn-count" style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-left:2px;">(${videoCount})</span>
+        `;
+
+        btn.addEventListener('click', async () => {
+            await selectPlaylist(pl.id);
+            document.getElementById('lists-sheet-overlay')?.classList.add('d-none');
+            const menuLibraryBtn = document.getElementById('menu-library');
+            if (menuLibraryBtn) menuLibraryBtn.click();
+        });
+
+        container.appendChild(btn);
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
 // selectPlaylist — bir playlist'i aktif yap / seçimi kaldır
 // ─────────────────────────────────────────────────────────────
 export async function selectPlaylist(playlistId) {

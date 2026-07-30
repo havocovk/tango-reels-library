@@ -47,7 +47,7 @@ import {
 import { setupStoreSubscriptions } from './uiSubscriptions.js';
 import { getDueVideos } from './learning/spacedRepetition.js';
 import { initPracticeSession, startPracticeSession } from './practiceSession.js';
-import { initPlaylists } from './playlistManager.js';
+import { initPlaylists, renderPlaylistsInMobileSheet, promptCreatePlaylist } from './playlistManager.js';
 import { initPracticeListModule, renderPracticeListView, bindPracticeListSearch, clearPracticeList, populatePracticeListInstructorSelect, populatePracticeListTagSelect } from './practiceListManager.js';
 import { loadTagColors } from './tagColorManager.js';
 import { initRealtimeSync } from './realtime.js';
@@ -540,11 +540,52 @@ async function initializeApp() {
     setupInfiniteScroll();
 
     // ── Bottom Nav ──────────────────────────────────────────────
+    document.getElementById('bn-dashboard')?.addEventListener('click', () => { callSwitchView('dashboard'); syncBottomNavActiveState('dashboard'); });
     document.getElementById('bn-library')?.addEventListener('click',   () => { callSwitchView('library');    syncBottomNavActiveState('library');    });
     document.getElementById('bn-favorites')?.addEventListener('click', () => { callSwitchView('favorites');  syncBottomNavActiveState('favorites');  });
-    document.getElementById('bn-stats')?.addEventListener('click',     () => { callSwitchView('stats');      syncBottomNavActiveState('stats');      });
-    document.getElementById('bn-add')?.addEventListener('click',       () => { callSwitchView('add');        syncBottomNavActiveState('add');        });
-    document.getElementById('bn-tags')?.addEventListener('click',      () => { callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); });
+    document.getElementById('bn-practice-list')?.addEventListener('click', () => {
+        callSwitchView('practiceList');
+        syncBottomNavActiveState('practiceList');
+        populatePracticeListInstructorSelect();
+        populatePracticeListTagSelect();
+        bindPracticeListSearch();
+        renderPracticeListView();
+    });
+
+    // ── Bottom Nav: "Listelerim" sheet ──────────────────────────
+    const listsSheetOverlay = document.getElementById('lists-sheet-overlay');
+    document.getElementById('bn-lists')?.addEventListener('click', () => {
+        renderPlaylistsInMobileSheet();
+        listsSheetOverlay?.classList.remove('d-none');
+    });
+    document.getElementById('ms-lists-new')?.addEventListener('click', () => promptCreatePlaylist());
+    listsSheetOverlay?.addEventListener('click', (e) => {
+        if (e.target === listsSheetOverlay) listsSheetOverlay.classList.add('d-none');
+    });
+
+    // ── Bottom Nav: "Daha Fazla" sheet ──────────────────────────
+    const moreSheetOverlay = document.getElementById('more-sheet-overlay');
+    document.getElementById('bn-more')?.addEventListener('click', () => {
+        moreSheetOverlay?.classList.remove('d-none');
+    });
+    moreSheetOverlay?.addEventListener('click', (e) => {
+        if (e.target === moreSheetOverlay) moreSheetOverlay.classList.add('d-none');
+    });
+    document.getElementById('ms-stats')?.addEventListener('click', () => {
+        callSwitchView('stats'); syncBottomNavActiveState('stats'); moreSheetOverlay?.classList.add('d-none');
+    });
+    document.getElementById('ms-add')?.addEventListener('click', () => {
+        callSwitchView('add'); syncBottomNavActiveState('add'); moreSheetOverlay?.classList.add('d-none');
+    });
+    document.getElementById('ms-tags')?.addEventListener('click', () => {
+        callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); moreSheetOverlay?.classList.add('d-none');
+    });
+    document.getElementById('ms-instructors')?.addEventListener('click', () => {
+        callSwitchView('instructorsList'); moreSheetOverlay?.classList.add('d-none');
+    });
+    document.getElementById('ms-shows')?.addEventListener('click', () => {
+        callSwitchView('shows'); syncBottomNavActiveState('shows'); moreSheetOverlay?.classList.add('d-none');
+    });
 
     // ── Grid/Liste toggle ───────────────────────────────────────
     document.getElementById('btn-view-toggle')?.addEventListener('click', toggleViewMode);
@@ -572,12 +613,14 @@ async function initializeApp() {
 }
 
 export function syncBottomNavActiveState(viewName) {
+    // Not: stats/add/tagManager artık "Daha Fazla" sheet'i üzerinden açılıyor,
+    // bu yüzden alt barda kendi butonları yok — o durumlarda hiçbir bottom-nav
+    // butonu aktif görünmez (sheet zaten kapanmış olur).
     const map = {
-        library:    'bn-library',
-        favorites:  'bn-favorites',
-        stats:      'bn-stats',
-        add:        'bn-add',
-        tagManager: 'bn-tags'
+        dashboard:    'bn-dashboard',
+        library:      'bn-library',
+        favorites:    'bn-favorites',
+        practiceList: 'bn-practice-list'
     };
     document.querySelectorAll('.bottom-nav-btn').forEach(btn => btn.classList.remove('active'));
     const targetId = map[viewName];

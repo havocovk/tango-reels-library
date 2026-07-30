@@ -65,7 +65,7 @@
             <!-- language.js innerHTML ile doldurur (ikon + metin) -->
             <button id="menu-dashboard"    class="menu-btn">Genel Bakış</button>
             <button id="menu-library"      class="menu-btn active">Koleksiyon</button>
-            <button id="menu-favorites"    class="menu-btn">Pratik Listem</button>
+            <button id="menu-favorites"    class="menu-btn">Favoriler</button>
             <button id="menu-practice-list" class="menu-btn">Pratik Listem</button>
             <button id="menu-stats"        class="menu-btn">İstatistikler</button>
             <button id="menu-add-video"    class="menu-btn">Yeni Video Ekle</button>
@@ -118,6 +118,12 @@
 
 <!-- Mobil Alt Navigasyon Barı -->
 <nav class="bottom-nav" id="bottom-nav" aria-label="Alt navigasyon">
+    <button class="bottom-nav-btn" id="bn-dashboard">
+        <span class="bn-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        </span>
+        <span class="bn-label" data-i18n="menuDashboard">Genel Bakış</span>
+    </button>
     <button class="bottom-nav-btn active" id="bn-library">
         <span class="bn-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -128,27 +134,67 @@
         <span class="bn-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </span>
-        <span class="bn-label" data-i18n="menuFavorites">Pratik</span>
+        <span class="bn-label" data-i18n="menuFavorites">Favoriler</span>
     </button>
-    <button class="bottom-nav-btn" id="bn-stats">
+    <button class="bottom-nav-btn" id="bn-practice-list">
         <span class="bn-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         </span>
-        <span class="bn-label" data-i18n="menuStats">İstatistik</span>
+        <span class="bn-label" data-i18n="menuPracticeList">Pratik Listem</span>
     </button>
-    <button class="bottom-nav-btn" id="bn-add">
+    <button class="bottom-nav-btn" id="bn-lists">
         <span class="bn-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         </span>
-        <span class="bn-label" data-i18n="menuAdd">Ekle</span>
+        <span class="bn-label" data-i18n="menuLists">Listelerim</span>
     </button>
-    <button class="bottom-nav-btn" id="bn-tags">
+    <button class="bottom-nav-btn" id="bn-more">
         <span class="bn-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
         </span>
-        <span class="bn-label" data-i18n="menuTags">Etiketler</span>
+        <span class="bn-label" data-i18n="menuMore">Daha Fazla</span>
     </button>
 </nav>
+
+<!-- Mobil "Daha Fazla" Bottom Sheet -->
+<div class="bottom-sheet-overlay d-none" id="more-sheet-overlay">
+    <div class="bottom-sheet" id="more-sheet" role="dialog" aria-label="Daha fazla seçenek">
+        <div class="bottom-sheet-handle"></div>
+        <div class="bottom-sheet-title" data-i18n="menuMore">Daha Fazla</div>
+        <button class="bottom-sheet-item" id="ms-stats">
+            <span class="bn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+            <span data-i18n="menuStats">İstatistikler</span>
+        </button>
+        <button class="bottom-sheet-item" id="ms-add">
+            <span class="bn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></span>
+            <span data-i18n="menuAdd">Yeni Video Ekle</span>
+        </button>
+        <button class="bottom-sheet-item" id="ms-tags">
+            <span class="bn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+            <span data-i18n="menuTags">Etiket Yönetimi</span>
+        </button>
+        <button class="bottom-sheet-item" id="ms-instructors">
+            <span class="bn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span data-i18n="menuInstructors">Eğitmenler</span>
+        </button>
+        <button class="bottom-sheet-item" id="ms-shows">
+            <span class="bn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></span>
+            <span data-i18n="menuShows">Tango Şovları</span>
+        </button>
+    </div>
+</div>
+
+<!-- Mobil "Listelerim" Bottom Sheet -->
+<div class="bottom-sheet-overlay d-none" id="lists-sheet-overlay">
+    <div class="bottom-sheet" id="lists-sheet" role="dialog" aria-label="Listelerim">
+        <div class="bottom-sheet-handle"></div>
+        <div class="bottom-sheet-title-row">
+            <span class="bottom-sheet-title" data-i18n="menuLists">Listelerim</span>
+            <button id="ms-lists-new" class="playlist-new-btn" title="Yeni Liste">＋</button>
+        </div>
+        <div id="mobile-playlist-list-container"></div>
+    </div>
+</div>
 
 <!-- Giriş Ekranı -->
 <div id="login-overlay" style="

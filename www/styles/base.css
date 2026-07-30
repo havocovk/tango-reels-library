@@ -212,7 +212,9 @@ body {
         display: none !important;
     }
 
-    /* Playlist bölümünü de gizle (mobilde yer kaplıyor) */
+    /* Sidebar içindeki masaüstü playlist bölümünü gizle (mobilde yer kaplıyor).
+       Not: Mobil "Listelerim" bottom sheet (#mobile-playlist-list-container)
+       bu kuraldan etkilenmez — ayrı bir id kullanır. */
     #playlist-section-container {
         display: none !important;
     }
@@ -281,6 +283,83 @@ body {
 
 .bottom-nav-btn.active .bn-label {
     color: #ff007f;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Mobil Bottom Sheet — "Daha Fazla" ve "Listelerim" panelleri
+   ═══════════════════════════════════════════════════════════ */
+.bottom-sheet-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 1100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.bottom-sheet-overlay.d-none {
+    display: none;
+}
+
+.bottom-sheet {
+    width: 100%;
+    max-width: 600px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: rgba(15, 10, 30, 0.98);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    padding: 10px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.bottom-sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 4px auto 14px;
+}
+
+.bottom-sheet-title {
+    color: #f1f5f9;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.bottom-sheet-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.bottom-sheet-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 12px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+
+.bottom-sheet-item:active,
+.bottom-sheet-item:hover {
+    background: rgba(255, 255, 255, 0.06);
 }
 
 /* ═══════════════════════════════════════════════════════════
