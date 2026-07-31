@@ -1,4 +1,10 @@
 <!-- views/add-video.html - Yeni video ekleme/düzenleme formu -->
+<!-- ✅ DÜZELTİLDİ (Adım 4): satır-içi max-width:900px masaüstünde bilinçli
+     (iki kolonlu grid için geniş form), ama mobilde ekran genişliğini
+     aşıyor ve alanların/butonların kesilmesine yol açıyordu. Masaüstü
+     genişliğini korumak için satır-içi değeri kaldırmak yerine, forms.css
+     içindeki mobil media query'de !important ile override edildi
+     (bkz. forms.css @media max-width:768px). -->
 <div id="view-add-container" class="view-panel d-none">
     <form id="add-video-form" class="glass-form" style="max-width:900px; margin:0 auto;">
         <!-- language.js innerHTML ile doldurur (ikon + başlık) -->

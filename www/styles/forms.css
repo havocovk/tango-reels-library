@@ -245,3 +245,43 @@
         gap: 12px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Adım 4 — "Yeni Video Ekle" formu mobil düzeltmesi
+   Kaynaklar: add-video.html'de satır-içi max-width:900px (mobilde ekranı
+   aşıyordu), birden fazla display:flex satırı flex-wrap içermiyordu
+   (eğitmen seç + 3 ikon buton, partner autocomplete satırı, kapak resmi
+   drop-area + 2 ikon buton), ve width:38px sabit ikon kolonu dar ekranda
+   drop-area ile birlikte toplam genişliği aşıyordu.
+   ═══════════════════════════════════════════════════════════ */
+@media screen and (max-width: 768px) {
+    .glass-form {
+        max-width: 100% !important;
+        padding-right: 0;
+    }
+
+    /* Eğitmen seç/ekle satırı: select + 3 ikon buton yan yana sığmıyordu */
+    #lbl-instructor + div,
+    #new-instructor-container > div {
+        flex-wrap: wrap;
+    }
+
+    #form-instructor-select {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    /* Rol Tipi + Partner Adı satırı (.atkk-inline-row) dar ekranda
+       yan yana sıkışıp taşıyordu — alt alta diz. */
+    .atkk-inline-row {
+        flex-direction: column;
+    }
+
+    /* Kapak resmi: drop-area + sabit 38px ikon kolonu. 38px kendisi
+       küçük ama drop-area'nın min içerik genişliğiyle toplamda dar
+       ekranlarda taşabiliyordu; drop-area metnini küçültüp esnekliği
+       artırıyoruz. */
+    #drop-area-text {
+        font-size: 0.72rem;
+    }
+}
