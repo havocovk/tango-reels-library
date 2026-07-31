@@ -216,6 +216,21 @@ body {
         width: 250px;
         height: 250px;
         filter: blur(60px);
+        opacity: 0.35;
+    }
+
+    /* Glow'lar (Adım 2 düzeltmesi): .app-container'ın arkaplanı
+       rgba(11,8,19,0.7) yarı saydam olduğu için position:fixed glow'lar
+       backdrop-filter:blur'un içinden sızıp kart/buton metinlerinin
+       okunabilirliğini bozuyordu (Orhan'ın "duman kartların üstüne çıkıyor"
+       şikayeti). Kartların/butonların z-index'i zaten .app-container'ın
+       z-index:2'sinden miras aldığı için glow'un z-index:1'inin üstünde
+       kalıyorlar — sorun z-index değil, arkaplanın yeterince opak olmaması.
+       Mobilde .app-container'ın arkaplanını belirgin şekilde
+       opaklaştırıyoruz ki glow sadece kenarlarda hafif bir ışıma olarak
+       kalsın, içerik üzerinde görünmesin. */
+    .app-container {
+        background: rgba(11, 8, 19, 0.96);
     }
 }
 
