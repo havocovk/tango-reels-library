@@ -44,7 +44,7 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
     const lang = translations[currentLang];
 
     // ── Sidebar ──────────────────────────────────────────────
-    setText('sidebar-title', lang.brandTitle);
+    setText('sidebar-title-text', lang.brandTitle);
     setText('lang-toggle-btn', lang.langBtn);
 
     // Adim 5.5: Rastgele buton metni

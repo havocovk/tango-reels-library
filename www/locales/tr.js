@@ -1,6 +1,6 @@
 // Türkçe dil dosyası
 export const tr = {
-    brandTitle: "💃 Arjantin Tango Kombinasyon Koleksiyonu",
+    brandTitle: "ATKK",
     title: "Arjantin Tango Kombinasyon Koleksiyonu",
     menuLibrary: "Koleksiyon",
     menuFavorites: "Favoriler",

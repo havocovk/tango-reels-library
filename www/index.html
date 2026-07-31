@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="assets/logo/logo-192.svg">
+    <link rel="apple-touch-icon" href="assets/logo/logo-192.png">
     <link rel="stylesheet" href="styles/base.css">
     <link rel="stylesheet" href="styles/buttons.css">
     <link rel="stylesheet" href="styles/cards.css">
@@ -43,7 +45,10 @@
     <!-- Sol Menü -->
     <nav class="sidebar-glass">
         <div class="sidebar-header">
-            <h2 id="sidebar-title"></h2>
+            <h2 id="sidebar-title" style="display:flex;align-items:center;gap:8px;">
+                <img src="assets/logo/logo-192.svg" alt="ATKK" style="width:28px;height:28px;flex-shrink:0;">
+                <span id="sidebar-title-text"></span>
+            </h2>
             <div style="display:flex;align-items:center;gap:8px;">
                 <span id="offline-queue-badge" title="Çevrimdışı bekleyen değişiklikler" style="
                     display:none;
