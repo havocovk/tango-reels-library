@@ -281,8 +281,16 @@ export function renderPlaylistsInMobileSheet() {
         btn.addEventListener('click', async () => {
             await selectPlaylist(pl.id);
             document.getElementById('lists-sheet-overlay')?.classList.add('d-none');
-            const menuLibraryBtn = document.getElementById('menu-library');
-            if (menuLibraryBtn) menuLibraryBtn.click();
+            // ✅ DÜZELTİLDİ: Önceden menu-library butonuna .click() ile
+            // tıklanıyordu; bu da callSwitchView('library')'yi opsiyonsuz
+            // çağırıp clearActivePlaylist() ile az önce seçilen playlist'i
+            // anında sıfırlıyordu (Listelerim'e tıklayınca içindeki videolar
+            // hiç görünmüyordu). navigation.js'i üst seviyede import etmek
+            // döngüsel bağımlılık yaratacağından (navigation.js zaten bu
+            // dosyadan clearActivePlaylist import ediyor), dinamik import
+            // ile callSwitchView'i preservePlaylist:true ile çağırıyoruz.
+            const { callSwitchView } = await import('./navigation.js');
+            callSwitchView('library', { preservePlaylist: true });
         });
 
         container.appendChild(btn);

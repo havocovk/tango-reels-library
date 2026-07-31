@@ -45,7 +45,14 @@ export function callUpdateInterfaceLanguage() {
 }
 
 export function callSwitchView(viewName, options = {}) {
-    clearActivePlaylist();
+    // ✅ DÜZELTİLDİ (mobil "Listelerim" sheet): playlist seçilip ardından
+    // view değiştirildiğinde (library'ye geçiş) activePlaylistId'nin
+    // sıfırlanmaması gerekiyor — options.preservePlaylist:true ile bu
+    // temizleme adımı atlanır. Masaüstü sidebar akışı (playlist dışı bir
+    // menüye tıklama) hâlâ varsayılan olarak temizler.
+    if (!options.preservePlaylist) {
+        clearActivePlaylist();
+    }
     store.set('currentView', viewName);
     store.set('visibleCount', 20);
     setVisibleCount(store.get('visibleCount'));
