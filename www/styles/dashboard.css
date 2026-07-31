@@ -232,4 +232,22 @@
     .dashboard-row-mid    { grid-template-columns: 1fr 1fr; }
     .dash-card-value      { font-size: 1.8rem; }
     .dash-card-action     { padding: 7px 10px; font-size: 0.72rem; }
+
+    /* Adım 2 (ek): "En Çok Çalışılan Teknikler" chip listesi zaten
+       flex-wrap:wrap kullanıyordu (CSS taşması tespit edilmedi), ama
+       Orhan'ın ekran görüntüsünde son satırdaki chip'ler kart/ekran
+       kenarına çok yakın görünüyordu. Önleyici olarak: mobilde
+       .dashboard-row-mid'deki kartların label'ı (ör. "Tango Şovu")
+       daralan 1fr sütunda sıkışmasın diye küçültüldü, toptags kartına
+       ve chip listesine ekstra alt boşluk eklendi. */
+    .dash-card-label {
+        font-size: 0.72rem;
+    }
+    .dash-card-toptags,
+    .dash-card-recent {
+        padding-bottom: 24px;
+    }
+    .dash-toptags-list {
+        margin-bottom: 4px;
+    }
 }
