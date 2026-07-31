@@ -94,6 +94,7 @@ body {
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 .sidebar-header {
