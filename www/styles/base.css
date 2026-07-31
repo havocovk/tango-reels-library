@@ -65,6 +65,13 @@ body {
 }
 
 .app-container {
+    /* position:relative ŞART: z-index yalnızca position'ı static olmayan
+       elementlerde uygulanır. Bu kural olmadan z-index:2 tarayıcı tarafından
+       tamamen yok sayılıyordu — .bg-glow (position:fixed, z-index:1) DOM
+       sırasına/kendi stacking context'ine göre üstte kalabiliyordu, arkaplan
+       ne kadar opak olursa olsun glow content'in üstünden görünüyordu
+       (Orhan'ın asıl şikayeti buydu; opaklık denemeleri kökeni atlamıştı). */
+    position: relative;
     display: flex;
     width: 95vw;
     height: 90vh;
@@ -172,6 +179,16 @@ body {
        akışta üst üste dizilir ve TÜM sayfa birlikte kayar (uygulama-shell
        gibi sabit header + iç scroll değil). height:100%/overflow:hidden
        denemesi bunu bozup sidebar'ı sabitlemişti — geri alındı. */
+    /* Masaüstünde .app-container yarı saydam bir "kart" (rgba(11,8,19,0.7)
+       + backdrop-filter:blur) — glow'lar kartın KENARLARINDAN sızar ama
+       kartın kendisi görünür bir kutu olduğu için içerik hep net kalır.
+       Mobilde .app-container ekranın tamamını kapladığı için "kenar" kalmaz;
+       backdrop-filter, arkasındaki glow'u bulanıklaştırıp kendi üzerine
+       yansıtmaya devam ettiğinden yarı saydam arkaplan glow'u içeri
+       sızdırıyordu (Orhan'ın 2. şikayeti — %96 opaklık denemesi yetersizdi).
+       Çözüm: mobilde backdrop-filter'ı tamamen kaldırıp arkaplanı tam opak
+       #000000 yapmak — masaüstündeki "kart" hissini, glow'u tamamen dışarıda
+       bırakan solid bir kutuyla birebir taklit ediyor. */
     .app-container {
         flex-direction: column;
         width: 100%;
@@ -183,14 +200,23 @@ body {
         border-radius: 0;
         border-left: none;
         border-right: none;
+        background: #000000;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
 
+    /* .sidebar-glass ve .main-content-glass'ın kendi yarı saydam
+       arkaplanları var (rgba(...,0.6) ve rgba(...,0.3)) — .app-container'ı
+       #000000 yaptığımızda bile bu iki iç katman saydam kaldığı için
+       glow onların üzerinden sızmaya devam ediyordu. Mobilde ikisini de
+       tam opak yapıyoruz. */
     nav.sidebar-glass {
         width: 100%;
         height: auto;
         padding: 15px;
         margin-bottom: 15px;
         border-radius: 16px;
+        background: #000000;
     }
 
     /* flex:1 + overflow-y:auto (masaüstü kuralı) mobilde .app-container'ın
@@ -204,6 +230,7 @@ body {
         padding: 20px;
         flex: none;
         overflow-y: visible;
+        background: #000000;
     }
 
     .library-sticky-bar {
@@ -219,19 +246,6 @@ body {
         opacity: 0.35;
     }
 
-    /* Glow'lar (Adım 2 düzeltmesi): .app-container'ın arkaplanı
-       rgba(11,8,19,0.7) yarı saydam olduğu için position:fixed glow'lar
-       backdrop-filter:blur'un içinden sızıp kart/buton metinlerinin
-       okunabilirliğini bozuyordu (Orhan'ın "duman kartların üstüne çıkıyor"
-       şikayeti). Kartların/butonların z-index'i zaten .app-container'ın
-       z-index:2'sinden miras aldığı için glow'un z-index:1'inin üstünde
-       kalıyorlar — sorun z-index değil, arkaplanın yeterince opak olmaması.
-       Mobilde .app-container'ın arkaplanını belirgin şekilde
-       opaklaştırıyoruz ki glow sadece kenarlarda hafif bir ışıma olarak
-       kalsın, içerik üzerinde görünmesin. */
-    .app-container {
-        background: rgba(11, 8, 19, 0.96);
-    }
 }
 
 /* ═══════════════════════════════════════════════════════════
