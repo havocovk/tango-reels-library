@@ -1,6 +1,6 @@
 // İngilizce dil dosyası
 export const en = {
-    brandTitle: "ATKK",
+    brandTitle: "Argentine Tango Combination Collection",
     title: "Argentine Tango Combination Collection",
     menuLibrary: "Collection",
     menuFavorites: "Favorites",
