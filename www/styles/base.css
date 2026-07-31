@@ -231,20 +231,27 @@ body {
        buradan geliyordu. Mobilde flex:none + overflow-y:visible ile içerik
        doğal yüksekliğine göre büyüsün, tüm sayfa (sidebar dahil) birlikte
        kaysın istiyoruz. */
+    /* Orhan'ın isteği: "Daha Fazla" bottom sheet'in kenardan kenara oturan
+       görünümüne benzer şekilde video kartlarının da mümkün olduğunca
+       ekran genişliğini kullanması. Kartların kendi border-radius:20px
+       köşe tasarımı korunduğu için (tercih: "boşluğu küçült", köşeleri
+       kaldırma değil) yatay padding 14px'ten 8px'e indirildi, dikey 14px
+       aynı kaldı — üst/alt boşluk (sticky bar, ilk kart arası mesafe)
+       etkilenmesin diye ayrı ayrı tanımlandı. */
     .main-content-glass {
         width: 100%;
-        padding: 14px;
+        padding: 14px 8px;
         flex: none;
         overflow-y: visible;
         background: #000000;
     }
 
-    /* library-sticky-bar'ın negatif margin'i .main-content-glass'ın
-       padding'iyle eşleşmeli (bleed tekniği) — 20px'ten 14px'e güncellendi. */
+    /* library-sticky-bar'ın negatif margin'i .main-content-glass'ın YATAY
+       padding'iyle eşleşmeli (bleed tekniği) — 20px'ten 8px'e güncellendi. */
     .library-sticky-bar {
         top: 0;
-        margin: 0 -14px;
-        padding: 14px 14px 10px 14px;
+        margin: 0 -8px;
+        padding: 14px 8px 10px 8px;
     }
 
     .bg-glow {
