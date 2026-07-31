@@ -276,8 +276,13 @@ export function renderTagManagerUI() {
             countCell.style.cssText = 'text-align:center; width:80px; font-size:0.85rem; color:#94a3b8;';
 
             // İşlemler
+            // ✅ DÜZELTİLDİ (Adım 5): 70px, header'daki 90px ile tutarsızdı ve
+            // iki buton (rename+delete) için zaten yetersizdi — mobilde
+            // butonlar kırpılıyordu. Header genişliğiyle eşleştirildi;
+            // taşan durumlarda artık tag-manager-table'ı saran
+            // .heatmap-scroll-wrapper yatay kaydırma sağlıyor.
             const actionCell = row.insertCell(3);
-            actionCell.style.cssText = 'width:70px; text-align:center;';
+            actionCell.style.cssText = 'width:90px; text-align:center;';
             const wrapper = document.createElement('div');
             wrapper.style.cssText = 'display:flex; gap:4px; justify-content:center; align-items:center;';
 
