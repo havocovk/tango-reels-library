@@ -189,6 +189,12 @@ body {
        Çözüm: mobilde backdrop-filter'ı tamamen kaldırıp arkaplanı tam opak
        #000000 yapmak — masaüstündeki "kart" hissini, glow'u tamamen dışarıda
        bırakan solid bir kutuyla birebir taklit ediyor. */
+    /* Adım 6: mobilde .app-container(padding:10px) + .main-content-glass
+       (padding:20px) üst üste biniyordu — toplamda her kenardan ~30px,
+       iki yandan ~60px kullanılabilir genişlik boşa gidiyordu (Orhan'ın
+       "kartlar ortada dar bir sütunda sıkışmış" şikayeti). .app-container
+       padding'i 10px'ten 6px'e indirildi; kalan boşluk .main-content-glass
+       tarafında (aşağıda 14px'e indirildi) tek noktadan yönetiliyor. */
     .app-container {
         flex-direction: column;
         width: 100%;
@@ -196,7 +202,7 @@ body {
         height: auto;
         min-height: 100vh;
         margin: 0;
-        padding: 10px;
+        padding: 6px;
         border-radius: 0;
         border-left: none;
         border-right: none;
@@ -227,16 +233,18 @@ body {
        kaysın istiyoruz. */
     .main-content-glass {
         width: 100%;
-        padding: 20px;
+        padding: 14px;
         flex: none;
         overflow-y: visible;
         background: #000000;
     }
 
+    /* library-sticky-bar'ın negatif margin'i .main-content-glass'ın
+       padding'iyle eşleşmeli (bleed tekniği) — 20px'ten 14px'e güncellendi. */
     .library-sticky-bar {
         top: 0;
-        margin: 0 -20px;
-        padding: 14px 20px 10px 20px;
+        margin: 0 -14px;
+        padding: 14px 14px 10px 14px;
     }
 
     .bg-glow {
