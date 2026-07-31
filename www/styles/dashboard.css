@@ -31,6 +31,16 @@
     display: grid;
     gap: 14px;
 }
+/* ✅ DÜZELTİLDİ (Adım 2 devamı): eskiden dashboard-row-top (3 kart) ve
+   satır-içi stil kullanan ikinci bir satır (3 kart, hiçbir class'ı
+   yoktu) ayrı ayrı yönetiliyordu. Mobil media query sadece
+   dashboard-row-top'u 1 kolona düşürüyordu; class'sız ikinci satır
+   satır-içi repeat(3,1fr)'i mobilde de koruyup 3. kartı (Bu Hafta
+   Çalışıldı) görünmeyecek kadar sıkıştırıyordu. Artık dashboard.html'de
+   toplam 6 kart tek bir .dashboard-row-all grid'inde; masaüstünde
+   3 kolon (2+2+2 sığar), mobilde (aşağıdaki media query) 2 kolon —
+   2+2+2 düzeni, tutarlı, yarım kalan satır yok. */
+.dashboard-row-all { grid-template-columns: repeat(3, 1fr); }
 .dashboard-row-top { grid-template-columns: repeat(3, 1fr); }
 .dashboard-row-mid { grid-template-columns: repeat(2, 1fr); }
 
@@ -228,6 +238,11 @@
 /* Mobil */
 @media (max-width: 640px) {
     .dashboard-wrapper    { padding: 16px 14px 32px; gap: 12px; }
+    /* .dashboard-row-all: 6 kart mobilde 2 kolonda 2+2+2 diziliyor —
+       hepsi tutarlı boyutta, "bazıları büyük bazıları küçük" görünmüyor
+       (Orhan'ın asıl şikayeti buydu). Eski dashboard-row-top/mid kuralları
+       artık HTML'de kullanılmadığı için etkisiz, güvenlik amaçlı bırakıldı. */
+    .dashboard-row-all    { grid-template-columns: 1fr 1fr; }
     .dashboard-row-top    { grid-template-columns: 1fr; }
     .dashboard-row-mid    { grid-template-columns: 1fr 1fr; }
     .dash-card-value      { font-size: 1.8rem; }

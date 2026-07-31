@@ -10,7 +10,21 @@
             <p class="dashboard-subtitle" id="dash-subtitle">Kombinasyon koleksiyonunun özeti</p>
         </div>
 
-        <div class="dashboard-row dashboard-row-top">
+        <!-- ✅ DÜZELTİLDİ (Adım 2 devamı): önceden 2 ayrı grid vardı —
+             .dashboard-row-top (3 kart, mobilde 1 kolona düşüyordu) ve
+             satır-içi style="grid-template-columns:repeat(3,1fr)" olan
+             ikinci satır (3 kart, mobil media query'si onu HİÇ
+             etkilemiyordu çünkü class'ı yoktu, sadece satır-içi stil
+             kullanıyordu — bu yüzden mobilde de 3 dar kolon kalıyor,
+             "Bu Hafta Çalışıldı" kartı görünmeyecek kadar sıkışıyordu).
+             Orhan'ın tercihi: toplam 6 kartı (Bugün Tekrar, Öğreniliyor,
+             Ustalaşıldı, Kombinasyon, Tango Şovu, Bu Hafta Çalışıldı) tek
+             bir 2 kolonlu grid'e alıp mobilde tutarlı 2+2+2 düzeni
+             sağlamak. Masaüstünde dashboard-row-top zaten 3 kolondu; şimdi
+             tüm 6 kart aynı .dashboard-row-all grid'inde, masaüstünde
+             3 kolon (dashboard.css), mobilde 2 kolon olacak şekilde tek
+             noktadan yönetiliyor. -->
+        <div class="dashboard-row dashboard-row-all">
 
             <div class="dash-card dash-card-due">
                 <div class="dash-card-icon-wrap dash-icon-cyan">
@@ -45,10 +59,6 @@
                     <div class="dash-card-label" id="dash-mastered-label">Ustalaşıldı</div>
                 </div>
             </div>
-
-        </div>
-
-        <div class="dashboard-row" style="grid-template-columns:repeat(3,1fr);">
 
             <div class="dash-card dash-card-total">
                 <div class="dash-card-icon-wrap dash-icon-purple">
