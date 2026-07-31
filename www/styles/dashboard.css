@@ -237,16 +237,46 @@
 
 /* Mobil */
 @media (max-width: 640px) {
-    .dashboard-wrapper    { padding: 16px 14px 32px; gap: 12px; }
-    /* .dashboard-row-all: 6 kart mobilde 2 kolonda 2+2+2 diziliyor —
-       hepsi tutarlı boyutta, "bazıları büyük bazıları küçük" görünmüyor
-       (Orhan'ın asıl şikayeti buydu). Eski dashboard-row-top/mid kuralları
-       artık HTML'de kullanılmadığı için etkisiz, güvenlik amaçlı bırakıldı. */
-    .dashboard-row-all    { grid-template-columns: 1fr 1fr; }
+    /* Kaynak (ikinci hata raporu): .dashboard-wrapper zaten dar bir mobil
+       padding'e (14px) sahipti — asıl sorun .dash-card'ın KENDİSİNİN
+       masaüstü değerlerini (padding:20px, gap:16px, ikon 44px) mobilde de
+       aynen kullanmasıydı. 2 kolonlu ~245px genişliğindeki bir kartta
+       40px padding + 44px ikon + 16px gap = 100px "çerçeve" harcanıyor,
+       metne sadece ~145px kalıyor — "Bugün Tekrar" gibi iki kelimelik
+       label'lar taşıyor/kesiliyordu. Kart iç boşluğu ve ikon boyutu
+       mobilde belirgin şekilde küçültüldü. */
+    .dashboard-wrapper    { padding: 16px 10px 32px; gap: 10px; }
+    .dashboard-row-all    { grid-template-columns: 1fr 1fr; gap: 8px; }
     .dashboard-row-top    { grid-template-columns: 1fr; }
     .dashboard-row-mid    { grid-template-columns: 1fr 1fr; }
-    .dash-card-value      { font-size: 1.8rem; }
-    .dash-card-action     { padding: 7px 10px; font-size: 0.72rem; }
+
+    .dash-card {
+        padding: 10px;
+        gap: 8px;
+    }
+    .dash-card-icon-wrap {
+        width: 32px;
+        height: 32px;
+    }
+    .dash-card-icon-wrap svg {
+        width: 16px;
+        height: 16px;
+    }
+    .dash-card-value      { font-size: 1.3rem; margin-bottom: 1px; }
+
+    /* dash-card-due: ikon + body + "Pratik Başlat" butonu üçü birden
+       dar bir kartta (.dash-card display:flex) yan yana sığmıyordu.
+       Kart bu satırda flex-wrap alıyor, buton alt satıra düşüyor. */
+    .dash-card-due {
+        flex-wrap: wrap;
+    }
+    .dash-card-action {
+        padding: 5px 8px;
+        font-size: 0.62rem;
+        gap: 3px;
+        flex-basis: 100%;
+        justify-content: center;
+    }
 
     /* Adım 2 (ek): "En Çok Çalışılan Teknikler" chip listesi zaten
        flex-wrap:wrap kullanıyordu (CSS taşması tespit edilmedi), ama
