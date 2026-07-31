@@ -57,10 +57,10 @@ export function renderPlatformBarChart(stats, lang, currentLang) {
             : `<span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:${color};box-shadow:0 0 8px ${glow1};flex-shrink:0;"></span>`;
 
         return `
-        <div style="display:grid;grid-template-columns:160px 1fr 80px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
-            <div style="display:flex;align-items:center;gap:10px;overflow:hidden;">
+        <div class="platform-bar-row" style="display:grid;grid-template-columns:160px 1fr 80px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div class="platform-bar-name-col" style="display:flex;align-items:center;gap:10px;overflow:hidden;">
                 ${iconHtml}
-                <span style="font-size:0.88rem;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</span>
+                <span class="platform-bar-name-text" style="font-size:0.88rem;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</span>
             </div>
             <div style="position:relative;height:20px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;">
                 <div style="position:absolute;top:0;left:0;height:100%;width:${widthPct}%;background:linear-gradient(90deg,${color},${color}bb);box-shadow:0 0 14px ${glow1},0 0 6px ${glow2};border-radius:10px;transition:width 0.8s cubic-bezier(0.25,0.46,0.45,0.94);"></div>
@@ -73,9 +73,9 @@ export function renderPlatformBarChart(stats, lang, currentLang) {
     }).join('');
 
     container.innerHTML = `
-        <div style="background:rgba(11,8,19,0.5);border:1px solid rgba(0,240,255,0.15);border-radius:16px;padding:20px 24px;">
-            <div style="display:grid;grid-template-columns:160px 1fr 80px;gap:12px;margin-bottom:4px;">
-                <span style="font-size:0.72rem;color:#475569;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">${currentLang === 'tr' ? 'PLATFORM' : 'PLATFORM'}</span>
+        <div class="platform-bar-container" style="background:rgba(11,8,19,0.5);border:1px solid rgba(0,240,255,0.15);border-radius:16px;padding:20px 24px;min-width:340px;">
+            <div class="platform-bar-row" style="display:grid;grid-template-columns:160px 1fr 80px;gap:12px;margin-bottom:4px;">
+                <span class="platform-bar-header-name" style="font-size:0.72rem;color:#475569;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">${currentLang === 'tr' ? 'PLATFORM' : 'PLATFORM'}</span>
                 <span style="font-size:0.72rem;color:#475569;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;">${currentLang === 'tr' ? 'DAĞILIM' : 'DISTRIBUTION'}</span>
                 <span style="font-size:0.72rem;color:#475569;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;text-align:right;">${currentLang === 'tr' ? 'VİDEO' : 'VIDEOS'}</span>
             </div>

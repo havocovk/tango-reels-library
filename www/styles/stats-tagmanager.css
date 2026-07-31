@@ -268,6 +268,34 @@ canvas { max-height: 350px; width: 100%; }
     border-radius: 2px;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Adım 3 — Platform Dağılımı grafiği mobil düzeltmesi
+   Kaynak: chartRenderers.js'deki grid-template-columns:160px 1fr 80px
+   satır-içi stiller sabitti, mobilde sığmıyordu. .heatmap-scroll-wrapper
+   (statsUI.js'de eklendi) yatay kaydırmayı sağlıyor; burada ayrıca
+   Orhan'ın isteği doğrultusunda mobilde platform ismi metni tamamen
+   gizlenip sadece ikon+yüzde/sayı kalıyor, grid kolonları buna göre
+   daraltılıyor. Satır-içi style'ları override etmek için !important
+   gerekiyor (specificity gereği).
+   ═══════════════════════════════════════════════════════════ */
+@media screen and (max-width: 768px) {
+    .platform-bar-container {
+        min-width: 0 !important;
+        padding: 14px 12px !important;
+    }
+    .platform-bar-row {
+        grid-template-columns: 34px 1fr 60px !important;
+        gap: 8px !important;
+    }
+    .platform-bar-name-col {
+        gap: 0 !important;
+    }
+    .platform-bar-name-text,
+    .platform-bar-header-name {
+        display: none !important;
+    }
+}
+
 .heatmap-svg {
     display: block;
 }

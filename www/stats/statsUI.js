@@ -184,7 +184,15 @@ export function renderStats(stats, currentLang) {
             <div class="stat-label stat-label-centered" style="margin-bottom:16px;">
                 ${lang.statsPlatformDistribution}
             </div>
-            <div id="platform-bar-chart"></div>
+            <!-- ✅ DÜZELTİLDİ (Adım 3): chartRenderers.js'deki grid
+                 (160px 1fr 80px sabit kolonlar) mobilde ekrana sığmıyordu.
+                 heatmap-scroll-wrapper ile aynı overflow-x:auto pattern'i
+                 uygulandı; mobilde platform ismi kolonu CSS ile küçültülüp/
+                 gizlenip sadece ikon+yüzde kalıyor (bkz. stats-tagmanager.css
+                 .platform-bar-row / .platform-bar-name-col mobil kuralları). -->
+            <div class="heatmap-scroll-wrapper">
+                <div id="platform-bar-chart"></div>
+            </div>
         </div>
 
         <div class="stats-tags">
