@@ -10,24 +10,28 @@
     font-family: 'Poppins', sans-serif;
 }
 
-/* Asıl yatay taşma kaynağı: .bg-glow elementleri (position:absolute,
-   right:-10%/left:-10%) body kutusunun dışına taşıyordu. body{overflow-x:hidden}
-   tek başına yetmiyor — tarayıcı sayfa scroll'unu documentElement (html)
-   üzerinden yönetir, o yüzden html'e de overflow-x:hidden + max-width:100%
-   gerekiyor. Kanıt: Chrome DevTools'ta 360px genişlikte test edilip
-   documentElement.scrollWidth ölçülerek doğrulandı (494px viewport'ta
-   543px'e taşıyordu; bu düzeltmeyle 494px'e iniyor). */
-html {
-    overflow-x: hidden;
-    max-width: 100%;
+/* Taşma kaynağı: .bg-glow elementleri (position:absolute; top/left/right/bottom:-10%)
+   hem yatayda hem dikeyde body kutusunun dışına taşıyor (blur ile büyütülmüş
+   dekoratif efektler). İlk düzeltmede sadece overflow-x ele alınmıştı; bu da
+   yatay taşmayı gizledi ama body'yi kendi (gizli) dikey scroll container'ı
+   haline getirdi — glow'ların dikey taşan kısmı yüzünden body.scrollHeight,
+   clientHeight'tan büyük kaldı ve tarayıcı sağ kenarda ince bir native
+   scrollbar gösterdi (Orhan'ın gördüğü "pembe çubuk").
+   Kanıt: Chrome'da canlı sitede document.body.scrollHeight (655px) >
+   clientHeight (595px) ölçülerek doğrulandı.
+   Çözüm: html+body'yi viewport'a sabitleyip (height:100%, overflow:hidden)
+   gerçek sayfa scroll'unu zaten kendi overflow-y:auto'suna sahip olan
+   .main-content-glass'a devretmek — glow'ların taşan kısmı artık hiçbir
+   yönde scrollbar üretmiyor. */
+html, body {
+    height: 100%;
+    overflow: hidden;
 }
 
 body {
     background: #0b0813;
     color: #f1f5f9;
-    min-height: 100vh;
     max-width: 100%;
-    overflow-x: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -158,15 +162,15 @@ body {
        taşıyordu). Mobilde flex ortalamayı kaldırıp normal blok akışına geç. */
     body {
         display: block;
-        overflow-x: hidden;
+        /* overflow: hidden zaten global html,body kuralında tanımlı */
     }
 
     .app-container {
         flex-direction: column;
         width: 100%;
         max-width: 100vw;
-        height: auto;
-        min-height: 100vh;
+        height: 100%;
+        min-height: 100%;
         margin: 0;
         padding: 10px;
         border-radius: 0;
