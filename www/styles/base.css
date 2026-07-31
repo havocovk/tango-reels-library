@@ -88,14 +88,13 @@ body {
 
 /* Sol Menü Tasarımı */
 .sidebar-glass {
-    width: 280px;
+    width: 296px;
     background: rgba(11, 8, 19, 0.6);
     border-right: 1px solid rgba(0, 240, 255, 0.3);
     padding: 30px 20px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    overflow-x: hidden;
 }
 
 .sidebar-header {
