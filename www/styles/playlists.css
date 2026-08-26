@@ -3,7 +3,7 @@
 /* ── Sol menü playlist bölümü ── */
 #playlist-section-container {
     margin-top: 16px;
-    border-top: 1px solid rgba(0, 240, 255, 0.15);
+    border-top: 1px solid rgb(var(--rgb-cyan) / 0.15);
     padding-top: 12px;
 }
 
@@ -17,15 +17,15 @@
 .playlist-sidebar-title {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .playlist-new-btn {
-    background: rgba(0, 240, 255, 0.15);
-    border: 1px solid rgba(0, 240, 255, 0.3);
-    color: #00f0ff;
+    background: rgb(var(--rgb-cyan) / 0.15);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.3);
+    color: var(--c-cyan);
     width: 24px;
     height: 24px;
     border-radius: 6px;
@@ -40,13 +40,13 @@
 }
 
 .playlist-new-btn:hover {
-    background: rgba(0, 240, 255, 0.3);
+    background: rgb(var(--rgb-cyan) / 0.3);
     transform: scale(1.1);
 }
 
 .playlist-sidebar-empty {
     font-size: 0.78rem;
-    color: #475569;
+    color: var(--text-faint);
     padding: 6px 4px;
     font-style: italic;
 }
@@ -55,7 +55,7 @@
     width: 100%;
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: var(--text-secondary);
     padding: 8px 8px 8px 4px;
     border-radius: 10px;
     cursor: pointer;
@@ -70,14 +70,14 @@
 }
 
 .playlist-sidebar-btn:hover {
-    background: rgba(255, 0, 127, 0.08);
-    color: #f1f5f9;
+    background: rgb(var(--rgb-pink) / 0.08);
+    color: var(--text-primary);
 }
 
 .playlist-sidebar-btn.active {
-    background: rgba(255, 0, 127, 0.15);
-    color: #f1f5f9;
-    border-left: 2px solid #00f0ff;
+    background: rgb(var(--rgb-pink) / 0.15);
+    color: var(--text-primary);
+    border-left: 2px solid var(--c-cyan);
     border-radius: 2px 10px 10px 2px;
 }
 
@@ -116,18 +116,18 @@
     transition: background 0.15s ease;
 }
 
-.playlist-edit-btn:hover  { background: rgba(0, 240, 255, 0.2); }
-.playlist-delete-btn:hover { background: rgba(239, 68, 68, 0.2); }
+.playlist-edit-btn:hover  { background: rgb(var(--rgb-cyan) / 0.2); }
+.playlist-delete-btn:hover { background: rgb(var(--rgb-red) / 0.2); }
 
 /* ── Video kart üzerindeki playlist butonu ── */
 .playlist-add-btn {
     position: absolute;
     top: 52px;
     left: 10px;
-    background: rgba(11, 8, 19, 0.7);
+    background: rgb(var(--rgb-ink) / 0.7);
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(0, 240, 255, 0.3);
-    color: #00f0ff;
+    border: 1px solid rgb(var(--rgb-cyan) / 0.3);
+    color: var(--c-cyan);
     font-size: 0.85rem;
     width: 30px;
     height: 30px;
@@ -146,19 +146,19 @@
 }
 
 .playlist-add-btn:hover {
-    background: rgba(0, 240, 255, 0.25);
-    border-color: #00f0ff;
+    background: rgb(var(--rgb-cyan) / 0.25);
+    border-color: var(--c-cyan);
 }
 
 /* ── Playlist açılır menüsü (dropdown) ── */
 .playlist-dropdown {
-    background: rgba(11, 8, 19, 0.97);
-    border: 1px solid rgba(0, 240, 255, 0.3);
+    background: rgb(var(--rgb-ink) / 0.97);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.3);
     border-radius: 12px;
     padding: 6px;
     min-width: 180px;
     max-width: 240px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(0, 240, 255, 0.1);
+    box-shadow: 0 8px 32px rgb(var(--rgb-black) / 0.6), 0 0 16px rgb(var(--rgb-cyan) / 0.1);
     backdrop-filter: blur(12px);
 }
 
@@ -166,7 +166,7 @@
     width: 100%;
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: var(--text-secondary);
     padding: 8px 10px;
     border-radius: 8px;
     cursor: pointer;
@@ -180,17 +180,17 @@
 }
 
 .playlist-dropdown-item:hover {
-    background: rgba(0, 240, 255, 0.1);
-    color: #f1f5f9;
+    background: rgb(var(--rgb-cyan) / 0.1);
+    color: var(--text-primary);
 }
 
 .playlist-dropdown-item.in-playlist {
-    color: #10b981;
+    color: var(--c-green);
 }
 
 .playlist-dropdown-item.in-playlist:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    background: rgb(var(--rgb-red) / 0.1);
+    color: var(--c-red);
 }
 
 .playlist-check {
@@ -201,9 +201,9 @@
 
 .playlist-dropdown-new {
     width: 100%;
-    background: rgba(255, 0, 127, 0.1);
-    border: 1px dashed rgba(255, 0, 127, 0.35);
-    color: #ff007f;
+    background: rgb(var(--rgb-pink) / 0.1);
+    border: 1px dashed rgb(var(--rgb-pink) / 0.35);
+    color: var(--c-pink);
     padding: 7px 10px;
     border-radius: 8px;
     cursor: pointer;
@@ -215,6 +215,6 @@
 }
 
 .playlist-dropdown-new:hover {
-    background: rgba(255, 0, 127, 0.2);
+    background: rgb(var(--rgb-pink) / 0.2);
     border-style: solid;
 }

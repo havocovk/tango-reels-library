@@ -4,11 +4,11 @@
 
 /* İstatistik container */
 .stats-container {
-    background: rgba(11, 8, 19, 0.5);
+    background: rgb(var(--rgb-ink) / 0.5);
     border-radius: 20px;
     padding: 15px;
     margin: 15px 0 20px 0;
-    border: 1px solid rgba(0, 240, 255, 0.2);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.2);
 }
 
 .stats-grid {
@@ -19,7 +19,7 @@
 }
 
 .stat-card {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgb(var(--rgb-black) / 0.4);
     border-radius: 12px;
     padding: 8px 12px;
     text-align: center;
@@ -28,12 +28,12 @@
 .stat-value {
     font-size: 1.8rem;
     font-weight: bold;
-    color: #00f0ff;
+    color: var(--c-cyan);
 }
 
 .stat-label {
     font-size: 0.75rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .role-cards {
@@ -45,23 +45,27 @@
 
 .role-card {
     flex: 1;
-    background: rgba(0,0,0,0.4);
+    background: rgb(var(--rgb-black) / 0.4);
     border-radius: 16px;
     padding: 12px;
     text-align: center;
     border-top: 3px solid;
 }
 
-.role-card.leader { border-color: #00f0ff; }
-.role-card.follower { border-color: #ff007f; }
-.role-card.both { border-color: #c084fc; }
+.role-card.leader { border-color: var(--c-cyan); }
+.role-card.follower { border-color: var(--c-pink); }
+/* "Çift" = lider + takipçi. Renk ikiliği kendi anlatıyor:
+   .role-card üzerindeki border-top:3px solid, border-image ile
+   soldan sağa cyan→pembe geçişi alır. Diğer kenarlar 0px olduğu
+   için gradyan yalnızca üst şeritte görünür. */
+.role-card.both { border-image: var(--rule-couple) 1; }
 .role-count { font-size: 2rem; font-weight: bold; }
-.role-name { font-size: 0.8rem; color: #94a3b8; }
+.role-name { font-size: 0.8rem; color: var(--text-secondary); }
 
 .platform-chart-container,
 .monthly-chart-container {
     margin-top: 20px;
-    background: rgba(0,0,0,0.3);
+    background: rgb(var(--rgb-black) / 0.3);
     border-radius: 16px;
     padding: 15px;
 }
@@ -80,11 +84,11 @@ canvas { max-height: 350px; width: 100%; }
 }
 
 .tag-badge {
-    background: rgba(255, 0, 127, 0.2);
+    background: rgb(var(--rgb-pink) / 0.2);
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.75rem;
-    color: #ff80bf;
+    color: var(--c-pink-soft);
 }
 
 .stat-label-centered {
@@ -97,7 +101,7 @@ canvas { max-height: 350px; width: 100%; }
 .tag-manager-table {
     width: 100%;
     border-collapse: collapse;
-    background: rgba(11, 8, 19, 0.6);
+    background: rgb(var(--rgb-ink) / 0.6);
     border-radius: 16px;
     overflow: hidden;
 }
@@ -105,12 +109,12 @@ canvas { max-height: 350px; width: 100%; }
 .tag-manager-table th,
 .tag-manager-table td {
     padding: 12px 10px;
-    border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-    color: #f1f5f9;
+    border-bottom: 1px solid rgb(var(--rgb-cyan) / 0.2);
+    color: var(--text-primary);
 }
 
 .tag-manager-table th {
-    background: rgba(255, 0, 127, 0.2);
+    background: rgb(var(--rgb-pink) / 0.2);
     font-weight: 600;
     text-align: left;
 }
@@ -130,16 +134,16 @@ canvas { max-height: 350px; width: 100%; }
     width: 16px;
     height: 16px;
     cursor: pointer;
-    accent-color: #ff007f;
-    background-color: #0b0813;
-    border: 1px solid #ff007f;
+    accent-color: var(--c-pink);
+    background-color: var(--surface-base);
+    border: 1px solid var(--c-pink);
     border-radius: 3px;
     vertical-align: middle;
 }
 
 .tag-merge-input {
-    background: #0b0813;
-    border: 1px solid #ff007f;
+    background: var(--surface-base);
+    border: 1px solid var(--c-pink);
     padding: 6px 12px;
     border-radius: 8px;
     color: white;
@@ -150,7 +154,7 @@ canvas { max-height: 350px; width: 100%; }
 .loading-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgb(var(--rgb-black) / 0.7);
     backdrop-filter: blur(4px);
     z-index: 20000;
     display: flex;
@@ -169,7 +173,7 @@ canvas { max-height: 350px; width: 100%; }
     right: 20px;
     min-width: 260px;
     max-width: 350px;
-    background: rgba(11, 8, 19, 0.95);
+    background: rgb(var(--rgb-ink) / 0.95);
     backdrop-filter: blur(12px);
     border-left: 4px solid;
     border-radius: 12px;
@@ -177,37 +181,37 @@ canvas { max-height: 350px; width: 100%; }
     display: flex;
     align-items: center;
     gap: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 20px rgb(var(--rgb-black) / 0.3);
     z-index: 20001;
     transform: translateX(120%);
     transition: transform 0.3s ease;
     font-family: var(--font-body);
     font-size: 0.9rem;
-    color: #f1f5f9;
+    color: var(--text-primary);
 }
 
 .toast-notification.show {
     transform: translateX(0);
 }
 
-.toast-success { border-left-color: #10b981; }
-.toast-error { border-left-color: #ef4444; }
-.toast-warning { border-left-color: #f59e0b; }
-.toast-info { border-left-color: #00f0ff; }
+.toast-success { border-left-color: var(--c-green); }
+.toast-error { border-left-color: var(--c-red); }
+.toast-warning { border-left-color: var(--c-amber); }
+.toast-info { border-left-color: var(--c-cyan); }
 
 .toast-icon { font-size: 1.4rem; flex-shrink: 0; }
 .toast-message { flex: 1; word-break: break-word; }
 .toast-close {
     background: none;
     border: none;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 1.2rem;
     cursor: pointer;
     padding: 0;
     margin-left: 8px;
     transition: color 0.2s;
 }
-.toast-close:hover { color: #ff007f; }
+.toast-close:hover { color: var(--c-pink); }
 
 @media (max-width: 640px) {
     .toast-notification {
@@ -239,14 +243,14 @@ canvas { max-height: 350px; width: 100%; }
    ═══════════════════════════════════════════════════════════ */
 .heatmap-section {
     margin-top: 28px;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgb(var(--rgb-black) / 0.3);
     border-radius: 16px;
     padding: 18px 16px 14px;
 }
 
 .heatmap-title {
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-weight: 600;
     margin-bottom: 14px;
     letter-spacing: 0.02em;
@@ -257,14 +261,14 @@ canvas { max-height: 350px; width: 100%; }
     overflow-x: auto;
     position: relative;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 0, 127, 0.3) transparent;
+    scrollbar-color: rgb(var(--rgb-pink) / 0.3) transparent;
 }
 
 .heatmap-scroll-wrapper::-webkit-scrollbar {
     height: 4px;
 }
 .heatmap-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(255, 0, 127, 0.3);
+    background: rgb(var(--rgb-pink) / 0.3);
     border-radius: 2px;
 }
 
@@ -315,9 +319,9 @@ canvas { max-height: 350px; width: 100%; }
 .heatmap-tooltip {
     display: none;
     position: absolute;
-    background: rgba(11, 8, 19, 0.95);
-    border: 1px solid rgba(0, 240, 255, 0.3);
-    color: #f1f5f9;
+    background: rgb(var(--rgb-ink) / 0.95);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.3);
+    color: var(--text-primary);
     font-size: 0.72rem;
     font-family: var(--font-body);
     padding: 5px 10px;
@@ -325,7 +329,7 @@ canvas { max-height: 350px; width: 100%; }
     pointer-events: none;
     white-space: nowrap;
     z-index: 100;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgb(var(--rgb-black) / 0.4);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -338,9 +342,9 @@ canvas { max-height: 350px; width: 100%; }
     align-items: center;
     margin-top: 10px;
     padding: 14px;
-    background: rgba(0, 0, 0, 0.25);
+    background: rgb(var(--rgb-black) / 0.25);
     border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgb(var(--rgb-white) / 0.06);
     min-height: 60px;
 }
 
@@ -364,7 +368,7 @@ canvas { max-height: 350px; width: 100%; }
 .tag-cloud-item:hover {
     transform: scale(1.12) translateY(-2px);
     filter: brightness(1.35);
-    background: rgba(255, 255, 255, 0.07);
+    background: rgb(var(--rgb-white) / 0.07);
 }
 
 .tag-cloud-item:active {
@@ -374,7 +378,7 @@ canvas { max-height: 350px; width: 100%; }
 .tag-cloud-hint {
     margin-top: 8px;
     font-size: 0.72rem;
-    color: #475569;
+    color: var(--text-faint);
     text-align: center;
     letter-spacing: 0.02em;
 }
@@ -402,10 +406,10 @@ canvas { max-height: 350px; width: 100%; }
     display: flex;
     align-items: center;
     gap: 6px;
-    background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(255, 0, 127, 0.55);
+    background: rgb(var(--rgb-black) / 0.55);
+    border: 1px solid rgb(var(--rgb-pink) / 0.55);
     border-radius: 10px;
-    color: #f1f5f9;
+    color: var(--text-primary);
     font-family: var(--font-body);
     font-size: 0.85rem;
     font-weight: 600;
@@ -418,13 +422,13 @@ canvas { max-height: 350px; width: 100%; }
 
 .year-dropdown-trigger:hover,
 .year-dropdown-trigger.open {
-    border-color: #ff007f;
-    box-shadow: 0 0 8px rgba(255, 0, 127, 0.35);
+    border-color: var(--c-pink);
+    box-shadow: 0 0 8px rgb(var(--rgb-pink) / 0.35);
 }
 
 .year-dropdown-arrow {
     font-size: 0.7rem;
-    color: #ff007f;
+    color: var(--c-pink);
     transition: transform 0.2s ease;
     display: inline-block;
 }
@@ -441,10 +445,10 @@ canvas { max-height: 350px; width: 100%; }
     left: 50%;
     transform: translateX(-50%);
     min-width: 90px;
-    background: rgba(11, 8, 25, 0.97);
-    border: 1px solid rgba(255, 0, 127, 0.4);
+    background: var(--surface-overlay);
+    border: 1px solid rgb(var(--rgb-pink) / 0.4);
     border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 0, 127, 0.15);
+    box-shadow: 0 8px 24px rgb(var(--rgb-black) / 0.6), 0 0 12px rgb(var(--rgb-pink) / 0.15);
     overflow: hidden;
     z-index: 1000;
     backdrop-filter: blur(12px);
@@ -457,7 +461,7 @@ canvas { max-height: 350px; width: 100%; }
 /* Her yıl satırı */
 .year-dropdown-item {
     padding: 9px 18px;
-    color: #cbd5e1;
+    color: var(--text-soft);
     font-family: var(--font-body);
     font-size: 0.85rem;
     font-weight: 500;
@@ -467,13 +471,13 @@ canvas { max-height: 350px; width: 100%; }
 }
 
 .year-dropdown-item:hover {
-    background: rgba(255, 0, 127, 0.18);
-    color: #f1f5f9;
+    background: rgb(var(--rgb-pink) / 0.18);
+    color: var(--text-primary);
 }
 
 .year-dropdown-item.active {
-    background: rgba(255, 0, 127, 0.25);
-    color: #ff007f;
+    background: rgb(var(--rgb-pink) / 0.25);
+    color: var(--c-pink);
     font-weight: 700;
 }
 
@@ -494,12 +498,12 @@ canvas { max-height: 350px; width: 100%; }
 
 .tm-color-dot:hover {
     transform: scale(1.25);
-    border-color: #fff !important;
+    border-color: var(--text-strong) !important;
 }
 
 .tm-color-dot-active {
     transform: scale(1.15);
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 6px rgb(var(--rgb-white) / 0.6);
 }
 
 /* Renk önizleme + seçici sarmalayıcı */
@@ -521,6 +525,14 @@ canvas { max-height: 350px; width: 100%; }
 
 /* ============================================
    ✅ YENİ (Adım 4.3): Öğrenme Yolu Önerisi Kartı
+
+   ⚠️ DEVRE DIŞI — TOKEN'A ÇEVRİLMEDİ.
+   learningPathAdvisor.js hiçbir yerden import edilmiyor (bkz. CLAUDE.md:
+   "AI Öğrenme Yolu Önerisi bilinçli olarak devre dışı bırakıldı").
+   Aşağıdaki tüm .learning-path-card / .lp-* kuralları render EDİLMİYOR.
+   Bu yüzden Adım 2 token geçişinde kasıtlı olarak atlandılar ve ham
+   hex/rgba değerlerini koruyorlar. Özellik yeniden açılırsa bu blok
+   da token'lara çevrilmeli.
    ✅ DÜZELTME: lp-continue-tags, lp-tag-meta stilleri eklendi
    ============================================ */
 

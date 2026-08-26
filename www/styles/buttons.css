@@ -16,7 +16,7 @@
 .menu-btn {
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: var(--text-secondary);
     padding: 14px 16px;
     border-radius: 12px;
     cursor: pointer;
@@ -30,25 +30,25 @@
 }
 
 .menu-btn:hover {
-    background: rgba(255, 0, 127, 0.1);
-    color: #f1f5f9;
-    text-shadow: 0 0 4px #ff007f;
+    background: rgb(var(--rgb-pink) / 0.1);
+    color: var(--text-primary);
+    text-shadow: 0 0 4px var(--c-pink);
 }
 
 .menu-btn.active {
-    background: rgba(255, 0, 127, 0.2);
-    color: #ff007f;
+    background: rgb(var(--rgb-pink) / 0.2);
+    color: var(--c-pink);
     font-weight: 600;
-    border-left: 3px solid #00f0ff;
+    border-left: 3px solid var(--c-cyan);
     border-radius: 4px 12px 12px 4px;
-    box-shadow: inset 0 0 8px rgba(0,240,255,0.2);
+    box-shadow: inset 0 0 8px rgb(var(--rgb-cyan) / 0.2);
 }
 
 /* ── Dil butonu ────────────────────────────────────────────── */
 .lang-btn {
-    background: rgba(255, 0, 127, 0.15);
-    border: 1px solid rgba(0, 240, 255, 0.4);
-    color: #f1f5f9;
+    background: rgb(var(--rgb-pink) / 0.15);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.4);
+    color: var(--text-primary);
     padding: 6px 12px;
     border-radius: 10px;
     cursor: pointer;
@@ -58,15 +58,15 @@
 }
 
 .lang-btn:hover {
-    background: rgba(255, 0, 127, 0.3);
-    border-color: #00f0ff;
-    box-shadow: 0 0 8px #00f0ff;
+    background: rgb(var(--rgb-pink) / 0.3);
+    border-color: var(--c-cyan);
+    box-shadow: 0 0 8px var(--c-cyan);
 }
 
 /* ── Ana buton (gradyan) ───────────────────────────────────── */
 .btn-primary {
-    background: linear-gradient(135deg, #ff007f, #00f0ff);
-    color: #ffffff;
+    background: linear-gradient(135deg, var(--c-pink), var(--c-cyan));
+    color: var(--text-strong);
     border: none;
     padding: 0 28px;
     border-radius: 16px;
@@ -74,20 +74,20 @@
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 14px rgba(255, 0, 127, 0.3);
+    box-shadow: 0 4px 14px rgb(var(--rgb-pink) / 0.3);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
-    background: linear-gradient(135deg, #ff4da6, #3cefff);
+    box-shadow: 0 6px 20px rgb(var(--rgb-cyan) / 0.4);
+    background: linear-gradient(135deg, var(--c-pink-bright), var(--c-cyan-vivid));
 }
 
 /* ── Pratik Başlat butonu (referans tasarım) ──────────────── */
 .btn-start-practice {
-    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,240,255,0.15));
-    border: 1px solid rgba(16, 185, 129, 0.5);
-    color: #10b981;
+    background: linear-gradient(135deg, rgb(var(--rgb-green) / 0.2), rgb(var(--rgb-cyan) / 0.15));
+    border: 1px solid rgb(var(--rgb-green) / 0.5);
+    color: var(--c-green);
     padding: 10px 20px;
     border-radius: 14px;
     cursor: pointer;
@@ -97,15 +97,15 @@
     white-space: nowrap;
     transition: all 0.25s ease;
     letter-spacing: 0.3px;
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+    box-shadow: 0 0 12px rgb(var(--rgb-green) / 0.15);
 }
 
 .btn-start-practice:hover {
-    background: linear-gradient(135deg, rgba(16,185,129,0.35), rgba(0,240,255,0.25));
-    border-color: rgba(16, 185, 129, 0.8);
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+    background: linear-gradient(135deg, rgb(var(--rgb-green) / 0.35), rgb(var(--rgb-cyan) / 0.25));
+    border-color: rgb(var(--rgb-green) / 0.8);
+    box-shadow: 0 0 20px rgb(var(--rgb-green) / 0.35);
     transform: translateY(-2px);
-    color: #34d399;
+    color: var(--c-green-bright);
 }
 
 .btn-start-practice:active { transform: translateY(0); }
@@ -117,9 +117,9 @@
 
 /* ── Ara Butonu (Neon Pembe) ──────────────────────────────── */
 .btn-search {
-    background: linear-gradient(135deg, rgba(255,0,127,0.18), rgba(0,240,255,0.08));
-    border: 1px solid rgba(255, 0, 127, 0.5);
-    color: #ff007f;
+    background: linear-gradient(135deg, rgb(var(--rgb-pink) / 0.18), rgb(var(--rgb-cyan) / 0.08));
+    border: 1px solid rgb(var(--rgb-pink) / 0.5);
+    color: var(--c-pink);
     padding: 10px 20px;
     border-radius: 14px;
     cursor: pointer;
@@ -129,24 +129,24 @@
     white-space: nowrap;
     transition: all 0.25s ease;
     letter-spacing: 0.3px;
-    box-shadow: 0 0 12px rgba(255, 0, 127, 0.15);
+    box-shadow: 0 0 12px rgb(var(--rgb-pink) / 0.15);
 }
 
 .btn-search:hover {
-    background: linear-gradient(135deg, rgba(255,0,127,0.32), rgba(0,240,255,0.15));
-    border-color: rgba(255, 0, 127, 0.85);
-    box-shadow: 0 0 20px rgba(255, 0, 127, 0.4);
+    background: linear-gradient(135deg, rgb(var(--rgb-pink) / 0.32), rgb(var(--rgb-cyan) / 0.15));
+    border-color: rgb(var(--rgb-pink) / 0.85);
+    box-shadow: 0 0 20px rgb(var(--rgb-pink) / 0.4);
     transform: translateY(-2px);
-    color: #ff4da6;
+    color: var(--c-pink-bright);
 }
 
 .btn-search:active { transform: translateY(0); }
 
 /* ── Yedekle / Dışa Aktar Butonu (Neon Cyan) ─────────────── */
 .btn-action-export {
-    background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(16,185,129,0.08));
-    border: 1px solid rgba(0, 240, 255, 0.5);
-    color: #00f0ff;
+    background: linear-gradient(135deg, rgb(var(--rgb-cyan) / 0.15), rgb(var(--rgb-green) / 0.08));
+    border: 1px solid rgb(var(--rgb-cyan) / 0.5);
+    color: var(--c-cyan);
     padding: 10px 20px;
     border-radius: 14px;
     cursor: pointer;
@@ -156,24 +156,24 @@
     white-space: nowrap;
     transition: all 0.25s ease;
     letter-spacing: 0.3px;
-    box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+    box-shadow: 0 0 12px rgb(var(--rgb-cyan) / 0.15);
 }
 
 .btn-action-export:hover {
-    background: linear-gradient(135deg, rgba(0,240,255,0.28), rgba(16,185,129,0.15));
-    border-color: rgba(0, 240, 255, 0.85);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    background: linear-gradient(135deg, rgb(var(--rgb-cyan) / 0.28), rgb(var(--rgb-green) / 0.15));
+    border-color: rgb(var(--rgb-cyan) / 0.85);
+    box-shadow: 0 0 20px rgb(var(--rgb-cyan) / 0.4);
     transform: translateY(-2px);
-    color: #3cefff;
+    color: var(--c-cyan-vivid);
 }
 
 .btn-action-export:active { transform: translateY(0); }
 
 /* ── Yedekten Geri Yükle Butonu (Neon Mor) ───────────────── */
 .btn-action-import {
-    background: linear-gradient(135deg, rgba(192,132,252,0.18), rgba(0,240,255,0.06));
-    border: 1px solid rgba(192, 132, 252, 0.5);
-    color: #c084fc;
+    background: linear-gradient(135deg, rgb(var(--rgb-purple) / 0.18), rgb(var(--rgb-cyan) / 0.06));
+    border: 1px solid rgb(var(--rgb-purple) / 0.5);
+    color: var(--c-purple);
     padding: 10px 20px;
     border-radius: 14px;
     cursor: pointer;
@@ -183,24 +183,24 @@
     white-space: nowrap;
     transition: all 0.25s ease;
     letter-spacing: 0.3px;
-    box-shadow: 0 0 12px rgba(192, 132, 252, 0.15);
+    box-shadow: 0 0 12px rgb(var(--rgb-purple) / 0.15);
 }
 
 .btn-action-import:hover {
-    background: linear-gradient(135deg, rgba(192,132,252,0.32), rgba(0,240,255,0.12));
-    border-color: rgba(192, 132, 252, 0.85);
-    box-shadow: 0 0 20px rgba(192, 132, 252, 0.4);
+    background: linear-gradient(135deg, rgb(var(--rgb-purple) / 0.32), rgb(var(--rgb-cyan) / 0.12));
+    border-color: rgb(var(--rgb-purple) / 0.85);
+    box-shadow: 0 0 20px rgb(var(--rgb-purple) / 0.4);
     transform: translateY(-2px);
-    color: #d8b4fe;
+    color: var(--c-purple-bright);
 }
 
 .btn-action-import:active { transform: translateY(0); }
 
 /* ── Veritabanına Kaydet Butonu (Neon Yeşil — tam genişlik) ─ */
 .btn-action-save {
-    background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(0,240,255,0.15));
-    border: 1px solid rgba(16, 185, 129, 0.55);
-    color: #10b981;
+    background: linear-gradient(135deg, rgb(var(--rgb-green) / 0.22), rgb(var(--rgb-cyan) / 0.15));
+    border: 1px solid rgb(var(--rgb-green) / 0.55);
+    color: var(--c-green);
     padding: 14px 20px;
     border-radius: 14px;
     cursor: pointer;
@@ -210,7 +210,7 @@
     white-space: nowrap;
     transition: all 0.25s ease;
     letter-spacing: 0.3px;
-    box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 16px rgb(var(--rgb-green) / 0.2);
     width: 100%;
     margin-top: 16px;
     display: flex;
@@ -219,20 +219,20 @@
 }
 
 .btn-action-save:hover {
-    background: linear-gradient(135deg, rgba(16,185,129,0.38), rgba(0,240,255,0.25));
-    border-color: rgba(16, 185, 129, 0.85);
-    box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
+    background: linear-gradient(135deg, rgb(var(--rgb-green) / 0.38), rgb(var(--rgb-cyan) / 0.25));
+    border-color: rgb(var(--rgb-green) / 0.85);
+    box-shadow: 0 0 24px rgb(var(--rgb-green) / 0.45);
     transform: translateY(-2px);
-    color: #34d399;
+    color: var(--c-green-bright);
 }
 
 .btn-action-save:active { transform: translateY(0); }
 
 /* ── Dosya Seç Butonu (Neon Cyan — kompakt) ──────────────── */
 .btn-action-file {
-    background: rgba(0, 240, 255, 0.08);
-    border: 1px solid rgba(0, 240, 255, 0.38);
-    color: #00f0ff;
+    background: rgb(var(--rgb-cyan) / 0.08);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.38);
+    color: var(--c-cyan);
     padding: 10px 14px;
     border-radius: 12px;
     cursor: pointer;
@@ -245,9 +245,9 @@
 }
 
 .btn-action-file:hover {
-    background: rgba(0, 240, 255, 0.18);
-    border-color: rgba(0, 240, 255, 0.65);
-    box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+    background: rgb(var(--rgb-cyan) / 0.18);
+    border-color: rgb(var(--rgb-cyan) / 0.65);
+    box-shadow: 0 0 14px rgb(var(--rgb-cyan) / 0.25);
     transform: translateY(-1px);
 }
 
@@ -255,9 +255,9 @@
 
 /* ── Resmi Sıfırla Butonu (Neon Kırmızı) ─────────────────── */
 .btn-action-reset {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.42);
-    color: #ef4444;
+    background: rgb(var(--rgb-red) / 0.1);
+    border: 1px solid rgb(var(--rgb-red) / 0.42);
+    color: var(--c-red);
     padding: 10px 14px;
     border-radius: 12px;
     cursor: pointer;
@@ -272,11 +272,11 @@
 }
 
 .btn-action-reset:hover {
-    background: rgba(239, 68, 68, 0.22);
-    border-color: rgba(239, 68, 68, 0.72);
-    box-shadow: 0 0 14px rgba(239, 68, 68, 0.28);
+    background: rgb(var(--rgb-red) / 0.22);
+    border-color: rgb(var(--rgb-red) / 0.72);
+    box-shadow: 0 0 14px rgb(var(--rgb-red) / 0.28);
     transform: translateY(-1px);
-    color: #f87171;
+    color: var(--c-red-bright);
 }
 
 .btn-action-reset:active { transform: translateY(0); }
@@ -288,9 +288,9 @@
 
 /* ── WhatsApp (Neon Yeşil — WhatsApp rengi) ───────────────── */
 .btn-share-whatsapp {
-    background: linear-gradient(135deg, rgba(37,211,102,0.15), rgba(0,240,255,0.06));
-    border: 1px solid rgba(37, 211, 102, 0.45);
-    color: #25d366;
+    background: linear-gradient(135deg, rgb(var(--rgb-wa) / 0.15), rgb(var(--rgb-cyan) / 0.06));
+    border: 1px solid rgb(var(--rgb-wa) / 0.45);
+    color: var(--c-wa);
     padding: 8px 16px;
     border-radius: 12px;
     cursor: pointer;
@@ -299,24 +299,24 @@
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
-    box-shadow: 0 0 10px rgba(37, 211, 102, 0.1);
+    box-shadow: 0 0 10px rgb(var(--rgb-wa) / 0.1);
 }
 
 .btn-share-whatsapp:hover {
-    background: linear-gradient(135deg, rgba(37,211,102,0.28), rgba(0,240,255,0.1));
-    border-color: rgba(37, 211, 102, 0.8);
-    box-shadow: 0 0 16px rgba(37, 211, 102, 0.3);
+    background: linear-gradient(135deg, rgb(var(--rgb-wa) / 0.28), rgb(var(--rgb-cyan) / 0.1));
+    border-color: rgb(var(--rgb-wa) / 0.8);
+    box-shadow: 0 0 16px rgb(var(--rgb-wa) / 0.3);
     transform: translateY(-1px);
-    color: #4ade80;
+    color: var(--c-green);
 }
 
 .btn-share-whatsapp:active { transform: translateY(0); }
 
 /* ── Kopyala (Neon Cyan) ──────────────────────────────────── */
 .btn-share-clipboard {
-    background: rgba(0, 240, 255, 0.08);
-    border: 1px solid rgba(0, 240, 255, 0.35);
-    color: #00f0ff;
+    background: rgb(var(--rgb-cyan) / 0.08);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.35);
+    color: var(--c-cyan);
     padding: 8px 16px;
     border-radius: 12px;
     cursor: pointer;
@@ -325,24 +325,24 @@
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.08);
+    box-shadow: 0 0 10px rgb(var(--rgb-cyan) / 0.08);
 }
 
 .btn-share-clipboard:hover {
-    background: rgba(0, 240, 255, 0.18);
-    border-color: rgba(0, 240, 255, 0.65);
-    box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+    background: rgb(var(--rgb-cyan) / 0.18);
+    border-color: rgb(var(--rgb-cyan) / 0.65);
+    box-shadow: 0 0 16px rgb(var(--rgb-cyan) / 0.25);
     transform: translateY(-1px);
-    color: #3cefff;
+    color: var(--c-cyan-vivid);
 }
 
 .btn-share-clipboard:active { transform: translateY(0); }
 
 /* ── PDF / Yazdır (Neon Pembe) ────────────────────────────── */
 .btn-share-print {
-    background: linear-gradient(135deg, rgba(255,0,127,0.12), rgba(0,240,255,0.05));
-    border: 1px solid rgba(255, 0, 127, 0.4);
-    color: #ff007f;
+    background: linear-gradient(135deg, rgb(var(--rgb-pink) / 0.12), rgb(var(--rgb-cyan) / 0.05));
+    border: 1px solid rgb(var(--rgb-pink) / 0.4);
+    color: var(--c-pink);
     padding: 8px 16px;
     border-radius: 12px;
     cursor: pointer;
@@ -351,15 +351,15 @@
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
-    box-shadow: 0 0 10px rgba(255, 0, 127, 0.08);
+    box-shadow: 0 0 10px rgb(var(--rgb-pink) / 0.08);
 }
 
 .btn-share-print:hover {
-    background: linear-gradient(135deg, rgba(255,0,127,0.25), rgba(0,240,255,0.1));
-    border-color: rgba(255, 0, 127, 0.75);
-    box-shadow: 0 0 16px rgba(255, 0, 127, 0.25);
+    background: linear-gradient(135deg, rgb(var(--rgb-pink) / 0.25), rgb(var(--rgb-cyan) / 0.1));
+    border-color: rgb(var(--rgb-pink) / 0.75);
+    box-shadow: 0 0 16px rgb(var(--rgb-pink) / 0.25);
     transform: translateY(-1px);
-    color: #ff4da6;
+    color: var(--c-pink-bright);
 }
 
 .btn-share-print:active { transform: translateY(0); }
@@ -370,9 +370,9 @@
 
 /* ── Tehlikeli buton ───────────────────────────────────────── */
 .btn-clear-danger {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    background: rgb(var(--rgb-red) / 0.1);
+    border: 1px solid rgb(var(--rgb-red) / 0.3);
+    color: var(--c-red);
     padding: 10px 16px;
     border-radius: 12px;
     font-size: 0.9rem;
@@ -382,18 +382,18 @@
 }
 
 .btn-clear-danger:hover {
-    background: rgba(239, 68, 68, 0.25);
-    border-color: rgba(239, 68, 68, 0.5);
+    background: rgb(var(--rgb-red) / 0.25);
+    border-color: rgb(var(--rgb-red) / 0.5);
     transform: translateY(-1px);
 }
 
 /* ── Etiket yönetimi butonları ────────────────────────────── */
 .tag-action-btn {
-    background: rgba(0, 240, 255, 0.15);
-    border: 1px solid rgba(0, 240, 255, 0.4);
+    background: rgb(var(--rgb-cyan) / 0.15);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.4);
     padding: 4px 8px;
     border-radius: 6px;
-    color: #00f0ff;
+    color: var(--c-cyan);
     cursor: pointer;
     font-size: 0.7rem;
     margin: 0 2px;
@@ -403,21 +403,21 @@
     gap: 4px;
 }
 
-.tag-action-btn:hover { background: rgba(0, 240, 255, 0.3); }
+.tag-action-btn:hover { background: rgb(var(--rgb-cyan) / 0.3); }
 
 .tag-danger-btn {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #ef4444;
+    background: rgb(var(--rgb-red) / 0.2);
+    border-color: rgb(var(--rgb-red) / 0.4);
+    color: var(--c-red);
 }
 
-.tag-danger-btn:hover { background: rgba(239, 68, 68, 0.4); }
+.tag-danger-btn:hover { background: rgb(var(--rgb-red) / 0.4); }
 
 /* ── Kart içi butonlar ────────────────────────────────────── */
 .card-crud-btn {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255, 0, 127, 0.2);
-    color: #94a3b8;
+    background: rgb(var(--rgb-white) / 0.03);
+    border: 1px solid rgb(var(--rgb-pink) / 0.2);
+    color: var(--text-secondary);
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -430,23 +430,23 @@
 }
 
 .card-edit-btn:hover {
-    background: rgba(255, 0, 127, 0.15);
-    border-color: rgba(255, 0, 127, 0.5);
-    color: #ff007f;
+    background: rgb(var(--rgb-pink) / 0.15);
+    border-color: rgb(var(--rgb-pink) / 0.5);
+    color: var(--c-pink);
     transform: translateY(-1px);
 }
 
 .card-delete-btn:hover {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #ef4444;
+    background: rgb(var(--rgb-red) / 0.15);
+    border-color: rgb(var(--rgb-red) / 0.4);
+    color: var(--c-red);
     transform: translateY(-1px);
 }
 
 .inline-edit-tags-btn {
     background: transparent;
     border: none;
-    color: #64748b;
+    color: var(--text-muted);
     font-size: 0.75rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -455,8 +455,8 @@
 }
 
 .inline-edit-tags-btn:hover {
-    color: #ff007f;
-    background: rgba(255, 0, 127, 0.1);
+    color: var(--c-pink);
+    background: rgb(var(--rgb-pink) / 0.1);
 }
 
 /* ── Mobil buton düzenlemeleri ───────────────────────────── */
@@ -534,23 +534,23 @@
 }
 
 .bottom-nav-btn.active .bn-icon .lucide-icon {
-    filter: drop-shadow(0 0 5px rgba(255, 0, 127, 0.8));
+    filter: drop-shadow(0 0 5px rgb(var(--rgb-pink) / 0.8));
 }
 
 /* ── Fav star: aktif durumda dolu yıldız ─────────────────── */
 .fav-star-btn.active .lucide-icon {
-    fill: #fbbf24;
-    stroke: #fbbf24;
+    fill: var(--c-gold);
+    stroke: var(--c-gold);
 }
 
 .fav-star-btn:hover .lucide-icon {
-    stroke: #fbbf24;
+    stroke: var(--c-gold);
 }
 
 /* ── Liste görünümü: fav star aktif ─────────────────────── */
 .vl-fav-btn.active .lucide-icon {
-    fill: #fbbf24;
-    stroke: #fbbf24;
+    fill: var(--c-gold);
+    stroke: var(--c-gold);
 }
 
 /* ── Practice buton ikonları: merkezi hizalama ──────────── */
@@ -604,5 +604,5 @@
 }
 
 .menu-btn.active .lucide-icon {
-    filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.6));
+    filter: drop-shadow(0 0 4px rgb(var(--rgb-cyan) / 0.6));
 }

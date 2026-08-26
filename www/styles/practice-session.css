@@ -19,14 +19,14 @@
     align-items: center;
     gap: 16px;
     padding: 16px 24px 12px 24px;
-    border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+    border-bottom: 1px solid rgb(var(--rgb-cyan) / 0.15);
     flex-shrink: 0;
 }
 
 .practice-exit-btn {
-    background: rgba(255, 0, 127, 0.15);
-    border: 1px solid rgba(255, 0, 127, 0.4);
-    color: #ff007f;
+    background: rgb(var(--rgb-pink) / 0.15);
+    border: 1px solid rgb(var(--rgb-pink) / 0.4);
+    color: var(--c-pink);
     padding: 6px 14px;
     border-radius: 10px;
     cursor: pointer;
@@ -38,7 +38,7 @@
 }
 
 .practice-exit-btn:hover {
-    background: rgba(255, 0, 127, 0.3);
+    background: rgb(var(--rgb-pink) / 0.3);
     transform: scale(1.03);
 }
 
@@ -52,20 +52,20 @@
 .practice-progress-bar-bg {
     flex: 1;
     height: 8px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgb(var(--rgb-white) / 0.08);
     border-radius: 4px;
     overflow: hidden;
 }
 
 .practice-progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ff007f, #00f0ff);
+    background: linear-gradient(90deg, var(--c-pink), var(--c-cyan));
     border-radius: 4px;
     transition: width 0.4s ease;
 }
 
 .practice-progress-text {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.85rem;
     font-weight: 600;
     white-space: nowrap;
@@ -89,8 +89,8 @@
     border-radius: 16px;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 0, 127, 0.25);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgb(var(--rgb-pink) / 0.25);
+    box-shadow: 0 8px 32px rgb(var(--rgb-black) / 0.5);
     cursor: pointer;
     display: block;
 }
@@ -98,7 +98,7 @@
 .practice-play-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(11, 8, 19, 0.45);
+    background: rgb(var(--rgb-ink) / 0.45);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -116,8 +116,8 @@
 }
 
 .practice-play-icon {
-    background: #ff007f;
-    color: #fff;
+    background: var(--c-pink);
+    color: var(--text-strong);
     width: 52px;
     height: 52px;
     border-radius: 50%;
@@ -126,18 +126,18 @@
     justify-content: center;
     font-size: 1.3rem;
     padding-left: 4px;
-    box-shadow: 0 4px 16px rgba(255, 0, 127, 0.5);
+    box-shadow: 0 4px 16px rgb(var(--rgb-pink) / 0.5);
     transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .practice-cover-img:hover .practice-play-icon {
     transform: scale(1.1);
-    background: #00f0ff;
-    color: #0b0813;
+    background: var(--c-cyan);
+    color: var(--surface-base);
 }
 
 .practice-watch-label {
-    color: #f1f5f9;
+    color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -157,12 +157,12 @@
 .practice-instructor {
     font-size: 1.15rem;
     font-weight: 700;
-    color: #ff007f;
+    color: var(--c-pink);
 }
 
 .practice-partner {
     font-size: 0.9rem;
-    color: #94a3b8;
+    color: var(--text-secondary);
 }
 
 .practice-badges-row {
@@ -180,7 +180,7 @@
 
 .practice-note {
     font-size: 0.82rem;
-    color: #64748b;
+    color: var(--text-muted);
     font-style: italic;
     margin-top: 2px;
     line-height: 1.5;
@@ -226,36 +226,36 @@
 
 /* Geç (soluk gri) */
 .practice-btn-skip {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
-    color: #94a3b8;
+    background: rgb(var(--rgb-white) / 0.06);
+    border-color: rgb(var(--rgb-white) / 0.12);
+    color: var(--text-secondary);
 }
 .practice-btn-skip:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #f1f5f9;
+    background: rgb(var(--rgb-white) / 0.12);
+    border-color: rgb(var(--rgb-white) / 0.2);
+    color: var(--text-primary);
 }
 
 /* İzle (cyan) */
 .practice-btn-watch {
-    background: rgba(0, 240, 255, 0.12);
-    border-color: rgba(0, 240, 255, 0.35);
-    color: #00f0ff;
+    background: rgb(var(--rgb-cyan) / 0.12);
+    border-color: rgb(var(--rgb-cyan) / 0.35);
+    color: var(--c-cyan);
 }
 .practice-btn-watch:hover {
-    background: rgba(0, 240, 255, 0.22);
-    box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+    background: rgb(var(--rgb-cyan) / 0.22);
+    box-shadow: 0 0 16px rgb(var(--rgb-cyan) / 0.25);
 }
 
 /* Çalıştım (pembe/yeşil gradient — başarı rengi) */
 .practice-btn-done {
-    background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.1));
-    border-color: rgba(16, 185, 129, 0.45);
-    color: #10b981;
+    background: linear-gradient(135deg, rgb(var(--rgb-green) / 0.2), rgb(var(--rgb-green) / 0.1));
+    border-color: rgb(var(--rgb-green) / 0.45);
+    color: var(--c-green);
 }
 .practice-btn-done:hover {
-    background: linear-gradient(135deg, rgba(16,185,129,0.35), rgba(16,185,129,0.2));
-    box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+    background: linear-gradient(135deg, rgb(var(--rgb-green) / 0.35), rgb(var(--rgb-green) / 0.2));
+    box-shadow: 0 0 16px rgb(var(--rgb-green) / 0.3);
 }
 
 /* ── SM-2 ZORLUK BUTONLARI (Adim 2.3) ── */
@@ -269,7 +269,7 @@
 
 .practice-difficulty-label {
     text-align: center;
-    color: rgba(255,255,255,0.5);
+    color: rgb(var(--rgb-white) / 0.5);
     font-size: 0.82rem;
     margin: 0 0 10px;
     letter-spacing: 0.3px;
@@ -282,35 +282,35 @@
 
 /* Zor (kırmızı) */
 .practice-btn-hard {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #ef4444;
+    background: rgb(var(--rgb-red) / 0.12);
+    border-color: rgb(var(--rgb-red) / 0.4);
+    color: var(--c-red);
 }
 .practice-btn-hard:hover {
-    background: rgba(239, 68, 68, 0.25);
-    box-shadow: 0 0 14px rgba(239, 68, 68, 0.25);
+    background: rgb(var(--rgb-red) / 0.25);
+    box-shadow: 0 0 14px rgb(var(--rgb-red) / 0.25);
 }
 
 /* Orta (amber) */
 .practice-btn-medium {
-    background: rgba(245, 158, 11, 0.12);
-    border-color: rgba(245, 158, 11, 0.4);
-    color: #f59e0b;
+    background: rgb(var(--rgb-amber) / 0.12);
+    border-color: rgb(var(--rgb-amber) / 0.4);
+    color: var(--c-amber);
 }
 .practice-btn-medium:hover {
-    background: rgba(245, 158, 11, 0.25);
-    box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+    background: rgb(var(--rgb-amber) / 0.25);
+    box-shadow: 0 0 14px rgb(var(--rgb-amber) / 0.25);
 }
 
 /* Kolay (yeşil) */
 .practice-btn-easy {
-    background: rgba(74, 222, 128, 0.12);
-    border-color: rgba(74, 222, 128, 0.4);
-    color: #4ade80;
+    background: rgb(var(--rgb-green) / 0.12);
+    border-color: rgb(var(--rgb-green) / 0.4);
+    color: var(--c-green);
 }
 .practice-btn-easy:hover {
-    background: rgba(74, 222, 128, 0.25);
-    box-shadow: 0 0 14px rgba(74, 222, 128, 0.25);
+    background: rgb(var(--rgb-green) / 0.25);
+    box-shadow: 0 0 14px rgb(var(--rgb-green) / 0.25);
 }
 
 /* ── ÖZET EKRANI ── */
@@ -324,14 +324,14 @@
 }
 
 .practice-summary-card {
-    background: rgba(11, 8, 19, 0.7);
-    border: 1px solid rgba(0, 240, 255, 0.25);
+    background: rgb(var(--rgb-ink) / 0.7);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.25);
     border-radius: 24px;
     padding: 40px 32px;
     max-width: 420px;
     width: 100%;
     text-align: center;
-    box-shadow: 0 0 40px rgba(0, 240, 255, 0.08);
+    box-shadow: 0 0 40px rgb(var(--rgb-cyan) / 0.08);
 }
 
 .practice-summary-emoji {
@@ -343,7 +343,7 @@
 .practice-summary-title {
     font-size: 1.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #ff007f, #00f0ff);
+    background: linear-gradient(135deg, var(--c-pink), var(--c-cyan));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 28px;
@@ -367,35 +367,35 @@
 .practice-stat-number {
     font-size: 2rem;
     font-weight: 800;
-    color: #00f0ff;
+    color: var(--c-cyan);
     line-height: 1;
 }
 
 .practice-stat-label {
     font-size: 0.78rem;
-    color: #64748b;
+    color: var(--text-muted);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .practice-stat-divider {
-    color: rgba(255, 255, 255, 0.15);
+    color: rgb(var(--rgb-white) / 0.15);
     font-size: 1.5rem;
     padding-bottom: 18px;
 }
 
 .practice-summary-message {
-    color: #94a3b8;
+    color: var(--text-secondary);
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 28px;
 }
 
 .practice-return-btn {
-    background: linear-gradient(135deg, #ff007f, #c0005a);
+    background: linear-gradient(135deg, var(--c-pink), #c0005a); /* gradyan durağı — palet üyesi değil, token yok */
     border: none;
-    color: #fff;
+    color: var(--text-strong);
     padding: 14px 32px;
     border-radius: 14px;
     cursor: pointer;
@@ -403,13 +403,13 @@
     font-size: 1rem;
     font-weight: 700;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 16px rgba(255, 0, 127, 0.35);
+    box-shadow: 0 4px 16px rgb(var(--rgb-pink) / 0.35);
     width: 100%;
 }
 
 .practice-return-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(255, 0, 127, 0.45);
+    box-shadow: 0 8px 24px rgb(var(--rgb-pink) / 0.45);
 }
 
 /* ── Mobil uyumu ── */

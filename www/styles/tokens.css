@@ -84,11 +84,35 @@
     --c-red:    #ef4444;   /* tehlike */
 
     /* Hover'da açılan parlak tonlar */
-    --c-cyan-bright: #7cfffe;
-    --c-pink-bright: #ff4da6;
+    --c-cyan-bright:   #7cfffe;
+    --c-pink-bright:   #ff4da6;
+    --c-green-bright:  #34d399;
+    --c-purple-bright: #d8b4fe;
+    --c-red-bright:    #f87171;
+
+    /* Altın — YALNIZCA favori yıldızı. --c-amber ile karıştırma:
+       amber turuncuya çalar, yıldızın altın sarısı kalması gerekiyor. */
+    --c-gold: #fbbf24;
+    --rgb-gold: 251 191 36;
+
+    /* Platform marka renkleri — semantik değil, dokunulmaz */
+    --c-yt: #ff4444;   --rgb-yt: 255 68 68;
+    --c-fb: #60a5fa;   --rgb-fb: 96 165 250;
+    --c-wa: #25d366;   --rgb-wa: 37 211 102;
+
+    /* Açık pembe tonları. NOT: üçü de "vurgulu pembe" rolünde,
+       birleştirme adayı — bkz. Adım 2 raporu. */
+    --c-pink-soft: #ff80bf;
+    --c-pink-mid:  #ff66b5;
+
+    /* Canlı cyan — .btn-primary hover ve bağlantı hover'larında.
+       --c-cyan-bright (#7cfffe) ile birleştirme adayı. */
+    --c-cyan-vivid: #3cefff;
 
     /* ── Yüzeyler ────────────────────────────────────── */
     --surface-base:         #0b0813;
+    --surface-solid:        #000000;   /* mobilde tam opak kabuk — glow sızmasın */
+    --surface-menu:         #1a1a2e;   /* açılır menü zemini (opak olmak zorunda) */
     --surface-raised:       rgb(var(--rgb-white) / 0.04);
     --surface-raised-hover: rgb(var(--rgb-white) / 0.07);
     --surface-sunken:       rgb(var(--rgb-ink) / 0.6);
@@ -103,7 +127,9 @@
     --border-follow-strong: rgb(var(--rgb-pink) / 0.6);
 
     /* ── Metin ───────────────────────────────────────── */
+    --text-strong:    #ffffff;
     --text-primary:   #f1f5f9;
+    --text-soft:      #cbd5e1;
     --text-secondary: #94a3b8;
     --text-muted:     #64748b;
     --text-faint:     #475569;
@@ -170,6 +196,10 @@
         rgb(var(--rgb-cyan) / 0.55) 18%,
         rgb(var(--rgb-pink) / 0.55) 82%,
         rgb(var(--rgb-pink) / 0)    100%);
+
+    /* Çift (lider + takipçi) göstergesi — İstatistikler rol kartı.
+       Solda cyan, sağda pembe: rengin kendisi ikiliği anlatır. */
+    --rule-couple: linear-gradient(90deg, var(--c-cyan), var(--c-pink));
 
     --rule-compas-v: linear-gradient(180deg,
         rgb(var(--rgb-cyan) / 0.75) 0%,
