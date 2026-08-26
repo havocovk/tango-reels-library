@@ -30,7 +30,7 @@
     padding: 6px 14px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.2s ease;
@@ -66,7 +66,7 @@
 
 .practice-progress-text {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
     min-width: 48px;
@@ -124,7 +124,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: var(--fs-xl);
     padding-left: 4px;
     box-shadow: 0 4px 16px rgb(var(--rgb-pink) / 0.5);
     transition: transform 0.2s ease, background 0.2s ease;
@@ -138,7 +138,7 @@
 
 .practice-watch-label {
     color: var(--text-primary);
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     letter-spacing: 0.5px;
 }
@@ -155,13 +155,13 @@
 }
 
 .practice-instructor {
-    font-size: 1.15rem;
+    font-size: var(--fs-lg);
     font-weight: 700;
     color: var(--c-pink);
 }
 
 .practice-partner {
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     color: var(--text-secondary);
 }
 
@@ -179,7 +179,7 @@
 }
 
 .practice-note {
-    font-size: 0.82rem;
+    font-size: var(--fs-sm);
     color: var(--text-muted);
     font-style: italic;
     margin-top: 2px;
@@ -209,7 +209,7 @@
     border: 1px solid transparent;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.82rem;
+    font-size: var(--fs-sm);
     font-weight: 600;
     transition: all 0.2s ease;
     letter-spacing: 0.3px;
@@ -220,7 +220,7 @@
 }
 
 .practice-btn-icon {
-    font-size: 1.4rem;
+    font-size: var(--fs-xl);
     line-height: 1;
 }
 
@@ -270,7 +270,7 @@
 .practice-difficulty-label {
     text-align: center;
     color: rgb(var(--rgb-white) / 0.5);
-    font-size: 0.82rem;
+    font-size: var(--fs-sm);
     margin: 0 0 10px;
     letter-spacing: 0.3px;
 }
@@ -341,7 +341,7 @@
 }
 
 .practice-summary-title {
-    font-size: 1.5rem;
+    font-size: var(--fs-2xl);
     font-weight: 700;
     background: linear-gradient(135deg, var(--c-pink), var(--c-cyan));
     -webkit-background-clip: text;
@@ -365,14 +365,16 @@
 }
 
 .practice-stat-number {
-    font-size: 2rem;
+    font-size: var(--fs-3xl);
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
     font-weight: 800;
     color: var(--c-cyan);
     line-height: 1;
 }
 
 .practice-stat-label {
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     color: var(--text-muted);
     font-weight: 500;
     text-transform: uppercase;
@@ -381,13 +383,13 @@
 
 .practice-stat-divider {
     color: rgb(var(--rgb-white) / 0.15);
-    font-size: 1.5rem;
+    font-size: var(--fs-2xl);
     padding-bottom: 18px;
 }
 
 .practice-summary-message {
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: var(--fs-md);
     line-height: 1.6;
     margin-bottom: 28px;
 }
@@ -400,7 +402,7 @@
     border-radius: 14px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: var(--fs-md);
     font-weight: 700;
     transition: all 0.2s ease;
     box-shadow: 0 4px 16px rgb(var(--rgb-pink) / 0.35);
@@ -418,9 +420,9 @@
     .practice-cover-wrap    { padding: 14px 16px 0 16px; }
     .practice-info-block    { padding: 14px 16px 0 16px; }
     .practice-actions       { padding: 16px 16px 20px 16px; gap: 8px; }
-    .practice-btn           { padding: 12px 6px; font-size: 0.76rem; }
-    .practice-btn-icon      { font-size: 1.2rem; }
+    .practice-btn           { padding: 12px 6px; font-size: var(--fs-xs); }
+    .practice-btn-icon      { font-size: var(--fs-lg); }
     .practice-summary-card  { padding: 28px 20px; }
-    .practice-summary-title { font-size: 1.25rem; }
-    .practice-stat-number   { font-size: 1.6rem; }
+    .practice-summary-title { font-size: var(--fs-xl); }
+    .practice-stat-number   { font-size: var(--fs-2xl); }
 }

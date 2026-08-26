@@ -14,14 +14,14 @@
     margin-bottom: 4px;
 }
 .dashboard-title {
-    font-size: 1.5rem;
+    font-size: var(--fs-2xl);
     font-weight: 700;
     color: var(--text-strong);
     margin: 0 0 4px;
     letter-spacing: -0.3px;
 }
 .dashboard-subtitle {
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     color: rgb(var(--rgb-white) / 0.35);
     margin: 0;
 }
@@ -87,14 +87,16 @@
     min-width: 0;
 }
 .dash-card-value {
-    font-size: 2.2rem;
+    font-size: var(--fs-3xl);
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
     font-weight: 700;
     color: var(--text-strong);
     line-height: 1;
     margin-bottom: 4px;
 }
 .dash-card-label {
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     color: rgb(var(--rgb-white) / 0.45);
     letter-spacing: 0.3px;
 }
@@ -109,7 +111,7 @@
     border: 1px solid rgb(var(--rgb-cyan) / 0.35);
     border-radius: 10px;
     color: var(--c-cyan);
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     font-weight: 600;
     font-family: var(--font-body);
     cursor: pointer;
@@ -136,7 +138,7 @@
     width: 100%;
 }
 .dash-toptags-title {
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     color: rgb(var(--rgb-white) / 0.7);
 }
@@ -154,20 +156,22 @@
     background: rgb(var(--rgb-purple) / 0.12);
     border: 1px solid rgb(var(--rgb-purple) / 0.3);
     border-radius: 20px;
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     color: var(--c-purple);
     cursor: pointer;
     transition: background 0.2s;
 }
 .dash-tag-chip:hover { background: rgb(var(--rgb-purple) / 0.22); }
 .dash-tag-chip-count {
-    font-size: 0.7rem;
+    font-size: var(--fs-2xs);
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
     color: rgb(var(--rgb-white) / 0.4);
     font-weight: 600;
 }
 .dash-toptags-empty {
     color: rgb(var(--rgb-white) / 0.25);
-    font-size: 0.82rem;
+    font-size: var(--fs-sm);
 }
 
 /* Son eklenenler listesi */
@@ -206,12 +210,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: var(--fs-lg);
     flex-shrink: 0;
 }
 .dash-recent-info { flex: 1; min-width: 0; }
 .dash-recent-name {
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     color: rgb(var(--rgb-white) / 0.85);
     white-space: nowrap;
@@ -219,12 +223,12 @@
     text-overflow: ellipsis;
 }
 .dash-recent-meta {
-    font-size: 0.73rem;
+    font-size: var(--fs-2xs);
     color: rgb(var(--rgb-white) / 0.35);
     margin-top: 2px;
 }
 .dash-recent-platform {
-    font-size: 0.7rem;
+    font-size: var(--fs-2xs);
     padding: 2px 8px;
     border-radius: 6px;
     flex-shrink: 0;
@@ -262,7 +266,7 @@
         width: 16px;
         height: 16px;
     }
-    .dash-card-value      { font-size: 1.3rem; margin-bottom: 1px; }
+    .dash-card-value      { font-size: var(--fs-xl); margin-bottom: 1px; }
 
     /* dash-card-due: ikon + body + "Pratik Başlat" butonu üçü birden
        dar bir kartta (.dash-card display:flex) yan yana sığmıyordu.
@@ -272,7 +276,7 @@
     }
     .dash-card-action {
         padding: 5px 8px;
-        font-size: 0.62rem;
+        font-size: var(--fs-3xs);
         gap: 3px;
         flex-basis: 100%;
         justify-content: center;
@@ -286,7 +290,7 @@
        daralan 1fr sütunda sıkışmasın diye küçültüldü, toptags kartına
        ve chip listesine ekstra alt boşluk eklendi. */
     .dash-card-label {
-        font-size: 0.72rem;
+        font-size: var(--fs-2xs);
     }
     .dash-card-toptags,
     .dash-card-recent {

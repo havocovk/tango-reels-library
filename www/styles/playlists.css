@@ -15,7 +15,7 @@
 }
 
 .playlist-sidebar-title {
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -30,7 +30,7 @@
     height: 24px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: var(--fs-md);
     line-height: 1;
     display: flex;
     align-items: center;
@@ -45,7 +45,7 @@
 }
 
 .playlist-sidebar-empty {
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     color: var(--text-faint);
     padding: 6px 4px;
     font-style: italic;
@@ -60,7 +60,7 @@
     border-radius: 10px;
     cursor: pointer;
     text-align: left;
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     font-family: inherit;
     display: flex;
     align-items: center;
@@ -109,7 +109,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     padding: 2px 4px;
     border-radius: 4px;
     line-height: 1;
@@ -128,7 +128,7 @@
     backdrop-filter: blur(4px);
     border: 1px solid rgb(var(--rgb-cyan) / 0.3);
     color: var(--c-cyan);
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     width: 30px;
     height: 30px;
     border-radius: 50%;
@@ -171,7 +171,7 @@
     border-radius: 8px;
     cursor: pointer;
     text-align: left;
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     font-family: inherit;
     display: flex;
     align-items: center;
@@ -196,7 +196,7 @@
 .playlist-check {
     margin-left: auto;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
 }
 
 .playlist-dropdown-new {
@@ -208,7 +208,7 @@
     border-radius: 8px;
     cursor: pointer;
     text-align: left;
-    font-size: 0.82rem;
+    font-size: var(--fs-sm);
     font-family: inherit;
     margin-top: 4px;
     transition: all 0.15s ease;

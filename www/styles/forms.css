@@ -19,7 +19,7 @@
 }
 
 .form-group label {
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     color: var(--c-cyan);
     text-shadow: 0 0 3px var(--c-cyan);
 }
@@ -32,7 +32,7 @@
     padding: 12px 16px;
     border-radius: 12px;
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: var(--fs-md);
     outline: none;
     transition: all 0.3s ease;
 }
@@ -55,7 +55,7 @@
     cursor: pointer;
     user-select: none;
     color: var(--text-primary) !important;
-    font-size: 0.95rem !important;
+    font-size: var(--fs-md) !important;
 }
 
 .checkbox-group input {
@@ -86,7 +86,7 @@
 }
 
 #drop-area-text {
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -111,14 +111,14 @@
 
 .compact-assistant-box h4 {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     color: var(--c-pink);
     font-weight: 600;
 }
 
 .compact-assistant-box p {
     margin: 0;
-    font-size: 0.72rem;
+    font-size: var(--fs-2xs);
     color: var(--text-muted);
 }
 
@@ -128,7 +128,7 @@
     padding: 6px 12px;
     border-radius: 6px;
     font-family: 'Courier New', monospace;
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     color: var(--c-cyan);
     word-break: break-all;
     margin-top: 2px;
@@ -159,7 +159,7 @@
     border: 1px solid rgb(var(--rgb-pink) / 0.5);
     padding: 4px 10px;
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     font-weight: 500;
     display: inline-flex;
     align-items: center;
@@ -178,7 +178,7 @@
     cursor: pointer;
     font-weight: bold;
     color: rgb(var(--rgb-pink) / 0.7);
-    font-size: 1rem;
+    font-size: var(--fs-md);
     transition: color 0.2s ease;
 }
 
@@ -203,7 +203,7 @@
 .autocomplete-suggestion-item {
     padding: 10px 14px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     color: var(--text-soft);
     transition: all 0.2s ease;
 }
@@ -282,6 +282,6 @@
        ekranlarda taşabiliyordu; drop-area metnini küçültüp esnekliği
        artırıyoruz. */
     #drop-area-text {
-        font-size: 0.72rem;
+        font-size: var(--fs-2xs);
     }
 }

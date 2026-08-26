@@ -134,16 +134,24 @@
     --text-muted:     #64748b;
     --text-faint:     #475569;
 
-    /* ── Tip ölçeği (9 basamak) ──────────────────────── */
-    --fs-3xs:  0.625rem;   /* 10px — mini kart etiketi, alt bar etiketi */
-    --fs-2xs:  0.6875rem;  /* 11px — rozet sayacı */
-    --fs-xs:   0.75rem;    /* 12px — badge, tag, meta */
-    --fs-sm:   0.8125rem;  /* 13px — yardımcı metin */
+    /* ── Tip ölçeği (11 basamak) ─────────────────────────
+       Kodda 33 keyfi değer vardı (0.52rem–3.5rem arası, düzensiz
+       aralıklarla). Ölçek, MEVCUT değerlerin dağılımına göre kuruldu:
+       en kalabalık bant 0.85–0.9rem (38 kullanım) --fs-base oldu.
+       En küçük basamaklar (4xs/3xs) bilinçli olarak korundu —
+       mobilde sıkışık alanlar (alt bar etiketi, mini kart etiketi)
+       yukarı yuvarlansaydı taşma riski doğardı. */
+    --fs-4xs:  0.5625rem;  /*  9px — alt bar etiketi (≤380px), mini kart etiketi */
+    --fs-3xs:  0.625rem;   /* 10px — mini kart eğitmen adı, liste etiketi */
+    --fs-2xs:  0.6875rem;  /* 11px — sayaç rozeti, ipucu, meta */
+    --fs-xs:   0.75rem;    /* 12px — badge, tag, küçük buton */
+    --fs-sm:   0.8125rem;  /* 13px — ikincil metin */
     --fs-base: 0.875rem;   /* 14px — gövde / UI varsayılanı */
-    --fs-md:   1rem;       /* 16px — menü, buton */
+    --fs-md:   1rem;       /* 16px — menü, birincil buton */
     --fs-lg:   1.125rem;   /* 18px — kart başlığı */
-    --fs-xl:   1.5rem;     /* 24px — view başlığı */
-    --fs-2xl:  2.25rem;    /* 36px — dashboard sayısı */
+    --fs-xl:   1.3125rem;  /* 21px — bölüm başlığı */
+    --fs-2xl:  1.5rem;     /* 24px — view başlığı */
+    --fs-3xl:  2rem;       /* 32px — dashboard sayısı, istatistik değeri */
 
     --lh-tight:  1.2;
     --lh-normal: 1.5;

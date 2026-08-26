@@ -21,7 +21,7 @@
     border-radius: 12px;
     cursor: pointer;
     text-align: left;
-    font-size: 1rem;
+    font-size: var(--fs-md);
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -52,7 +52,7 @@
     padding: 6px 12px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     transition: all 0.2s ease;
 }
@@ -72,7 +72,7 @@
     border-radius: 16px;
     font-weight: 600;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: var(--fs-md);
     transition: all 0.3s ease;
     box-shadow: 0 4px 14px rgb(var(--rgb-pink) / 0.3);
 }
@@ -92,7 +92,7 @@
     border-radius: 14px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: var(--fs-md);
     font-weight: 700;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -124,7 +124,7 @@
     border-radius: 14px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: var(--fs-md);
     font-weight: 700;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -151,7 +151,7 @@
     border-radius: 14px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     font-weight: 700;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -178,7 +178,7 @@
     border-radius: 14px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     font-weight: 700;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -205,7 +205,7 @@
     border-radius: 14px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: var(--fs-md);
     font-weight: 700;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -237,7 +237,7 @@
     border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.88rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -262,7 +262,7 @@
     border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.88rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -295,7 +295,7 @@
     border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.88rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -321,7 +321,7 @@
     border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.88rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -347,7 +347,7 @@
     border-radius: 12px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.88rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
     transition: all 0.25s ease;
@@ -375,7 +375,7 @@
     color: var(--c-red);
     padding: 10px 16px;
     border-radius: 12px;
-    font-size: 0.9rem;
+    font-size: var(--fs-base);
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -395,7 +395,7 @@
     border-radius: 6px;
     color: var(--c-cyan);
     cursor: pointer;
-    font-size: 0.7rem;
+    font-size: var(--fs-2xs);
     margin: 0 2px;
     transition: all 0.2s;
     display: inline-flex;
@@ -425,7 +425,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: var(--fs-base);
     transition: all 0.2s ease;
 }
 
@@ -447,7 +447,7 @@
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     cursor: pointer;
     padding: 2px 6px;
     border-radius: 4px;
@@ -472,7 +472,7 @@
         flex: 1;
         min-width: 120px;
         padding: 10px 12px;
-        font-size: 0.9rem;
+        font-size: var(--fs-base);
         justify-content: center;
     }
 
