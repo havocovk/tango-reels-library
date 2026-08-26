@@ -424,7 +424,7 @@
     padding: 10px 14px;
     border-radius: 12px;
     cursor: pointer;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 0.85rem;
     font-weight: 600;
     white-space: nowrap;
@@ -610,7 +610,7 @@
     border-radius: 7px;
     color: rgba(255,255,255,0.75);
     font-size: 0.8rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-body);
     cursor: pointer;
     width: 100%;
     text-align: left;

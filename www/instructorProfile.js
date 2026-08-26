@@ -180,13 +180,13 @@ export function renderInstructorProfile(instructorId) {
             .prof-video-role { font-size:0.72rem;font-weight:700;letter-spacing:0.3px; }
             .prof-video-tags { margin-top:3px;display:flex;flex-wrap:wrap;gap:3px; }
             .prof-vl-tag { font-size:0.68rem;color:#94a3b8;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:1px 5px; }
-            .prof-watch-btn { flex-shrink:0;padding:6px 12px;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.3);border-radius:8px;color:#00f0ff;font-size:0.85rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;transition:background 0.15s;font-family:'Poppins',sans-serif; }
+            .prof-watch-btn { flex-shrink:0;padding:6px 12px;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.3);border-radius:8px;color:#00f0ff;font-size:0.85rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;transition:background 0.15s;font-family: var(--font-body); }
             .prof-watch-btn:hover { background:rgba(0,240,255,0.22); }
             .prof-empty { text-align:center;padding:32px;color:#475569;font-size:0.88rem; }
             .prof-section-title { font-size:0.82rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px; }
-            .prof-edit-field { width:100%;padding:9px 12px;background:rgba(11,8,19,0.9);border:1px solid rgba(255,0,127,0.35);border-radius:9px;color:#f1f5f9;font-size:0.88rem;outline:none;font-family:'Poppins',sans-serif;box-sizing:border-box; }
+            .prof-edit-field { width:100%;padding:9px 12px;background:rgba(11,8,19,0.9);border:1px solid rgba(255,0,127,0.35);border-radius:9px;color:#f1f5f9;font-size:0.88rem;outline:none;font-family: var(--font-body);box-sizing:border-box; }
             .prof-edit-field:focus { border-color:rgba(0,240,255,0.6); }
-            .prof-edit-btn { padding:6px 14px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s; }
+            .prof-edit-btn { padding:6px 14px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family: var(--font-body);display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s; }
         </style>
 
         <button id="prof-back-btn" class="prof-edit-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.12);color:#94a3b8;margin-bottom:24px;">${T.backBtn}</button>
@@ -211,7 +211,7 @@ export function renderInstructorProfile(instructorId) {
                 <label style="font-size:0.75rem;color:#94a3b8;display:block;margin-bottom:6px;">${T.photoUrlLabel}</label>
                 <div style="display:flex;gap:8px;align-items:center;">
                     <input id="prof-photo-input" type="url" class="prof-edit-field" style="flex:1;" placeholder="${T.photoPlaceholder}" value="${escapeHtml(instructor.photo_url || '')}">
-                    <button id="prof-photo-upload-btn" type="button" style="padding:8px 12px;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.35);border-radius:8px;color:#00f0ff;font-size:0.75rem;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s;">${icon('upload', { size: 14, color: '#00f0ff' })} ${lang === 'tr' ? 'Fotoğraf Yükle' : 'Upload Photo'}</button>
+                    <button id="prof-photo-upload-btn" type="button" style="padding:8px 12px;background:rgba(0,240,255,0.1);border:1px solid rgba(0,240,255,0.35);border-radius:8px;color:#00f0ff;font-size:0.75rem;font-weight:600;font-family: var(--font-body);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s;">${icon('upload', { size: 14, color: '#00f0ff' })} ${lang === 'tr' ? 'Fotoğraf Yükle' : 'Upload Photo'}</button>
                 </div>
                 <input id="prof-photo-file-input" type="file" accept="image/*" style="display:none;">
                 <div id="prof-photo-upload-status" style="font-size:0.72rem;color:#94a3b8;margin-top:4px;"></div>

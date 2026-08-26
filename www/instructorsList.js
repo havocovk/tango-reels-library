@@ -94,7 +94,7 @@ export function renderInstructorsList() {
             .ins-list-name { font-size:0.9rem; font-weight:700; color:#e2e8f0; text-align:center; line-height:1.3; word-break:break-word; }
             .ins-list-count { font-size:0.72rem; color:#64748b; }
             .ins-list-socials { display:flex; gap:10px; align-items:center; }
-            .ins-list-view-btn { margin-top:4px; padding:6px 16px; background:rgba(255,0,127,0.1); border:1px solid rgba(255,0,127,0.35); border-radius:999px; color:#ff6fae; font-size:0.75rem; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif; transition:background 0.15s; width:100%; }
+            .ins-list-view-btn { margin-top:4px; padding:6px 16px; background:rgba(255,0,127,0.1); border:1px solid rgba(255,0,127,0.35); border-radius:999px; color:#ff6fae; font-size:0.75rem; font-weight:600; cursor:pointer; font-family: var(--font-body); transition:background 0.15s; width:100%; }
             .ins-list-view-btn:hover { background:rgba(255,0,127,0.22); }
         </style>
         <h2 style="font-size:1.3rem;font-weight:700;margin:0 0 24px;background:linear-gradient(135deg,#ff007f,#00f0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${title}</h2>

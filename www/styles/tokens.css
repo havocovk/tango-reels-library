@@ -1,0 +1,128 @@
+/* ============================================
+   tokens.css — Tasarım token'ları (tek doğruluk kaynağı)
+   Cascade'de İLK sırada yüklenir. Buradaki değerler
+   CLAUDE.md'de tanımlı Tokyo Cyber-Synthwave paletidir.
+
+   Kullanım: alfa varyantı için rgb(var(--rgb-pink) / 0.2)
+   yazılır — her alfa için ayrı token tanımlanmaz.
+   ============================================ */
+
+:root {
+
+    /* ── Yazı tipi aileleri ──────────────────────────────
+       display: başlıklar ve sayısal alanlar (gösterge paneli hissi)
+       body:    gövde metni ve tüm UI kontrolleri              */
+    --font-display: 'Space Grotesk', 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-body:    'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    /* ── Ham palet ───────────────────────────────────────
+       RGB üçlüleri alfa üretimi için, hex'ler doğrudan kullanım için. */
+    --rgb-cyan:   0 240 255;
+    --rgb-pink:   255 0 127;
+    --rgb-purple: 192 38 211;
+    --rgb-green:  74 222 128;
+    --rgb-amber:  245 158 11;
+    --rgb-red:    239 68 68;
+    --rgb-ink:    11 8 19;
+    --rgb-white:  255 255 255;
+    --rgb-black:  0 0 0;
+
+    --c-cyan:   #00f0ff;   /* lider */
+    --c-pink:   #ff007f;   /* takipçi / marka */
+    --c-purple: #c026d3;   /* etiket / taksonomi */
+    --c-green:  #4ade80;   /* başarı / ustalaşıldı */
+    --c-amber:  #f59e0b;   /* uyarı / beklemede */
+    --c-red:    #ef4444;   /* tehlike */
+
+    /* Hover'da açılan parlak tonlar */
+    --c-cyan-bright: #7cfffe;
+    --c-pink-bright: #ff4da6;
+
+    /* ── Yüzeyler ────────────────────────────────────── */
+    --surface-base:         #0b0813;
+    --surface-raised:       rgb(var(--rgb-white) / 0.04);
+    --surface-raised-hover: rgb(var(--rgb-white) / 0.07);
+    --surface-sunken:       rgb(var(--rgb-ink) / 0.6);
+    --surface-overlay:      rgb(var(--rgb-ink) / 0.95);
+    --surface-scrim:        rgb(var(--rgb-black) / 0.55);
+
+    /* ── Kenarlıklar ─────────────────────────────────── */
+    --border-subtle:        rgb(var(--rgb-white) / 0.08);
+    --border-lead:          rgb(var(--rgb-cyan) / 0.3);
+    --border-lead-strong:   rgb(var(--rgb-cyan) / 0.6);
+    --border-follow:        rgb(var(--rgb-pink) / 0.3);
+    --border-follow-strong: rgb(var(--rgb-pink) / 0.6);
+
+    /* ── Metin ───────────────────────────────────────── */
+    --text-primary:   #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted:     #64748b;
+    --text-faint:     #475569;
+
+    /* ── Tip ölçeği (9 basamak) ──────────────────────── */
+    --fs-3xs:  0.625rem;   /* 10px — mini kart etiketi, alt bar etiketi */
+    --fs-2xs:  0.6875rem;  /* 11px — rozet sayacı */
+    --fs-xs:   0.75rem;    /* 12px — badge, tag, meta */
+    --fs-sm:   0.8125rem;  /* 13px — yardımcı metin */
+    --fs-base: 0.875rem;   /* 14px — gövde / UI varsayılanı */
+    --fs-md:   1rem;       /* 16px — menü, buton */
+    --fs-lg:   1.125rem;   /* 18px — kart başlığı */
+    --fs-xl:   1.5rem;     /* 24px — view başlığı */
+    --fs-2xl:  2.25rem;    /* 36px — dashboard sayısı */
+
+    --lh-tight:  1.2;
+    --lh-normal: 1.5;
+    --tracking-wide: 0.06em;
+    --tracking-caps: 0.1em;
+
+    /* ── Boşluk ──────────────────────────────────────── */
+    --sp-1:  4px;
+    --sp-2:  8px;
+    --sp-3:  12px;
+    --sp-4:  16px;
+    --sp-5:  20px;
+    --sp-6:  24px;
+    --sp-8:  32px;
+    --sp-10: 40px;
+
+    /* ── Köşe yarıçapı ───────────────────────────────── */
+    --r-sm:   8px;
+    --r-md:   12px;
+    --r-lg:   16px;
+    --r-xl:   20px;
+    --r-2xl:  24px;
+    --r-full: 999px;
+
+    /* ── Hareket ─────────────────────────────────────────
+       Tek varsayılan eğri: --ease-out.
+       --ease-compas yalnızca iki imza anında kullanılır
+       (view girişi ve play butonu) — başka yerde karıştırılmaz. */
+    --dur-instant: 120ms;
+    --dur-fast:    180ms;
+    --dur-base:    240ms;
+    --dur-slow:    380ms;
+
+    --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-inout:  cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-compas: cubic-bezier(0.34, 1.32, 0.64, 1);
+
+    /* ── Gölge ve glow ───────────────────────────────── */
+    --shadow-card:    0 12px 24px -10px rgb(var(--rgb-pink) / 0.3);
+    --shadow-raised:  0 8px 24px rgb(var(--rgb-black) / 0.5);
+    --shadow-overlay: 0 0 40px rgb(var(--rgb-pink) / 0.3);
+    --glow-lead:      0 0 20px rgb(var(--rgb-cyan) / 0.35);
+    --glow-follow:    0 0 20px rgb(var(--rgb-pink) / 0.35);
+
+    /* ── İmza: compás çizgisi ────────────────────────────
+       Lider (cyan) → takipçi (pembe) geçişi. Uygulamadaki
+       tüm yapısal ayırıcılar bu tek öğede birleşir. */
+    --rule-compas: linear-gradient(90deg,
+        rgb(var(--rgb-cyan) / 0)    0%,
+        rgb(var(--rgb-cyan) / 0.55) 18%,
+        rgb(var(--rgb-pink) / 0.55) 82%,
+        rgb(var(--rgb-pink) / 0)    100%);
+
+    --rule-compas-v: linear-gradient(180deg,
+        rgb(var(--rgb-cyan) / 0.75) 0%,
+        rgb(var(--rgb-pink) / 0.75) 100%);
+}

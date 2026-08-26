@@ -7,7 +7,21 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
+}
+
+/* Font tanımı * seçicisinden body'ye taşındı.
+   ÖNCESİ: * { font-family: 'Poppins', sans-serif } — Poppins hiçbir
+   yerden yüklenmiyordu (index.html sadece Plus Jakarta Sans indiriyordu),
+   dolayısıyla tüm uygulama tarayıcı varsayılan sans fontuyla render
+   oluyordu. Form kontrolleri font'u miras almadığı için ayrıca
+   inherit ediliyor. */
+button, input, select, textarea, optgroup {
+    font-family: inherit;
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
 }
 
 /* Taşma kaynağı: .bg-glow elementleri (position:absolute; top/left/right/bottom:-10%)
@@ -25,7 +39,8 @@
    glow'lar body'nin değil app-container'ın DIŞINDA konumlandığı için onlara
    ayrı bir wrapper gerekiyor — bkz. .bg-glow-wrapper). */
 body {
-    background: #0b0813;
+    font-family: var(--font-body);
+    background: var(--surface-base);
     color: #f1f5f9;
     min-height: 100vh;
     overflow-x: hidden;
@@ -338,7 +353,7 @@ body {
     transition: all 0.2s ease;
     flex: 1;
     min-width: 0;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-body);
     /* Dokunma hedefi: minimum 44x44px */
     min-height: 44px;
 }
@@ -469,7 +484,7 @@ body {
     border: none;
     border-radius: 12px;
     color: rgba(255, 255, 255, 0.85);
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 0.9rem;
     font-weight: 500;
     padding: 12px 10px;

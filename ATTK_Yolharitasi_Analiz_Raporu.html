@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATTK Yol Haritası Analiz Raporu</title>
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --surface: #13131f;
+    --surface2: #1a1a2e;
+    --border: #2a2a3e;
+    --cyan: #00f0ff;
+    --pink: #ff007f;
+    --purple: #c026d3;
+    --green: #4ade80;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --muted: #64748b;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 24px 16px;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  h1 {
+    font-size: 1.6rem;
+    color: var(--cyan);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+  }
+
+  .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 32px; }
+
+  h2 {
+    font-size: 1.1rem;
+    color: var(--pink);
+    margin: 32px 0 12px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-left: 3px solid var(--pink);
+    border-radius: 0 4px 4px 0;
+  }
+
+  h3 {
+    font-size: 1rem;
+    color: var(--amber);
+    margin: 24px 0 8px;
+  }
+
+  .summary-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 0.8rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .badge-total { background: #1e293b; color: var(--text-dim); }
+  .badge-done { background: #14532d; color: var(--green); }
+  .badge-missing { background: #450a0a; color: var(--red); }
+
+  .missing-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .missing-list li {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .missing-list li strong { color: var(--cyan); }
+
+  .note {
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* Birleşik tablo */
+  .master-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 32px;
+    font-size: 0.88rem;
+  }
+
+  .master-table th {
+    background: var(--surface2);
+    color: var(--cyan);
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .master-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .master-table tr:hover td { background: var(--surface2); }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-fill {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--cyan), var(--pink));
+  }
+
+  .score-num { font-weight: 700; color: var(--cyan); min-width: 24px; }
+
+  /* Detaylı değerlendirme kartları */
+  .eval-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .eval-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .eval-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .eval-card-title {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+
+  .score-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--surface2);
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+  }
+
+  .eval-desc {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+
+  .pro-con {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 500px) {
+    .pro-con { grid-template-columns: 1fr; }
+  }
+
+  .pro-block, .con-block {
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+
+  .pro-block {
+    background: rgba(74, 222, 128, 0.07);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+  }
+
+  .con-block {
+    background: rgba(239, 68, 68, 0.07);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+
+  .pro-block .label { color: var(--green); font-weight: 700; font-size: 0.8rem; margin-bottom: 4px; }
+  .con-block .label { color: var(--red); font-weight: 700; font-size: 0.8rem; margin-bottom: 4px; }
+
+  .pro-block ul, .con-block ul {
+    list-style: none;
+    font-size: 0.83rem;
+    color: var(--text-dim);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .pro-block ul li::before { content: "+ "; color: var(--green); }
+  .con-block ul li::before { content: "- "; color: var(--red); }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>ATTK Yol Haritası Analiz Raporu</h1>
+  <p class="meta">Tarih: 2026-08-07 &nbsp;|&nbsp; Proje: tango-reels-library</p>
+
+  <!-- V1 -->
+  <h2>ATTK_Yol_Haritası_V1.md</h2>
+  <div class="summary-bar">
+    <span class="badge badge-total">Toplam: 25 adım</span>
+    <span class="badge badge-done">Yapılmış: 23</span>
+    <span class="badge badge-missing">Yapılmamış: 2</span>
+  </div>
+  <ul class="missing-list">
+    <li><strong>4.3 — Server-Side Filtering (Tam):</strong> <code>dbFetchVideosPage()</code> filtre parametresi almıyor. Eğitmen, platform, öğrenme durumu ve etiket filtreleri hâlâ istemci tarafında uygulanıyor; Supabase'e yalnızca sayfalama parametresi gönderiliyor.</li>
+    <li><strong>5.2 — Etiket Ağ Haritası Görsel Render:</strong> <code>computeTagNetwork()</code> mevcut ancak <code>renderTagNetwork()</code> fonksiyonu yok ve <code>vis-network</code> CDN eklenmemiş. Veri hesaplanıyor ama ekrana basılmıyor.</li>
+  </ul>
+
+  <!-- V2 -->
+  <h2>ATTK_Yol_Haritası_V2.md</h2>
+  <div class="summary-bar">
+    <span class="badge badge-total">Toplam: 15 adım</span>
+    <span class="badge badge-done">Yapılmış: 10</span>
+    <span class="badge badge-missing">Yapılmamış: 5</span>
+  </div>
+  <ul class="missing-list">
+    <li><strong>1.2 — Supabase Storage RLS:</strong> Panel üzerinden yapılması gereken bir ayar; kod tarafında doğrulanamıyor ama belgelenmiş adım olarak eksik.</li>
+    <li><strong>2.4 — PWA Manifest Eksiklikleri:</strong> <code>manifest.json</code>'da <code>shortcuts</code> ve <code>screenshots</code> alanları yok. İkonlar mevcut ama yanlış yolda (<code>assets/logo/</code> vs <code>/icons/</code>).</li>
+    <li><strong>4.2 — AI Otomatik Etiket Önerisi:</strong> <code>aiTagSuggester.js</code> yok. Vercel'de <code>api/suggest-tags.js</code> endpoint'i yok. Form alanında AI öneri container'ı yok.</li>
+    <li><strong>5.1 — Herkese Açık Playlist Paylaşım Linki:</strong> <code>db/sharedPlaylists.js</code>, <code>views/shared-playlist.html</code> ve <code>sharedPlaylistViewer.js</code> dosyaların hiçbiri yok.</li>
+    <li><strong>5.2 — Çok Kullanıcı Altyapısı:</strong> Tablolarda <code>user_id</code> sütunu yok. (Uzun vadeli adım.)</li>
+  </ul>
+
+  <!-- V3 -->
+  <h2>ATTK_Yol_Haritası_V3.md</h2>
+  <div class="summary-bar">
+    <span class="badge badge-total">Toplam: 18 adım</span>
+    <span class="badge badge-done">Yapılmış: 18</span>
+    <span class="badge badge-missing">Yapılmamış: 0</span>
+  </div>
+  <p class="note">V3 içeriği büyük ölçüde V4 ile örtüşüyor. Bağımsız değerlendirilen adımların tamamı uygulanmış; V4 ile çakışan adımlar V4 kapsamında raporlandı.</p>
+
+  <!-- V4 -->
+  <h2>ATTK_Yol_Haritası_V4.md</h2>
+  <div class="summary-bar">
+    <span class="badge badge-total">Toplam: 22 adım</span>
+    <span class="badge badge-done">Yapılmış: 17</span>
+    <span class="badge badge-missing">Yapılmamış: 5</span>
+  </div>
+  <ul class="missing-list">
+    <li><strong>3.1 — Etiket Birleştirme Toplu İstek:</strong> <code>dbMergeTagsNormalized()</code> hâlâ iç içe <code>for</code> döngüsüyle video başına ayrı istek gönderiyor. Toplu <code>IN</code> sorgusu uygulanmamış.</li>
+    <li><strong>3.3 — Template Lazy Loading:</strong> <code>loadTemplates()</code> tüm 10 şablonu başlangıçta <code>Promise.all</code> ile yüklüyor. Sayfa geçişinde yükle yaklaşımı uygulanmamış.</li>
+    <li><strong>3.4 — EventBus / Döngüsel Bağımlılık Temizliği:</strong> <code>eventBus.js</code> yok. <code>dataManager.js</code> ↔ <code>videoHandlers.js</code> döngüsel bağımlılığı devam ediyor.</li>
+    <li><strong>4.5 — Küçük UX (2 madde):</strong> Navigation menüsünde playlist başlığı yanında video sayısı yok. Çevrimdışı kuyruğa simge/rozet yok.</li>
+    <li><strong>5.6 — Quiz Modu:</strong> Hiçbir dosyada iz yok; tamamen uygulanmamış.</li>
+  </ul>
+
+  <!-- V5 -->
+  <h2>ATTK_Yol_Haritası_V5.md</h2>
+  <div class="summary-bar">
+    <span class="badge badge-total">Toplam: 10 adım</span>
+    <span class="badge badge-done">Yapılmış: 9</span>
+    <span class="badge badge-missing">Yapılmamış: 1</span>
+  </div>
+  <ul class="missing-list">
+    <li><strong>9 — Kombinasyon Zinciri 1-Çok İlişkisi:</strong> <code>addLink()</code> hâlâ tek hedefle çalışıyor. UI'da çoklu kombinasyon seçimi yok. Kod içinde yalnızca açıklama satırı var; implementasyon yapılmamış.</li>
+  </ul>
+
+  <hr class="section-divider">
+
+  <!-- Birleşik tablo -->
+  <h2>Yapılmayan Tüm Adımlar — Öncelik Tablosu</h2>
+  <table class="master-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Kaynak</th>
+        <th>Adım</th>
+        <th>Açıklama</th>
+        <th>Değer</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>V1</td>
+        <td>4.3</td>
+        <td>Server-side filtering</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:80px"></div><span class="score-num">8</span></div></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>V2</td>
+        <td>1.2</td>
+        <td>Supabase Storage RLS</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:70px"></div><span class="score-num">7</span></div></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>V2</td>
+        <td>4.2</td>
+        <td>AI otomatik etiket önerisi</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:70px"></div><span class="score-num">7</span></div></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>V4</td>
+        <td>3.4</td>
+        <td>EventBus / döngüsel bağımlılık</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:70px"></div><span class="score-num">7</span></div></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>V5</td>
+        <td>9</td>
+        <td>Kombinasyon zinciri 1-çok</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:70px"></div><span class="score-num">7</span></div></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>V1</td>
+        <td>5.2</td>
+        <td>Etiket ağ haritası görsel</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:60px"></div><span class="score-num">6</span></div></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>V4</td>
+        <td>3.1</td>
+        <td>Etiket birleştirme toplu istek</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:60px"></div><span class="score-num">6</span></div></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>V4</td>
+        <td>5.6</td>
+        <td>Quiz modu</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:60px"></div><span class="score-num">6</span></div></td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>V2</td>
+        <td>5.1</td>
+        <td>Herkese açık playlist paylaşım linki</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:50px"></div><span class="score-num">5</span></div></td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td>V4</td>
+        <td>3.3</td>
+        <td>Template lazy loading</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:50px"></div><span class="score-num">5</span></div></td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td>V2</td>
+        <td>2.4</td>
+        <td>PWA manifest (shortcuts/screenshots)</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:40px"></div><span class="score-num">4</span></div></td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td>V4</td>
+        <td>4.5a</td>
+        <td>Playlist video sayısı gösterimi</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:30px"></div><span class="score-num">3</span></div></td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td>V4</td>
+        <td>4.5b</td>
+        <td>Çevrimdışı kuyruk simgesi</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:30px"></div><span class="score-num">3</span></div></td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td>V2</td>
+        <td>5.2</td>
+        <td>Çok kullanıcı altyapısı</td>
+        <td><div class="score-bar"><div class="score-fill" style="width:20px"></div><span class="score-num">2</span></div></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr class="section-divider">
+
+  <!-- Detaylı değerlendirme -->
+  <h2>Detaylı Değerlendirme</h2>
+  <div class="eval-grid">
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">1. Server-Side Filtering (V1 / 4.3)</span>
+        <span class="score-badge">8 / 10</span>
+      </div>
+      <p class="eval-desc">Filtrelemenin istemciden Supabase'e taşınması. 800+ video eşiğinde istemci tarafı filtreleme bellek ve render sorununa yol açacak.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Ölçeklenebilirlik; yalnızca eşleşen kayıtlar geliyor</li>
+          <li>Gereksiz ağ transferi yok</li>
+          <li>Sayfalama ile birleşince gerçek performans</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>dbFetchVideosPage() imzası değişiyor; tüm çağıran yerler güncellenmeli</li>
+          <li>Supabase sorgu karmaşıklığı artıyor</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">2. Supabase Storage RLS (V2 / 1.2)</span>
+        <span class="score-badge">7 / 10</span>
+      </div>
+      <p class="eval-desc">Kapak görseli yükleme bucket'ına Row Level Security politikası eklenmesi.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Yetkisiz silme/değiştirme engelliyor</li>
+          <li>İyi pratik; çok kullanıcıya geçilirse zorunlu</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Panel ayarı; kod tarafında izlenemiyor</li>
+          <li>Yanlış yapılandırılırsa yükleme kırılıyor</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">3. AI Otomatik Etiket Önerisi (V2 / 4.2)</span>
+        <span class="score-badge">7 / 10</span>
+      </div>
+      <p class="eval-desc">Video başlığı/açıklamasından Vercel serverless fonksiyon aracılığıyla otomatik etiket önerisi.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Etiket seçme süresini kısaltıyor</li>
+          <li>Etiket tutarlılığını artırıyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Vercel fonksiyonu + dış AI API maliyeti ve gecikme</li>
+          <li>Tango terminolojisi spesifik; her öneri manuel onay gerektirebilir</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">4. EventBus / Döngüsel Bağımlılık (V4 / 3.4)</span>
+        <span class="score-badge">7 / 10</span>
+      </div>
+      <p class="eval-desc">dataManager.js ↔ videoHandlers.js döngüsel import bağımlılığını eventBus.js ile çözmek.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>ES Modules'da döngüsel bağımlılık sessiz hataya yol açabilir</li>
+          <li>Kod tabanını genişletmek kolaylaşıyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Mevcut kod çalışıyor; refaktör riski taşıyor</li>
+          <li>Yanlış uygulanırsa hata izleme zorlaşıyor</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">5. Kombinasyon Zinciri 1-Çok (V5 / 9)</span>
+        <span class="score-badge">7 / 10</span>
+      </div>
+      <p class="eval-desc">Bir kombinasyondan birden fazla farklı kombinasyona zincir bağlantısı kurabilmek.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Gerçek tango akışını modelliyor (dallanma yapısı)</li>
+          <li>Zincir haritası görselleştirmesi zenginleşiyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>addLink() ve UI yeniden yazılması gerekiyor</li>
+          <li>video_links tablo yapısı değişebilir</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">6. Etiket Ağ Haritası Görsel (V1 / 5.2)</span>
+        <span class="score-badge">6 / 10</span>
+      </div>
+      <p class="eval-desc">computeTagNetwork() verisi üzerinden vis-network ile interaktif graf çizimi.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Etiketler arası ilişki görsel olarak anlaşılıyor</li>
+          <li>Eğitim planlamasında teknik bağlantıları gösteriyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>vis-network CDN bağımlılığı; sayfa ağırlığı artıyor</li>
+          <li>Etiket sayısı fazlaysa graf okunaksız olabilir</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">7. Etiket Birleştirme Toplu İstek (V4 / 3.1)</span>
+        <span class="score-badge">6 / 10</span>
+      </div>
+      <p class="eval-desc">dbMergeTagsNormalized() içindeki for döngüsünü toplu Supabase sorgusuna çevirmek.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Çok sayıda video normalizasyonunda ciddi hız farkı</li>
+          <li>Supabase istek limitine çarpma riski azalıyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Nadir kullanılan işlem; aciliyet düşük</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">8. Quiz Modu (V4 / 5.6)</span>
+        <span class="score-badge">6 / 10</span>
+      </div>
+      <p class="eval-desc">Kombinasyonları rastgele gösterip kullanıcının adını/kategorisini tahmin ettiği oyunlaştırma modu.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Kombinasyon ismi/kategorisini ezberlemek için etkili araç</li>
+          <li>Mevcut practice_sessions altyapısıyla entegre edilebilir</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Yeni view + mantık; önemli geliştirme süresi</li>
+          <li>Tek kullanıcı projesi; oyunlaştırma motivasyonu sınırlı</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">9. Herkese Açık Playlist Paylaşım Linki (V2 / 5.1)</span>
+        <span class="score-badge">5 / 10</span>
+      </div>
+      <p class="eval-desc">Bir playlist'i benzersiz URL ile paylaşılabilir kılmak.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Öğrencilere pratik listesi göndermek kolaylaşıyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Tek kullanıcı projesi; paylaşım ihtiyacı sınırlı</li>
+          <li>3 yeni dosya + backend logic gerektiriyor</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">10. Template Lazy Loading (V4 / 3.3)</span>
+        <span class="score-badge">5 / 10</span>
+      </div>
+      <p class="eval-desc">10 HTML şablonunun başlangıçta değil, ihtiyaç anında yüklenmesi.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>İlk yükleme süresi kısalıyor</li>
+          <li>Kullanılmayan şablonlar ağ isteği harcamıyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Şablonlar küçükse pratik fark minimal</li>
+          <li>Yanlış uygulanırsa sayfa geçişlerinde gecikme</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">11. PWA Manifest Eksiklikleri (V2 / 2.4)</span>
+        <span class="score-badge">4 / 10</span>
+      </div>
+      <p class="eval-desc">manifest.json'a shortcuts ve screenshots alanı eklenmesi.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>shortcuts: uzun basışta hızlı eylem menüsü</li>
+          <li>screenshots: daha profesyonel PWA görünümü</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Tek kullanıcı projesi; mağaza görünümü anlamsız</li>
+          <li>Düşük öncelikli kozmetik iyileştirme</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">12 & 13. Playlist Video Sayısı + Çevrimdışı Kuyruk Simgesi (V4 / 4.5)</span>
+        <span class="score-badge">3 / 10</span>
+      </div>
+      <p class="eval-desc">Navigation'da küçük UX iyileştirmeleri.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>Anlık durum bilgisi veriyor</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>İşlevsellik üzerinde sıfır etkisi</li>
+          <li>Saf kozmetik</li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div class="eval-card">
+      <div class="eval-card-header">
+        <span class="eval-card-title">14. Çok Kullanıcı Altyapısı (V2 / 5.2)</span>
+        <span class="score-badge">2 / 10</span>
+      </div>
+      <p class="eval-desc">Tablolara user_id ekleyerek birden fazla kullanıcıyı desteklemek.</p>
+      <div class="pro-con">
+        <div class="pro-block"><div class="label">Artıları</div><ul>
+          <li>İleride çok kullanıcıya geçiş için temel</li>
+        </ul></div>
+        <div class="con-block"><div class="label">Eksileri</div><ul>
+          <li>Tüm tablolarda migration riski</li>
+          <li>Şu an tek kullanıcı; önceliği yok</li>
+        </ul></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

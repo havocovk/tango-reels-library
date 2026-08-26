@@ -111,7 +111,7 @@
     color: #00f0ff;
     font-size: 0.78rem;
     font-weight: 600;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: var(--font-body);
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.2s, box-shadow 0.2s;

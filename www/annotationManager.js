@@ -114,7 +114,7 @@ function renderAnnotationList(annotations, videoUrl, platform, videoId) {
                     font-weight: 600;
                     cursor: pointer;
                     white-space: nowrap;
-                    font-family: 'Poppins', sans-serif;
+                    font-family: var(--font-body);
                     transition: background 0.15s;
                 "
             >⏱ ${formatTimestamp(ann.timestamp_sec)}</button>
