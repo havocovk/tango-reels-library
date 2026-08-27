@@ -67,6 +67,14 @@
 .dash-card-mastered { border-color: rgb(var(--rgb-green) / 0.2); }
 .dash-card-total    { border-color: rgb(var(--rgb-purple) / 0.2); }
 .dash-card-week     { border-color: rgb(var(--rgb-pink) / 0.2);  }
+.dash-card-shows    { border-color: rgb(var(--rgb-purple) / 0.2); }
+
+/* Bölüm başlıklarındaki küçük ikon kutusu (32px).
+   ÖNCESİ: dashboard.html içinde style="width:32px;height:32px". */
+.dash-card-icon-wrap.dash-icon-sm {
+    width: 32px;
+    height: 32px;
+}
 
 .dash-card-icon-wrap {
     width: 44px;

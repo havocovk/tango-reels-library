@@ -104,9 +104,18 @@
     width: 100%;
 }
 
+/* ── İsim mi, rol mü? ────────────────────────────────────────
+   ÖNCESİ: eğitmen adı --c-pink idi. Ama pembe uygulamada
+   TAKİPÇİ rolünün rengi (.badge-follower, .role-card.follower).
+   Aynı kartta hem isim hem rol rozeti pembe olduğu için renk
+   iki farklı anlam taşıyordu.
+   ŞİMDİ: isimler nötr (--text-primary), pembe yalnızca rol
+   göstergelerine ait. cyan=lider / pembe=takipçi kodlaması
+   uygulama genelinde tek anlama geliyor. */
 .card-instructor {
     font-size: var(--fs-md);
-    color: var(--c-pink);
+    font-weight: 600;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -349,10 +358,21 @@
    Adım 3.2 — Benzer Kombinasyonlar Bölümü
    ═══════════════════════════════════════════════════════════ */
 .similar-videos-section {
+    position: relative;
     margin-top: 12px;
     padding-top: 10px;
-    border-top: 1px solid rgb(var(--rgb-white) / 0.06);
     width: 100%;
+}
+
+/* İmza: compás çizgisi (bkz. base.css) */
+.similar-videos-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--rule-compas);
 }
 
 .similar-videos-title {
@@ -415,7 +435,7 @@
 
 .similar-video-mini-instructor {
     font-size: var(--fs-3xs);
-    color: var(--c-pink);
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -511,7 +531,7 @@
 
 .vl-instructor {
     font-size: var(--fs-base);
-    color: var(--c-pink);
+    color: var(--text-primary);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;

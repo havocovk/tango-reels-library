@@ -291,3 +291,126 @@
         font-size: var(--fs-2xs);
     }
 }
+/* ════════════════════════════════════════════════════════════
+   KOLEKSİYON ARAMA + FİLTRE BARI
+   ÖNCESİ: views/library.html içinde 19 satır içi style vardı;
+   altı <select> aynı beş satırlık stili birebir tekrarlıyordu.
+   Token'a çevrilemiyor, tek noktadan değiştirilemiyor ve
+   :focus durumu tanımlanamıyordu (satır içi stille mümkün değil).
+   ════════════════════════════════════════════════════════════ */
+
+.search-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+}
+
+.filter-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    margin: var(--sp-3) 0;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+}
+
+/* Arama alanı — filtre kutularından geniş (flex:3) */
+.search-field {
+    flex: 3;
+    min-width: 0;
+    background: rgb(var(--rgb-ink) / 0.8);
+    border: 1px solid rgb(var(--rgb-pink) / 0.5);
+    border-radius: var(--r-md);
+    padding: 10px var(--sp-4);
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+    outline: none;
+    transition-property: border-color, box-shadow;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+}
+
+.search-field::placeholder {
+    color: var(--text-muted);
+}
+
+.search-field:focus {
+    border-color: rgb(var(--rgb-cyan) / 0.7);
+    box-shadow: 0 0 0 3px rgb(var(--rgb-cyan) / 0.12);
+}
+
+/* Filtre açılır listeleri — altısı da aynı */
+.filter-select {
+    flex: 1;
+    min-width: 0;
+    background: rgb(var(--rgb-ink) / 0.8);
+    border: 1px solid rgb(var(--rgb-pink) / 0.5);
+    border-radius: var(--r-md);
+    padding: 10px;
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+    cursor: pointer;
+    outline: none;
+    transition-property: border-color, box-shadow;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+}
+
+.filter-select:hover {
+    border-color: rgb(var(--rgb-pink) / 0.75);
+}
+
+.filter-select:focus {
+    border-color: rgb(var(--rgb-cyan) / 0.7);
+    box-shadow: 0 0 0 3px rgb(var(--rgb-cyan) / 0.12);
+}
+
+.filter-select option {
+    background: var(--surface-base);
+    color: var(--text-primary);
+}
+
+/* Toplam sayı göstergesi */
+.total-count {
+    text-align: right;
+    margin: 10px 0 5px;
+    color: var(--c-cyan);
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--fs-lg);
+}
+
+/* Paylaş çubuğu */
+.share-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-2);
+    margin: 6px 0 var(--sp-3);
+}
+
+.share-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+}
+
+/* Rastgele keşfet — .btn-view-toggle iskeletini amber tonda kullanır */
+.btn-random {
+    color: var(--c-amber);
+    border-color: rgb(var(--rgb-amber) / 0.4);
+}
+
+.btn-random:hover {
+    background: rgb(var(--rgb-amber) / 0.18);
+    border-color: rgb(var(--rgb-amber) / 0.7);
+}
