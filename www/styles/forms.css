@@ -448,8 +448,32 @@
         display: contents;
     }
 
+    /* ── Mobil: arama satırı düzeni ──────────────────────────
+       ÖNCESİ: flex-wrap ile kendiliğinden sarılıyordu. Arama alanı
+       (flex:3), "Ara" ve "Pratik Başlat" tam satıra yayılıyor ama
+       "Rastgele" ve "Liste" kendi içerik genişliklerinde kalıp
+       satırın solunda küçük ve düzensiz duruyordu.
+       ŞİMDİ: ilk üçü açıkça tam satır (flex-basis 100%), görünüm
+       değiştirme butonları flex:1 1 0 ile kalan satırı EŞİT paylaşıyor.
+       Yan yana iki tanesi varsa (Koleksiyon) yarı yarıya bölüşüyor;
+       tek başına kalıyorsa (Pratik Listem'de "Liste", Şovlar'da
+       "Rastgele") satırın tamamını kaplıyor. nth-child hilesi gerekmiyor. */
     .search-header {
+        display: flex;
+        flex-wrap: wrap;
         gap: var(--sp-2);
         margin-bottom: var(--sp-3);
+    }
+
+    .search-header > .search-field,
+    .search-header > .btn-search,
+    .search-header > .btn-start-practice {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .search-header > .btn-view-toggle {
+        flex: 1 1 0;
+        min-width: 0;
     }
 }

@@ -102,6 +102,11 @@ canvas { max-height: 350px; width: 100%; }
 /* Tag Manager Tablosu */
 .tag-manager-table {
     width: 100%;
+    /* table-layout:fixed ŞART: otomatik düzende tarayıcı sütun
+       genişliklerini içeriğe göre yeniden hesaplıyor ve verdiğimiz
+       width değerlerini öneri sayıp eziyordu. Fixed ile thead'deki
+       genişlikler birebir uygulanıyor, etiket sütunu kalanı alıyor. */
+    table-layout: fixed;
     border-collapse: collapse;
     background: rgb(var(--rgb-ink) / 0.6);
     border-radius: 16px;
@@ -152,9 +157,15 @@ canvas { max-height: 350px; width: 100%; }
 }
 
 .tag-col-name {
+    overflow: hidden;
+}
+
+/* Renk noktası + rozet. Flex BURADA, hücrede değil. */
+.tag-name-wrap {
     display: flex;
     align-items: center;
     gap: var(--sp-2);
+    min-width: 0;
 }
 
 .tag-col-count {
@@ -188,6 +199,7 @@ canvas { max-height: 350px; width: 100%; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .tag-checkbox {
@@ -297,16 +309,33 @@ canvas { max-height: 350px; width: 100%; }
         font-size: var(--fs-3xs);
     }
 
-    /* Sabit sütunlar daraltıldı — 360px ekranda toplam bütçe:
-       328px − (26 + 48 + 60) = ~194px etiket sütununa kalıyor.
-       En uzun rozet (#Intermediate) ~137px, rahat sığıyor. */
-    .tag-col-check   { width: 26px; }
-    .tag-col-count   { width: 48px; font-size: var(--fs-xs); }
-    .tag-col-actions { width: 60px; }
+    /* 360px ekranda bütçe:
+       344 (main-content) − 16 (kart padding) = 328px
+       30 (onay) + 58 (kullanım) + 76 (işlemler) = 164px sabit
+       → etiket sütununa 164px kalıyor. */
+    .tag-col-check   { width: 30px; }
+    .tag-col-count   { width: 58px; }
+    .tag-col-actions { width: 76px; }
+
+    /* Başlıklar dar sütuna sığsın: "İşlemler" tek satırda,
+       "Kullanım Sayısı" iki satırda. */
+    .tag-manager-table th.tag-col-count,
+    .tag-manager-table th.tag-col-actions {
+        font-size: var(--fs-3xs);
+        padding: 8px 2px;
+        line-height: var(--lh-tight);
+    }
+
+    /* Sayı sola hizalı: sağa hizalı olduğunda etiket sütunundan
+       daha da uzaklaşıyordu. Sola alınca rozete yaklaşıyor. */
+    .tag-manager-table td.tag-col-count {
+        text-align: left;
+        padding-left: 2px;
+    }
+
     .tag-actions-wrap { gap: 3px; }
-    .tag-row-btn     { padding: 3px 4px; }
-    .tag-col-name    { gap: 5px; min-width: 0; }
-    .tag-row-badge   { max-width: 100%; }
+    .tag-row-btn      { padding: 3px 5px; }
+    .tag-name-wrap    { gap: 5px; }
 
     /* Tablo artık sığdığı için yatay kaydırma kilidi kalkıyor */
     .tag-manager-table {

@@ -249,6 +249,13 @@ export function renderTagManagerUI() {
             // Etiket + renk noktası — sadece görsel (Adim 4.5)
             const tagCell = row.insertCell(1);
             tagCell.className = 'tag-col-name';
+            // Flex, HÜCRENİN KENDİSİNDE değil içindeki sarmalayıcıda olmalı.
+            // display:flex verilen bir <td> tablo düzeninden çıkar; tarayıcı
+            // yerine anonim hücre üretir ve sütun genişliği algoritması
+            // bozulur (etiket sütunu şişip İşlemler sütununu ekran dışına
+            // itiyordu). Sarmalayıcı ile hücre normal table-cell kalıyor.
+            const nameWrap = document.createElement('div');
+            nameWrap.className = 'tag-name-wrap';
 
             const colorDot = document.createElement('span');
             colorDot.style.cssText = `
@@ -257,7 +264,7 @@ export function renderTagManagerUI() {
                 border:2px solid ${color ? color + '66' : 'rgba(255,255,255,0.15)'};
                 display:inline-block;
             `;
-            tagCell.appendChild(colorDot);
+            nameWrap.appendChild(colorDot);
 
             const badge = document.createElement('span');
             badge.style.cssText = `
@@ -269,7 +276,8 @@ export function renderTagManagerUI() {
             `;
             badge.className = 'tag-row-badge';
             badge.textContent = '#' + tag;
-            tagCell.appendChild(badge);
+            nameWrap.appendChild(badge);
+            tagCell.appendChild(nameWrap);
 
             // Kullanım sayısı
             const countCell = row.insertCell(2);
