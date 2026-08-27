@@ -4,7 +4,7 @@
 //    - Supabase API çağrıları → her zaman ağdan git (önbelleğe alma)
 //    - Uygulama dosyaları (HTML/CSS/JS/Font) → önce ağdan dene, ağ yoksa önbellekten sun
 
-const CACHE_NAME = 'tango-app-v6';
+const CACHE_NAME = 'tango-app-v7';
 
 // Önbelleğe alınacak uygulama dosyaları (uygulama kabuğu)
 const PRECACHE_URLS = [
@@ -22,6 +22,7 @@ const PRECACHE_URLS = [
   '/styles/practice-session.css',
   '/styles/playlists.css',
   '/styles/dashboard.css',
+  '/styles/motion.css',
   // Fontlar — kendi sunucumuzdan servis ediliyor, precache garantili
   '/assets/fonts/plus-jakarta-sans-latin.woff2',
   '/assets/fonts/plus-jakarta-sans-latin-ext.woff2',

@@ -1,0 +1,197 @@
+/* ============================================
+   motion.css — Hareket katmanı
+   Cascade'de SON sırada yüklenir; diğer dosyalardaki
+   hareket tanımlarını bilinçle ezer.
+
+   HAREKET DİLİ
+   Tek varsayılan eğri: --ease-out.
+   --ease-compas (hafif overshoot, 2/4 vuruşun "yerine
+   oturma" hissi) YALNIZCA iki imza anında kullanılır:
+   view girişi ve play butonu. Başka hiçbir yerde
+   karıştırılmaz — karışık easing, hareketi dil olmaktan
+   çıkarıp gürültüye çevirir.
+   ============================================ */
+
+/* ── Ortak geçiş özellik listesi ─────────────────────────
+   `transition: all` yerine geçer. `all`, layout
+   özelliklerini (width/height/top/padding) de kapsadığı
+   için her hover'da gereksiz reflow tetikliyordu.
+   Bu liste yalnızca compositor ve paint dostu özellikler. */
+:root {
+    --tr-ui: transform, opacity, color, background-color,
+             border-color, box-shadow, text-shadow, filter;
+}
+
+/* ═══════════════════════════════════════════════════════
+   1. ERİŞİLEBİLİRLİK TABANI
+   İşletim sistemi "animasyonları azalt" diyorsa hareket
+   durur. Windows: Ayarlar → Erişim Kolaylığı → Görsel
+   Efektler → Animasyon efektleri.
+   Android: Ayarlar → Erişilebilirlik → Animasyonları kaldır.
+   ═══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   2. VIEW GİRİŞİ — birinci imza anı
+   ÖNCESİ: .view-panel'de `animation: fadeIn 0.4s ease`
+   vardı; dashboard ve instructor-profile bu sınıfı
+   taşımadığı için onlar animasyonsuz, aniden beliriyordu.
+   Animasyon artık id'ye bağlandı: tüm view'lar aynı girişi
+   alır, .view-panel'in layout kuralları (height/flex)
+   olduğu gibi korunur.
+   d-none kalkınca CSS animasyonu kendiliğinden yeniden
+   tetiklenir — ek JS gerekmiyor.
+   ═══════════════════════════════════════════════════════ */
+@keyframes viewEnter {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+[id^="view-"]:not(.d-none) {
+    animation: viewEnter var(--dur-slow) var(--ease-compas) both;
+}
+
+/* ═══════════════════════════════════════════════════════
+   3. DASHBOARD KADEMESİ — ikinci vuruş
+   View yerine oturduktan sonra kartlar sırayla belirir.
+   VIDEO KARTLARINA UYGULANMAZ: .video-grid her filtre ve
+   her arama tuşunda yeniden render oluyor; orada kademe
+   hızlı değil, yavaş hissettirir.
+   ═══════════════════════════════════════════════════════ */
+@keyframes cardRise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+#view-dashboard-container:not(.d-none) .dash-card {
+    animation: cardRise var(--dur-base) var(--ease-out) both;
+}
+
+#view-dashboard-container:not(.d-none) .dashboard-row-all > .dash-card:nth-child(1) { animation-delay:  40ms; }
+#view-dashboard-container:not(.d-none) .dashboard-row-all > .dash-card:nth-child(2) { animation-delay:  75ms; }
+#view-dashboard-container:not(.d-none) .dashboard-row-all > .dash-card:nth-child(3) { animation-delay: 110ms; }
+#view-dashboard-container:not(.d-none) .dashboard-row-all > .dash-card:nth-child(4) { animation-delay: 145ms; }
+#view-dashboard-container:not(.d-none) .dashboard-row-all > .dash-card:nth-child(5) { animation-delay: 180ms; }
+#view-dashboard-container:not(.d-none) .dashboard-row-all > .dash-card:nth-child(6) { animation-delay: 215ms; }
+
+/* Alttaki iki geniş kart — kademe uzamasın diye ikisi de aynı anda */
+#view-dashboard-container:not(.d-none) > .dashboard-wrapper > .dash-card {
+    animation-delay: 250ms;
+}
+
+/* ═══════════════════════════════════════════════════════
+   4. MODAL
+   ÖNCESİ: yalnızca overlay fade oluyordu, diyalog kutusu
+   tam boyutta aniden beliriyordu.
+   ═══════════════════════════════════════════════════════ */
+@keyframes modalEnter {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+.modal-overlay {
+    animation: fadeIn var(--dur-fast) var(--ease-out);
+}
+
+.modal-content {
+    animation: modalEnter var(--dur-base) var(--ease-out) both;
+}
+
+/* ═══════════════════════════════════════════════════════
+   5. BOTTOM SHEET (mobil)
+   ÖNCESİ: yalnızca d-none ile açılıp kapanıyordu, panel
+   kaymadan aniden beliriyordu.
+
+   NOT — kapanış animasyonsuz: sheet 10 ayrı çağrı yerinde
+   classList.add('d-none') ile kapatılıyor. Çıkış animasyonu
+   için app.js'te ortak bir closeSheet() yardımcısı yazıp 10
+   çağrıyı değiştirmek gerekir; bu adımın kapsamı dışında.
+   ═══════════════════════════════════════════════════════ */
+@keyframes sheetRise {
+    from { transform: translateY(100%); }
+    to   { transform: none; }
+}
+
+.bottom-sheet-overlay:not(.d-none) {
+    animation: fadeIn var(--dur-fast) var(--ease-out);
+}
+
+.bottom-sheet-overlay:not(.d-none) .bottom-sheet {
+    animation: sheetRise var(--dur-base) var(--ease-out) both;
+}
+
+/* ═══════════════════════════════════════════════════════
+   6. SPINNER
+   index.html'deki <div class="spinner"> için hiç CSS
+   tanımlı değildi — yükleme göstergesi görünmüyordu.
+   ═══════════════════════════════════════════════════════ */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 3px solid rgb(var(--rgb-cyan) / 0.15);
+    border-top-color: var(--c-cyan);
+    animation: spin 700ms linear infinite;
+}
+
+/* Spinner DURUM bildiriyor, dekoratif değil — reduced-motion'da
+   da dönmeye devam eder, yalnızca yavaşlar. */
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation-duration: 1600ms !important;
+        animation-iteration-count: infinite !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════
+   7. TOAST
+   Mevcut sağdan kayma korundu, token sürelerine bağlandı
+   ve opaklık eklendi (kayma + belirme birlikte).
+   ═══════════════════════════════════════════════════════ */
+.toast-notification {
+    opacity: 0;
+    transition-property: transform, opacity;
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
+}
+
+.toast-notification.show {
+    opacity: 1;
+}
+
+/* Hareket azaltmada yandan kayma yok, yalnızca belirme */
+@media (prefers-reduced-motion: reduce) {
+    .toast-notification     { transform: none !important; }
+    .toast-notification.show { transform: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   8. VIDEO KARTI — kapak ve play butonu
+   --ease-compas'ın ikinci ve SON kullanım yeri: play
+   düğmesinin basılma hissi.
+   ═══════════════════════════════════════════════════════ */
+.video-cover-container {
+    transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.play-overlay {
+    transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.play-icon {
+    transition: transform var(--dur-base) var(--ease-compas),
+                background-color var(--dur-fast) var(--ease-out);
+}

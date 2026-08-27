@@ -136,8 +136,12 @@ body {
     background: rgb(var(--rgb-ink) / 0.3);
 }
 
+/* animation: fadeIn KALDIRILDI (Adım 4) — view girişi artık
+   motion.css'te [id^="view-"]:not(.d-none) üzerinden yönetiliyor.
+   Böylece .view-panel sınıfını taşımayan dashboard ve
+   instructor-profile de aynı girişi alıyor. Buradaki kurallar
+   yalnızca layout. */
 .view-panel {
-    animation: fadeIn 0.4s ease;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -350,7 +354,9 @@ body {
     cursor: pointer;
     padding: 6px 8px;
     border-radius: 12px;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     flex: 1;
     min-width: 0;
     font-family: var(--font-body);

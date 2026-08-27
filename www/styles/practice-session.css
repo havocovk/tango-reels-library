@@ -33,7 +33,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     font-family: inherit;
 }
 
@@ -211,7 +213,9 @@
     font-family: inherit;
     font-size: var(--fs-sm);
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     letter-spacing: 0.3px;
 }
 
@@ -404,7 +408,9 @@
     font-family: inherit;
     font-size: var(--fs-md);
     font-weight: 700;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     box-shadow: 0 4px 16px rgb(var(--rgb-pink) / 0.35);
     width: 100%;
 }

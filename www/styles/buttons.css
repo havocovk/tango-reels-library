@@ -26,7 +26,9 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: all 0.3s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
 }
 
 .menu-btn:hover {
@@ -54,7 +56,9 @@
     cursor: pointer;
     font-size: var(--fs-base);
     font-weight: 600;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 
 .lang-btn:hover {
@@ -73,7 +77,9 @@
     font-weight: 600;
     cursor: pointer;
     font-size: var(--fs-md);
-    transition: all 0.3s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     box-shadow: 0 4px 14px rgb(var(--rgb-pink) / 0.3);
 }
 
@@ -95,7 +101,9 @@
     font-size: var(--fs-md);
     font-weight: 700;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     letter-spacing: 0.3px;
     box-shadow: 0 0 12px rgb(var(--rgb-green) / 0.15);
 }
@@ -127,7 +135,9 @@
     font-size: var(--fs-md);
     font-weight: 700;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     letter-spacing: 0.3px;
     box-shadow: 0 0 12px rgb(var(--rgb-pink) / 0.15);
 }
@@ -154,7 +164,9 @@
     font-size: var(--fs-base);
     font-weight: 700;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     letter-spacing: 0.3px;
     box-shadow: 0 0 12px rgb(var(--rgb-cyan) / 0.15);
 }
@@ -181,7 +193,9 @@
     font-size: var(--fs-base);
     font-weight: 700;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     letter-spacing: 0.3px;
     box-shadow: 0 0 12px rgb(var(--rgb-purple) / 0.15);
 }
@@ -208,7 +222,9 @@
     font-size: var(--fs-md);
     font-weight: 700;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     letter-spacing: 0.3px;
     box-shadow: 0 0 16px rgb(var(--rgb-green) / 0.2);
     width: 100%;
@@ -240,7 +256,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     flex: 1;
 }
 
@@ -265,7 +283,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     width: 100%;
     margin-top: 8px;
     display: block;
@@ -298,7 +318,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     box-shadow: 0 0 10px rgb(var(--rgb-wa) / 0.1);
 }
 
@@ -324,7 +346,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     box-shadow: 0 0 10px rgb(var(--rgb-cyan) / 0.08);
 }
 
@@ -350,7 +374,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.25s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
     box-shadow: 0 0 10px rgb(var(--rgb-pink) / 0.08);
 }
 
@@ -378,7 +404,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 
 .btn-clear-danger:hover {
@@ -397,7 +425,9 @@
     cursor: pointer;
     font-size: var(--fs-2xs);
     margin: 0 2px;
-    transition: all 0.2s;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -426,7 +456,9 @@
     justify-content: center;
     align-items: center;
     font-size: var(--fs-base);
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 
 .card-edit-btn:hover {
@@ -451,7 +483,9 @@
     cursor: pointer;
     padding: 2px 6px;
     border-radius: 4px;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 
 .inline-edit-tags-btn:hover {
@@ -600,7 +634,9 @@
 
 /* ── Menü butonları: ikon rengi geçişleri ───────────────── */
 .menu-btn .lucide-icon {
-    transition: all 0.3s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
 }
 
 .menu-btn.active .lucide-icon {

@@ -568,7 +568,9 @@ canvas { max-height: 350px; width: 100%; }
     padding: 4px 10px;
     cursor: pointer;
     font-size: 0.85rem;
-    transition: all 0.2s;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 .lp-refresh-btn:hover { background: rgba(192,132,252,0.3); }
 

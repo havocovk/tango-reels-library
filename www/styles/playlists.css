@@ -35,7 +35,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     font-family: inherit;
 }
 
@@ -65,7 +67,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     position: relative;
 }
 
@@ -137,7 +141,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     opacity: 0;
 }
 
@@ -176,7 +182,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.15s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-instant);
+    transition-timing-function: var(--ease-out);
 }
 
 .playlist-dropdown-item:hover {
@@ -211,7 +219,9 @@
     font-size: var(--fs-sm);
     font-family: inherit;
     margin-top: 4px;
-    transition: all 0.15s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-instant);
+    transition-timing-function: var(--ease-out);
 }
 
 .playlist-dropdown-new:hover {

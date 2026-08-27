@@ -20,14 +20,22 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
 }
 
+/* Dinlenme hâlinde kenarlık pembe (takipçi), hover'da cyan'a
+   (lider) kayar — tek geçişli. ÖNCESİ: borderGlow 2s sonsuz
+   döngüsü çalışıyordu; hover edilen her kartta kesintisiz
+   repaint üretiyor, motion kuralındaki "dekoratif sonsuz
+   döngü kullanma" maddesini ihlal ediyordu. */
 .video-card:hover {
     transform: translateY(-6px);
     background: rgb(var(--rgb-ink) / 0.8);
-    box-shadow: 0 12px 24px -10px rgb(var(--rgb-pink) / 0.3);
-    animation: borderGlow 2s ease-in-out infinite;
+    border-color: rgb(var(--rgb-cyan) / 0.55);
+    box-shadow: 0 12px 24px -10px rgb(var(--rgb-pink) / 0.3),
+                0 0 18px rgb(var(--rgb-cyan) / 0.12);
 }
 
 .video-cover-link {
@@ -187,7 +195,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 
 .fav-star-btn:hover {
@@ -220,7 +230,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     padding: 0;
 }
 
@@ -271,7 +283,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     padding: 0;
 }
 
@@ -321,7 +335,9 @@
 }
 .learning-badge {
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 .learning-badge:hover {
     transform: scale(1.02);
@@ -370,7 +386,9 @@
     overflow: hidden;
     border: 1px solid rgb(var(--rgb-white) / 0.07);
     background: rgb(var(--rgb-white) / 0.03);
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 
 .similar-video-mini:hover {
@@ -430,7 +448,9 @@
     font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
     flex-shrink: 0;
 }
 
@@ -457,7 +477,9 @@
     border: 1px solid rgb(var(--rgb-pink) / 0.12);
     border-radius: 12px;
     padding: 8px 12px;
-    transition: all 0.2s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
 }
 
 .video-list-row:hover {
@@ -547,7 +569,9 @@
     justify-content: center;
     align-items: center;
     font-size: var(--fs-sm);
-    transition: all 0.15s ease;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-instant);
+    transition-timing-function: var(--ease-out);
     padding: 0;
 }
 
@@ -564,26 +588,9 @@
     .vl-instructor { font-size: var(--fs-xs); }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   Adım 7.3 — Hover-to-Glow Sınır Animasyonu
-   ═══════════════════════════════════════════════════════════ */
-@keyframes borderGlow {
-    0%   {
-        border-color: rgb(var(--rgb-pink) / 0.5);
-        box-shadow: 0 12px 24px -10px rgb(var(--rgb-pink) / 0.3),
-                    0 0 0 0 rgb(var(--rgb-pink) / 0);
-    }
-    50%  {
-        border-color: rgb(var(--rgb-cyan) / 0.7);
-        box-shadow: 0 12px 24px -10px rgb(var(--rgb-cyan) / 0.3),
-                    0 0 20px 2px rgb(var(--rgb-cyan) / 0.12);
-    }
-    100% {
-        border-color: rgb(var(--rgb-pink) / 0.5);
-        box-shadow: 0 12px 24px -10px rgb(var(--rgb-pink) / 0.3),
-                    0 0 0 0 rgb(var(--rgb-pink) / 0);
-    }
-}
+/* Adım 7.3'teki @keyframes borderGlow KALDIRILDI (Adım 4 — hareket katmanı).
+   Sonsuz döngü yerine .video-card:hover üzerinde tek geçişli
+   pembe→cyan kenarlık geçişi kullanılıyor. */
 
 /* ── Adim 4.4: Üç Nokta Menüsü ── */
 .card-more-menu {
