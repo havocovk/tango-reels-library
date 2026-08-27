@@ -181,10 +181,22 @@ body {
     pointer-events: none;
 }
 
-/* <hr> yerine geçen yatay compás çizgisi */
+/* <hr> yerine geçen yatay compás çizgisi.
+
+   flex-shrink:0 ŞART: .sidebar-glass bir flex column container
+   (overflow-y:auto). Masaüstünde menü butonları + playlist listesi
+   yüksekliği aşınca flex, esnek öğeleri sıkıştırıyor ve height:1px
+   olan <hr> 0'a çöküyordu — çizgi görünmez oluyordu. (Eski <hr>
+   bundan etkilenmiyordu çünkü çizgisi border ile çiziliyordu;
+   border sıkışmaz, yalnızca content box sıkışır.)
+   Belirti: masaüstünde çizgi playlist'ler yüklenene kadar görünüp
+   sonra kayboluyordu, mobilde ise (menü gizli, taşma yok) hep
+   görünüyordu. */
 hr.compas-rule {
     border: none;
     height: 1px;
+    min-height: 1px;
+    flex-shrink: 0;
     background: var(--rule-compas);
     margin: var(--sp-4) 0;
 }
@@ -192,8 +204,21 @@ hr.compas-rule {
 hr.compas-rule-footer {
     border: none;
     height: 1px;
+    min-height: 1px;
+    flex-shrink: 0;
     background: var(--rule-compas);
     margin: 0 0 var(--sp-4);
+}
+
+/* Mobilde .menu-items ve #playlist-section-container gizleniyor,
+   böylece iki <hr> yan yana düşüyor: biri logonun altında, diğeri
+   hemen ardından gelen "Çıkış Yap" butonunun üstünde. İkisi de aynı
+   çizgi olduğu için çift göründüğü rapor edildi. Mobilde alttaki
+   gizlenir — logonun altındaki tek ayırıcı yeterli. */
+@media screen and (max-width: 768px) {
+    hr.compas-rule-footer {
+        display: none;
+    }
 }
 
 @keyframes fadeIn {
