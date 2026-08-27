@@ -434,7 +434,20 @@ async function initializeApp() {
     document.getElementById('tag-manager-delete-btn')?.addEventListener('click',  () => deleteSelectedTags());
     document.getElementById('tag-manager-cleanup-btn')?.addEventListener('click', () => cleanupUnusedTags());
     document.getElementById('tag-merge-cancel-btn')?.addEventListener('click', () => {
-        document.getElementById('tag-merge-panel')?.classList.add('d-none');
+        // ÖNCESİ: panel önce d-none ile gizleniyor, hemen ardından
+        // updateTagManagerSelection() çağrılıyordu. O fonksiyon işaretli
+        // kutulara bakıp karar veriyor; kutular hâlâ işaretli olduğu için
+        // paneli TEKRAR açıyordu. Gizle → anında geri aç, sonuçta İptal
+        // hiçbir şey yapmıyor gibi görünüyordu.
+        // DOĞRUSU: önce seçimi temizle; paneli kapatmayı ve üstteki
+        // Birleştir/Sil butonlarını pasifleştirmeyi zaten
+        // updateTagManagerSelection() kendisi yapıyor.
+        document.querySelectorAll('#tag-manager-tbody .tag-checkbox')
+            .forEach(cb => { cb.checked = false; });
+        const selectAllCb = document.getElementById('tag-select-all');
+        if (selectAllCb) selectAllCb.checked = false;
+        const mergeNameInput = document.getElementById('tag-merge-new-name');
+        if (mergeNameInput) mergeNameInput.value = '';
         updateTagManagerSelection();
     });
     document.getElementById('tag-merge-confirm-btn')?.addEventListener('click', () => mergeSelectedTags());
