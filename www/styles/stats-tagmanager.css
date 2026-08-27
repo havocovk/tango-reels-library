@@ -213,22 +213,69 @@ canvas { max-height: 350px; width: 100%; }
     vertical-align: middle;
 }
 
-/* Birleştirme paneli — tablonun ÜSTÜNDE duruyor (bkz. tag-manager.html).
-   ÖNCESİ: satır içi stil + tablonun altındaydı. */
+/* ── Birleştirme paneli ──────────────────────────────────────
+   Tablonun ÜSTÜNDE duruyor (bkz. tag-manager.html).
+   ÖNCESİ: satır içi stildi, öğeler akış içinde yan yana diziliyordu;
+   etiket / kutu / iki buton düzensiz sarılıyor, "İptal" alt satıra
+   düşüyordu. Ayrıca hepsi masaüstü ölçüsündeydi — sayfanın geri
+   kalanı mobilde küçültülmüşken panel büyük kalıyordu.
+   ŞİMDİ: sütun flex — etiket, tam genişlik kutu, altta yan yana
+   iki eşit buton. Ölçüler mobilde tek noktadan küçülüyor. */
 .tag-merge-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
     margin-bottom: var(--sp-4);
-    padding: 15px;
+    padding: var(--sp-3);
     background: rgb(var(--rgb-cyan) / 0.1);
+    border: 1px solid rgb(var(--rgb-cyan) / 0.25);
     border-radius: var(--r-md);
 }
 
+.tag-merge-panel label {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
 .tag-merge-input {
+    width: 100%;
+    margin: 0;
     background: var(--surface-base);
-    border: 1px solid var(--c-pink);
-    padding: 6px 12px;
-    border-radius: 8px;
-    color: white;
-    margin: 0 8px;
+    border: 1px solid rgb(var(--rgb-pink) / 0.6);
+    padding: 8px 12px;
+    border-radius: var(--r-sm);
+    color: var(--text-primary);
+    font-size: var(--fs-base);
+    outline: none;
+    transition-property: border-color, box-shadow;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+}
+
+.tag-merge-input::placeholder {
+    color: var(--text-muted);
+}
+
+.tag-merge-input:focus {
+    border-color: rgb(var(--rgb-cyan) / 0.7);
+    box-shadow: 0 0 0 3px rgb(var(--rgb-cyan) / 0.12);
+}
+
+.tag-merge-actions {
+    display: flex;
+    gap: var(--sp-2);
+}
+
+/* Panel butonları satır butonlarından farklı: metin taşıyorlar,
+   eşit bölüşüp satırı dolduruyorlar. Özgüllük (0,2,0) olduğu için
+   mobil .tag-action-btn daraltmasından etkilenmiyorlar. */
+.tag-merge-actions .tag-action-btn {
+    flex: 1;
+    justify-content: center;
+    margin: 0;
+    padding: 8px 10px;
+    font-size: var(--fs-sm);
 }
 
 /* Loading overlay */
@@ -339,6 +386,21 @@ canvas { max-height: 350px; width: 100%; }
     .tag-row-btn      { padding: 3px 5px; }
     .tag-name-wrap    { gap: 5px; }
 
+    /* Birleştirme paneli mobil ölçek */
+    .tag-merge-panel {
+        gap: 6px;
+        padding: var(--sp-2);
+        margin-bottom: var(--sp-3);
+    }
+    .tag-merge-panel label { font-size: var(--fs-xs); }
+    .tag-merge-input {
+        padding: 7px 10px;
+        font-size: var(--fs-sm);
+    }
+    .tag-merge-actions .tag-action-btn {
+        padding: 7px 8px;
+        font-size: var(--fs-xs);
+    }
     /* Tablo artık sığdığı için yatay kaydırma kilidi kalkıyor */
     .tag-manager-table {
         min-width: 0;
