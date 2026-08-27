@@ -62,6 +62,33 @@
     background: var(--rule-compas-v);
 }
 
+/* ── Çıkış butonu ───────────────────────────────────────────
+   ÖNCESİ: index.html içinde 15 satırlık satır içi stil + iki adet
+   onmouseover/onmouseout JS handler'ı vardı. Hover artık CSS ile. */
+.btn-logout {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    text-align: left;
+    background: transparent;
+    border: 1px solid rgb(var(--rgb-pink) / 0.3);
+    color: rgb(var(--rgb-white) / 0.45);
+    border-radius: var(--r-sm);
+    padding: 9px 14px;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition-property: var(--tr-ui);
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+}
+
+.btn-logout:hover {
+    border-color: rgb(var(--rgb-pink) / 0.7);
+    color: var(--c-pink);
+    background: rgb(var(--rgb-pink) / 0.08);
+}
+
 /* ── Dil butonu ────────────────────────────────────────────── */
 .lang-btn {
     background: rgb(var(--rgb-pink) / 0.15);

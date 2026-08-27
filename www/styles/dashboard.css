@@ -257,7 +257,9 @@
        metne sadece ~145px kalıyor — "Bugün Tekrar" gibi iki kelimelik
        label'lar taşıyor/kesiliyordu. Kart iç boşluğu ve ikon boyutu
        mobilde belirgin şekilde küçültüldü. */
-    .dashboard-wrapper    { padding: 16px 10px 32px; gap: 10px; }
+    /* Yatay padding 0: kenar boşluğu artık .main-content-glass'ta
+       tek noktadan yönetiliyor (bkz. base.css Adım 6 notu). */
+    .dashboard-wrapper    { padding: 12px 0 28px; gap: 10px; }
     .dashboard-row-all    { grid-template-columns: 1fr 1fr; gap: 8px; }
     .dashboard-row-top    { grid-template-columns: 1fr; }
     .dashboard-row-mid    { grid-template-columns: 1fr 1fr; }

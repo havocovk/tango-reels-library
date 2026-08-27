@@ -119,6 +119,51 @@ body {
     margin-bottom: 10px;
 }
 
+#sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+/* Logo masaüstünde büyük; mobilde gezinme alt barda olduğu için
+   şerit inceltiliyor (aşağıdaki 768px bloğuna bak).
+   margin-left: SVG kendi içinde boşluk taşıyor, optik hizalama için. */
+.sidebar-logo {
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+    margin-left: -19px;
+}
+
+.sidebar-brand {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-tight);
+    font-weight: 500;
+}
+
+.sidebar-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.offline-badge {
+    align-items: center;
+    gap: var(--sp-1);
+    background: rgb(var(--rgb-amber) / 0.2);
+    border: 1px solid rgb(var(--rgb-amber) / 0.5);
+    color: var(--c-amber);
+    border-radius: var(--r-full);
+    padding: 2px var(--sp-2);
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: var(--sp-5);
+}
+
 .sidebar-header h2 {
     font-size: var(--fs-xl);
     font-weight: 700;
@@ -282,7 +327,7 @@ hr.compas-rule-footer {
         height: auto;
         min-height: 100vh;
         margin: 0;
-        padding: 6px;
+        padding: 0;
         border-radius: 0;
         border-left: none;
         border-right: none;
@@ -318,9 +363,17 @@ hr.compas-rule-footer {
        kaldırma değil) yatay padding 14px'ten 8px'e indirildi, dikey 14px
        aynı kaldı — üst/alt boşluk (sticky bar, ilk kart arası mesafe)
        etkilenmesin diye ayrı ayrı tanımlandı. */
+    /* Adım 6: mobilde yatay boşluk TOPLAMI düşürüldü.
+       ÖNCESİ  .app-container 6px + .main-content-glass 8px = 14px/kenar,
+               Genel Bakış'ta ayrıca .dashboard-wrapper 10px = 24px/kenar
+               (360px ekranda genişliğin %13'ü kenar boşluğuna gidiyordu).
+       ŞİMDİ   .app-container 0 + .main-content-glass 8px = 8px/kenar,
+               .dashboard-wrapper yatay padding 0 — tek noktadan yönetiliyor.
+       8px'in altına inilmedi: kartların border-radius:20px köşeleri
+       ekran kenarına yapışık görünmeye başlıyor. */
     .main-content-glass {
         width: 100%;
-        padding: 14px 8px;
+        padding: 12px 8px;
         flex: none;
         overflow-y: visible;
         background: var(--surface-solid);
@@ -331,7 +384,7 @@ hr.compas-rule-footer {
     .library-sticky-bar {
         top: 0;
         margin: 0 -8px;
-        padding: 14px 8px 10px 8px;
+        padding: 12px 8px 10px;
     }
 
     .bg-glow {
@@ -390,9 +443,30 @@ hr.compas-rule-footer {
     }
 
     /* Sidebar sadece logo + dil butonu — kompakt yap */
+    /* Mobilde şerit yalnızca logo + dil + çıkış taşıyor (gezinme alt
+       barda). 120px logo ekranın üst üçte birini yiyordu — 44px'e indi. */
     nav.sidebar-glass {
-        padding: 10px 15px !important;
-        margin-bottom: 6px !important;
+        padding: 8px 10px !important;
+        margin-bottom: 4px !important;
+        border-radius: 0;
+    }
+
+    .sidebar-logo {
+        width: 44px;
+        height: 44px;
+        margin-left: -7px;
+    }
+
+    .sidebar-brand {
+        font-size: var(--fs-base);
+    }
+
+    hr.compas-rule {
+        margin: var(--sp-2) 0;
+    }
+
+    .sidebar-footer {
+        padding-top: var(--sp-2);
     }
 
     /* Ana içerik bottom nav'ın arkasında kalmasın */
