@@ -45,9 +45,7 @@ export function updateInterfaceLanguage(currentLang, editingVideoId, editInstruc
 
     // ── Sidebar ──────────────────────────────────────────────
     setText('sidebar-title-text', lang.brandTitle);
-    // Bayrak emojisi kaldırıldı (CLAUDE.md: yalnızca Lucide SVG).
-    // locales'teki langBtn artık sadece "EN" / "TR" metnini taşıyor.
-    setHTML('lang-toggle-btn', `${icon('globe', { size: 14 })} ${lang.langBtn}`);
+    setText('lang-toggle-btn', lang.langBtn);
 
     // Adim 5.5: Rastgele buton metni
     const randomBtn2 = document.getElementById('btn-random-video');

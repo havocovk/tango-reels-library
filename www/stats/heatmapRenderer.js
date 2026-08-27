@@ -2,6 +2,7 @@
 // Yıllık aktivite heatmap'i ve heatmap yıl dropdown'ı
 // statsUI.js'den bölündü.
 
+import { icon } from '../icons.js';
 import { computeLearningHeatmap } from './computeStats.js';
 
 // ─────────────────────────────────────────────────────────────
@@ -103,8 +104,8 @@ export function renderLearningHeatmap(heatmapData, currentLang) {
     const svgW      = PAD_LEFT + weeks.length * STEP + 10;
     const svgH      = legendY + 22;
     const titleText = currentLang === 'tr'
-        ? `📅 Yıllık Aktivite Haritası — ${year}`
-        : `📅 Annual Activity Map — ${year}`;
+        ? `${icon('calendar', { size: 15 })} Yıllık Aktivite Haritası — ${year}`
+        : `${icon('calendar', { size: 15 })} Annual Activity Map — ${year}`;
 
     container.innerHTML = `
         <div class="heatmap-section">

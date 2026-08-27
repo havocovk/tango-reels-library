@@ -166,12 +166,12 @@ export async function runTagHealthCheck() {
         const more = problems.length > 10 ? `\n\n...ve ${problems.length - 10} tane daha` : '';
 
         const msg = lang === 'tr'
-            ? `⚠️ ${problems.length} videoda etiket senkron bozukluğu tespit edildi:\n\n${problemList}${more}\n\nOtomatik onar?`
-            : `⚠️ ${problems.length} video(s) have tag sync issues:\n\n${problemList}${more}\n\nAuto-repair?`;
+            ? `${problems.length} videoda etiket senkron bozukluğu tespit edildi:\n\n${problemList}${more}\n\nOtomatik onar?`
+            : `${problems.length} video(s) have tag sync issues:\n\n${problemList}${more}\n\nAuto-repair?`;
 
         const repair = await showCustomConfirm(
             msg,
-            lang === 'tr' ? '🔧 Onar' : '🔧 Repair',
+            lang === 'tr' ? 'Onar' : 'Repair',
             lang === 'tr' ? 'İptal' : 'Cancel'
         );
 
@@ -193,8 +193,8 @@ export async function runTagHealthCheck() {
         showLoading(false);
 
         const resultMsg = lang === 'tr'
-            ? `✅ ${fixed} video onarıldı${failed > 0 ? `, ${failed} video onarılamadı` : ''}`
-            : `✅ ${fixed} video(s) repaired${failed > 0 ? `, ${failed} failed` : ''}`;
+            ? `${fixed} video onarıldı${failed > 0 ? `, ${failed} video onarılamadı` : ''}`
+            : `${fixed} video(s) repaired${failed > 0 ? `, ${failed} failed` : ''}`;
 
         await showCustomAlert(resultMsg, okText, true);
 

@@ -75,7 +75,7 @@ export async function loadAndRenderSessions(currentLang) {
                         ${s.practiced_count || 0} ${t ? 'video' : 'videos'}
                     </span>
                     <span style="color:rgba(255,255,255,0.4);font-size:0.78rem;white-space:nowrap;">
-                        ⏱ ${durStr}
+                        ${icon('clock', { size: 12 })} ${durStr}
                     </span>
                     <button class="ph-delete-btn" data-session-id="${s.id}" title="${t ? 'Bu seansı sil' : 'Delete this session'}" style="
                         flex-shrink:0;

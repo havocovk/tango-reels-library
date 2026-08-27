@@ -91,11 +91,6 @@
 
 /* ── Dil butonu ────────────────────────────────────────────── */
 .lang-btn {
-    /* İçerik: globe ikonu + dil kodu (app.js / ui/language.js doldurur) */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
     background: rgb(var(--rgb-pink) / 0.15);
     border: 1px solid rgb(var(--rgb-cyan) / 0.4);
     color: var(--text-primary);

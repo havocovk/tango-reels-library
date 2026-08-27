@@ -289,10 +289,10 @@ export function renderInstructorProfile(instructorId) {
                 const url = await uploadInstructorPhoto(file);
                 const photoInput = document.getElementById('prof-photo-input');
                 if (photoInput) photoInput.value = url;
-                if (photoStatusEl) { photoStatusEl.style.color = '#4ade80'; photoStatusEl.textContent = lang === 'tr' ? '✅ Fotoğraf yüklendi.' : '✅ Photo uploaded.'; }
+                if (photoStatusEl) { photoStatusEl.style.color = '#4ade80'; photoStatusEl.textContent = lang === 'tr' ? 'Fotoğraf yüklendi.' : 'Photo uploaded.'; }
             } catch (err) {
                 console.error('[InstructorPhoto]', err);
-                if (photoStatusEl) { photoStatusEl.style.color = '#ef4444'; photoStatusEl.textContent = lang === 'tr' ? '❌ Yükleme başarısız.' : '❌ Upload failed.'; }
+                if (photoStatusEl) { photoStatusEl.style.color = '#ef4444'; photoStatusEl.textContent = lang === 'tr' ? 'Yükleme başarısız.' : 'Upload failed.'; }
             } finally {
                 photoUploadBtn.disabled = false;
                 photoUploadBtn.style.opacity = '1';

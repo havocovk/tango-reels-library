@@ -81,7 +81,7 @@ function renderAnnotationList(annotations, videoUrl, platform, videoId) {
                 text-align:center; padding:28px 16px;
                 opacity:0.5; font-size:0.88rem; line-height:1.6;
             ">
-                📭 Henüz not eklenmemiş.<br>
+                ${icon('file-text', { size: 18, color: '#64748b' })} Henüz not eklenmemiş.<br>
                 <span style="font-size:0.8rem;">Yukarıdaki formu kullanarak ilk notunu ekleyebilirsin.</span>
             </div>`;
         return;
@@ -117,7 +117,7 @@ function renderAnnotationList(annotations, videoUrl, platform, videoId) {
                     font-family: var(--font-body);
                     transition: background 0.15s;
                 "
-            >⏱ ${formatTimestamp(ann.timestamp_sec)}</button>
+            >${icon('clock', { size: 12 })} ${formatTimestamp(ann.timestamp_sec)}</button>
 
             <div style="
                 flex: 1;
@@ -187,7 +187,7 @@ async function loadAnnotations(videoId, videoUrl, platform) {
     const container = document.getElementById('annotation-list-container');
     if (container) {
         container.innerHTML = `<div style="text-align:center; padding:24px; opacity:0.45; font-size:0.88rem;">
-            ⏳ Notlar yükleniyor…
+            Notlar yükleniyor…
         </div>`;
     }
     try {
@@ -229,7 +229,7 @@ export async function openAnnotationModal(video) {
             || (video.instructors && video.instructors.name)
             || 'Bilinmeyen Eğitmen';
         subtitle.textContent = activePlatform !== 'youtube'
-            ? `${instructor} — ⚠️ Timestamp atlama yalnızca YouTube\'da çalışır`
+            ? `${instructor} — Timestamp atlama yalnızca YouTube\'da çalışır`
             : instructor;
     }
 
@@ -258,14 +258,14 @@ export async function openAnnotationModal(video) {
             const timestampSec = parseTimestamp(tsVal);
             if (timestampSec === null) {
                 if (errEl) {
-                    errEl.textContent = '⚠️ Geçerli bir zaman gir. Örnek: 1:32 veya 45';
+                    errEl.textContent = 'Geçerli bir zaman gir. Örnek: 1:32 veya 45';
                     errEl.style.display = 'block';
                 }
                 return;
             }
             if (!noteVal) {
                 if (errEl) {
-                    errEl.textContent = '⚠️ Not alanı boş bırakılamaz.';
+                    errEl.textContent = 'Not alanı boş bırakılamaz.';
                     errEl.style.display = 'block';
                 }
                 return;

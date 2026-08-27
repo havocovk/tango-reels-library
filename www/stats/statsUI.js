@@ -203,8 +203,8 @@ export function renderStats(stats, currentLang) {
             </div>
             <div class="tag-cloud-hint">
                 ${currentLang === 'tr'
-                    ? '💡 Bir etikete tıkla → koleksiyon o etiketle filtrelenir'
-                    : '💡 Click a tag → collection filters by that tag'}
+                    ? `${icon('lightbulb', { size: 13 })} Bir etikete tıkla → koleksiyon o etiketle filtrelenir`
+                    : `${icon('lightbulb', { size: 13 })} Click a tag → collection filters by that tag`}
             </div>
         </div>
 
@@ -242,12 +242,12 @@ export function renderStats(stats, currentLang) {
 
         <div class="stats-tag-network" style="margin-top:30px;">
             <div class="stat-label stat-label-centered">
-                ${currentLang === 'tr' ? '🔗 Etiket Bağlantı Haritası' : '🔗 Tag Connection Map'}
+                ${currentLang === 'tr' ? `${icon('link-2', { size: 15 })} Etiket Bağlantı Haritası` : `${icon('link-2', { size: 15 })} Tag Connection Map`}
             </div>
             <div style="text-align:center;opacity:0.6;font-size:0.85rem;margin:8px 0 12px 0;">
                 ${currentLang === 'tr'
-                    ? '💡 Bir düğüme tıkla → koleksiyon o etiketle filtrelenir. Düğümleri sürükleyerek gezebilirsin.'
-                    : '💡 Click a node → collection filters by that tag. Drag nodes to explore.'}
+                    ? `${icon('lightbulb', { size: 13 })} Bir düğüme tıkla → koleksiyon o etiketle filtrelenir. Düğümleri sürükleyerek gezebilirsin.`
+                    : `${icon('lightbulb', { size: 13 })} Click a node → collection filters by that tag. Drag nodes to explore.`}
             </div>
             <div id="tag-network-container"
                 style="background:rgba(11,8,19,0.4);border:1px solid rgba(0,240,255,0.2);border-radius:16px;"></div>

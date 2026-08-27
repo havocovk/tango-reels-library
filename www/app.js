@@ -131,14 +131,12 @@ async function initializeApp() {
     if (langBtn) {
         const savedLang = localStorage.getItem('tango_lang') || 'tr';
         store.set('currentLang', savedLang);
-        // Bayrak emojisi Lucide globe ikonuyla değiştirildi (CLAUDE.md).
-        const langLabel = (l) => `${icon('globe', { size: 14 })} ${l === 'tr' ? 'EN' : 'TR'}`;
-        langBtn.innerHTML = langLabel(savedLang);
+        langBtn.textContent = savedLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
         langBtn.onclick = () => {
             const newLang = store.get('currentLang') === 'tr' ? 'en' : 'tr';
             store.set('currentLang', newLang);
             localStorage.setItem('tango_lang', newLang);
-            langBtn.innerHTML = langLabel(newLang);
+            langBtn.textContent = newLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
             updateAllLanguages();
             callUpdateInterfaceLanguage();
             if (store.get('currentView') === 'stats') renderStatsPanel();

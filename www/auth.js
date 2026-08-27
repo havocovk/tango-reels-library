@@ -105,8 +105,8 @@ async function _handlePasswordReset() {
         if (msgEl) {
             msgEl.style.color = '#4ade80';
             msgEl.textContent = lang === 'en'
-                ? '✅ Link sent! Please check your email.'
-                : '✅ Bağlantı gönderildi! E-postanızı kontrol edin.';
+                ? 'Link sent! Please check your email.'
+                : 'Bağlantı gönderildi! E-postanızı kontrol edin.';
         }
         if (btnEl) { btnEl.disabled = true; } // Tekrar gönderimi engelle
     }
@@ -188,7 +188,7 @@ function _applyAuthLang(lang) {
             forgotLink:  'Şifremi unuttum',
             resetInfo:   'E-posta adresinizi girin, şifre sıfırlama bağlantısı göndereceğiz.',
             resetBtn:    'Sıfırlama Bağlantısı Gönder',
-            resetOk:     '✅ Bağlantı gönderildi! E-postanızı kontrol edin.',
+            resetOk:     'Bağlantı gönderildi! E-postanızı kontrol edin.',
             resetErr:    'Gönderilemedi: '
         },
         en: {
@@ -202,7 +202,7 @@ function _applyAuthLang(lang) {
             forgotLink:  'Forgot password',
             resetInfo:   'Enter your email and we will send a password reset link.',
             resetBtn:    'Send Reset Link',
-            resetOk:     '✅ Link sent! Please check your email.',
+            resetOk:     'Link sent! Please check your email.',
             resetErr:    'Failed: '
         }
     };

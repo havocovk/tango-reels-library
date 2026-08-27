@@ -96,8 +96,8 @@ export async function exportToJSON(videos, instructors, favorites) {
         console.error('Dışa aktarma hatası:', err);
         await showCustomAlert(
             currentLang === 'tr'
-                ? `❌ Dışa aktarma sırasında hata: ${err.message}`
-                : `❌ Export error: ${err.message}`,
+                ? `Dışa aktarma sırasında hata: ${err.message}`
+                : `Export error: ${err.message}`,
             okText, true
         );
     }
@@ -135,8 +135,8 @@ export async function importFromJSON(
     } catch (err) {
         await showCustomAlert(
             currentLang === 'tr'
-                ? `❌ Geçersiz veya bozuk yedek dosyası!\nDetay: ${err.message}`
-                : `❌ Invalid or corrupted backup file!\nDetail: ${err.message}`,
+                ? `Geçersiz veya bozuk yedek dosyası!\nDetay: ${err.message}`
+                : `Invalid or corrupted backup file!\nDetail: ${err.message}`,
             okText, true
         );
         return;
@@ -146,8 +146,8 @@ export async function importFromJSON(
     const backupVersion = backup.version || '1.0';
     if (backupVersion === '1.0') {
         const warnMsg = currentLang === 'tr'
-            ? '⚠️ Bu eski format (v1.0) bir yedek dosyası!\n\nNotlar, oynatma listeleri, bağlantılar ve etiket renkleri bu dosyada YOK.\n\nYalnızca videolar, eğitmenler ve favoriler içe aktarılacak.\n\nDevam edilsin mi?'
-            : '⚠️ This is an old format (v1.0) backup!\n\nNotes, playlists, links, and tag colors are NOT included.\n\nOnly videos, instructors, and favorites will be imported.\n\nContinue?';
+            ? 'Bu eski format (v1.0) bir yedek dosyası!\n\nNotlar, oynatma listeleri, bağlantılar ve etiket renkleri bu dosyada YOK.\n\nYalnızca videolar, eğitmenler ve favoriler içe aktarılacak.\n\nDevam edilsin mi?'
+            : 'This is an old format (v1.0) backup!\n\nNotes, playlists, links, and tag colors are NOT included.\n\nOnly videos, instructors, and favorites will be imported.\n\nContinue?';
         if (!await showCustomConfirm(warnMsg, okText, cancelText)) return;
     }
 
@@ -218,8 +218,8 @@ export async function importFromJSON(
         showLoading(false);
         await showCustomAlert(
             currentLang === 'tr'
-                ? `❌ İçe aktarma başarısız!\n\nHata: ${err.message}\n\nVideolar, eğitmenler ve favoriler eklenmedi (işlem geri alındı).`
-                : `❌ Import failed!\n\nError: ${err.message}\n\nNo videos, instructors, or favorites were added (transaction rolled back).`,
+                ? `İçe aktarma başarısız!\n\nHata: ${err.message}\n\nVideolar, eğitmenler ve favoriler eklenmedi (işlem geri alındı).`
+                : `Import failed!\n\nError: ${err.message}\n\nNo videos, instructors, or favorites were added (transaction rolled back).`,
             okText, true
         );
     }
@@ -449,52 +449,52 @@ function buildSuccessMessage(insertedVideos, skippedVideos, insertedFavorites, p
     const isOld = backupVersion === '1.0';
 
     if (currentLang === 'tr') {
-        let msg = `✅ İçe aktarma tamamlandı!`;
+        let msg = `İçe aktarma tamamlandı!`;
         if (isOld) msg += ` (v1.0 yedek)`;
         msg += `\n\n`;
-        msg += `📹 Video: ${insertedVideos} eklendi, ${skippedVideos} zaten vardı\n`;
+        msg += `Video: ${insertedVideos} eklendi, ${skippedVideos} zaten vardı\n`;
         msg += `⭐ Favori: ${insertedFavorites} eklendi\n`;
         if (!isOld) {
             if (phase2.tagColors > 0)
-                msg += `🎨 Etiket rengi: ${phase2.tagColors} güncellendi\n`;
+                msg += `Etiket rengi: ${phase2.tagColors} güncellendi\n`;
             if (phase2.videoLinks > 0 || phase2.videoLinksSkipped > 0) {
                 const total = phase2.videoLinks + phase2.videoLinksSkipped;
-                msg += `🔗 Kombinasyon bağlantısı: ${phase2.videoLinks} eklendi`;
+                msg += `Kombinasyon bağlantısı: ${phase2.videoLinks} eklendi`;
                 if (phase2.videoLinksSkipped > 0) msg += `, ${phase2.videoLinksSkipped} zaten vardı`;
                 msg += `\n`;
             }
             if (phase2.annotations > 0)
-                msg += `📝 Video notu: ${phase2.annotations} eklendi\n`;
+                msg += `Video notu: ${phase2.annotations} eklendi\n`;
             if (phase2.playlists > 0)
-                msg += `🎵 Oynatma listesi: ${phase2.playlists} oluşturuldu\n`;
+                msg += `Oynatma listesi: ${phase2.playlists} oluşturuldu\n`;
             if (phase2.playlistVideos > 0)
                 msg += `   └─ ${phase2.playlistVideos} video listeye bağlandı\n`;
             if (phase2.errors.length > 0)
-                msg += `\n⚠️ Bazı ek veriler eklenemedi: ${phase2.errors.join(', ')}`;
+                msg += `\nBazı ek veriler eklenemedi: ${phase2.errors.join(', ')}`;
         }
         return msg;
     } else {
-        let msg = `✅ Import completed!`;
+        let msg = `Import completed!`;
         if (isOld) msg += ` (v1.0 backup)`;
         msg += `\n\n`;
-        msg += `📹 Videos: ${insertedVideos} added, ${skippedVideos} already existed\n`;
+        msg += `Videos: ${insertedVideos} added, ${skippedVideos} already existed\n`;
         msg += `⭐ Favorites: ${insertedFavorites} added\n`;
         if (!isOld) {
             if (phase2.tagColors > 0)
-                msg += `🎨 Tag colors: ${phase2.tagColors} updated\n`;
+                msg += `Tag colors: ${phase2.tagColors} updated\n`;
             if (phase2.videoLinks > 0 || phase2.videoLinksSkipped > 0) {
-                msg += `🔗 Combination links: ${phase2.videoLinks} added`;
+                msg += `Combination links: ${phase2.videoLinks} added`;
                 if (phase2.videoLinksSkipped > 0) msg += `, ${phase2.videoLinksSkipped} already existed`;
                 msg += `\n`;
             }
             if (phase2.annotations > 0)
-                msg += `📝 Video notes: ${phase2.annotations} added\n`;
+                msg += `Video notes: ${phase2.annotations} added\n`;
             if (phase2.playlists > 0)
-                msg += `🎵 Playlists: ${phase2.playlists} created\n`;
+                msg += `Playlists: ${phase2.playlists} created\n`;
             if (phase2.playlistVideos > 0)
                 msg += `   └─ ${phase2.playlistVideos} videos linked\n`;
             if (phase2.errors.length > 0)
-                msg += `\n⚠️ Some secondary data could not be imported: ${phase2.errors.join(', ')}`;
+                msg += `\nSome secondary data could not be imported: ${phase2.errors.join(', ')}`;
         }
         return msg;
     }

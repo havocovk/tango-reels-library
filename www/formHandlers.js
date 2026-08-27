@@ -93,7 +93,7 @@ export async function autoFetchThumbnail(url) {
     }
 
     // 2. Metadata — yükleniyor göster
-    _showMetaBox('⏳ Video bilgileri yükleniyor...', '');
+    _showMetaBox('Video bilgileri yükleniyor...', '');
 
     try {
         const metaRes = await fetch(`/api/youtube-metadata?videoId=${encodeURIComponent(videoId)}`);
@@ -128,7 +128,7 @@ function _showMetaBox(title, duration) {
     const titleEl = document.getElementById('yt-meta-title');
     const durEl = document.getElementById('yt-meta-duration');
     if (titleEl) titleEl.textContent = title;
-    if (durEl) durEl.textContent = duration ? `⏱ ${duration}` : '';
+    if (durEl) durEl.textContent = duration || '';
 }
 
 // Metadata bilgi kutusunu gizle

@@ -223,8 +223,8 @@
     transform: translateY(-3px);
 }
 
+/* Emoji yerine Lucide SVG geldi; boyut SVG width/height ile geliyor. */
 .practice-btn-icon {
-    font-size: var(--fs-xl);
     line-height: 1;
 }
 
@@ -429,7 +429,6 @@
     .practice-info-block    { padding: 14px 16px 0 16px; }
     .practice-actions       { padding: 16px 16px 20px 16px; gap: 8px; }
     .practice-btn           { padding: 12px 6px; font-size: var(--fs-xs); }
-    .practice-btn-icon      { font-size: var(--fs-lg); }
     .practice-summary-card  { padding: 28px 20px; }
     .practice-summary-title { font-size: var(--fs-xl); }
     .practice-stat-number   { font-size: var(--fs-2xl); }

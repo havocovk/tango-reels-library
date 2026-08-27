@@ -19,6 +19,7 @@ import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';
 
 import { icon } from './icons.js';
+import { escapeHtml } from './utils.js';
 
 // ─────────────────────────────────────────────────────────────
 // OTURUM STATE'İ
@@ -113,13 +114,16 @@ function showCurrentCard() {
     // ── Eğitmen ──
     const instructorEl = document.getElementById('practice-instructor-name');
     if (instructorEl) {
-        instructorEl.textContent = '👤 ' + (video.instructors?.name || video.instructor_name || '—');
+        const insName = video.instructors?.name || video.instructor_name || '—';
+        instructorEl.innerHTML = `${icon('user', { size: 15 })} ${escapeHtml(insName)}`;
     }
 
     // ── Partner ──
     const partnerEl = document.getElementById('practice-partner-name');
     if (partnerEl) {
-        partnerEl.textContent = video.partner_name ? ('👥 ' + video.partner_name) : '';
+        partnerEl.innerHTML = video.partner_name
+            ? `${icon('users', { size: 15 })} ${escapeHtml(video.partner_name)}`
+            : '';
     }
 
     // ── Badge'ler (rol + öğrenme durumu) ──
@@ -171,7 +175,9 @@ function showCurrentCard() {
     // ── Not ──
     const noteEl = document.getElementById('practice-note-text');
     if (noteEl) {
-        noteEl.textContent = video.notes ? ('📝 ' + video.notes) : '';
+        noteEl.innerHTML = video.notes
+            ? `${icon('file-text', { size: 14 })} ${escapeHtml(video.notes)}`
+            : '';
     }
 
     // Adim 4.5: Annotation notları
@@ -182,7 +188,7 @@ function showCurrentCard() {
             if (!annotations || annotations.length === 0) return;
             annotEl.innerHTML = annotations.map(a => {
                 const timeStr = a.timestamp_seconds != null
-                    ? `<span style="color:#00f0ff;font-size:0.72rem;margin-right:6px;">⏱ ${Math.floor(a.timestamp_seconds/60)}:${String(a.timestamp_seconds%60).padStart(2,'0')}</span>`
+                    ? `<span style="color:#00f0ff;font-size:0.72rem;margin-right:6px;">${icon('clock', { size: 12 })} ${Math.floor(a.timestamp_seconds/60)}:${String(a.timestamp_seconds%60).padStart(2,'0')}</span>`
                     : '';
                 return `<div style="
                     font-size:0.78rem; color:#94a3b8;
@@ -340,7 +346,7 @@ function endSession() {
 
     // Başlık
     const summaryTitle = document.getElementById('summary-title');
-    if (summaryTitle) summaryTitle.textContent = lang === 'tr' ? '🎉 Pratik Tamamlandı!' : '🎉 Practice Complete!';
+    if (summaryTitle) summaryTitle.textContent = lang === 'tr' ? 'Pratik Tamamlandı!' : 'Practice Complete!';
 
     // İstatistikler
     const practicedCount = document.getElementById('summary-practiced-count');
@@ -366,15 +372,15 @@ function endSession() {
             : 0;
         let msg = '';
         if (lang === 'tr') {
-            if (pct === 100) msg = 'Mükemmel! Tüm kombinasyonları çalıştın. 💪';
-            else if (pct >= 70) msg = 'Harika gidiyor! Devam et. 🔥';
-            else if (pct >= 40) msg = 'İyi başlangıç. Yarın kalan kombinasyonları tamamla. 👍';
-            else msg = 'Bugün bir adım attın. Küçük adımlar büyük fark yaratır. 🌱';
+            if (pct === 100) msg = 'Mükemmel! Tüm kombinasyonları çalıştın.';
+            else if (pct >= 70) msg = 'Harika gidiyor! Devam et.';
+            else if (pct >= 40) msg = 'İyi başlangıç. Yarın kalan kombinasyonları tamamla.';
+            else msg = 'Bugün bir adım attın. Küçük adımlar büyük fark yaratır.';
         } else {
-            if (pct === 100) msg = 'Perfect! You practiced all combinations. 💪';
-            else if (pct >= 70) msg = 'Great job! Keep going. 🔥';
-            else if (pct >= 40) msg = 'Good start. Finish the rest tomorrow. 👍';
-            else msg = 'You took a step today. Small steps make a big difference. 🌱';
+            if (pct === 100) msg = 'Perfect! You practiced all combinations.';
+            else if (pct >= 70) msg = 'Great job! Keep going.';
+            else if (pct >= 40) msg = 'Good start. Finish the rest tomorrow.';
+            else msg = 'You took a step today. Small steps make a big difference.';
         }
         msgEl.textContent = msg;
     }
@@ -393,7 +399,7 @@ function endSession() {
     // "Koleksiyona Dön" butonu
     const returnBtn = document.getElementById('btn-practice-return');
     if (returnBtn) {
-        returnBtn.textContent = lang === 'tr' ? '📚 Koleksiyona Dön' : '📚 Back to Collection';
+        returnBtn.innerHTML = `${icon('book-open', { size: 15 })} ${lang === 'tr' ? 'Koleksiyona Dön' : 'Back to Collection'}`;
         returnBtn.onclick = () => {
             if (_callSwitchView) _callSwitchView('library');
         };

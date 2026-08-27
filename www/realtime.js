@@ -77,9 +77,9 @@ export function initRealtimeSync() {
         )
         .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
-                console.log('✅ Realtime senkronizasyon aktif.');
+                console.log('Realtime senkronizasyon aktif.');
             } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                console.warn('⚠️ Realtime bağlantı sorunu:', status);
+                console.warn('Realtime bağlantı sorunu:', status);
             }
         });
 }
