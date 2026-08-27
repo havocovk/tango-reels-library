@@ -136,6 +136,36 @@ canvas { max-height: 350px; width: 100%; }
     text-align: center;
 }
 
+/* ── Etiket Yönetimi başlık satırı ──────────────────────────
+   ÖNCESİ: tag-manager.html icinde satir ici stildi. */
+.tag-manager-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-5);
+}
+
+#tag-manager-title {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    color: var(--text-primary);
+    text-shadow: 0 0 4px var(--c-pink);
+}
+
+.tag-actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+}
+
+.tag-actions-bar .tag-action-btn {
+    margin: 0;
+    justify-content: center;
+}
+
 /* Tabloyu saran kart — ÖNCESİ tag-manager.html'de satır içi stildi */
 .tag-table-card {
     background: rgb(var(--rgb-ink) / 0.4);
@@ -385,6 +415,36 @@ canvas { max-height: 350px; width: 100%; }
     .tag-actions-wrap { gap: 3px; }
     .tag-row-btn      { padding: 3px 5px; }
     .tag-name-wrap    { gap: 5px; }
+
+    /* ── Aksiyon butonları 2x2 ızgara ────────────────────────
+       ÖNCESİ: kapsayıcı flex-wrap kullanıyordu, dört buton farklı
+       genişlikte olduğu için 3 + 1 kırılıyordu — üstte üç, altta tek
+       buton kalıp blok dengesiz duruyordu.
+       ŞİMDİ: iki eşit sütun. Dört buton da aynı genişlikte; ızgara
+       satır yüksekliklerini eşitlediği için "Kullanılmayanları
+       Temizle" iki satıra düşse bile yanındaki buton onunla aynı
+       boyda kalıyor. Gruplama da anlamlı oluyor:
+       üst satır = seçime bağlı işlemler, alt satır = bakım işlemleri. */
+    .tag-actions-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        flex-basis: 100%;
+    }
+
+    .tag-actions-bar .tag-action-btn {
+        padding: 8px 6px;
+        min-height: 36px;
+        font-size: var(--fs-xs);
+        line-height: var(--lh-tight);
+        text-align: center;
+        white-space: normal;
+    }
+
+    .tag-manager-header {
+        gap: var(--sp-2);
+        margin-bottom: var(--sp-3);
+    }
 
     /* Birleştirme paneli mobil ölçek */
     .tag-merge-panel {

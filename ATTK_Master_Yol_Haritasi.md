@@ -1,8 +1,8 @@
 # ATTK — Arjantin Tango Kombinasyon Koleksiyonu
 # Master Yol Haritası
 
-**Son Güncelleme:** 2026-08-07  
-**Kapsam:** V1 → V5 yol haritalarının tüm geçmişi + mevcut durum + bekleyen işler + şartlı görevler
+**Son Güncelleme:** 2026-08-27  
+**Kapsam:** V1 → V6 yol haritalarının tüm geçmişi + mevcut durum + bekleyen işler + şartlı görevler
 
 ---
 
@@ -21,6 +21,9 @@ Claude'a "yol haritası dosyasına bak ve şu şartı sağlayan adımları uygul
 | Stack | Vanilla JS ES Modules, Supabase (PostgreSQL + REST API), Vercel, GitHub |
 | Repo | `havocovk/tango-reels-library` |
 | UI Teması | Synthwave/neon koyu — Tokyo Cyber-Synthwave |
+| Tasarım sistemi | `styles/tokens.css` — tüm renk / tip ölçeği / boşluk / yarıçap / hareket token’ları. Ham hex veya rgba yazma, token kullan. |
+| Tipografi | Space Grotesk (başlık + sayısal alanlar), Plus Jakarta Sans (gövde ve UI). Kendi sunucumuzdan servis ediliyor (`assets/fonts/`), Google Fonts bağlantısı yok. |
+| Hareket | `styles/motion.css` — tek varsayılan eğri `--ease-out`; imza eğrisi `--ease-compas` yalnızca view girişi ve play butonunda kullanılır. |
 | Renkler | Cyan `#00f0ff`, Pink `#ff007f`, Purple `#c026d3`, Green `#4ade80`, Amber `#f59e0b`, Red `#ef4444`, Muted `#64748b` |
 | İkon sistemi | Yalnızca Lucide SVG — `icons.js` içindeki `icon()` fonksiyonu |
 | Kütüphaneler | Chart.js (istatistik), vis-network jsDelivr CDN (zincir haritası), Fuse.js CDN (fuzzy search) |
@@ -38,6 +41,13 @@ ui/:  viewRouter.js (eski adı: ui/navigation.js — iki kez yeniden adlandırı
 
 db/, views/, styles/, modals/, learning/, stats/
   stats/ altında: chartRenderers.js, heatmapRenderer.js, sessionHistory.js
+
+  styles/ yükleme sırası ÖNEMLİ (index.html bu sırayla bağlar):
+    tokens.css (İLK) -> base, buttons, cards, forms, modals,
+    stats-tagmanager, practice-session, playlists, dashboard ->
+    motion.css (SON; önceki dosyaların hareket tanımlarını bilinçle ezer)
+
+  assets/fonts/ — 4 adet .woff2 (variable font, latin + latin-ext)
 ```
 
 ### Kritik Teknik Kurallar
@@ -47,6 +57,12 @@ db/, views/, styles/, modals/, learning/, stats/
 - `content_type` alanı: `'combination'` ve `'show'` videolarını ayırt eder. Show videoları pratik/spaced repetition akışlarına dahil edilmemeli.
 - Lokalizasyon: `ui/language.js` her dil değişiminde HTML'i ezebilir. Buton metni düzeltmeleri HTML'de değil, dil sisteminde yapılmalı.
 - SM-2 spaced repetition kapalı: `practice_sessions` tablosu ve veriler korunuyor ama algoritma devre dışı.
+- **Renk yazma kuralı:** ham hex/rgba kullanma. Katı renk icin `var(--c-pink)`, alfa varyantı icin `rgb(var(--rgb-pink) / 0.2)`. Tek istisna: tek seferlik gradyan durakları (yorumla işaretli).
+- **`transition: all` kullanma.** `transition-property: var(--tr-ui)` + token süre/eğri kullan. `all`, layout özelliklerini de animate edip gereksiz reflow üretiyor.
+- **Dekoratif sonsuz döngü yok.** Tek istisna `.spinner` (durum bildiriyor). Her yeni animasyon `prefers-reduced-motion` altında durmalı.
+- **Bir `<td>` elemanına `display:flex` verme.** Hücre tablo düzeninden çıkar, sütun genişliği algoritması bozulur. Flex’i hücre içindeki sarmalayıcıya koy (bkz. `.tag-name-wrap`).
+- **`position: sticky` ve `overflow` ilişkisi:** sticky en yakın KAYDIRILABİLİR atasına göre çalışır. `overflow:hidden` olan bir ata sticky’yi öldürür — mobilde `.app-container` bu yüzden `overflow:visible`.
+- **Satır içi genişlik/stil yazma.** Media query onları ezemez, mobil daraltma imkânsız hale gelir. İstisna: JS’in `style.display` ile açıp kapattığı elemanlar (ör. `#offline-queue-badge`).
 
 ---
 
@@ -187,6 +203,36 @@ db/, views/, styles/, modals/, learning/, stats/
 | 8 | Öğrenme Yolu Önerisi (`learningPathAdvisor.js`) devre dışı bırakıldı | ✅ Tamamlandı |
 | 9 | Kombinasyon zinciri 1-çok ilişkisi | ❌ Yapılmadı |
 | 10 | Rozet & Hedef Takibi sistemi | ✅ Tamamlandı (`badgeSystem.js` + `monthly_stats`) |
+
+---
+
+### V6 — Tasarım Sistemi ve Hareket Katmanı ✅
+
+**Tarih:** 2026-08-27 · **Kapsam:** görsel kimlik korunarak altına sistem kurulması. Palet CLAUDE.md’de sabit olduğu için değiştirilmedi, kanonikleştirildi.
+
+| Adım | Açıklama | Durum |
+|------|----------|-------|
+| 1 | `tokens.css` + tipografi düzeltmesi. `*` seçicisinde `Poppins` tanımlıydı ama hiçbir yerden yüklenmiyordu; uygulamanın tamamı tarayıcı varsayılan fontuyla render oluyordu. Space Grotesk + Plus Jakarta Sans kendi sunucumuza alındı, Google Fonts bağlantısı kaldırıldı (opaque yanıtlar Service Worker önbelleğine giremiyordu). | ✅ Tamamlandı |
+| 2 | 9 CSS dosyasının token’lara geçişi — 581 renk değeri. Dağılmış palet kanonikleştirildi: `#10b981` → `--c-green`, `#c084fc` → `--c-purple`. Ayrı tutulanlar: `--c-gold` (favori yıldızı), platform marka renkleri. | ✅ Tamamlandı |
+| 3 | Tipografi ölçeği — 33 keyfi `font-size` değeri 11 basamağa indi. Sayısal alanlara Space Grotesk + `tabular-nums`. | ✅ Tamamlandı |
+| 4 | `motion.css` — `prefers-reduced-motion` (projede hiç yoktu), sonsuz `borderGlow` döngüsü kaldırıldı, 40 adet `transition: all` temizlendi, view girişi tüm view’lara yayıldı, dashboard kademesi, modal ve bottom sheet giriş animasyonları, eksik `.spinner` yazıldı. | ✅ Tamamlandı |
+| 5 | Bileşen cilası — compás çizgisi (cyan→pembe imza ayırıcı) 5 farklı tek seferlik kenarlığın yerine geçti; filtre barı sınıflara alındı; eğitmen adları pembeden beyaza çekildi (pembe artık yalnızca takipçi rolünü anlatıyor). | ✅ Tamamlandı |
+| 6 | Mobil geçiş — yatay boşluk toplamı 24px’den 8px’e, sidebar şeridi ~235px’den ~125px’e indi; filtreler 2 sütun; Etiket Yönetimi tablosu yatay kaydırma olmadan ekrana sığıyor. | ✅ Tamamlandı |
+
+**Yeni dosyalar:** `styles/tokens.css`, `styles/motion.css`, `assets/fonts/` (4 × .woff2)
+
+**Yol boyunca bulunup düzeltilen mevcut hatalar:**
+
+| Hata | Kök sebep |
+|------|-----------|
+| Yükleme göstergesi hiç görünmüyordu | `index.html`’deki `<div class="spinner">` için CSS yazılmamıştı |
+| `dashboard.css` offline çalışmıyordu | `sw.js` precache listesinde eksikti |
+| Dashboard ve instructor-profile animasyonsuz beliriyordu | `.view-panel` sınıfını taşımıyorlardı |
+| Aktif menü butonu metnini 3px sağa itiyordu | Gösterge `border-left: 3px` ile çiziliyordu |
+| Etiket Yönetimi "İptal" butonu çalışmıyordu | Paneli gizleyip hemen `updateTagManagerSelection()` çağırıyordu; kutular hâlâ işaretli olduğu için fonksiyon paneli geri açıyordu |
+| Butonlar tam satıra yayılınca metin sola kayıyordu | Paylaşılan neon buton kuralında `justify-content` yoktu |
+| Etiket tablosu mobilde yatay kaydırma gerektiriyordu | Etiket hücresine `display:flex` verilmişti, hücre tablo düzeninden çıkıyordu |
+| Mobilde yapışık arama barı yapışmıyordu | `.app-container` üzerindeki `overflow:hidden` mobilde ezilmiyordu |
 
 ---
 
@@ -390,6 +436,68 @@ Bunlar planlanmış ama bilinçli olarak vazgeçilmiş adımlardır.
 
 ---
 
+### Grup D — V6 Tasarım Sisteminden Kalanlar
+
+V6 çalışması sırasında tespit edilip bilinçli olarak kapsam dışı bırakılan işler. Hepsi küçük ve bağımsız.
+
+---
+
+#### D1 — Emoji Temizliği
+**Kaynak:** V6 denetimi
+**Mevcut Durum:** CLAUDE.md "yalnızca Lucide SVG, emoji yok" diyor ama üç yerde emoji duruyor:
+
+| Yer | Emoji |
+|-----|-------|
+| `index.html` çevrimdışı rozeti | ⏳ |
+| `views/practice-session.html:90` özet ekranı | 🎉 |
+| `index.html` dil butonu | 🇬🇧 |
+
+**Ne Gerekiyor:** `icon()` fonksiyonu JS tarafında olduğu için HTML'e doğrudan yazılamıyor. Üç eleman da JS'ten render edilmeli ya da statik SVG gömülmeli. Dil butonundaki bayrak için Lucide'de karşılık yok — "TR/EN" metni veya `globe` ikonu düşünülebilir.
+**Efor:** 2/10
+
+---
+
+#### D2 — Bottom Sheet Kapanış Animasyonu
+**Kaynak:** V6 Adım 4
+**Mevcut Durum:** Panel CSS ile alttan kayarak AÇILIYOR, ama kapanışı anlık. Sebep: sheet `app.js` içinde **10 ayrı yerde** `classList.add('d-none')` ile kapatılıyor.
+**Ne Gerekiyor:** `app.js`'e ortak bir `closeSheet(el)` yardımcısı yazıp 10 çağrıyı ona bağlamak; yardımcı önce çıkış sınıfını ekleyip `transitionend` sonrası `d-none` vermeli. `toast.js:27`'deki mevcut desen örnek alınabilir.
+**Efor:** 3/10
+
+---
+
+#### D3 — Kalan İki Renk Sapması
+**Kaynak:** V6 Adım 2
+**Mevcut Durum:** Aynı rolü üstlenen ikişer değer token'lara alındı ama birleştirilmedi (görsel değişiklik onayı alınmadığı için):
+
+| Token | Değer | Yer |
+|-------|-------|-----|
+| `--c-cyan-bright` | `#7cfffe` | Kart bağlantı hover'ı (1) |
+| `--c-cyan-vivid` | `#3cefff` | Buton hover'ları (4) |
+| `--c-pink-mid` | `#ff66b5` | `.badge-both` metni (1) |
+| `--c-pink-soft` | `#ff80bf` | Form ve istatistik vurguları (2) |
+
+**Ne Gerekiyor:** Her çiftin birinde karar verip diğerini silmek. Görsel etki küçük ama onay gerektirir.
+**Efor:** 1/10
+
+---
+
+#### D4 — Ölü Öğrenme Yolu CSS'i
+**Kaynak:** V6 Adım 2
+**Mevcut Durum:** `stats-tagmanager.css` içinde `.learning-path-card` ve `.lp-*` kuralları (139 satır) duruyor. `learningPathAdvisor.js` hiçbir yerden import edilmediği için hiç render edilmiyorlar. Token geçişinde bilinçle atlandılar, üstlerine uyarı yorumu düşüldü.
+**Ne Gerekiyor:** Özellik kalıcı olarak iptalse blok silinebilir (git geçmişinde kalır). Geri açılacaksa token'lara çevrilmeli.
+**Şart:** AI Öğrenme Yolu Önerisi hakkında nihai karar verilmiş olmalı.
+**Efor:** 1/10
+
+---
+
+#### D5 — Yatay Mod Kararı
+**Kaynak:** V6 Adım 6
+**Mevcut Durum:** `manifest.json` içinde `"orientation": "portrait-primary"` var — uygulama kasıtlı olarak dikey moda kilitli. CSS'te yatay mod için bir eksik yok, kilit manifest kaynaklı.
+**Ne Gerekiyor:** Kilit kalkacaksa `"orientation"` satırı kaldırılır veya `"any"` yapılır; ardından yatay modda tüm ekranların test edilmesi gerekir (özellikle alt bar yüksekliği ve dashboard ızgarası).
+**Efor:** 1/10 (kilit kaldırma) + test yükü
+
+---
+
 ## ŞARTLı GÖREVLER
 
 Bu bölüm, belirli şartlar oluştuğunda uygulanacak adımları tanımlar. Claude bu bölümü okuyarak hangi şart gerçekleştiğinde ne yapacağını anlayacak.
@@ -473,6 +581,11 @@ Etiket sayısı fazlaysa ve normalizasyon işlemi sık yapılıyorsa, 800 video 
 | C2 | Gelecek | Video izleme ilerlemesi | 5/10 | — |
 | C3 | Gelecek | Etiket ağ haritası görsel | 6/10 | vis-network CDN kontrolü yap |
 | C4 | Gelecek | Çok kullanıcı altyapısı | 2/10 | B3 + auth stabil + açık karar |
+| D1 | V6 Kalanı | Emoji temizliği (3 yer) | 2/10 | — (bağımsız) |
+| D2 | V6 Kalanı | Bottom sheet kapanış animasyonu | 3/10 | — (bağımsız) |
+| D3 | V6 Kalanı | Kalan iki renk sapması | 1/10 | Görsel onay gerekir |
+| D4 | V6 Kalanı | Ölü öğrenme yolu CSS silme | 1/10 | Özellik hakkında nihai karar |
+| D5 | V6 Kalanı | Yatay mod kilidi kararı | 1/10 | — (karar meselesi) |
 
 ---
 
