@@ -145,6 +145,7 @@ body {
     display: flex;
     align-items: center;
     gap: var(--sp-2);
+    flex-shrink: 0;
 }
 
 .offline-badge {
@@ -334,6 +335,17 @@ hr.compas-rule-footer {
         background: var(--surface-solid);
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
+        /* overflow:visible ŞART (masaüstündeki overflow:hidden ezilir).
+           position:sticky en yakın KAYDIRILABİLİR atasına göre çalışır.
+           overflow:hidden olan bir ata kendini kaydırma kabı ilan eder
+           ama kaydırmaz — .library-sticky-bar mobilde hiç yapışmıyordu.
+           Masaüstünde kaydırma kabı .main-content-glass (overflow-y:auto)
+           olduğu için orada sorun yoktu.
+           Not: overflow:hidden glow'ları kırpmak için konmuştu ama
+           .bg-glow elemanları .app-container'ın KARDEŞİ, çocuğu değil —
+           zaten kırpılmıyorlardı. Yatay taşmayı body{overflow-x:hidden}
+           engelliyor. */
+        overflow: visible;
     }
 
     /* .sidebar-glass ve .main-content-glass'ın kendi yarı saydam
@@ -451,10 +463,12 @@ hr.compas-rule-footer {
         border-radius: 0;
     }
 
+    /* 44px fazla küçüktü — yanındaki dil butonundan ufak kalıyordu.
+       56px, tek satıra inen dil butonuyla dengeli duruyor. */
     .sidebar-logo {
-        width: 44px;
-        height: 44px;
-        margin-left: -7px;
+        width: 56px;
+        height: 56px;
+        margin-left: -9px;
     }
 
     .sidebar-brand {

@@ -99,6 +99,9 @@
     cursor: pointer;
     font-size: var(--fs-base);
     font-weight: 600;
+    /* .sidebar-header flex; başlık uzayınca buton sıkışıp "🇬🇧" ve "EN"
+       ayrı satırlara kırılıyor, buton kare gibi büyüyordu. */
+    white-space: nowrap;
     transition-property: var(--tr-ui);
     transition-duration: var(--dur-fast);
     transition-timing-function: var(--ease-out);
