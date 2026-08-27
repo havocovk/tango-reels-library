@@ -87,7 +87,8 @@
     font-size: var(--fs-lg);
     padding-left: 4px;
     box-shadow: 0 4px 12px rgb(var(--rgb-black) / 0.3);
-    transition: transform 0.3s ease;
+    /* transform ve transition motion.css'te — düğme scale(0.72)'den
+       yerine oturur, imza eğrisi orada uygulanır. */
 }
 
 .video-card:hover .play-icon {

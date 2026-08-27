@@ -187,11 +187,24 @@
     transition: transform var(--dur-slow) var(--ease-out);
 }
 
+/* Karartma, düğmeden HIZLI kapanır (120ms): düğme daha
+   büyürken görünür hâle gelsin, hareket fark edilsin. */
 .play-overlay {
-    transition: opacity var(--dur-fast) var(--ease-out);
+    transition: opacity var(--dur-instant) var(--ease-out);
 }
 
+/* DÜZELTME: önceki hâlde düğme scale(1) → scale(1.1) gidiyordu.
+   Düğme opacity:0 olan .play-overlay içinde durduğu için scale(1)
+   hâli hiç görünmüyor, hareket fark edilmiyordu — düğme doğrudan
+   son boyutunda beliriyor gibi duruyordu.
+   Şimdi scale(0.72)'den scale(1)'e gidiyor; --ease-compas'ın
+   overshoot'u burada net görünür (tepe ~1.09, sonra yerine oturur). */
 .play-icon {
+    transform: scale(0.72);
     transition: transform var(--dur-base) var(--ease-compas),
                 background-color var(--dur-fast) var(--ease-out);
+}
+
+.video-card:hover .play-icon {
+    transform: scale(1);
 }
