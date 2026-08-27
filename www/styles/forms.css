@@ -414,3 +414,42 @@
     background: rgb(var(--rgb-amber) / 0.18);
     border-color: rgb(var(--rgb-amber) / 0.7);
 }
+
+/* Tango Şovları bölümü mor vurgu kullanıyor (content_type='show').
+   Yapı diğer sayfalarla birebir aynı, yalnızca kenarlık rengi farklı. */
+.search-field-shows,
+.filter-select-shows {
+    border-color: rgb(var(--rgb-purple) / 0.45);
+}
+
+.filter-select-shows:hover {
+    border-color: rgb(var(--rgb-purple) / 0.75);
+}
+
+/* ── Mobil: filtreler 2 sütun ────────────────────────────────
+   ÖNCESİ: satırda 3 kutu vardı. 360px ekranda her birine ~106px
+   düşüyor ve altısının da yazısı kesiliyordu:
+   "Tüm Rollei", "Tüm Eğitm", "Tüm Etiket", "Tüm Öğre"...
+   ÇÖZÜM: .filter-row'a display:contents verilerek iki ayrı satır
+   kapsayıcısı düzenden çıkarılıyor; tüm select'ler doğrudan
+   .filter-groups grid'inin öğesi oluyor. Böylece kaç satıra
+   bölünmüş olurlarsa olsunlar tek bir 2 sütunlu ızgaraya
+   diziliyorlar ve HTML değişmiyor.
+   Her kutuya ~166px düşüyor — "Tüm Öğrenme Durumları" tam sığıyor. */
+@media screen and (max-width: 768px) {
+    .filter-groups {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--sp-2);
+        margin: var(--sp-2) 0;
+    }
+
+    .filter-row {
+        display: contents;
+    }
+
+    .search-header {
+        gap: var(--sp-2);
+        margin-bottom: var(--sp-3);
+    }
+}

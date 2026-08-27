@@ -121,15 +121,73 @@ canvas { max-height: 350px; width: 100%; }
     text-align: left;
 }
 
-.tag-manager-table th:first-child,
-.tag-manager-table td:first-child {
+/* Sütun hizaları sınıf tabanlı.
+   ÖNCESİ: th:first-child / td:nth-child(3) seçicileri kullanılıyordu.
+   Özgüllükleri (0,1,2) yeni .tag-col-* sınıflarını (0,1,0) eziyordu;
+   mobil daraltma bu yüzden hiç uygulanmıyordu. */
+.tag-manager-table .tag-col-check,
+.tag-manager-table .tag-col-count,
+.tag-manager-table .tag-col-actions {
     text-align: center;
-    width: 40px;
 }
 
-.tag-manager-table th:nth-child(3),
-.tag-manager-table td:nth-child(3) {
+/* Tabloyu saran kart — ÖNCESİ tag-manager.html'de satır içi stildi */
+.tag-table-card {
+    background: rgb(var(--rgb-ink) / 0.4);
+    border-radius: var(--r-xl);
+    padding: 15px;
+}
+
+/* ── Etiket tablosu sütunları ────────────────────────────────
+   Genişlikler ÖNCEDEN tagManager.js içinde satır içi veriliyordu
+   (36/80/90px) ve tablo style="min-width:420px" ile kilitliydi.
+   360px telefonda kullanılabilir alan ~328px olduğu için tablo
+   sığmıyor, yatay kaydırma gerekiyordu; etiket sütunu ekranın
+   solunda kalıp kırpılıyordu.
+   Genişlikler artık CSS'te, mobilde daralıyorlar ve tablo yana
+   kaydırılmadan ekrana oturuyor. */
+.tag-col-check {
+    width: 36px;
     text-align: center;
+}
+
+.tag-col-name {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.tag-col-count {
+    width: 80px;
+    text-align: center;
+    font-size: var(--fs-base);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.tag-col-actions {
+    width: 90px;
+    text-align: center;
+}
+
+.tag-actions-wrap {
+    display: flex;
+    gap: var(--sp-1);
+    justify-content: center;
+    align-items: center;
+}
+
+.tag-row-btn {
+    padding: 3px 6px;
+    margin: 0;
+}
+
+.tag-row-badge {
+    display: inline-block;
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .tag-checkbox {
@@ -231,12 +289,33 @@ canvas { max-height: 350px; width: 100%; }
 @media screen and (max-width: 768px) {
     .tag-manager-table th,
     .tag-manager-table td {
-        padding: 8px 4px;
+        padding: 8px 3px;
         font-size: var(--fs-xs);
     }
     .tag-action-btn {
         padding: 2px 6px;
         font-size: var(--fs-3xs);
+    }
+
+    /* Sabit sütunlar daraltıldı — 360px ekranda toplam bütçe:
+       328px − (26 + 48 + 60) = ~194px etiket sütununa kalıyor.
+       En uzun rozet (#Intermediate) ~137px, rahat sığıyor. */
+    .tag-col-check   { width: 26px; }
+    .tag-col-count   { width: 48px; font-size: var(--fs-xs); }
+    .tag-col-actions { width: 60px; }
+    .tag-actions-wrap { gap: 3px; }
+    .tag-row-btn     { padding: 3px 4px; }
+    .tag-col-name    { gap: 5px; min-width: 0; }
+    .tag-row-badge   { max-width: 100%; }
+
+    /* Tablo artık sığdığı için yatay kaydırma kilidi kalkıyor */
+    .tag-manager-table {
+        min-width: 0;
+    }
+
+    /* Tabloyu saran kart: masaüstünde 15px, mobilde 8px */
+    .tag-table-card {
+        padding: var(--sp-2);
     }
 }
 

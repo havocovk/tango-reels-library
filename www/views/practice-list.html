@@ -2,11 +2,10 @@
 <div id="view-practice-list-container" class="view-panel d-none">
 
     <div class="library-sticky-bar">
-    <div class="search-header" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px; align-items:center;" role="search" aria-label="Pratik listesi araması">
-        <input type="text" id="practice-list-search-input" class="form-control"
+    <div class="search-header" role="search" aria-label="Pratik listesi araması">
+        <input type="text" id="practice-list-search-input" class="search-field"
             placeholder="Eğitmen, etiket, platform veya not ara..."
-            aria-label="Pratik listesinde ara"
-            style="flex:3; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px 16px; border-radius:12px; color:#f1f5f9; outline:none;">
+            aria-label="Pratik listesinde ara">
         <button id="practice-list-search-btn" class="btn-search" aria-label="Ara">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             Ara
@@ -21,36 +20,36 @@
         </button>
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px; margin-bottom:12px;" role="group" aria-label="Filtreler">
-        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <select id="pl-filter-role-select" aria-label="Role göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
+    <div class="filter-groups" role="group" aria-label="Filtreler">
+        <div class="filter-row">
+            <select id="pl-filter-role-select" aria-label="Role göre filtrele" class="filter-select">
                 <option value="all">Tüm Roller</option>
                 <option value="Leader">Lider</option>
                 <option value="Follower">Takipçi</option>
                 <option value="Both">Çift</option>
             </select>
-            <select id="pl-filter-instructor-select" aria-label="Eğitmene göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
+            <select id="pl-filter-instructor-select" aria-label="Eğitmene göre filtrele" class="filter-select">
                 <option value="all">Tüm Eğitmenler</option>
             </select>
-            <select id="pl-filter-tag-select" aria-label="Etikete göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
+            <select id="pl-filter-tag-select" aria-label="Etikete göre filtrele" class="filter-select">
                 <option value="all">Tüm Etiketler</option>
             </select>
         </div>
-        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <select id="pl-filter-date-select" aria-label="Tarihe göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
+        <div class="filter-row">
+            <select id="pl-filter-date-select" aria-label="Tarihe göre filtrele" class="filter-select">
                 <option value="all">Tüm Tarihler</option>
                 <option value="week">Bu Hafta</option>
                 <option value="month">Bu Ay</option>
                 <option value="3months">Son 3 Ay</option>
             </select>
-            <select id="pl-filter-platform-select" aria-label="Platforma göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
+            <select id="pl-filter-platform-select" aria-label="Platforma göre filtrele" class="filter-select">
                 <option value="all">Tüm Platformlar</option>
                 <option value="drive">Google Drive</option>
                 <option value="youtube">YouTube</option>
                 <option value="instagram">Instagram</option>
                 <option value="facebook">Facebook</option>
             </select>
-            <select id="pl-filter-learning-status-select" aria-label="Öğrenme durumuna göre filtrele" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(255,0,127,0.5); padding:10px; border-radius:10px; color:#f1f5f9;">
+            <select id="pl-filter-learning-status-select" aria-label="Öğrenme durumuna göre filtrele" class="filter-select">
                 <option value="all">Tüm Öğrenme Durumları</option>
                 <option value="new">Yeni</option>
                 <option value="learning">Çalışıyorum</option>
@@ -60,7 +59,7 @@
     </div>
     </div><!-- /library-sticky-bar -->
 
-    <div id="practice-list-total-count" style="text-align:right; margin:10px 0 5px 0; color:#00f0ff; font-size:1.1rem;"></div>
+    <div id="practice-list-total-count" class="total-count"></div>
 
     <div id="clear-practice-list-container" style="margin:10px 0;">
         <button id="btn-clear-practice-list" class="btn-clear-danger">

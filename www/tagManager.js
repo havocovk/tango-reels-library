@@ -238,7 +238,7 @@ export function renderTagManagerUI() {
 
             // Checkbox
             const cbCell = row.insertCell(0);
-            cbCell.style.cssText = 'width:36px; text-align:center;';
+            cbCell.className = 'tag-col-check';
             const cb = document.createElement('input');
             cb.type = 'checkbox';
             cb.className = 'tag-checkbox';
@@ -248,7 +248,7 @@ export function renderTagManagerUI() {
 
             // Etiket + renk noktası — sadece görsel (Adim 4.5)
             const tagCell = row.insertCell(1);
-            tagCell.style.cssText = 'display:flex;align-items:center;gap:8px;';
+            tagCell.className = 'tag-col-name';
 
             const colorDot = document.createElement('span');
             colorDot.style.cssText = `
@@ -265,39 +265,39 @@ export function renderTagManagerUI() {
                 background:${color ? color + '22' : 'rgba(255,255,255,0.05)'};
                 color:${color || '#cbd5e1'};
                 border:1px solid ${color ? color + '66' : 'rgba(255,255,255,0.1)'};
-                font-size:0.78rem; padding:2px 8px; border-radius:8px; font-weight:600;
+                padding:2px 8px; border-radius:8px; font-weight:600;
             `;
+            badge.className = 'tag-row-badge';
             badge.textContent = '#' + tag;
             tagCell.appendChild(badge);
 
             // Kullanım sayısı
             const countCell = row.insertCell(2);
             countCell.textContent = count;
-            countCell.style.cssText = 'text-align:center; width:80px; font-size:0.85rem; color:#94a3b8;';
+            countCell.className = 'tag-col-count';
 
             // İşlemler
-            // ✅ DÜZELTİLDİ (Adım 5): 70px, header'daki 90px ile tutarsızdı ve
-            // iki buton (rename+delete) için zaten yetersizdi — mobilde
-            // butonlar kırpılıyordu. Header genişliğiyle eşleştirildi;
-            // taşan durumlarda artık tag-manager-table'ı saran
-            // .heatmap-scroll-wrapper yatay kaydırma sağlıyor.
+            // Sütun genişlikleri artık stats-tagmanager.css'te
+            // (.tag-col-*). Satır içi genişlik verilirse mobil media
+            // query onları ezemiyor ve tablo 420px'e kilitlenip yatay
+            // kaydırma gerektiriyordu.
             const actionCell = row.insertCell(3);
-            actionCell.style.cssText = 'width:90px; text-align:center;';
+            actionCell.className = 'tag-col-actions';
             const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'display:flex; gap:4px; justify-content:center; align-items:center;';
+            wrapper.className = 'tag-actions-wrap';
 
             const renameBtn = document.createElement('button');
             renameBtn.innerHTML = icon('pencil', { size: 13, color: '#c026d3' });
-            renameBtn.className = 'tag-action-btn';
+            renameBtn.className = 'tag-action-btn tag-row-btn';
             renameBtn.title = currentLang === 'tr' ? 'Yeniden Adlandır' : 'Rename';
-            renameBtn.style.cssText = 'padding:3px 6px; margin:0;';
+
             renameBtn.onclick = () => promptRenameTagModern(tag);
 
             const deleteBtn = document.createElement('button');
             deleteBtn.innerHTML = icon('trash-2', { size: 13, color: '#ef4444' });
-            deleteBtn.className = 'tag-action-btn tag-danger-btn';
+            deleteBtn.className = 'tag-action-btn tag-danger-btn tag-row-btn';
             deleteBtn.title = currentLang === 'tr' ? 'Sil' : 'Delete';
-            deleteBtn.style.cssText = 'padding:3px 6px; margin:0;';
+
             deleteBtn.onclick = () => deleteSingleTag(tag);
 
             wrapper.appendChild(renameBtn);

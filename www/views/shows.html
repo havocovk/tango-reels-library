@@ -2,10 +2,9 @@
 <div id="view-shows-container" class="view-panel d-none">
 
     <div class="library-sticky-bar">
-        <div class="search-header" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px; align-items:center;">
-            <input type="text" id="shows-search-input" class="form-control"
-                placeholder="Sanatçı, etiket veya not ara..."
-                style="flex:3; background:rgba(11,8,19,0.8); border:1px solid rgba(192,38,211,0.5); padding:10px 16px; border-radius:12px; color:#f1f5f9; outline:none;">
+        <div class="search-header">
+            <input type="text" id="shows-search-input" class="search-field search-field-shows"
+                placeholder="Sanatçı, etiket veya not ara...">
             <button id="shows-search-btn" class="btn-search" style="border-color:rgba(192,38,211,0.5);">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <span id="shows-search-label">Ara</span>
@@ -13,24 +12,26 @@
             <button id="shows-random-btn" class="btn-view-toggle" style="color:#c026d3;border-color:rgba(192,38,211,0.4);"></button>
         </div>
 
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
-            <select id="shows-instructor-select" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(192,38,211,0.4); padding:10px; border-radius:10px; color:#f1f5f9;">
+        <div class="filter-groups" role="group" aria-label="Filtreler">
+            <div class="filter-row">
+            <select id="shows-instructor-select" class="filter-select filter-select-shows">
                 <option value="all" id="shows-opt-all-instructors">Tüm Sanatçılar</option>
             </select>
-            <select id="shows-tag-select" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(192,38,211,0.4); padding:10px; border-radius:10px; color:#f1f5f9;">
+            <select id="shows-tag-select" class="filter-select filter-select-shows">
                 <option value="all" id="shows-opt-all-tags">Tüm Etiketler</option>
             </select>
-            <select id="shows-platform-select" style="flex:1; background:rgba(11,8,19,0.8); border:1px solid rgba(192,38,211,0.4); padding:10px; border-radius:10px; color:#f1f5f9;">
+            <select id="shows-platform-select" class="filter-select filter-select-shows">
                 <option value="all" id="shows-opt-all-platforms">Tüm Platformlar</option>
                 <option value="youtube">YouTube</option>
                 <option value="instagram">Instagram</option>
                 <option value="facebook">Facebook</option>
                 <option value="drive">Drive</option>
             </select>
+            </div>
         </div>
     </div>
 
-    <div id="shows-total-count" style="text-align:right; margin:10px 0 5px 0; color:#00f0ff; font-size:1.1rem;"></div>
+    <div id="shows-total-count" class="total-count"></div>
 
     <div id="shows-grid" class="video-grid"></div>
 
