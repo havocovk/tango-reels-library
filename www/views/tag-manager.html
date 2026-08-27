@@ -35,6 +35,23 @@
              ve tablo yana kaydırılmadan ekrana oturuyor.
              heatmap-scroll-wrapper DİKEY kaydırma (max-height:65vh) için
              duruyor; yatay kaydırma artık tetiklenmiyor. -->
+        <!-- Birleştirme paneli tablonun ÜSTÜNDE: tablo max-height:65vh
+             olduğu için panel altta kaldığında telefonda ekranın çok
+             aşağısında kalıyor, iki etiket seçen kullanıcı paneli hiç
+             göremiyordu. Şimdi aksiyon butonlarının hemen altında açılıyor. -->
+        <div id="tag-merge-panel" class="tag-merge-panel d-none">
+            <label>Yeni Etiket Adı:</label>
+            <input type="text" id="tag-merge-new-name" class="tag-merge-input" placeholder="Örn: sacada">
+            <!-- language.js innerHTML ile doldurur -->
+            <button id="tag-merge-confirm-btn" class="tag-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Birleştir
+            </button>
+            <button id="tag-merge-cancel-btn" class="tag-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                İptal
+            </button>
+        </div>
         <div class="heatmap-scroll-wrapper" style="max-height:65vh; overflow-y:auto;">
             <table class="tag-manager-table" id="tag-manager-table">
                 <thead>
@@ -47,19 +64,6 @@
                 </thead>
                 <tbody id="tag-manager-tbody"></tbody>
             </table>
-        </div>
-        <div id="tag-merge-panel" class="d-none" style="margin-top:20px; padding:15px; background:rgba(0,240,255,0.1); border-radius:12px;">
-            <label>Yeni Etiket Adı:</label>
-            <input type="text" id="tag-merge-new-name" class="tag-merge-input" placeholder="Örn: sacada">
-            <!-- language.js innerHTML ile doldurur -->
-            <button id="tag-merge-confirm-btn" class="tag-action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                Birleştir
-            </button>
-            <button id="tag-merge-cancel-btn" class="tag-action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                İptal
-            </button>
         </div>
     </div>
 </div>

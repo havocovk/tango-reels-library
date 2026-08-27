@@ -213,6 +213,15 @@ canvas { max-height: 350px; width: 100%; }
     vertical-align: middle;
 }
 
+/* Birleştirme paneli — tablonun ÜSTÜNDE duruyor (bkz. tag-manager.html).
+   ÖNCESİ: satır içi stil + tablonun altındaydı. */
+.tag-merge-panel {
+    margin-bottom: var(--sp-4);
+    padding: 15px;
+    background: rgb(var(--rgb-cyan) / 0.1);
+    border-radius: var(--r-md);
+}
+
 .tag-merge-input {
     background: var(--surface-base);
     border: 1px solid var(--c-pink);
@@ -324,13 +333,6 @@ canvas { max-height: 350px; width: 100%; }
         font-size: var(--fs-3xs);
         padding: 8px 2px;
         line-height: var(--lh-tight);
-    }
-
-    /* Sayı sola hizalı: sağa hizalı olduğunda etiket sütunundan
-       daha da uzaklaşıyordu. Sola alınca rozete yaklaşıyor. */
-    .tag-manager-table td.tag-col-count {
-        text-align: left;
-        padding-left: 2px;
     }
 
     .tag-actions-wrap { gap: 3px; }

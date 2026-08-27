@@ -675,6 +675,10 @@
 .btn-share-print {
     display: inline-flex;
     align-items: center;
+    /* justify-content EKSİKTİ: varsayılan flex-start olduğu için ikon+metin
+       sola yaslanıyordu. Buton dar olduğunda fark edilmiyordu; mobilde
+       tam satıra yayılınca metin solda kalıyordu. */
+    justify-content: center;
     gap: 6px;
 }
 
