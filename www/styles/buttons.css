@@ -91,6 +91,11 @@
 
 /* ── Dil butonu ────────────────────────────────────────────── */
 .lang-btn {
+    /* İçerik: globe ikonu + dil kodu (app.js / ui/language.js doldurur) */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     background: rgb(var(--rgb-pink) / 0.15);
     border: 1px solid rgb(var(--rgb-cyan) / 0.4);
     color: var(--text-primary);
@@ -132,7 +137,7 @@
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgb(var(--rgb-cyan) / 0.4);
-    background: linear-gradient(135deg, var(--c-pink-bright), var(--c-cyan-vivid));
+    background: linear-gradient(135deg, var(--c-pink-bright), var(--c-cyan-bright));
 }
 
 /* ── Pratik Başlat butonu (referans tasarım) ──────────────── */
@@ -222,7 +227,7 @@
     border-color: rgb(var(--rgb-cyan) / 0.85);
     box-shadow: 0 0 20px rgb(var(--rgb-cyan) / 0.4);
     transform: translateY(-2px);
-    color: var(--c-cyan-vivid);
+    color: var(--c-cyan-bright);
 }
 
 .btn-action-export:active { transform: translateY(0); }
@@ -403,7 +408,7 @@
     border-color: rgb(var(--rgb-cyan) / 0.65);
     box-shadow: 0 0 16px rgb(var(--rgb-cyan) / 0.25);
     transform: translateY(-1px);
-    color: var(--c-cyan-vivid);
+    color: var(--c-cyan-bright);
 }
 
 .btn-share-clipboard:active { transform: translateY(0); }

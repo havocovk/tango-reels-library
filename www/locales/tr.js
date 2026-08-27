@@ -39,7 +39,7 @@ export const tr = {
         facebook: "./images/facebook-icon-2023.png",
         other: ""
     },
-    langBtn: "🇬🇧 EN",
+    langBtn: "EN",
     formTitle: "Yeni Video Kaydet",
     formTitleEdit: "Videoyu Düzenle",
     lblInstructor: "Eğitmen Seç / Ekle:",

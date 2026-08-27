@@ -39,7 +39,7 @@ export const en = {
         facebook: "./images/facebook-icon-2023.png",
         other: ""
     },
-    langBtn: "🇹🇷 TR",
+    langBtn: "TR",
     formTitle: "Save New Video",
     formTitleEdit: "Edit Video",
     lblInstructor: "Select / Add Instructor:",

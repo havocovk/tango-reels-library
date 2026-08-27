@@ -338,8 +338,10 @@
     box-shadow: 0 0 40px rgb(var(--rgb-cyan) / 0.08);
 }
 
-.practice-summary-emoji {
-    font-size: 3.5rem;
+/* ÖNCESİ: .practice-summary-emoji, font-size:3.5rem ile 🎉 emojisini
+   boyutluyordu. Emoji Lucide trophy ikonuyla değiştirildi; boyut artık
+   SVG'nin width/height'ından geliyor, font-size'a gerek yok. */
+.practice-summary-icon {
     margin-bottom: 12px;
     line-height: 1;
 }

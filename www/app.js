@@ -7,7 +7,8 @@
 //   onclick ile kurulur — hangi koşulda olursa olsun çalışması garanti
 // ✅ GÜNCELLEME: menu-instructors butonu (Eğitmenler sayfası) eklendi
 import { translations } from './i18n.js';
-import { icon } from './icons.js'; // Adim 5.5
+import { icon } from './icons.js';
+import { closeBottomSheet } from './utils.js'; // Adim 5.5
 import { initAuth, signOut } from './auth.js';
 import { handlePasteEvent, handleFileSelect, resetUploadedCoverUrl } from './storage.js';
 import {
@@ -130,12 +131,14 @@ async function initializeApp() {
     if (langBtn) {
         const savedLang = localStorage.getItem('tango_lang') || 'tr';
         store.set('currentLang', savedLang);
-        langBtn.textContent = savedLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
+        // Bayrak emojisi Lucide globe ikonuyla değiştirildi (CLAUDE.md).
+        const langLabel = (l) => `${icon('globe', { size: 14 })} ${l === 'tr' ? 'EN' : 'TR'}`;
+        langBtn.innerHTML = langLabel(savedLang);
         langBtn.onclick = () => {
             const newLang = store.get('currentLang') === 'tr' ? 'en' : 'tr';
             store.set('currentLang', newLang);
             localStorage.setItem('tango_lang', newLang);
-            langBtn.textContent = newLang === 'tr' ? '🇬🇧 EN' : '🇹🇷 TR';
+            langBtn.innerHTML = langLabel(newLang);
             updateAllLanguages();
             callUpdateInterfaceLanguage();
             if (store.get('currentView') === 'stats') renderStatsPanel();
@@ -573,7 +576,7 @@ async function initializeApp() {
     });
     document.getElementById('ms-lists-new')?.addEventListener('click', () => promptCreatePlaylist());
     listsSheetOverlay?.addEventListener('click', (e) => {
-        if (e.target === listsSheetOverlay) listsSheetOverlay.classList.add('d-none');
+        if (e.target === listsSheetOverlay) closeBottomSheet(listsSheetOverlay);
     });
 
     // ── Bottom Nav: "Daha Fazla" sheet ──────────────────────────
@@ -582,22 +585,22 @@ async function initializeApp() {
         moreSheetOverlay?.classList.remove('d-none');
     });
     moreSheetOverlay?.addEventListener('click', (e) => {
-        if (e.target === moreSheetOverlay) moreSheetOverlay.classList.add('d-none');
+        if (e.target === moreSheetOverlay) closeBottomSheet(moreSheetOverlay);
     });
     document.getElementById('ms-stats')?.addEventListener('click', () => {
-        callSwitchView('stats'); syncBottomNavActiveState('stats'); moreSheetOverlay?.classList.add('d-none');
+        callSwitchView('stats'); syncBottomNavActiveState('stats'); closeBottomSheet(moreSheetOverlay);
     });
     document.getElementById('ms-add')?.addEventListener('click', () => {
-        callSwitchView('add'); syncBottomNavActiveState('add'); moreSheetOverlay?.classList.add('d-none');
+        callSwitchView('add'); syncBottomNavActiveState('add'); closeBottomSheet(moreSheetOverlay);
     });
     document.getElementById('ms-tags')?.addEventListener('click', () => {
-        callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); moreSheetOverlay?.classList.add('d-none');
+        callSwitchView('tagManager'); syncBottomNavActiveState('tagManager'); closeBottomSheet(moreSheetOverlay);
     });
     document.getElementById('ms-instructors')?.addEventListener('click', () => {
-        callSwitchView('instructorsList'); moreSheetOverlay?.classList.add('d-none');
+        callSwitchView('instructorsList'); closeBottomSheet(moreSheetOverlay);
     });
     document.getElementById('ms-shows')?.addEventListener('click', () => {
-        callSwitchView('shows'); syncBottomNavActiveState('shows'); moreSheetOverlay?.classList.add('d-none');
+        callSwitchView('shows'); syncBottomNavActiveState('shows'); closeBottomSheet(moreSheetOverlay);
     });
 
     // ── Grid/Liste toggle ───────────────────────────────────────

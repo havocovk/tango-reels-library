@@ -9,7 +9,7 @@ import { showToast } from './toast.js';
 import { showCustomConfirm } from './tangoModals.js';
 import { showModernPrompt } from './utils.js';
 import { icon } from './icons.js';
-import { escapeHtml } from './utils.js'; // Adim 1.2
+import { escapeHtml, closeBottomSheet } from './utils.js'; // Adim 1.2
 import {
     dbFetchPlaylists,
     dbFetchAllPlaylistVideos,
@@ -280,7 +280,7 @@ export function renderPlaylistsInMobileSheet() {
 
         btn.addEventListener('click', async () => {
             await selectPlaylist(pl.id);
-            document.getElementById('lists-sheet-overlay')?.classList.add('d-none');
+            closeBottomSheet(document.getElementById('lists-sheet-overlay'));
             // ✅ DÜZELTİLDİ: Önceden menu-library butonuna .click() ile
             // tıklanıyordu; bu da callSwitchView('library')'yi opsiyonsuz
             // çağırıp clearActivePlaylist() ile az önce seçilen playlist'i

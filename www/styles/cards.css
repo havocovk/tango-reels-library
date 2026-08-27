@@ -157,7 +157,7 @@
 
 .badge-both {
     background: linear-gradient(135deg, rgb(var(--rgb-pink) / 0.15), rgb(var(--rgb-cyan) / 0.1));
-    color: var(--c-pink-mid);
+    color: var(--c-pink-soft);
     border: 1px solid rgb(var(--rgb-pink) / 0.3);
 }
 

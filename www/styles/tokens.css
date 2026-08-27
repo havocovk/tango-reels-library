@@ -83,8 +83,11 @@
     --c-amber:  #f59e0b;   /* uyarı / beklemede */
     --c-red:    #ef4444;   /* tehlike */
 
-    /* Hover'da açılan parlak tonlar */
-    --c-cyan-bright:   #7cfffe;
+    /* Hover'da açılan parlak tonlar.
+       D3: --c-cyan-bright (#7cfffe) ile --c-cyan-vivid (#3cefff) aynı
+       rolü üstleniyordu; çok kullanılan #3cefff'te birleştirildi.
+       Aynı şekilde --c-pink-mid (#ff66b5) --c-pink-soft'a katıldı. */
+    --c-cyan-bright:   #3cefff;
     --c-pink-bright:   #ff4da6;
     --c-green-bright:  #34d399;
     --c-purple-bright: #d8b4fe;
@@ -100,14 +103,8 @@
     --c-fb: #60a5fa;   --rgb-fb: 96 165 250;
     --c-wa: #25d366;   --rgb-wa: 37 211 102;
 
-    /* Açık pembe tonları. NOT: üçü de "vurgulu pembe" rolünde,
-       birleştirme adayı — bkz. Adım 2 raporu. */
+    /* Açık pembe — form ve istatistik vurguları, .badge-both metni */
     --c-pink-soft: #ff80bf;
-    --c-pink-mid:  #ff66b5;
-
-    /* Canlı cyan — .btn-primary hover ve bağlantı hover'larında.
-       --c-cyan-bright (#7cfffe) ile birleştirme adayı. */
-    --c-cyan-vivid: #3cefff;
 
     /* ── Yüzeyler ────────────────────────────────────── */
     --surface-base:         #0b0813;

@@ -111,10 +111,10 @@
    ÖNCESİ: yalnızca d-none ile açılıp kapanıyordu, panel
    kaymadan aniden beliriyordu.
 
-   NOT — kapanış animasyonsuz: sheet 10 ayrı çağrı yerinde
-   classList.add('d-none') ile kapatılıyor. Çıkış animasyonu
-   için app.js'te ortak bir closeSheet() yardımcısı yazıp 10
-   çağrıyı değiştirmek gerekir; bu adımın kapsamı dışında.
+   Kapanış da animasyonlu: utils.js'teki closeBottomSheet()
+   yardımcısı önce .sheet-closing sınıfını ekler, animasyon
+   bitince d-none verir. 8 çağrı yeri (app.js 7 + playlistManager.js 1)
+   bu yardımcıdan geçiyor.
    ═══════════════════════════════════════════════════════ */
 @keyframes sheetRise {
     from { transform: translateY(100%); }
@@ -127,6 +127,26 @@
 
 .bottom-sheet-overlay:not(.d-none) .bottom-sheet {
     animation: sheetRise var(--dur-base) var(--ease-out) both;
+}
+
+/* Kapanış — bu kurallar açılış kurallarıyla AYNI özgüllükte (0,2,0),
+   dosyada sonra geldikleri için onları eziyorlar. */
+@keyframes sheetFall {
+    from { transform: none; }
+    to   { transform: translateY(100%); }
+}
+
+@keyframes overlayFade {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+.bottom-sheet-overlay.sheet-closing {
+    animation: overlayFade var(--dur-fast) var(--ease-out) both;
+}
+
+.bottom-sheet-overlay.sheet-closing .bottom-sheet {
+    animation: sheetFall var(--dur-fast) var(--ease-out) both;
 }
 
 /* ═══════════════════════════════════════════════════════

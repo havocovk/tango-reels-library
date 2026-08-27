@@ -198,6 +198,42 @@ export function showCustomAlert(message, okText = '', persistent = false) {
 // ================================================================
 let subscriptions = [];
 
+/**
+ * Mobil bottom sheet'i kapanis animasyonuyla kapatir.
+ *
+ * ONCESI: sheet 8 ayri cagri yerinde dogrudan classList.add('d-none')
+ * ile kapatiliyordu. d-none display:none oldugu icin gecis calismiyor,
+ * panel aniden kayboluyordu (acilis kayiyor, kapanis anlik).
+ *
+ * SIMDI: once .sheet-closing sinifi eklenir (motion.css'teki sheetFall
+ * + overlayFade animasyonlarini tetikler), animasyon bitince d-none
+ * verilir. Hareket azaltma acikken animasyon atlanir.
+ */
+export function closeBottomSheet(overlay) {
+    if (!overlay || overlay.classList.contains('d-none')) return;
+
+    const sheet = overlay.querySelector('.bottom-sheet');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!sheet || reduced) {
+        overlay.classList.add('d-none');
+        return;
+    }
+
+    let finished = false;
+    const finish = () => {
+        if (finished) return;
+        finished = true;
+        overlay.classList.remove('sheet-closing');
+        overlay.classList.add('d-none');
+    };
+
+    overlay.classList.add('sheet-closing');
+    sheet.addEventListener('animationend', finish, { once: true });
+    // Guvenlik agi: animationend gelmezse panel kilitli kalmasin
+    setTimeout(finish, 400);
+}
+
 export function addSubscription(unsubscribeFn) {
     subscriptions.push(unsubscribeFn);
 }
