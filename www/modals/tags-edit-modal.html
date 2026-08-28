@@ -2,8 +2,11 @@
 <div id="tags-edit-modal" class="modal-overlay d-none">
     <div class="modal-content" style="max-width:500px; padding:25px;">
         <span id="tags-modal-close-btn" class="modal-close">&times;</span>
-        <!-- ui/language.js bu başlığı pencil ikonuyla yeniden yazıyor; bu yalnızca yedek metin -->
-        <h3 id="edit-tags-title">Etiketleri Düzenle</h3>
+        <!-- İkon HTML'de DURMALI: modal lazy yükleniyor, updateInterfaceLanguage()
+             açılışta çalıştığı için o an bu eleman DOM'da olmuyor ve
+             language.js'in pencil ikonu hiç uygulanmıyor. Dil değiştirilince
+             language.js aynı ikonu yeniden basar — görünüm değişmez. -->
+        <h3 id="edit-tags-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c026d3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Etiketleri Düzenle</h3>
         <div class="form-group">
             <div class="tags-input-container" id="modal-tags-wrapper">
                 <div id="modal-chips-area" style="display:inline-flex; flex-wrap:wrap; gap:6px;"></div>
